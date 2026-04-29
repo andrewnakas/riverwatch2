@@ -1228,30 +1228,6 @@
       "state_cd": "13"
     },
     {
-      "id": "15129000",
-      "name": "ALSEK R NR YAKUTAT AK",
-      "state": "AK",
-      "site_no": "15129000",
-      "lat": 59.395,
-      "lon": -138.081944,
-      "drain_area_sqmi": 10490.0,
-      "alt_ft": 240.0,
-      "huc_cd": "190104041905",
-      "state_cd": "02"
-    },
-    {
-      "id": "15054000",
-      "name": "AUKE C AT AUKE BAY AK",
-      "state": "AK",
-      "site_no": "15054000",
-      "lat": 58.3818946,
-      "lon": -134.6378955,
-      "drain_area_sqmi": 4.0,
-      "alt_ft": 52.8,
-      "huc_cd": "19010301",
-      "state_cd": "02"
-    },
-    {
       "id": "15087700",
       "name": "INDIAN R AT SITKA AK",
       "state": "AK",
@@ -1456,18 +1432,6 @@
       "state_cd": "41"
     },
     {
-      "id": "14211000",
-      "name": "CLACKAMAS RIVER NEAR CLACKAMAS, OR",
-      "state": "OR",
-      "site_no": "14211000",
-      "lat": 45.3931766,
-      "lon": -122.532868,
-      "drain_area_sqmi": 933.0,
-      "alt_ft": 50.68,
-      "huc_cd": "17090011",
-      "state_cd": "41"
-    },
-    {
       "id": "14201500",
       "name": "BUTTE CREEK AT MONITOR, OR",
       "state": "OR",
@@ -1489,18 +1453,6 @@
       "drain_area_sqmi": 83.9,
       "alt_ft": 1713.92,
       "huc_cd": "17100311",
-      "state_cd": "41"
-    },
-    {
-      "id": "14306900",
-      "name": "BIG CREEK NEAR ROOSEVELT BEACH, OREG.",
-      "state": "OR",
-      "site_no": "14306900",
-      "lat": 44.167899,
-      "lon": -124.0665067,
-      "drain_area_sqmi": 11.9,
-      "alt_ft": 141.0,
-      "huc_cd": "17100205",
       "state_cd": "41"
     },
     {
@@ -1671,18 +1623,6 @@
       "state_cd": "06"
     },
     {
-      "id": "11218000",
-      "name": "DINKEY C A MOUTH CA",
-      "state": "CA",
-      "site_no": "11218000",
-      "lat": 36.90966939,
-      "lon": -119.1284494,
-      "drain_area_sqmi": 132.0,
-      "alt_ft": 1310.0,
-      "huc_cd": "18030010",
-      "state_cd": "06"
-    },
-    {
       "id": "11292000",
       "name": "MF STANISLAUS R AT KENNEDY MDWS NR DARDANELLE CA",
       "state": "CA",
@@ -1691,18 +1631,6 @@
       "lon": -119.7412867,
       "drain_area_sqmi": 47.5,
       "alt_ft": 6326.3,
-      "huc_cd": "18040010",
-      "state_cd": "06"
-    },
-    {
-      "id": "11291000",
-      "name": "RELIEF RES NR BAKER STATION CA",
-      "state": "CA",
-      "site_no": "11291000",
-      "lat": 38.28102397,
-      "lon": -119.7335085,
-      "drain_area_sqmi": 24.4,
-      "alt_ft": 7200.0,
       "huc_cd": "18040010",
       "state_cd": "06"
     },
@@ -1731,18 +1659,6 @@
       "state_cd": "06"
     },
     {
-      "id": "11272500",
-      "name": "MERCED R NR STEVINSON CA",
-      "state": "CA",
-      "site_no": "11272500",
-      "lat": 37.3707436,
-      "lon": -120.9304445,
-      "drain_area_sqmi": 1273.0,
-      "alt_ft": 73.0,
-      "huc_cd": "18040008",
-      "state_cd": "06"
-    },
-    {
       "id": "09402500",
       "name": "COLORADO RIVER NEAR GRAND CANYON, AZ",
       "state": "AZ",
@@ -1752,18 +1668,6 @@
       "drain_area_sqmi": 141600.0,
       "alt_ft": 2418.7,
       "huc_cd": "15010001",
-      "state_cd": "04"
-    },
-    {
-      "id": "09404120",
-      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
-      "state": "AZ",
-      "site_no": "09404120",
-      "lat": 36.25971509,
-      "lon": -112.8907702,
-      "drain_area_sqmi": 147931.0,
-      "alt_ft": 1760.0,
-      "huc_cd": "150100020405",
       "state_cd": "04"
     },
     {
@@ -1812,40 +1716,6 @@
       "drain_area_sqmi": 151.0,
       "alt_ft": 6571.48,
       "huc_cd": "140500030303",
-      "state_cd": "08"
-    },
-    {
-      "id": "09303000",
-      "name": "NORTH FORK WHITE RIVER AT BUFORD, CO",
-      "state": "CO",
-      "site_no": "09303000",
-      "lat": 39.9874772,
-      "lon": -107.6145076,
-      "drain_area_sqmi": 259.0,
-      "alt_ft": 7010.0,
-      "huc_cd": "14050005",
-      "state_cd": "08"
-    },
-    {
-      "id": "09071100",
-      "name": "COLORADO RIVER NEAR GLENWOOD SPRINGS, CO.",
-      "state": "CO",
-      "site_no": "09071100",
-      "lat": 39.56998269,
-      "lon": -107.22672,
-      "huc_cd": "14010001",
-      "state_cd": "08"
-    },
-    {
-      "id": "09077200",
-      "name": "FRYINGPAN RIVER NEAR IVANHOE LAKE, CO.",
-      "state": "CO",
-      "site_no": "09077200",
-      "lat": 39.2455437,
-      "lon": -106.5314189,
-      "drain_area_sqmi": 18.7,
-      "alt_ft": 9892.49,
-      "huc_cd": "14010004",
       "state_cd": "08"
     },
     {
@@ -1933,18 +1803,6 @@
       "state_cd": "56"
     },
     {
-      "id": "06225500",
-      "name": "Wind River near Crowheart, WY",
-      "state": "WY",
-      "site_no": "06225500",
-      "lat": 43.2425,
-      "lon": -109.0105556,
-      "drain_area_sqmi": 1894.0,
-      "alt_ft": 5635.0,
-      "huc_cd": "10080001",
-      "state_cd": "56"
-    },
-    {
       "id": "06221400",
       "name": "DINWOODY CREEK ABOVE LAKES, NEAR BURRIS, WY",
       "state": "WY",
@@ -1966,18 +1824,6 @@
       "drain_area_sqmi": 230.0,
       "alt_ft": 7188.71,
       "huc_cd": "10080001",
-      "state_cd": "56"
-    },
-    {
-      "id": "06037000",
-      "name": "Gibbon River near West Yellowstone MT",
-      "state": "WY",
-      "site_no": "06037000",
-      "lat": 44.64910556,
-      "lon": -110.7847361,
-      "drain_area_sqmi": 113.0,
-      "alt_ft": 6940.0,
-      "huc_cd": "10020007",
       "state_cd": "56"
     },
     {
@@ -2125,18 +1971,6 @@
       "state_cd": "30"
     },
     {
-      "id": "06179500",
-      "name": "West Fork Poplar River at international boundary",
-      "state": "?",
-      "site_no": "06179500",
-      "lat": 49.00000556,
-      "lon": -106.3683278,
-      "drain_area_sqmi": 145.0,
-      "alt_ft": 2847.83,
-      "huc_cd": "",
-      "state_cd": "94"
-    },
-    {
       "id": "03065000",
       "name": "DRY FORK AT HENDRICKS, WV",
       "state": "WV",
@@ -2147,42 +1981,6 @@
       "alt_ft": 1699.13,
       "huc_cd": "05020004",
       "state_cd": "54"
-    },
-    {
-      "id": "03071000",
-      "name": "CHEAT RIVER NEAR PISGAH, WV",
-      "state": "WV",
-      "site_no": "03071000",
-      "lat": 39.6070263,
-      "lon": -79.7775555,
-      "drain_area_sqmi": 1353.0,
-      "alt_ft": 875.68,
-      "huc_cd": "05020004",
-      "state_cd": "54"
-    },
-    {
-      "id": "03187000",
-      "name": "GAULEY RIVER AT CAMDEN ON GAULEY, WV",
-      "state": "WV",
-      "site_no": "03187000",
-      "lat": 38.36594285,
-      "lon": -80.6009232,
-      "drain_area_sqmi": 236.0,
-      "alt_ft": 2003.5,
-      "huc_cd": "05050005",
-      "state_cd": "54"
-    },
-    {
-      "id": "03114000",
-      "name": "Captina Creek at Armstrongs Mills OH",
-      "state": "OH",
-      "site_no": "03114000",
-      "lat": 39.90868407,
-      "lon": -80.92398369,
-      "drain_area_sqmi": 134.0,
-      "alt_ft": 739.53,
-      "huc_cd": "05030106",
-      "state_cd": "39"
     },
     {
       "id": "03198350",
@@ -2281,18 +2079,6 @@
       "state_cd": "47"
     },
     {
-      "id": "03207500",
-      "name": "LEVISA FORK NEAR GRUNDY, VA",
-      "state": "VA",
-      "site_no": "03207500",
-      "lat": 37.2978881,
-      "lon": -82.12596789,
-      "drain_area_sqmi": 239.0,
-      "alt_ft": 984.47,
-      "huc_cd": "05070202",
-      "state_cd": "51"
-    },
-    {
       "id": "03220000",
       "name": "Mill Creek near Bellepoint OH",
       "state": "OH",
@@ -2338,18 +2124,6 @@
       "drain_area_sqmi": 27.6,
       "alt_ft": 2976.24,
       "huc_cd": "06010106",
-      "state_cd": "37"
-    },
-    {
-      "id": "02112120",
-      "name": "ROARING RIVER NEAR ROARING RIVER, NC",
-      "state": "NC",
-      "site_no": "02112120",
-      "lat": 36.25027778,
-      "lon": -81.0444444,
-      "drain_area_sqmi": 128.0,
-      "alt_ft": 964.85,
-      "huc_cd": "03040101",
       "state_cd": "37"
     },
     {
@@ -2458,18 +2232,6 @@
       "drain_area_sqmi": 784.0,
       "alt_ft": 955.47,
       "huc_cd": "02040102",
-      "state_cd": "36"
-    },
-    {
-      "id": "01422000",
-      "name": "WEST BRANCH DELAWARE RIVER AT DELHI NY",
-      "state": "NY",
-      "site_no": "01422000",
-      "lat": 42.2711111,
-      "lon": -74.9180556,
-      "drain_area_sqmi": 142.0,
-      "alt_ft": 1345.29,
-      "huc_cd": "02040101",
       "state_cd": "36"
     },
     {

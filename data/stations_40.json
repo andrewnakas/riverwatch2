@@ -1,5 +1,5 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: ~238 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, and Great Lakes / Driftless",
+  "description": "Live zero-shot river-discharge forecast subset: ~218 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, and Great Lakes / Driftless",
   "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
@@ -514,16 +514,6 @@
       "state": "GA"
     },
     {
-      "id": "15129000",
-      "name": "ALSEK R NR YAKUTAT AK",
-      "state": "AK"
-    },
-    {
-      "id": "15054000",
-      "name": "AUKE C AT AUKE BAY AK",
-      "state": "AK"
-    },
-    {
       "id": "15087700",
       "name": "INDIAN R AT SITKA AK",
       "state": "AK"
@@ -609,11 +599,6 @@
       "state": "OR"
     },
     {
-      "id": "14211000",
-      "name": "CLACKAMAS RIVER NEAR CLACKAMAS, OR",
-      "state": "OR"
-    },
-    {
       "id": "14201500",
       "name": "BUTTE CREEK AT MONITOR, OR",
       "state": "OR"
@@ -621,11 +606,6 @@
     {
       "id": "14375100",
       "name": "SUCKER CREEK BLW LITTLE GRAYBACK CK, NR HOLLAND,OR",
-      "state": "OR"
-    },
-    {
-      "id": "14306900",
-      "name": "BIG CREEK NEAR ROOSEVELT BEACH, OREG.",
       "state": "OR"
     },
     {
@@ -699,18 +679,8 @@
       "state": "CA"
     },
     {
-      "id": "11218000",
-      "name": "DINKEY C A MOUTH CA",
-      "state": "CA"
-    },
-    {
       "id": "11292000",
       "name": "MF STANISLAUS R AT KENNEDY MDWS NR DARDANELLE CA",
-      "state": "CA"
-    },
-    {
-      "id": "11291000",
-      "name": "RELIEF RES NR BAKER STATION CA",
       "state": "CA"
     },
     {
@@ -724,18 +694,8 @@
       "state": "CA"
     },
     {
-      "id": "11272500",
-      "name": "MERCED R NR STEVINSON CA",
-      "state": "CA"
-    },
-    {
       "id": "09402500",
       "name": "COLORADO RIVER NEAR GRAND CANYON, AZ",
-      "state": "AZ"
-    },
-    {
-      "id": "09404120",
-      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
       "state": "AZ"
     },
     {
@@ -756,21 +716,6 @@
     {
       "id": "09255000",
       "name": "SLATER FORK NEAR SLATER, CO",
-      "state": "CO"
-    },
-    {
-      "id": "09303000",
-      "name": "NORTH FORK WHITE RIVER AT BUFORD, CO",
-      "state": "CO"
-    },
-    {
-      "id": "09071100",
-      "name": "COLORADO RIVER NEAR GLENWOOD SPRINGS, CO.",
-      "state": "CO"
-    },
-    {
-      "id": "09077200",
-      "name": "FRYINGPAN RIVER NEAR IVANHOE LAKE, CO.",
       "state": "CO"
     },
     {
@@ -809,11 +754,6 @@
       "state": "WY"
     },
     {
-      "id": "06225500",
-      "name": "Wind River near Crowheart, WY",
-      "state": "WY"
-    },
-    {
       "id": "06221400",
       "name": "DINWOODY CREEK ABOVE LAKES, NEAR BURRIS, WY",
       "state": "WY"
@@ -821,11 +761,6 @@
     {
       "id": "06218500",
       "name": "WIND RIVER NEAR DUBOIS, WY",
-      "state": "WY"
-    },
-    {
-      "id": "06037000",
-      "name": "Gibbon River near West Yellowstone MT",
       "state": "WY"
     },
     {
@@ -889,29 +824,9 @@
       "state": "MT"
     },
     {
-      "id": "06179500",
-      "name": "West Fork Poplar River at international boundary",
-      "state": "?"
-    },
-    {
       "id": "03065000",
       "name": "DRY FORK AT HENDRICKS, WV",
       "state": "WV"
-    },
-    {
-      "id": "03071000",
-      "name": "CHEAT RIVER NEAR PISGAH, WV",
-      "state": "WV"
-    },
-    {
-      "id": "03187000",
-      "name": "GAULEY RIVER AT CAMDEN ON GAULEY, WV",
-      "state": "WV"
-    },
-    {
-      "id": "03114000",
-      "name": "Captina Creek at Armstrongs Mills OH",
-      "state": "OH"
     },
     {
       "id": "03198350",
@@ -954,11 +869,6 @@
       "state": "TN"
     },
     {
-      "id": "03207500",
-      "name": "LEVISA FORK NEAR GRUNDY, VA",
-      "state": "VA"
-    },
-    {
       "id": "03220000",
       "name": "Mill Creek near Bellepoint OH",
       "state": "OH"
@@ -976,11 +886,6 @@
     {
       "id": "03455500",
       "name": "W F PIGEON R ABOVE LAKE LOGAN NR HAZELWOOD, NC",
-      "state": "NC"
-    },
-    {
-      "id": "02112120",
-      "name": "ROARING RIVER NEAR ROARING RIVER, NC",
       "state": "NC"
     },
     {
@@ -1026,11 +931,6 @@
     {
       "id": "01421000",
       "name": "EAST BRANCH DELAWARE RIVER AT FISHS EDDY NY",
-      "state": "NY"
-    },
-    {
-      "id": "01422000",
-      "name": "WEST BRANCH DELAWARE RIVER AT DELHI NY",
       "state": "NY"
     },
     {
