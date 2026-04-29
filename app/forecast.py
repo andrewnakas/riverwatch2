@@ -263,7 +263,7 @@ def chronos_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
         ctx = torch.tensor(q_hist["q_cfs"].astype(float).tolist())
         # Chronos-Bolt returns quantile forecasts; take the median (q=0.5)
         quantiles, _mean = pipe.predict_quantiles(
-            context=ctx,
+            inputs=ctx,
             prediction_length=horizon,
             quantile_levels=[0.1, 0.5, 0.9],
         )
@@ -402,7 +402,7 @@ def _rolling_chronos_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
         ctx_len = len(q_hist) - 30
         ctx = torch.tensor(q_hist["q_cfs"].iloc[:ctx_len].astype(float).tolist())
         quantiles, _ = pipe.predict_quantiles(
-            context=ctx,
+            inputs=ctx,
             prediction_length=30,
             quantile_levels=[0.5],
         )

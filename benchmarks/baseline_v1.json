@@ -1,0 +1,1529 @@
+{
+  "label": "v1-baseline",
+  "ran_at": "2026-04-29T05:49:08.890976+00:00",
+  "args": {
+    "train_days": 540,
+    "eval_days": 14,
+    "horizon": 7,
+    "limit": 0,
+    "label": "v1-baseline"
+  },
+  "stations": 40,
+  "succeeded": 38,
+  "aggregate_mae": {
+    "persistence_lag1": {
+      "mae_mean": 18.04672932330827,
+      "mae_median": 7.325,
+      "stations": 38
+    },
+    "runoff_ridge": {
+      "mae_mean": 20.661545406811978,
+      "mae_median": 9.037915988233163,
+      "stations": 38
+    },
+    "chronos_bolt": {
+      "mae_mean": 21.253159848937862,
+      "mae_median": 7.432141767229353,
+      "stations": 38
+    },
+    "ensemble_blend": {
+      "mae_mean": 17.875613739576245,
+      "mae_median": 6.7912865348499025,
+      "stations": 38
+    }
+  },
+  "results": [
+    {
+      "station_id": "06036905",
+      "name": "Firehole River near West Yellowstone MT",
+      "state": "WY",
+      "rows_train": 539,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 28.142857142857142,
+          "rmse": 29.65275222109601,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 22.56943096036867,
+          "rmse": 24.61716782705531,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 24.830570765904017,
+          "rmse": 26.386406222709983,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 26.112173755515762,
+          "rmse": 27.776699219768542,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.5982824589192914,
+        "runoff_ridge": 0.3016340730384761,
+        "chronos_bolt": 0.1000834680422325
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 10.083333333333334,
+        "chronos_bolt": 60.276502990722655
+      }
+    },
+    {
+      "station_id": "15056560",
+      "error": "not enough eval rows",
+      "rows": 2
+    },
+    {
+      "station_id": "02231000",
+      "name": "ST. MARYS RIVER NEAR MACCLENNY, FL",
+      "state": "FL",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 2.4000000000000017,
+          "rmse": 2.688600273110794,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.6490394179764333,
+          "rmse": 0.6876223415434114,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 3.689903477260045,
+          "rmse": 3.936068726684833,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 2.550141118826449,
+          "rmse": 2.817028693147706,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.7929413858060437,
+        "runoff_ridge": 0.038457657211593124,
+        "chronos_bolt": 0.16860095698236321
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.9700000000000001,
+        "chronos_bolt": 4.561973775227865
+      }
+    },
+    {
+      "station_id": "06037100",
+      "name": "Gibbon River at Madison Jct, YNP",
+      "state": "WY",
+      "rows_train": 539,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 9.428571428571429,
+          "rmse": 10.433462649434409,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 9.846174691849074,
+          "rmse": 10.764803647503442,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 14.095807756696429,
+          "rmse": 15.32398045908528,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 9.740229392194559,
+          "rmse": 10.769691674764621,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.7946342704582232,
+        "runoff_ridge": 0.14182014410261345,
+        "chronos_bolt": 0.06354558543916339
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 3.5694444444444446,
+        "chronos_bolt": 44.635718790690106
+      }
+    },
+    {
+      "station_id": "06048650",
+      "name": "E Gallatin R ab Water Reclamation Fa nr Bozeman MT",
+      "state": "MT",
+      "rows_train": 495,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 6.714285714285714,
+          "rmse": 8.202786982831768,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 33.41839047106162,
+          "rmse": 35.61667572246632,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 10.014186314174108,
+          "rmse": 11.348950817103598,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 9.387810443358067,
+          "rmse": 10.595001404015825,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.6623045570556975,
+        "runoff_ridge": 0.22717046307010422,
+        "chronos_bolt": 0.11052497987419842
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 6.859999999999999,
+        "chronos_bolt": 41.10753303527833
+      }
+    },
+    {
+      "station_id": "15052000",
+      "name": "LEMON C NR JUNEAU AK",
+      "state": "AK",
+      "rows_train": 540,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 11.671428571428573,
+          "rmse": 15.473433454057405,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 8.64164483114649,
+          "rmse": 11.656246586906734,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 12.00209524972098,
+          "rmse": 15.441023063100806,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 10.98728926994745,
+          "rmse": 14.697515828386651,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.21494287355733466,
+        "runoff_ridge": 0.18533807510603784,
+        "chronos_bolt": 0.5997190513366275
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 17.24533333333334,
+        "chronos_bolt": 6.180829996744791
+      }
+    },
+    {
+      "station_id": "15055500",
+      "name": "ANTLER R BL ANTLER LK NR AUKE BAY AK",
+      "state": "AK",
+      "rows_train": 540,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 5.74285714285714,
+          "rmse": 8.079427136693717,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 7.374083508053671,
+          "rmse": 7.868060779126513,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 7.989840698242186,
+          "rmse": 9.775407163283916,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 3.876856968723442,
+          "rmse": 5.7895469034049505,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.4526694796347311,
+        "runoff_ridge": 0.20150078919851575,
+        "chronos_bolt": 0.34582973116675325
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 8.902777777777779,
+        "chronos_bolt": 11.653179066975907
+      }
+    },
+    {
+      "station_id": "06036805",
+      "name": "Firehole River at Old Faithful, YNP",
+      "state": "WY",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 9.171428571428569,
+          "rmse": 9.421404202286256,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 9.852101450429204,
+          "rmse": 10.06088569042288,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 5.226629311697825,
+          "rmse": 5.500292956381933,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 8.920923335395447,
+          "rmse": 9.167030525962025,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.8297944200401591,
+        "runoff_ridge": 0.09100078806440412,
+        "chronos_bolt": 0.07920479189543676
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 2.1933333333333334,
+        "chronos_bolt": 22.97860669453939
+      }
+    },
+    {
+      "station_id": "15052500",
+      "name": "MENDENHALL R NR AUKE BAY AK",
+      "state": "AK",
+      "rows_train": 540,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 15.214285714285714,
+          "rmse": 18.739759108072107,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 18.06734317171962,
+          "rmse": 23.048202094711993,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 32.59077671595982,
+          "rmse": 35.48133905310119,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 17.544863208254064,
+          "rmse": 23.53367396083521,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.2252813200994529,
+        "runoff_ridge": 0.5819642279613589,
+        "chronos_bolt": 0.1927544519391881
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 51.66555555555555,
+        "chronos_bolt": 60.38399861653646
+      }
+    },
+    {
+      "station_id": "06195600",
+      "name": "Shields River nr Livingston MT",
+      "state": "MT",
+      "rows_train": 535,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 33.0,
+          "rmse": 37.589892258425,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 9.434187145319836,
+          "rmse": 11.32480598711274,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 49.03188214983259,
+          "rmse": 53.63479008972826,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 25.57596468302068,
+          "rmse": 28.180490697713168,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.599809322243982,
+        "runoff_ridge": 0.34044177448364676,
+        "chronos_bolt": 0.05974890327237119
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 11.351666666666667,
+        "chronos_bolt": 113.95749740600586
+      }
+    },
+    {
+      "station_id": "06050000",
+      "name": "Hyalite C at Hyalite R S nr Bozeman MT",
+      "state": "MT",
+      "rows_train": 529,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.8714285714285711,
+          "rmse": 0.9539392014169452,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 4.337448819690104,
+          "rmse": 4.756825319345658,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.820171683175223,
+          "rmse": 0.937830102731188,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.8300091890413311,
+          "rmse": 0.9323827006655822,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.8060700509284193,
+        "runoff_ridge": 0.0370792223427073,
+        "chronos_bolt": 0.15685072672887337
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.9200000000000002,
+        "chronos_bolt": 4.727963091532389
+      }
+    },
+    {
+      "station_id": "10068500",
+      "name": "BEAR RIVER AT PESCADERO ID",
+      "state": "ID",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 9.28571428571428,
+          "rmse": 12.7560629842104,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 13.451228042522866,
+          "rmse": 18.587056501549593,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 7.194957624162947,
+          "rmse": 9.715496890849916,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 7.547681352864649,
+          "rmse": 10.48282488206809,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.8168164993817054,
+        "runoff_ridge": 0.14952279808126218,
+        "chronos_bolt": 0.03366070253703244
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 3.661111111111111,
+        "chronos_bolt": 88.84116302490234
+      }
+    },
+    {
+      "station_id": "06036940",
+      "name": "Tantalus Creek at Norris Junction, YNP",
+      "state": "WY",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.5485714285714285,
+          "rmse": 0.8059599422871019,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.545973935689514,
+          "rmse": 0.8227808667683886,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.48544846126011443,
+          "rmse": 0.7575638380906766,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.5130433969699177,
+          "rmse": 0.7772877110069468,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.42951394160533296,
+        "runoff_ridge": 0.007975835276754585,
+        "chronos_bolt": 0.5625102231179124
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.3713888888888889,
+        "chronos_bolt": 0.2835801003774007
+      }
+    },
+    {
+      "station_id": "06708800",
+      "name": "EAST PLUM CR ABV HASKINS GULCH NR CASTLE ROCK, CO",
+      "state": "CO",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.5000000000000001,
+          "rmse": 0.6659472308567058,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.4876616268790774,
+          "rmse": 0.6019082070039201,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.39848725455147893,
+          "rmse": 0.4727285518807588,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.4501703460121241,
+          "rmse": 0.5996776486993858,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.7732327141182563,
+        "runoff_ridge": 0.025744353642837284,
+        "chronos_bolt": 0.2010229322389063
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.665888888888889,
+        "chronos_bolt": 2.561335003534953
+      }
+    },
+    {
+      "station_id": "15008000",
+      "name": "SALMON R NR HYDER AK",
+      "state": "AK",
+      "rows_train": 496,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 35.05714285714286,
+          "rmse": 45.80102930845863,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 39.62174349161243,
+          "rmse": 42.2136317590329,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 47.687554059709825,
+          "rmse": 62.7639994774865,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 24.199528023539195,
+          "rmse": 34.8080230467401,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.07215958233064673,
+        "runoff_ridge": 0.4526450333630919,
+        "chronos_bolt": 0.4751953843062613
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 125.45666666666668,
+        "chronos_bolt": 19.05090193684896
+      }
+    },
+    {
+      "station_id": "09180000",
+      "name": "DOLORES RIVER NEAR CISCO, UT",
+      "state": "UT",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 19.0,
+          "rmse": 22.357485163970093,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 23.56604190915188,
+          "rmse": 26.396348991537476,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 23.278880528041295,
+          "rmse": 25.746750491390884,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 21.299097791748505,
+          "rmse": 24.30756132112753,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.48996080861947533,
+        "runoff_ridge": 0.4063952707049315,
+        "chronos_bolt": 0.10364392067559323
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 16.58888888888889,
+        "chronos_bolt": 78.42143910725912
+      }
+    },
+    {
+      "station_id": "15057596",
+      "error": "not enough eval rows",
+      "rows": 0
+    },
+    {
+      "station_id": "15101490",
+      "name": "GREENS C AT GREENS CREEK MINE NR JUNEAU AK",
+      "state": "AK",
+      "rows_train": 521,
+      "rows_eval": 13,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 7.935714285714286,
+          "rmse": 9.494010894092279,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 4.813369721243914,
+          "rmse": 5.776740924742128,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 6.486997397286552,
+          "rmse": 8.132915183892914,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 6.661488440051108,
+          "rmse": 8.019982684938721,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.46401993886771686,
+        "runoff_ridge": 0.2863131917241277,
+        "chronos_bolt": 0.2496668694081555
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 12.340555555555557,
+        "chronos_bolt": 22.93561756134033
+      }
+    },
+    {
+      "station_id": "06814000",
+      "name": "TURKEY C NR SENECA, KS",
+      "state": "KS",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 35.22857142857142,
+          "rmse": 37.13215779963699,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 32.037877151195524,
+          "rmse": 41.36219512466742,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 37.5533695765904,
+          "rmse": 45.800470877986875,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 19.39012895921872,
+          "rmse": 26.72446405149794,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.629396682463203,
+        "runoff_ridge": 0.11771116621356259,
+        "chronos_bolt": 0.2528921513232345
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 3.7404444444444445,
+        "chronos_bolt": 9.309198849995932
+      }
+    },
+    {
+      "station_id": "07207000",
+      "name": "CIMARRON RIVER NEAR CIMARRON, NM",
+      "state": "NM",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 1.2785714285714285,
+          "rmse": 1.4655130744652434,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 1.1544384323973413,
+          "rmse": 1.3471340623895058,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 1.0708612714494978,
+          "rmse": 1.265954956371425,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 1.2453456704502448,
+          "rmse": 1.4309765676297748,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.8355094650337088,
+        "runoff_ridge": 0.013827681646307884,
+        "chronos_bolt": 0.15066285331998325
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.331,
+        "chronos_bolt": 1.8355794200897217
+      }
+    },
+    {
+      "station_id": "10125500",
+      "name": "MALAD RIVER AT WOODRUFF ID",
+      "state": "ID",
+      "rows_train": 538,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 1.3571428571428572,
+          "rmse": 1.4267845968170125,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 1.5318223395572745,
+          "rmse": 1.6005022621032814,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 1.334507043021065,
+          "rmse": 1.4139680031414605,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.5629315990979552,
+          "rmse": 0.6785569542974546,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.6323244693924921,
+        "runoff_ridge": 0.06818565528282373,
+        "chronos_bolt": 0.29948987532468413
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 2.1566666666666667,
+        "chronos_bolt": 4.553453114827474
+      }
+    },
+    {
+      "station_id": "15088000",
+      "name": "SAWMILL C NR SITKA AK",
+      "state": "AK",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 11.142857142857144,
+          "rmse": 12.458617212882935,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 22.911013571611814,
+          "rmse": 27.107361565720954,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 10.412290954589844,
+          "rmse": 11.641552502896763,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 15.630495969054246,
+          "rmse": 18.38001372308872,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.1227040995165053,
+        "runoff_ridge": 0.43323409092069226,
+        "chronos_bolt": 0.4440618095628025
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 70.61444444444443,
+        "chronos_bolt": 19.512332814534506
+      }
+    },
+    {
+      "station_id": "10039500",
+      "name": "BEAR RIVER AT BORDER, WY",
+      "state": "ID",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 32.857142857142854,
+          "rmse": 33.62397104108063,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 51.36825245829873,
+          "rmse": 53.55144899771121,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 17.701021466936385,
+          "rmse": 18.192921290924392,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 35.82524740090222,
+          "rmse": 36.81899370014556,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.5805486935357663,
+        "runoff_ridge": 0.2769862322269534,
+        "chronos_bolt": 0.14246507423728036
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 9.542222222222222,
+        "chronos_bolt": 38.8847910563151
+      }
+    },
+    {
+      "station_id": "07203000",
+      "name": "VERMEJO RIVER NEAR DAWSON, NM",
+      "state": "NM",
+      "rows_train": 506,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.42571428571428577,
+          "rmse": 0.46717998978674474,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.30644495755935247,
+          "rmse": 0.327494785759295,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.7605462237766812,
+          "rmse": 0.8000717103476612,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.5500608238003222,
+          "rmse": 0.5894076355645511,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.6163629370453811,
+        "runoff_ridge": 0.009045126101140968,
+        "chronos_bolt": 0.37459193685347786
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.2934999999999999,
+        "chronos_bolt": 0.4829322369893391
+      }
+    },
+    {
+      "station_id": "06043120",
+      "name": "Gallatin River above Deer Creek, near Big Sky, MT",
+      "state": "MT",
+      "rows_train": 535,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 108.0,
+          "rmse": 113.68502854063816,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 135.1380815419943,
+          "rmse": 143.375281817888,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 112.33095005580357,
+          "rmse": 119.29593297952425,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 120.57773429625293,
+          "rmse": 127.459360949867,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.49244409219823093,
+        "runoff_ridge": 0.45510041520653177,
+        "chronos_bolt": 0.052455492595237234
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 18.483333333333334,
+        "chronos_bolt": 173.51868896484376
+      }
+    },
+    {
+      "station_id": "09182400",
+      "name": "CASTLE CREEK BELOW CASTLE VALLEY NEAR MOAB, UT",
+      "state": "UT",
+      "rows_train": 540,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.06000000000000024,
+          "rmse": 0.07578164119928499,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.07132661916074921,
+          "rmse": 0.08311407423591555,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.11676818575177883,
+          "rmse": 0.13956020504066813,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.06449106565785888,
+          "rmse": 0.07830905929993691,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.837015180061684,
+        "runoff_ridge": 0.0043873545688233265,
+        "chronos_bolt": 0.15859746536949273
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.10483333333333333,
+        "chronos_bolt": 0.5532691911061605
+      }
+    },
+    {
+      "station_id": "09379025",
+      "name": "CHINLE CREEK AT CHINLE, AZ",
+      "state": "AZ",
+      "rows_train": 419,
+      "rows_eval": 10,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.0,
+          "rmse": 0.0,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.0,
+          "rmse": 0.0,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.017999557512147085,
+          "rmse": 0.018084665425282535,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.01747421950641963,
+          "rmse": 0.017556843446194733,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.028540047276909907,
+        "runoff_ridge": 0.0006461149591855993,
+        "chronos_bolt": 0.9708138377639045
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.4527777777777778,
+        "chronos_bolt": 0.013310790061950684
+      }
+    },
+    {
+      "station_id": "06620000",
+      "name": "NORTH PLATTE RIVER NEAR NORTHGATE, CO",
+      "state": "CO",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 5.5857142857142845,
+          "rmse": 6.47357265017879,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 9.769941880125538,
+          "rmse": 11.355556502487355,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 7.6693259102957585,
+          "rmse": 9.685127639315583,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 6.921084629648697,
+          "rmse": 7.321787273030895,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.5197403313366888,
+        "runoff_ridge": 0.36905894694332714,
+        "chronos_bolt": 0.1112007217199841
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 14.201666666666668,
+        "chronos_bolt": 66.37707763671875
+      }
+    },
+    {
+      "station_id": "09379200",
+      "name": "CHINLE CREEK NEAR MEXICAN WATER, AZ",
+      "state": "AZ",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.07285714285714286,
+          "rmse": 0.08984112962017214,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.08603243457133213,
+          "rmse": 0.09988534203504883,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.14084895406450543,
+          "rmse": 0.1519544875889957,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.07238282222638763,
+          "rmse": 0.08994047739628627,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.3155138972952629,
+        "runoff_ridge": 0.010440004290503256,
+        "chronos_bolt": 0.6740460984142339
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.6617777777777778,
+        "chronos_bolt": 0.3097712252934774
+      }
+    },
+    {
+      "station_id": "06052500",
+      "name": "Gallatin River at Logan MT",
+      "state": "MT",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 126.71428571428571,
+          "rmse": 130.9225507149715,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 162.5929994293526,
+          "rmse": 167.2089804859807,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 141.31847272600447,
+          "rmse": 149.72602840754814,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 144.94092089467148,
+          "rmse": 149.559951550167,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.44751687161535475,
+        "runoff_ridge": 0.47747563996516046,
+        "chronos_bolt": 0.07500748841948475
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 21.33888888888889,
+        "chronos_bolt": 127.31412556966146
+      }
+    },
+    {
+      "station_id": "09417500",
+      "name": "MEADOW VALLEY WASH AT EAGLE CYN NR URSINE, NV",
+      "state": "NV",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.45857142857142896,
+          "rmse": 0.5318834458788884,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.8431248378267826,
+          "rmse": 1.0238391704709393,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.4884573990958078,
+          "rmse": 0.5477023879563848,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.45225112508121207,
+          "rmse": 0.5273829576724465,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.6418891781613163,
+        "runoff_ridge": 0.016776486881443956,
+        "chronos_bolt": 0.3413343349572398
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.5227222222222222,
+        "chronos_bolt": 0.9829943936665855
+      }
+    },
+    {
+      "station_id": "09382000",
+      "name": "PARIA RIVER AT LEES FERRY, AZ",
+      "state": "AZ",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.45571428571428524,
+          "rmse": 0.5084289527554461,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.25529613786501454,
+          "rmse": 0.2836745261560845,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.6057490267072404,
+          "rmse": 0.6348027278951153,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.4989825289202622,
+          "rmse": 0.536682984549067,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.3475904852141673,
+        "runoff_ridge": 0.098511971155323,
+        "chronos_bolt": 0.5538975436305098
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 5.668277777777778,
+        "chronos_bolt": 3.5570466880798337
+      }
+    },
+    {
+      "station_id": "09416000",
+      "name": "MUDDY RV NR MOAPA, NV",
+      "state": "NV",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.5571428571428579,
+          "rmse": 0.5794085654478084,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.7988993624289021,
+          "rmse": 0.8714585688916276,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.815213666643415,
+          "rmse": 0.8848450506922046,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.6375434429911664,
+          "rmse": 0.6697673887893244,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.6729490307058721,
+        "runoff_ridge": 0.02220731801329378,
+        "chronos_bolt": 0.30484365128083407
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.66,
+        "chronos_bolt": 1.4569644419352212
+      }
+    },
+    {
+      "station_id": "09418500",
+      "name": "MEADOW VALLEY WASH NR CALIENTE, NV",
+      "state": "NV",
+      "rows_train": 539,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.6642857142857144,
+          "rmse": 0.7326371153969358,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.8554870134979067,
+          "rmse": 0.9573591894759325,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.390801135471889,
+          "rmse": 0.4499305283605822,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.5864716893331586,
+          "rmse": 0.6598135277636707,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.735479880085911,
+        "runoff_ridge": 0.009694033419465689,
+        "chronos_bolt": 0.2548260864946232
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 0.26361111111111113,
+        "chronos_bolt": 0.7608352467219035
+      }
+    },
+    {
+      "station_id": "06043500",
+      "name": "Gallatin River near Gallatin Gateway, MT",
+      "state": "MT",
+      "rows_train": 540,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 120.85714285714286,
+          "rmse": 127.08152613859454,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 109.59900065354309,
+          "rmse": 114.52549261724903,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 184.52838134765625,
+          "rmse": 196.0999787838677,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 118.38699760605093,
+          "rmse": 123.98536355042293,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.47428824185721374,
+        "runoff_ridge": 0.47968985794503205,
+        "chronos_bolt": 0.046021900197754186
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 20.227777777777778,
+        "chronos_bolt": 208.46156107584636
+      }
+    },
+    {
+      "station_id": "02176930",
+      "name": "CHATTOOGA RIVER AT BURRELLS FORD, NR PINE MTN, GA",
+      "state": "GA",
+      "rows_train": 541,
+      "rows_eval": 15,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 10.128571428571432,
+          "rmse": 11.169026047831697,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 7.812943586541597,
+          "rmse": 8.137405264761751,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 8.825138636997767,
+          "rmse": 9.948143757817977,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 2.6669541338131637,
+          "rmse": 3.6617342537931568,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.3021095131989649,
+        "runoff_ridge": 0.39486552568196925,
+        "chronos_bolt": 0.30302496111906585
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 26.14055555555555,
+        "chronos_bolt": 26.061584116617837
+      }
+    },
+    {
+      "station_id": "10251300",
+      "name": "AMARGOSA RV AT TECOPA, CA",
+      "state": "CA",
+      "rows_train": 501,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.03142857142857143,
+          "rmse": 0.03464101615137755,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 0.07661415465828407,
+          "rmse": 0.09471473988792684,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 0.031957131794520796,
+          "rmse": 0.041604339112277386,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 0.03080860480751855,
+          "rmse": 0.040150804436013286,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.04006641147903815,
+        "runoff_ridge": 0.009249887567873165,
+        "chronos_bolt": 0.9506837009530887
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 4.617277777777777,
+        "chronos_bolt": 0.1945944283803304
+      }
+    },
+    {
+      "station_id": "03274650",
+      "name": "WHITEWATER RIVER NEAR ECONOMY, IN",
+      "state": "IN",
+      "rows_train": 526,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 0.23,
+          "rmse": 0.274824619400394,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 10.302240433657582,
+          "rmse": 12.01640915115384,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 1.8530099596296037,
+          "rmse": 1.8774683006998016,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 2.7206232194456446,
+          "rmse": 3.0851823313732547,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.5361241259342492,
+        "runoff_ridge": 0.20784489898892633,
+        "chronos_bolt": 0.2560309750768245
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 7.753611111111111,
+        "chronos_bolt": 16.235918245951336
+      }
+    },
+    {
+      "station_id": "05014500",
+      "name": "Swiftcurrent Creek at Many Glacier MT",
+      "state": "MT",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 22.5,
+          "rmse": 24.66440465818823,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 20.72864383219073,
+          "rmse": 26.122008599647522,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 23.30312020438058,
+          "rmse": 25.575648026326036,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 20.327427161266634,
+          "rmse": 24.07174740394418,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.3717578723075181,
+        "runoff_ridge": 0.5472379146442308,
+        "chronos_bolt": 0.0810042130482511
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 29.440555555555555,
+        "chronos_bolt": 135.11344510396322
+      }
+    },
+    {
+      "station_id": "01428750",
+      "name": "West Branch Lackawaxen River near Aldenville, PA",
+      "state": "PA",
+      "rows_train": 541,
+      "rows_eval": 14,
+      "eval_horizon": 7,
+      "members": {
+        "persistence_lag1": {
+          "mae": 12.485714285714286,
+          "rmse": 17.215856478424598,
+          "n": 7
+        },
+        "runoff_ridge": {
+          "mae": 10.222381436106337,
+          "rmse": 13.831395556275682,
+          "n": 7
+        },
+        "chronos_bolt": {
+          "mae": 10.527094377790178,
+          "rmse": 14.632114097637542,
+          "n": 7
+        },
+        "ensemble_blend": {
+          "mae": 10.969693526237437,
+          "rmse": 15.007777924312368,
+          "n": 7
+        }
+      },
+      "weights": {
+        "persistence_lag1": 0.3784580300751015,
+        "runoff_ridge": 0.4762789181264576,
+        "chronos_bolt": 0.1452630517984409
+      },
+      "rolling_mae_train": {
+        "persistence_lag1": 25.169444444444444,
+        "chronos_bolt": 65.57468154907227
+      }
+    }
+  ]
+}

@@ -74,6 +74,24 @@ spread (max 8 AK, 8 MT, 4 WY, 3 elsewhere). Skewed toward Mountain West +
 Yellowstone + Alaska panhandle hydrology, with sentinel CONUS sites for
 contrast.
 
+## Current baseline (`benchmarks/baseline_v1.json`)
+
+14-day held-out eval window, 7-day forecast horizon, 38/40 stations succeeded
+(2 stations skipped: USGS hadn't reported recent enough daily values for the
+held-out window):
+
+| forecaster        | mean MAE (cfs) |
+|-------------------|----------------|
+| persistence_lag1  | 18.05          |
+| runoff_ridge      | 20.66          |
+| chronos_bolt      | 21.25          |
+| **ensemble_blend**| **17.88**      |
+
+The blend already beats every individual member because per-station
+inverse-MAE weights down-weight the foundation model on hard snowmelt sites
+(e.g. 06195600, 15052500) where it can't see the SWE / temperature forcing
+that ridge gets.
+
 ## Roadmap toward better MAE
 
 - [x] Baseline ensemble: persistence + ridge + Chronos-Bolt zero-shot
