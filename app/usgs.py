@@ -64,53 +64,72 @@ def fetch_daily_discharge(site_no: str, start: date, end: date, *, max_age_hours
     rec = _load_record(site_no)
     have: dict[str, float] = rec.get("rows", {})
     last_known = rec.get("last_known")  # ISO string of latest date we hold
+    first_known = rec.get("first_known") or (min(have.keys()) if have else None)
 
-    fetch_from = start
+    needs_backward = bool(first_known) and first_known > start.isoformat()
+    needs_forward = (not last_known) or (last_known < end.isoformat())
+
+    fetched_at = rec.get("fetched_at", 0)
+    age = time.time() - float(fetched_at) if fetched_at else float("inf")
+    if not needs_backward and last_known and last_known >= end.isoformat() and age < max_age_hours * 3600:
+        return _slice_record(have, start, end)
+
+    fwd_from = start
     if last_known:
         try:
             ld = date.fromisoformat(last_known)
-            # Re-fetch the last known day in case USGS revised it; use ld (not ld+1).
             if ld >= start:
-                fetch_from = ld
+                fwd_from = ld
         except ValueError:
             pass
 
-    # Skip if record is fresh enough and already covers `end`.
-    fetched_at = rec.get("fetched_at", 0)
-    age = time.time() - float(fetched_at) if fetched_at else float("inf")
-    if last_known and last_known >= end.isoformat() and age < max_age_hours * 3600:
-        return _slice_record(have, start, end)
+    fetched_any = False
+    if needs_backward:
+        bwd_from = start
+        bwd_to = (date.fromisoformat(first_known) - timedelta(days=1)) if first_known else end
+        if bwd_from <= bwd_to:
+            fetched_any = _fetch_and_merge(site_no, have, bwd_from, bwd_to) or fetched_any
 
-    if fetch_from <= end:
-        params = {
-            "format": "json",
-            "sites": site_no,
-            "startDT": fetch_from.isoformat(),
-            "endDT": end.isoformat(),
-            "parameterCd": "00060",
-            "siteStatus": "all",
+    if needs_forward and fwd_from <= end:
+        fetched_any = _fetch_and_merge(site_no, have, fwd_from, end) or fetched_any
+
+    if fetched_any and have:
+        rec = {
+            "site_no": site_no,
+            "rows": have,
+            "first_known": min(have.keys()),
+            "last_known": max(have.keys()),
+            "fetched_at": time.time(),
         }
-        url = DV_URL + "?" + urlencode(params)
-        time.sleep(0.05 + random.random() * 0.10)
-        try:
-            payload = _http_json(url)
-        except Exception:
-            # Network blip — return what we already have.
-            return _slice_record(have, start, end)
-        df_new = _parse_dv(payload)
-        for _, r in df_new.iterrows():
-            have[r["date"].isoformat()] = float(r["q_cfs"])
-        if have:
-            new_last = max(have.keys())
-            rec = {
-                "site_no": site_no,
-                "rows": have,
-                "last_known": new_last,
-                "fetched_at": time.time(),
-            }
-            _save_record(site_no, rec)
+        _save_record(site_no, rec)
 
     return _slice_record(have, start, end)
+
+
+def _fetch_and_merge(site_no: str, have: dict[str, float], start: date, end: date) -> bool:
+    """Fetch [start, end] from USGS and merge into `have`. Returns True if anything was added."""
+    params = {
+        "format": "json",
+        "sites": site_no,
+        "startDT": start.isoformat(),
+        "endDT": end.isoformat(),
+        "parameterCd": "00060",
+        "siteStatus": "all",
+    }
+    url = DV_URL + "?" + urlencode(params)
+    time.sleep(0.05 + random.random() * 0.10)
+    try:
+        payload = _http_json(url)
+    except Exception:
+        return False
+    df_new = _parse_dv(payload)
+    added = False
+    for _, r in df_new.iterrows():
+        k = r["date"].isoformat()
+        if k not in have:
+            added = True
+        have[k] = float(r["q_cfs"])
+    return added or not df_new.empty
 
 
 def _slice_record(have: dict[str, float], start: date, end: date) -> pd.DataFrame:

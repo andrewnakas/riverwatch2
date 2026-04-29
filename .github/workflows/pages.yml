@@ -3,9 +3,10 @@ name: Build & deploy GitHub Pages
 on:
   push:
     branches: [main]
-  schedule:
-    # Hourly (sharded build keeps wall-time well under an hour)
-    - cron: "0 * * * *"
+  # Hourly cron temporarily paused while v9 backfills 30yr per-sensor history
+  # from cold cache. Re-enable once builds are back to ~1-day-delta runtimes.
+  # schedule:
+  #   - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -23,6 +24,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 350  # cold 30yr backfill can take hours; subsequent runs are 1-day deltas
     strategy:
       fail-fast: false
       matrix:

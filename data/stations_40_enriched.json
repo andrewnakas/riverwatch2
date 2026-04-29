@@ -1,5 +1,5 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: ~2000 USGS gauges across all 50 states + DC, harvested from active daily-mean discharge sites with drainage area >= 50 sqmi",
+  "description": "Live zero-shot river-discharge forecast subset: ~1893 USGS gauges across all 50 states + DC, harvested from active daily-mean discharge sites with drainage area >= 50 sqmi",
   "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
@@ -4886,87 +4886,6 @@
       "site_no": "09379700"
     },
     {
-      "id": "03589500",
-      "name": "TENNESSEE RIVER AT FLORENCE AL",
-      "state": "AL",
-      "lat": 34.78703254,
-      "lon": -87.6700288,
-      "drain_area_sqmi": 30810.0,
-      "site_no": "03589500"
-    },
-    {
-      "id": "06467500",
-      "name": "MISSOURI RIVER AT YANKTON, SD",
-      "state": "SD",
-      "lat": 42.86608985,
-      "lon": -97.3939586,
-      "drain_area_sqmi": 279500.0,
-      "site_no": "06467500"
-    },
-    {
-      "id": "05083500",
-      "name": "RED RIVER OF THE NORTH AT OSLO, MN",
-      "state": "MN",
-      "lat": 48.19387265,
-      "lon": -97.140628,
-      "drain_area_sqmi": 31200.0,
-      "site_no": "05083500"
-    },
-    {
-      "id": "03322420",
-      "name": "OHIO RIVER AT UNIONTOWN DAM, KY",
-      "state": "KY",
-      "lat": 37.79715556,
-      "lon": -87.9983356,
-      "drain_area_sqmi": 108000.0,
-      "site_no": "03322420"
-    },
-    {
-      "id": "07355500",
-      "name": "Red River at Alexandria, LA",
-      "state": "LA",
-      "lat": 31.31027778,
-      "lon": -92.4388333,
-      "drain_area_sqmi": 67500.0,
-      "site_no": "07355500"
-    },
-    {
-      "id": "06330000",
-      "name": "MISSOURI RIVER NR WILLISTON, ND",
-      "state": "ND",
-      "lat": 48.1080792,
-      "lon": -103.7146446,
-      "drain_area_sqmi": 164500.0,
-      "site_no": "06330000"
-    },
-    {
-      "id": "301141089320300",
-      "name": "EAST PEARL RIVER AT CSX RAILROAD NR CLAIBORNE, MS",
-      "state": "MS",
-      "lat": 30.1947222,
-      "lon": -89.5341667,
-      "drain_area_sqmi": 8674.0,
-      "site_no": "301141089320300"
-    },
-    {
-      "id": "07263500",
-      "name": "Arkansas River at Little Rock, AR",
-      "state": "AR",
-      "lat": 34.74933056,
-      "lon": -92.2667,
-      "drain_area_sqmi": 158000.0,
-      "site_no": "07263500"
-    },
-    {
-      "id": "03435000",
-      "name": "CUMBERLAND RIVER BELOW CHEATHAM DAM, TN",
-      "state": "TN",
-      "lat": 36.32290298,
-      "lon": -87.2282645,
-      "drain_area_sqmi": 14163.0,
-      "site_no": "03435000"
-    },
-    {
       "id": "06909000",
       "name": "Missouri River at Boonville, MO",
       "state": "MO",
@@ -4974,24 +4893,6 @@
       "lon": -92.7454638,
       "drain_area_sqmi": 500700.0,
       "site_no": "06909000"
-    },
-    {
-      "id": "03384500",
-      "name": "OHIO RIVER AT DAM 51 AT GOLCONDA, IL",
-      "state": "IL",
-      "lat": 37.3578302,
-      "lon": -88.4825424,
-      "drain_area_sqmi": 143900.0,
-      "site_no": "03384500"
-    },
-    {
-      "id": "05411500",
-      "name": "Mississippi River at Clayton, IA",
-      "state": "IA",
-      "lat": 42.9035981,
-      "lon": -91.1451296,
-      "drain_area_sqmi": 79200.0,
-      "site_no": "05411500"
     },
     {
       "id": "07316000",
@@ -5010,15 +4911,6 @@
       "lon": -96.775394,
       "drain_area_sqmi": 70400.0,
       "site_no": "06796000"
-    },
-    {
-      "id": "01036390",
-      "name": "Penobscot River at Eddington, Maine",
-      "state": "ME",
-      "lat": 44.82666667,
-      "lon": -68.6966667,
-      "drain_area_sqmi": 7515.0,
-      "site_no": "01036390"
     },
     {
       "id": "011230695",
@@ -5183,33 +5075,6 @@
       "site_no": "05340500"
     },
     {
-      "id": "09404120",
-      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
-      "state": "AZ",
-      "lat": 36.25971509,
-      "lon": -112.8907702,
-      "drain_area_sqmi": 147931.0,
-      "site_no": "09404120"
-    },
-    {
-      "id": "02079500",
-      "name": "ROANOKE RIVER AT BUGGS ISLAND, VA",
-      "state": "VA",
-      "lat": 36.60319824,
-      "lon": -78.2977743,
-      "drain_area_sqmi": 7866.0,
-      "site_no": "02079500"
-    },
-    {
-      "id": "03206000",
-      "name": "OHIO RIVER AT HUNTINGTON, WV",
-      "state": "WV",
-      "lat": 38.41341549,
-      "lon": -82.500434,
-      "drain_area_sqmi": 55906.0,
-      "site_no": "03206000"
-    },
-    {
       "id": "01129500",
       "name": "CONNECTICUT RIVER AT NORTH STRATFORD, NH",
       "state": "NH",
@@ -5217,24 +5082,6 @@
       "lon": -71.63120018,
       "drain_area_sqmi": 799.0,
       "site_no": "01129500"
-    },
-    {
-      "id": "08447410",
-      "name": "Pecos Rv nr Langtry, TX",
-      "state": "TX",
-      "lat": 29.8029823,
-      "lon": -101.4462223,
-      "drain_area_sqmi": 44015.0,
-      "site_no": "08447410"
-    },
-    {
-      "id": "02081000",
-      "name": "ROANOKE RIVER NEAR SCOTLAND NECK, NC",
-      "state": "NC",
-      "lat": 36.20916667,
-      "lon": -77.38388889,
-      "drain_area_sqmi": 8671.0,
-      "site_no": "02081000"
     },
     {
       "id": "09379500",
@@ -5262,15 +5109,6 @@
       "lon": -144.744722,
       "drain_area_sqmi": 24030.0,
       "site_no": "15214000"
-    },
-    {
-      "id": "14019200",
-      "name": "COLUMBIA RIVER AT MCNARY DAM,NEAR UMATILLA, OR",
-      "state": "OR",
-      "lat": 45.93268257,
-      "lon": -119.2965915,
-      "drain_area_sqmi": 214000.0,
-      "site_no": "14019200"
     },
     {
       "id": "09371010",
@@ -5318,24 +5156,6 @@
       "site_no": "13172454"
     },
     {
-      "id": "03575500",
-      "name": "TENNESSEE RIVER AT WHITESBURG AL",
-      "state": "AL",
-      "lat": 34.57175806,
-      "lon": -86.5580466,
-      "drain_area_sqmi": 25610.0,
-      "site_no": "03575500"
-    },
-    {
-      "id": "06439500",
-      "name": "CHEYENNE RIVER NEAR EAGLE BUTTE SD",
-      "state": "SD",
-      "lat": 44.69637199,
-      "lon": -101.2173711,
-      "drain_area_sqmi": 24235.0,
-      "site_no": "06439500"
-    },
-    {
       "id": "05137500",
       "name": "RAINY RIVER NEAR BOAT LANDING AT WHEELERS POINT,MN",
       "state": "MN",
@@ -5343,24 +5163,6 @@
       "lon": -94.7041111,
       "drain_area_sqmi": 21200.0,
       "site_no": "05137500"
-    },
-    {
-      "id": "03238000",
-      "name": "OHIO RIVER AT MAYSVILLE, KY",
-      "state": "KY",
-      "lat": 38.68410948,
-      "lon": -83.7838888,
-      "drain_area_sqmi": 70130.0,
-      "site_no": "03238000"
-    },
-    {
-      "id": "07344400",
-      "name": "Red River near Hosston, LA.",
-      "state": "LA",
-      "lat": 32.8931941,
-      "lon": -93.8224008,
-      "drain_area_sqmi": 57041.0,
-      "site_no": "07344400"
     },
     {
       "id": "05124000",
@@ -5381,24 +5183,6 @@
       "site_no": "02489000"
     },
     {
-      "id": "07250500",
-      "name": "AR River at Van Buren, AR",
-      "state": "AR",
-      "lat": 35.43085,
-      "lon": -94.3565139,
-      "drain_area_sqmi": 150482.0,
-      "site_no": "07250500"
-    },
-    {
-      "id": "034315005",
-      "name": "CUMBERLAND RIVER AT WOODLAND ST AT NASHVILLE, TN",
-      "state": "TN",
-      "lat": 36.16727879,
-      "lon": -86.7763875,
-      "drain_area_sqmi": 12842.0,
-      "site_no": "034315005"
-    },
-    {
       "id": "06906500",
       "name": "Missouri River at Glasgow, MO",
       "state": "MO",
@@ -5415,15 +5199,6 @@
       "lon": -87.75638889,
       "drain_area_sqmi": 28635.0,
       "site_no": "03377500"
-    },
-    {
-      "id": "05389500",
-      "name": "Mississippi River at McGregor, IA",
-      "state": "IA",
-      "lat": 43.02701224,
-      "lon": -91.1726298,
-      "drain_area_sqmi": 67500.0,
-      "site_no": "05389500"
     },
     {
       "id": "07315500",
@@ -5543,15 +5318,6 @@
       "site_no": "08407000"
     },
     {
-      "id": "02169625",
-      "name": "CONGAREE RIVER AT CONGAREE NP NEAR GADSDEN, SC",
-      "state": "SC",
-      "lat": 33.81071,
-      "lon": -80.8670348,
-      "drain_area_sqmi": 8290.0,
-      "site_no": "02169625"
-    },
-    {
       "id": "01096500",
       "name": "NASHUA RIVER AT EAST PEPPERELL, MA",
       "state": "MA",
@@ -5588,15 +5354,6 @@
       "site_no": "04292000"
     },
     {
-      "id": "03033000",
-      "name": "Allegheny River near Rimer, PA",
-      "state": "PA",
-      "lat": 40.9583333,
-      "lon": -79.5472222,
-      "drain_area_sqmi": 8389.0,
-      "site_no": "03033000"
-    },
-    {
       "id": "02343805",
       "name": "CHATTAHOOCHEE RIVER AT MILE 46 NEAR COLUMBIA, ALA",
       "state": "GA",
@@ -5606,24 +5363,6 @@
       "site_no": "02343805"
     },
     {
-      "id": "04085059",
-      "name": "FOX RIVER AT DE PERE, WI",
-      "state": "WI",
-      "lat": 44.44944406,
-      "lon": -88.064477,
-      "drain_area_sqmi": 6110.0,
-      "site_no": "04085059"
-    },
-    {
-      "id": "09383100",
-      "name": "COLORADO R ABV LITTLE COLORADO R NR DESERT VIEW",
-      "state": "AZ",
-      "lat": 36.2040833,
-      "lon": -111.8007222,
-      "drain_area_sqmi": 114272.0,
-      "site_no": "09383100"
-    },
-    {
       "id": "02025500",
       "name": "JAMES RIVER AT HOLCOMB ROCK, VA",
       "state": "VA",
@@ -5631,15 +5370,6 @@
       "lon": -79.2625287,
       "drain_area_sqmi": 3256.0,
       "site_no": "02025500"
-    },
-    {
-      "id": "03201500",
-      "name": "OHIO RIVER AT POINT PLEASANT, WV",
-      "state": "WV",
-      "lat": 38.84396959,
-      "lon": -82.139589,
-      "drain_area_sqmi": 52796.0,
-      "site_no": "03201500"
     },
     {
       "id": "01076500",
@@ -5676,15 +5406,6 @@
       "lon": -109.422914,
       "drain_area_sqmi": 19400.0,
       "site_no": "09234500"
-    },
-    {
-      "id": "06645000",
-      "name": "NORTH PLATTE RIVER BELOW CASPER, WY",
-      "state": "WY",
-      "lat": 42.85888889,
-      "lon": -106.2113889,
-      "drain_area_sqmi": 12574.0,
-      "site_no": "06645000"
     },
     {
       "id": "15024800",
@@ -5750,15 +5471,6 @@
       "site_no": "13172500"
     },
     {
-      "id": "02423000",
-      "name": "ALABAMA RIVER AT SELMA AL",
-      "state": "AL",
-      "lat": 32.40569225,
-      "lon": -87.0186007,
-      "drain_area_sqmi": 17095.0,
-      "site_no": "02423000"
-    },
-    {
       "id": "06477000",
       "name": "JAMES RIVER NEAR FORESTBURG,SD",
       "state": "SD",
@@ -5820,15 +5532,6 @@
       "lon": -94.4324373,
       "drain_area_sqmi": 145940.0,
       "site_no": "07249455"
-    },
-    {
-      "id": "03426310",
-      "name": "CUMBERLAND RIVER AT OLD HICKORY DAM (TW), TN",
-      "state": "TN",
-      "lat": 36.29711845,
-      "lon": -86.6586324,
-      "drain_area_sqmi": 11673.0,
-      "site_no": "03426310"
     },
     {
       "id": "06895500",
@@ -6038,15 +5741,6 @@
       "site_no": "02356000"
     },
     {
-      "id": "04084500",
-      "name": "FOX R AT RAPIDE CROCHE DAM NEAR WRIGHTSTOWN, WI",
-      "state": "WI",
-      "lat": 44.3174889,
-      "lon": -88.1973263,
-      "drain_area_sqmi": 6010.0,
-      "site_no": "04084500"
-    },
-    {
       "id": "09519000",
       "name": "ENTERPRISE CANAL AT GILLESPIE DAM, AZ",
       "state": "AZ",
@@ -6063,15 +5757,6 @@
       "lon": -79.3672547,
       "drain_area_sqmi": 3076.0,
       "site_no": "02024752"
-    },
-    {
-      "id": "03151000",
-      "name": "OHIO RIVER AT PARKERSBURG, WV",
-      "state": "WV",
-      "lat": 39.2681306,
-      "lon": -81.5637358,
-      "drain_area_sqmi": 35625.0,
-      "site_no": "03151000"
     },
     {
       "id": "01081000",
@@ -6110,15 +5795,6 @@
       "site_no": "10126000"
     },
     {
-      "id": "06642000",
-      "name": "NORTH PLATTE RIVER AT ALCOVA, WY",
-      "state": "WY",
-      "lat": 42.5741069,
-      "lon": -106.692594,
-      "drain_area_sqmi": 10812.0,
-      "site_no": "06642000"
-    },
-    {
       "id": "15564900",
       "name": "KOYUKUK R AT HUGHES AK",
       "state": "AK",
@@ -6126,24 +5802,6 @@
       "lon": -154.2610644,
       "drain_area_sqmi": 17990.0,
       "site_no": "15564900"
-    },
-    {
-      "id": "14102000",
-      "name": "DESCHUTES RIVER AT SHERARS BRIDGE, OR",
-      "state": "OR",
-      "lat": 45.26102778,
-      "lon": -121.03636111,
-      "drain_area_sqmi": 10200.0,
-      "site_no": "14102000"
-    },
-    {
-      "id": "07123000",
-      "name": "ARKANSAS RIVER AT LA JUNTA, CO",
-      "state": "CO",
-      "lat": 37.99055556,
-      "lon": -103.5319444,
-      "drain_area_sqmi": 12210.0,
-      "site_no": "07123000"
     },
     {
       "id": "12436500",
@@ -6209,15 +5867,6 @@
       "site_no": "05288500"
     },
     {
-      "id": "03216000",
-      "name": "OHIO RIVER AT ASHLAND, KY",
-      "state": "KY",
-      "lat": 38.4840255,
-      "lon": -82.6415499,
-      "drain_area_sqmi": 60750.0,
-      "site_no": "03216000"
-    },
-    {
       "id": "07348000",
       "name": "Twelvemile Bayou near Dixie, LA",
       "state": "LA",
@@ -6270,15 +5919,6 @@
       "lon": -94.0638889,
       "drain_area_sqmi": 485100.0,
       "site_no": "06894650"
-    },
-    {
-      "id": "05585500",
-      "name": "ILLINOIS RIVER AT MEREDOSIA, IL",
-      "state": "IL",
-      "lat": 39.83116667,
-      "lon": -90.5598333,
-      "drain_area_sqmi": 26029.0,
-      "site_no": "05585500"
     },
     {
       "id": "05489500",
@@ -6542,15 +6182,6 @@
       "site_no": "10118000"
     },
     {
-      "id": "06641000",
-      "name": "NORTH PLATTE RIVER BELOW PATHFINDER RESERVOIR, WY",
-      "state": "WY",
-      "lat": 42.4649402,
-      "lon": -106.8470423,
-      "drain_area_sqmi": 10702.0,
-      "site_no": "06641000"
-    },
-    {
       "id": "15875000",
       "name": "COLVILLE R AT UMIAT AK",
       "state": "AK",
@@ -6567,15 +6198,6 @@
       "lon": -122.9614893,
       "drain_area_sqmi": 8350.0,
       "site_no": "14197900"
-    },
-    {
-      "id": "07119700",
-      "name": "ARKANSAS RIVER AT CATLIN DAM, NEAR FOWLER, CO.",
-      "state": "CO",
-      "lat": 38.12583934,
-      "lon": -103.9119006,
-      "drain_area_sqmi": 10901.0,
-      "site_no": "07119700"
     },
     {
       "id": "12399500",
@@ -6639,24 +6261,6 @@
       "lon": -93.3946659,
       "drain_area_sqmi": 17280.0,
       "site_no": "05283500"
-    },
-    {
-      "id": "03438220",
-      "name": "CUMBERLAND RIVER NEAR GRAND RIVERS, KY",
-      "state": "KY",
-      "lat": 37.02172174,
-      "lon": -88.2230852,
-      "drain_area_sqmi": 17598.0,
-      "site_no": "03438220"
-    },
-    {
-      "id": "07350020",
-      "name": "Loggy Bayou Near East Point,LA.",
-      "state": "LA",
-      "lat": 32.1946083,
-      "lon": -93.4418526,
-      "drain_area_sqmi": 2648.0,
-      "site_no": "07350020"
     },
     {
       "id": "05117500",
@@ -6857,15 +6461,6 @@
       "site_no": "01168500"
     },
     {
-      "id": "01356000",
-      "name": "MOHAWK RIVER AT VISCHER FERRY DAM NY",
-      "state": "NY",
-      "lat": 42.80419444,
-      "lon": -73.8476667,
-      "drain_area_sqmi": 3371.0,
-      "site_no": "01356000"
-    },
-    {
       "id": "10321000",
       "name": "HUMBOLDT RV NR CARLIN, NV",
       "state": "NV",
@@ -6981,15 +6576,6 @@
       "lon": -106.127598,
       "drain_area_sqmi": 5924.0,
       "site_no": "06317000"
-    },
-    {
-      "id": "15478000",
-      "name": "TANANA R AT BIG DELTA AK",
-      "state": "AK",
-      "lat": 64.1551284,
-      "lon": -145.8523536,
-      "drain_area_sqmi": 13470.0,
-      "site_no": "15478000"
     },
     {
       "id": "13181000",
@@ -7964,15 +7550,6 @@
       "site_no": "07076750"
     },
     {
-      "id": "07030000",
-      "name": "HATCHIE RIVER NEAR STANTON, TN",
-      "state": "TN",
-      "lat": 35.52285789,
-      "lon": -89.3492375,
-      "drain_area_sqmi": 1975.0,
-      "site_no": "07030000"
-    },
-    {
       "id": "05490600",
       "name": "Des Moines River at St. Francisville, MO",
       "state": "MO",
@@ -8061,15 +7638,6 @@
       "lon": -97.3351944,
       "drain_area_sqmi": 40490.0,
       "site_no": "07144300"
-    },
-    {
-      "id": "03329500",
-      "name": "WABASH RIVER AT DELPHI, IN",
-      "state": "IN",
-      "lat": 40.59127778,
-      "lon": -86.6979167,
-      "drain_area_sqmi": 4069.0,
-      "site_no": "03329500"
     },
     {
       "id": "01589025",
@@ -8207,15 +7775,6 @@
       "site_no": "03184000"
     },
     {
-      "id": "01137940",
-      "name": "AMMONOOSUC RIVER BELOW LISBON DAM, AT LISBON, NH",
-      "state": "NH",
-      "lat": 44.2125,
-      "lon": -71.9141667,
-      "drain_area_sqmi": 288.0,
-      "site_no": "01137940"
-    },
-    {
       "id": "08160400",
       "name": "Colorado Rv abv La Grange, TX",
       "state": "TX",
@@ -8295,15 +7854,6 @@
       "lon": -123.5344618,
       "drain_area_sqmi": 8475.0,
       "site_no": "11523000"
-    },
-    {
-      "id": "12391400",
-      "name": "Clark Fork bl Noxon Rapids Dam nr Noxon MT",
-      "state": "MT",
-      "lat": 47.9612444,
-      "lon": -115.7335056,
-      "drain_area_sqmi": 21709.0,
-      "site_no": "12391400"
     },
     {
       "id": "13094000",
@@ -8765,24 +8315,6 @@
       "site_no": "05270700"
     },
     {
-      "id": "03414000",
-      "name": "CUMBERLAND RIVER NEAR ROWENA, KY",
-      "state": "KY",
-      "lat": 36.88395484,
-      "lon": -85.1394008,
-      "drain_area_sqmi": 5790.0,
-      "site_no": "03414000"
-    },
-    {
-      "id": "07380120",
-      "name": "Amite River at Port Vincent, LA",
-      "state": "LA",
-      "lat": 30.3326939,
-      "lon": -90.8520419,
-      "drain_area_sqmi": 1596.0,
-      "site_no": "07380120"
-    },
-    {
       "id": "05059000",
       "name": "SHEYENNE RIVER NEAR KINDRED, ND",
       "state": "ND",
@@ -9197,15 +8729,6 @@
       "site_no": "03287500"
     },
     {
-      "id": "07385500",
-      "name": "BAYOU TECHE @ ARNAUDVILLE, LA",
-      "state": "LA",
-      "lat": 30.3974195,
-      "lon": -91.9306728,
-      "drain_area_sqmi": 1530.0,
-      "site_no": "07385500"
-    },
-    {
       "id": "06337000",
       "name": "LITTLE MISSOURI RIVER NEAR WATFORD CITY, ND",
       "state": "ND",
@@ -9240,15 +8763,6 @@
       "lon": -86.9946574,
       "drain_area_sqmi": 1805.0,
       "site_no": "03584600"
-    },
-    {
-      "id": "06922500",
-      "name": "Osage River at Warsaw, MO",
-      "state": "MO",
-      "lat": 38.2445,
-      "lon": -93.3871111,
-      "drain_area_sqmi": 11500.0,
-      "site_no": "06922500"
     },
     {
       "id": "05542500",
@@ -9348,15 +8862,6 @@
       "lon": -77.7301944,
       "drain_area_sqmi": 281.0,
       "site_no": "01619500"
-    },
-    {
-      "id": "01368000",
-      "name": "Wallkill River near Unionville Ny",
-      "state": "NJ",
-      "lat": 41.26009487,
-      "lon": -74.5484934,
-      "drain_area_sqmi": 140.0,
-      "site_no": "01368000"
     },
     {
       "id": "04121970",
@@ -9611,24 +9116,6 @@
       "site_no": "05316770"
     },
     {
-      "id": "03315500",
-      "name": "GREEN RIVER AT LOCK 4 AT WOODBURY, KY",
-      "state": "KY",
-      "lat": 37.18226814,
-      "lon": -86.62998829,
-      "drain_area_sqmi": 5404.0,
-      "site_no": "03315500"
-    },
-    {
-      "id": "07353000",
-      "name": "Saline Byu nr Clarence, LA",
-      "state": "LA",
-      "lat": 31.76805556,
-      "lon": -92.9694444,
-      "drain_area_sqmi": 1386.0,
-      "site_no": "07353000"
-    },
-    {
       "id": "05058700",
       "name": "SHEYENNE RIVER AT LISBON, ND",
       "state": "ND",
@@ -9636,15 +9123,6 @@
       "lon": -97.6792652,
       "drain_area_sqmi": 8190.0,
       "site_no": "05058700"
-    },
-    {
-      "id": "07288700",
-      "name": "BIG SUNFLOWER RIVER NR ANGUILLA, MS",
-      "state": "MS",
-      "lat": 32.9717936,
-      "lon": -90.7778758,
-      "drain_area_sqmi": 2578.67,
-      "site_no": "07288700"
     },
     {
       "id": "07060500",
@@ -10041,15 +9519,6 @@
       "lon": -84.8311989,
       "drain_area_sqmi": 5225.0,
       "site_no": "03287250"
-    },
-    {
-      "id": "08012150",
-      "name": "Mermentau River At Mermentau, LA",
-      "state": "LA",
-      "lat": 30.19,
-      "lon": -92.5905556,
-      "drain_area_sqmi": 1381.0,
-      "site_no": "08012150"
     },
     {
       "id": "05058500",
@@ -10592,15 +10061,6 @@
       "site_no": "02236000"
     },
     {
-      "id": "07139500",
-      "name": "ARKANSAS R AT DODGE CITY, KS",
-      "state": "KS",
-      "lat": 37.7447427,
-      "lon": -100.0329126,
-      "drain_area_sqmi": 30600.0,
-      "site_no": "07139500"
-    },
-    {
       "id": "03327500",
       "name": "WABASH RIVER AT PERU, IN",
       "state": "IN",
@@ -10790,15 +10250,6 @@
       "site_no": "09224700"
     },
     {
-      "id": "15202000",
-      "name": "TAZLINA R NR GLENNALLEN AK",
-      "state": "AK",
-      "lat": 62.055556,
-      "lon": -145.426111,
-      "drain_area_sqmi": 2660.0,
-      "site_no": "15202000"
-    },
-    {
       "id": "14372300",
       "name": "ROGUE RIVER NEAR AGNESS, OR",
       "state": "OR",
@@ -10934,15 +10385,6 @@
       "site_no": "03528000"
     },
     {
-      "id": "06918070",
-      "name": "Osage River above Schell City, MO",
-      "state": "MO",
-      "lat": 38.0558611,
-      "lon": -94.1454167,
-      "drain_area_sqmi": 5410.0,
-      "site_no": "06918070"
-    },
-    {
       "id": "05583000",
       "name": "SANGAMON RIVER NEAR OAKFORD, IL",
       "state": "IL",
@@ -11051,15 +10493,6 @@
       "site_no": "01381000"
     },
     {
-      "id": "04121650",
-      "name": "MUSKEGON RIVER AT BIG RAPIDS, MI",
-      "state": "MI",
-      "lat": 43.693634,
-      "lon": -85.4675442,
-      "drain_area_sqmi": 1751.0,
-      "site_no": "04121650"
-    },
-    {
       "id": "08329918",
       "name": "RIO GRANDE AT ALAMEDA BRIDGE AT ALAMEDA, NM",
       "state": "NM",
@@ -11123,15 +10556,6 @@
       "site_no": "01438500"
     },
     {
-      "id": "02223382",
-      "name": "OCONEE RIVER NEAR DUBLIN, GA",
-      "state": "GA",
-      "lat": 32.69488308,
-      "lon": -82.9387549,
-      "drain_area_sqmi": 4100.0,
-      "site_no": "02223382"
-    },
-    {
       "id": "04065106",
       "name": "MENOMINEE RIVER AT NIAGARA, WI",
       "state": "WI",
@@ -11157,15 +10581,6 @@
       "lon": -78.5347329,
       "drain_area_sqmi": 1372.0,
       "site_no": "01629500"
-    },
-    {
-      "id": "03204000",
-      "name": "GUYANDOTTE RIVER AT BRANCHLAND, WV",
-      "state": "WV",
-      "lat": 38.2208561,
-      "lon": -82.2013093,
-      "drain_area_sqmi": 1225.0,
-      "site_no": "03204000"
     },
     {
       "id": "01094000",
@@ -11229,15 +10644,6 @@
       "lon": -121.9622313,
       "drain_area_sqmi": 3920.0,
       "site_no": "11509500"
-    },
-    {
-      "id": "07099400",
-      "name": "ARKANSAS RIVER ABOVE PUEBLO, CO",
-      "state": "CO",
-      "lat": 38.2716694,
-      "lon": -104.718033,
-      "drain_area_sqmi": 4670.0,
-      "site_no": "07099400"
     },
     {
       "id": "12422000",
@@ -11366,15 +10772,6 @@
       "site_no": "07019000"
     },
     {
-      "id": "05527000",
-      "name": "KANKAKEE RIVER AT CUSTER PARK, IL",
-      "state": "IL",
-      "lat": 41.2461111,
-      "lon": -88.1275,
-      "drain_area_sqmi": 4810.0,
-      "site_no": "05527000"
-    },
-    {
       "id": "05464730",
       "name": "Cedar River below Indian Creek at Cedar Rapids, IA",
       "state": "IA",
@@ -11501,15 +10898,6 @@
       "site_no": "02169000"
     },
     {
-      "id": "01110500",
-      "name": "BLACKSTONE RIVER AT NORTHBRIDGE, MA",
-      "state": "MA",
-      "lat": 42.15370688,
-      "lon": -71.65201138,
-      "drain_area_sqmi": 141.0,
-      "site_no": "01110500"
-    },
-    {
       "id": "01349527",
       "name": "MOHAWK R ABOVE STATE HIGHWAY 30A AT FONDA NY",
       "state": "NY",
@@ -11580,15 +10968,6 @@
       "lon": -79.7844925,
       "drain_area_sqmi": 1371.0,
       "site_no": "02016500"
-    },
-    {
-      "id": "01608070",
-      "name": "SOUTH BRANCH POTOMAC RIVER NEAR MOOREFIELD, WV",
-      "state": "WV",
-      "lat": 39.10391667,
-      "lon": -78.9593056,
-      "drain_area_sqmi": 1216.0,
-      "site_no": "01608070"
     },
     {
       "id": "01089500",
@@ -11697,15 +11076,6 @@
       "lon": -112.8794444,
       "drain_area_sqmi": 13600.0,
       "site_no": "13077000"
-    },
-    {
-      "id": "02462951",
-      "name": "BLACK WARRIOR RIVER AT HOLT L&D NEAR HOLT AL.",
-      "state": "AL",
-      "lat": 33.25317258,
-      "lon": -87.4491703,
-      "drain_area_sqmi": 4219.0,
-      "site_no": "02462951"
     },
     {
       "id": "06438000",
@@ -11832,24 +11202,6 @@
       "lon": -70.20112778,
       "drain_area_sqmi": 519.0,
       "site_no": "01043500"
-    },
-    {
-      "id": "01119384",
-      "name": "WILLIMANTIC RIVER NEAR MANSFIELD DEPOT, CT",
-      "state": "CT",
-      "lat": 41.81555556,
-      "lon": -72.31694444,
-      "drain_area_sqmi": 98.0,
-      "site_no": "01119384"
-    },
-    {
-      "id": "03138500",
-      "name": "Walhonding River below Mohawk Dam at Nellie OH",
-      "state": "OH",
-      "lat": 40.34145696,
-      "lon": -82.0654213,
-      "drain_area_sqmi": 1505.0,
-      "site_no": "03138500"
     },
     {
       "id": "02234500",
@@ -12014,15 +11366,6 @@
       "site_no": "03056000"
     },
     {
-      "id": "01150500",
-      "name": "MASCOMA RIVER AT MASCOMA, NH",
-      "state": "NH",
-      "lat": 43.6489604,
-      "lon": -72.182033,
-      "drain_area_sqmi": 153.0,
-      "site_no": "01150500"
-    },
-    {
       "id": "08098290",
       "name": "Brazos Rv nr Highbank, TX",
       "state": "TX",
@@ -12077,24 +11420,6 @@
       "site_no": "11507500"
     },
     {
-      "id": "07099200",
-      "name": "ARKANSAS RIVER NEAR PORTLAND, CO.",
-      "state": "CO",
-      "lat": 38.33722178,
-      "lon": -104.93889055,
-      "drain_area_sqmi": 4280.0,
-      "site_no": "07099200"
-    },
-    {
-      "id": "12443500",
-      "name": "SIMILKAMEEN RIVER NEAR OROVILLE, WA",
-      "state": "WA",
-      "lat": 48.96099,
-      "lon": -119.5011834,
-      "drain_area_sqmi": 3580.0,
-      "site_no": "12443500"
-    },
-    {
       "id": "11361450",
       "name": "PIT R BL LK BRITTON DAM NR BURNEY CA",
       "state": "CA",
@@ -12120,15 +11445,6 @@
       "lon": -116.0491944,
       "drain_area_sqmi": 11740.0,
       "site_no": "12305000"
-    },
-    {
-      "id": "02462500",
-      "name": "BLACK WARRIOR R AT BANKHEAD L&D NEAR BESSEMER AL",
-      "state": "AL",
-      "lat": 33.4584457,
-      "lon": -87.3541677,
-      "drain_area_sqmi": 3981.0,
-      "site_no": "02462500"
     },
     {
       "id": "06447450",
@@ -12264,15 +11580,6 @@
       "lon": -72.31284722,
       "drain_area_sqmi": 96.3,
       "site_no": "01119382"
-    },
-    {
-      "id": "03122500",
-      "name": "Tuscarawas River below Dover Dam near Dover OH",
-      "state": "OH",
-      "lat": 40.5297862,
-      "lon": -81.4298369,
-      "drain_area_sqmi": 1405.0,
-      "site_no": "03122500"
     },
     {
       "id": "02315500",
@@ -12455,15 +11762,6 @@
       "site_no": "08096500"
     },
     {
-      "id": "02087570",
-      "name": "NEUSE RIVER AT SMITHFIELD, NC",
-      "state": "NC",
-      "lat": 35.5125,
-      "lon": -78.3494444,
-      "drain_area_sqmi": 1206.0,
-      "site_no": "02087570"
-    },
-    {
       "id": "09295100",
       "name": "DUCHESNE RIV ABV UINTA RIV, NR RANDLETT, UT",
       "state": "UT",
@@ -12579,15 +11877,6 @@
       "lon": -82.6346023,
       "drain_area_sqmi": 3897.0,
       "site_no": "03215000"
-    },
-    {
-      "id": "07349000",
-      "name": "Bayou Dorcheat near Minden, LA",
-      "state": "LA",
-      "lat": 32.59759468,
-      "lon": -93.3320309,
-      "drain_area_sqmi": 1097.0,
-      "site_no": "07349000"
     },
     {
       "id": "06335500",
@@ -12923,15 +12212,6 @@
       "site_no": "14166000"
     },
     {
-      "id": "07097000",
-      "name": "ARKANSAS RIVER AT PORTLAND, CO.",
-      "state": "CO",
-      "lat": 38.38833418,
-      "lon": -105.0160961,
-      "drain_area_sqmi": 4024.0,
-      "site_no": "07097000"
-    },
-    {
       "id": "12500450",
       "name": "YAKIMA RIVER ABOVE AHTANUM CREEK AT UNION GAP, WA",
       "state": "WA",
@@ -13002,15 +12282,6 @@
       "lon": -84.44799549,
       "drain_area_sqmi": 3593.0,
       "site_no": "03254520"
-    },
-    {
-      "id": "07349890",
-      "name": "Red Chute Bayou near Elm Grove, LA.",
-      "state": "LA",
-      "lat": 32.3626553,
-      "lon": -93.5029523,
-      "drain_area_sqmi": 1004.0,
-      "site_no": "07349890"
     },
     {
       "id": "06470500",
@@ -13247,15 +12518,6 @@
       "site_no": "02228070"
     },
     {
-      "id": "05426031",
-      "name": "ROCK RIVER AT JEFFERSON, WI",
-      "state": "WI",
-      "lat": 42.99611515,
-      "lon": -88.8073274,
-      "drain_area_sqmi": 1850.0,
-      "site_no": "05426031"
-    },
-    {
       "id": "09510000",
       "name": "VERDE RIVER BELOW BARTLETT DAM, AZ",
       "state": "AZ",
@@ -13409,15 +12671,6 @@
       "site_no": "06357800"
     },
     {
-      "id": "05220600",
-      "name": "MISSISSIPPI RIVER AT PALISADE, MN",
-      "state": "MN",
-      "lat": 46.709444,
-      "lon": -93.484444,
-      "drain_area_sqmi": 4840.0,
-      "site_no": "05220600"
-    },
-    {
       "id": "03253500",
       "name": "LICKING RIVER AT CATAWBA, KY",
       "state": "KY",
@@ -13425,15 +12678,6 @@
       "lon": -84.3107693,
       "drain_area_sqmi": 3300.0,
       "site_no": "03253500"
-    },
-    {
-      "id": "02491500",
-      "name": "Bogue Chitto River at Franklinton, LA",
-      "state": "LA",
-      "lat": 30.84296176,
-      "lon": -90.16203,
-      "drain_area_sqmi": 990.0,
-      "site_no": "02491500"
     },
     {
       "id": "05051522",
@@ -13778,15 +13022,6 @@
       "site_no": "07128500"
     },
     {
-      "id": "12199000",
-      "name": "SKAGIT RIVER NEAR SEDRO WOOLLEY, WA",
-      "state": "WA",
-      "lat": 48.4839962,
-      "lon": -122.2432123,
-      "drain_area_sqmi": 3015.0,
-      "site_no": "12199000"
-    },
-    {
       "id": "11355010",
       "name": "PIT R BL PIT NO 1 PH NR FALL RIVER MILLS CA",
       "state": "CA",
@@ -13821,15 +13056,6 @@
       "lon": -87.180279,
       "drain_area_sqmi": 1766.0,
       "site_no": "02425000"
-    },
-    {
-      "id": "06361000",
-      "name": "MOREAU RIVER AT PROMISE SD",
-      "state": "SD",
-      "lat": 45.3431222,
-      "lon": -100.6133889,
-      "drain_area_sqmi": 5240.0,
-      "site_no": "06361000"
     },
     {
       "id": "05301000",
@@ -14057,15 +13283,6 @@
       "site_no": "01318500"
     },
     {
-      "id": "10350500",
-      "name": "TRUCKEE RV AT CLARK, NV",
-      "state": "NV",
-      "lat": 39.56545278,
-      "lon": -119.486186,
-      "drain_area_sqmi": 1600.0,
-      "site_no": "10350500"
-    },
-    {
       "id": "01134500",
       "name": "MOOSE RIVER AT VICTORY, VT",
       "state": "VT",
@@ -14073,15 +13290,6 @@
       "lon": -71.8373143,
       "drain_area_sqmi": 75.2,
       "site_no": "01134500"
-    },
-    {
-      "id": "03063000",
-      "name": "Monongahela R L&D8 (Lower Pool) @ Point Marion, PA",
-      "state": "PA",
-      "lat": 39.72697315,
-      "lon": -79.9114316,
-      "drain_area_sqmi": 2720.0,
-      "site_no": "03063000"
     },
     {
       "id": "02202680",
@@ -14145,15 +13353,6 @@
       "lon": -97.9258703,
       "drain_area_sqmi": 25237.0,
       "site_no": "08090800"
-    },
-    {
-      "id": "02108566",
-      "name": "NORTHEAST CAPE FEAR R NR BURGAW, NC",
-      "state": "NC",
-      "lat": 34.5983333,
-      "lon": -77.8752778,
-      "drain_area_sqmi": 920.0,
-      "site_no": "02108566"
     },
     {
       "id": "10136600",
@@ -14660,15 +13859,6 @@
       "site_no": "13307000"
     },
     {
-      "id": "02424590",
-      "name": "CAHABA RIVER NEAR SUTTLE, AL.",
-      "state": "AL",
-      "lat": 32.5293002,
-      "lon": -87.198884,
-      "drain_area_sqmi": 1480.0,
-      "site_no": "02424590"
-    },
-    {
       "id": "06360500",
       "name": "MOREAU RIVER NEAR WHITEHORSE,SD",
       "state": "SD",
@@ -14676,15 +13866,6 @@
       "lon": -100.8429214,
       "drain_area_sqmi": 4889.0,
       "site_no": "06360500"
-    },
-    {
-      "id": "05076500",
-      "name": "RED LAKE RIVER AT THIEF RIVER FALLS, MN",
-      "state": "MN",
-      "lat": 48.11108669,
-      "lon": -96.1808922,
-      "drain_area_sqmi": 3450.0,
-      "site_no": "05076500"
     },
     {
       "id": "03282060",
@@ -14712,15 +13893,6 @@
       "lon": -96.5986848,
       "drain_area_sqmi": 4010.0,
       "site_no": "05051500"
-    },
-    {
-      "id": "02441000",
-      "name": "TIBBEE CREEK NR TIBBEE, MS",
-      "state": "MS",
-      "lat": 33.53777778,
-      "lon": -88.6333333,
-      "drain_area_sqmi": 926.0,
-      "site_no": "02441000"
     },
     {
       "id": "07077555",
@@ -14966,15 +14138,6 @@
       "site_no": "01634000"
     },
     {
-      "id": "03153500",
-      "name": "LITTLE KANAWHA RIVER AT GRANTSVILLE, WV",
-      "state": "WV",
-      "lat": 38.9217307,
-      "lon": -81.0947567,
-      "drain_area_sqmi": 913.0,
-      "site_no": "03153500"
-    },
-    {
       "id": "01091000",
       "name": "SOUTH BRANCH PISCATAQUOG RIVER NEAR GOFFSTOWN, NH",
       "state": "NH",
@@ -15081,15 +14244,6 @@
       "lon": -111.87805556,
       "drain_area_sqmi": 5810.0,
       "site_no": "13038500"
-    },
-    {
-      "id": "02362000",
-      "name": "CHOCTAWHATCHEE RIVER NEAR GENEVA, ALABAMA",
-      "state": "AL",
-      "lat": 31.0412902,
-      "lon": -85.8521574,
-      "drain_area_sqmi": 1346.0,
-      "site_no": "02362000"
     },
     {
       "id": "06482020",
@@ -15659,15 +14813,6 @@
       "site_no": "02312762"
     },
     {
-      "id": "06870200",
-      "name": "SMOKY HILL R AT NEW CAMBRIA, KS",
-      "state": "KS",
-      "lat": 38.8639972,
-      "lon": -97.4831556,
-      "drain_area_sqmi": 11730.0,
-      "site_no": "06870200"
-    },
-    {
       "id": "03364000",
       "name": "EAST FORK WHITE RIVER AT COLUMBUS, IN",
       "state": "IN",
@@ -16208,15 +15353,6 @@
       "site_no": "03490000"
     },
     {
-      "id": "03189600",
-      "name": "GAULEY RIVER BELOW SUMMERSVILLE DAM, WV",
-      "state": "WV",
-      "lat": 38.2151103,
-      "lon": -80.8881536,
-      "drain_area_sqmi": 805.0,
-      "site_no": "03189600"
-    },
-    {
       "id": "010642505",
       "name": "SACO RIVER AT RIVER STREET, AT BARTLETT, NH",
       "state": "NH",
@@ -16532,15 +15668,6 @@
       "site_no": "08353000"
     },
     {
-      "id": "02176000",
-      "name": "COMBAHEE RIVER NEAR YEMASSEE, SC",
-      "state": "SC",
-      "lat": 32.707122,
-      "lon": -80.826218,
-      "drain_area_sqmi": 1100.0,
-      "site_no": "02176000"
-    },
-    {
       "id": "01169000",
       "name": "NORTH RIVER AT SHATTUCKVILLE, MA",
       "state": "MA",
@@ -16676,15 +15803,6 @@
       "site_no": "15493000"
     },
     {
-      "id": "14064500",
-      "name": "DESCHUTES R AT BENHAM FALLS NR BEND, OR",
-      "state": "OR",
-      "lat": 43.93011715,
-      "lon": -121.4119746,
-      "drain_area_sqmi": 1759.0,
-      "site_no": "14064500"
-    },
-    {
       "id": "07094500",
       "name": "ARKANSAS RIVER AT PARKDALE, CO.",
       "state": "CO",
@@ -16692,15 +15810,6 @@
       "lon": -105.373056,
       "drain_area_sqmi": 2459.0,
       "site_no": "07094500"
-    },
-    {
-      "id": "12450500",
-      "name": "METHOW RIVER AT PATEROS, WA",
-      "state": "WA",
-      "lat": 48.04708647,
-      "lon": -119.91229,
-      "drain_area_sqmi": 1810.0,
-      "site_no": "12450500"
     },
     {
       "id": "11150500",
@@ -17072,15 +16181,6 @@
       "site_no": "06660000"
     },
     {
-      "id": "15291000",
-      "name": "SUSITNA R NR DENALI AK",
-      "state": "AK",
-      "lat": 63.1034076,
-      "lon": -147.5181418,
-      "drain_area_sqmi": 917.0,
-      "site_no": "15291000"
-    },
-    {
       "id": "14312000",
       "name": "SOUTH UMPQUA RIVER NEAR BROCKWAY, OR",
       "state": "OR",
@@ -17432,15 +16532,6 @@
       "site_no": "03069500"
     },
     {
-      "id": "01145000",
-      "name": "MASCOMA RIVER AT WEST CANAAN, NH",
-      "state": "NH",
-      "lat": 43.65118308,
-      "lon": -72.08480849,
-      "drain_area_sqmi": 80.5,
-      "site_no": "01145000"
-    },
-    {
       "id": "07227500",
       "name": "Canadian Rv nr Amarillo, TX",
       "state": "TX",
@@ -17502,15 +16593,6 @@
       "lon": -108.83345163,
       "drain_area_sqmi": 2147.0,
       "site_no": "09171100"
-    },
-    {
-      "id": "12155500",
-      "name": "SNOHOMISH RIVER AT SNOHOMISH, WA",
-      "state": "WA",
-      "lat": 47.911,
-      "lon": -122.09875,
-      "drain_area_sqmi": 1714.0,
-      "site_no": "12155500"
     },
     {
       "id": "11351948",
@@ -17673,15 +16755,6 @@
       "lon": -68.8316667,
       "drain_area_sqmi": 195.0,
       "site_no": "01037000"
-    },
-    {
-      "id": "03143500",
-      "name": "Wills Creek bl Wills Creek Dam at Wills Creek OH",
-      "state": "OH",
-      "lat": 40.15951555,
-      "lon": -81.8473527,
-      "drain_area_sqmi": 842.0,
-      "site_no": "03143500"
     },
     {
       "id": "02322800",
@@ -18287,15 +17360,6 @@
       "site_no": "06634620"
     },
     {
-      "id": "15242000",
-      "name": "KASILOF R NR KASILOF AK",
-      "state": "AK",
-      "lat": 60.318056,
-      "lon": -151.259722,
-      "drain_area_sqmi": 738.0,
-      "site_no": "15242000"
-    },
-    {
       "id": "14152000",
       "name": "MIDDLE FORK WILLAMETTE RIVER AT JASPER, OR",
       "state": "OR",
@@ -18386,15 +17450,6 @@
       "site_no": "03308500"
     },
     {
-      "id": "07349500",
-      "name": "Bodcau Bayou near Sarepta, LA",
-      "state": "LA",
-      "lat": 32.9051392,
-      "lon": -93.4829512,
-      "drain_area_sqmi": 546.0,
-      "site_no": "07349500"
-    },
-    {
       "id": "05053000",
       "name": "WILD RICE RIVER NEAR ABERCROMBIE, ND",
       "state": "ND",
@@ -18402,15 +17457,6 @@
       "lon": -96.78229235,
       "drain_area_sqmi": 2080.0,
       "site_no": "05053000"
-    },
-    {
-      "id": "02479160",
-      "name": "BLACK CREEK NR WIGGINS, MS",
-      "state": "MS",
-      "lat": 30.85333333,
-      "lon": -88.9136111,
-      "drain_area_sqmi": 701.0,
-      "site_no": "02479160"
     },
     {
       "id": "07056000",
@@ -18636,15 +17682,6 @@
       "lon": -77.16527778,
       "drain_area_sqmi": 603.0,
       "site_no": "01674500"
-    },
-    {
-      "id": "03195500",
-      "name": "ELK RIVER AT SUTTON, WV",
-      "state": "WV",
-      "lat": 38.66315555,
-      "lon": -80.7095413,
-      "drain_area_sqmi": 542.0,
-      "site_no": "03195500"
     },
     {
       "id": "01072870",

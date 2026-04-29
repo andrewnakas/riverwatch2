@@ -65,52 +65,74 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
             rec = {}
     have: dict = rec.get("rows", {})
     last_known = rec.get("last_known")
+    first_known = rec.get("first_known") or (min(have.keys()) if have else None)
     fetched_at = rec.get("fetched_at", 0)
     age = time.time() - float(fetched_at) if fetched_at else float("inf")
 
-    fetch_from = start
+    needs_backward = bool(first_known) and first_known > start.isoformat()
+    needs_forward = (not last_known) or (last_known < end.isoformat())
+
+    if not needs_backward and last_known and last_known >= end.isoformat() and age < max_age_hours * 3600:
+        return _slice_hist_record(have, start, end)
+
+    fwd_from = start
     if last_known:
         try:
             ld = date.fromisoformat(last_known)
             if ld >= start:
-                fetch_from = ld - timedelta(days=2)  # re-fetch last 2 days in case provisional values were revised
+                fwd_from = ld - timedelta(days=2)  # re-fetch last 2 days in case provisional values were revised
         except ValueError:
             pass
 
-    if last_known and last_known >= end.isoformat() and age < max_age_hours * 3600:
-        return _slice_hist_record(have, start, end)
+    fetched_any = False
+    if needs_backward:
+        bwd_from = start
+        bwd_to = date.fromisoformat(first_known) - timedelta(days=1) if first_known else end
+        if bwd_from <= bwd_to:
+            fetched_any = _fetch_and_merge_hist(lat, lon, have, bwd_from, bwd_to) or fetched_any
 
-    if fetch_from <= end:
-        params = {
-            "latitude": f"{lat:.4f}",
-            "longitude": f"{lon:.4f}",
-            "start_date": fetch_from.isoformat(),
-            "end_date": end.isoformat(),
-            "daily": ",".join(DAILY_VARS),
-            "timezone": "UTC",
+    if needs_forward and fwd_from <= end:
+        fetched_any = _fetch_and_merge_hist(lat, lon, have, fwd_from, end) or fetched_any
+
+    if fetched_any and have:
+        rec = {
+            "lat": lat,
+            "lon": lon,
+            "rows": have,
+            "first_known": min(have.keys()),
+            "last_known": max(have.keys()),
+            "fetched_at": time.time(),
         }
-        url = ARCHIVE_URL + "?" + urlencode(params)
-        try:
-            payload = _http_json(url)
-        except Exception:
-            return _slice_hist_record(have, start, end)
-        df_new = _to_df(payload)
-        for _, r in df_new.iterrows():
-            row = {k: (None if pd.isna(r[k]) else float(r[k]) if k != "date" else r[k].isoformat())
-                   for k in df_new.columns}
-            have[row["date"]] = {k: row[k] for k in df_new.columns if k != "date"}
-        if have:
-            new_last = max(have.keys())
-            rec = {
-                "lat": lat,
-                "lon": lon,
-                "rows": have,
-                "last_known": new_last,
-                "fetched_at": time.time(),
-            }
-            rp.write_text(json.dumps(rec, separators=(",", ":")))
+        rp.write_text(json.dumps(rec, separators=(",", ":")))
 
     return _slice_hist_record(have, start, end)
+
+
+def _fetch_and_merge_hist(lat: float, lon: float, have: dict, start: date, end: date) -> bool:
+    """Fetch Open-Meteo archive [start, end] and merge into `have`. Returns True if anything was added."""
+    params = {
+        "latitude": f"{lat:.4f}",
+        "longitude": f"{lon:.4f}",
+        "start_date": start.isoformat(),
+        "end_date": end.isoformat(),
+        "daily": ",".join(DAILY_VARS),
+        "timezone": "UTC",
+    }
+    url = ARCHIVE_URL + "?" + urlencode(params)
+    try:
+        payload = _http_json(url)
+    except Exception:
+        return False
+    df_new = _to_df(payload)
+    added = False
+    for _, r in df_new.iterrows():
+        row = {k: (None if pd.isna(r[k]) else float(r[k]) if k != "date" else r[k].isoformat())
+               for k in df_new.columns}
+        k = row["date"]
+        if k not in have:
+            added = True
+        have[k] = {col: row[col] for col in df_new.columns if col != "date"}
+    return added or not df_new.empty
 
 
 def _slice_hist_record(have: dict, start: date, end: date) -> pd.DataFrame:

@@ -1,5 +1,5 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: ~2000 USGS gauges across all 50 states + DC, harvested from active daily-mean discharge sites with drainage area >= 50 sqmi",
+  "description": "Live zero-shot river-discharge forecast subset: ~1893 USGS gauges across all 50 states + DC, harvested from active daily-mean discharge sites with drainage area >= 50 sqmi",
   "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
@@ -2354,64 +2354,9 @@
       "state": "UT"
     },
     {
-      "id": "03589500",
-      "name": "TENNESSEE RIVER AT FLORENCE AL",
-      "state": "AL"
-    },
-    {
-      "id": "06467500",
-      "name": "MISSOURI RIVER AT YANKTON, SD",
-      "state": "SD"
-    },
-    {
-      "id": "05083500",
-      "name": "RED RIVER OF THE NORTH AT OSLO, MN",
-      "state": "MN"
-    },
-    {
-      "id": "03322420",
-      "name": "OHIO RIVER AT UNIONTOWN DAM, KY",
-      "state": "KY"
-    },
-    {
-      "id": "07355500",
-      "name": "Red River at Alexandria, LA",
-      "state": "LA"
-    },
-    {
-      "id": "06330000",
-      "name": "MISSOURI RIVER NR WILLISTON, ND",
-      "state": "ND"
-    },
-    {
-      "id": "301141089320300",
-      "name": "EAST PEARL RIVER AT CSX RAILROAD NR CLAIBORNE, MS",
-      "state": "MS"
-    },
-    {
-      "id": "07263500",
-      "name": "Arkansas River at Little Rock, AR",
-      "state": "AR"
-    },
-    {
-      "id": "03435000",
-      "name": "CUMBERLAND RIVER BELOW CHEATHAM DAM, TN",
-      "state": "TN"
-    },
-    {
       "id": "06909000",
       "name": "Missouri River at Boonville, MO",
       "state": "MO"
-    },
-    {
-      "id": "03384500",
-      "name": "OHIO RIVER AT DAM 51 AT GOLCONDA, IL",
-      "state": "IL"
-    },
-    {
-      "id": "05411500",
-      "name": "Mississippi River at Clayton, IA",
-      "state": "IA"
     },
     {
       "id": "07316000",
@@ -2422,11 +2367,6 @@
       "id": "06796000",
       "name": "Platte River at North Bend, Nebr.",
       "state": "NE"
-    },
-    {
-      "id": "01036390",
-      "name": "Penobscot River at Eddington, Maine",
-      "state": "ME"
     },
     {
       "id": "011230695",
@@ -2519,34 +2459,9 @@
       "state": "WI"
     },
     {
-      "id": "09404120",
-      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
-      "state": "AZ"
-    },
-    {
-      "id": "02079500",
-      "name": "ROANOKE RIVER AT BUGGS ISLAND, VA",
-      "state": "VA"
-    },
-    {
-      "id": "03206000",
-      "name": "OHIO RIVER AT HUNTINGTON, WV",
-      "state": "WV"
-    },
-    {
       "id": "01129500",
       "name": "CONNECTICUT RIVER AT NORTH STRATFORD, NH",
       "state": "NH"
-    },
-    {
-      "id": "08447410",
-      "name": "Pecos Rv nr Langtry, TX",
-      "state": "TX"
-    },
-    {
-      "id": "02081000",
-      "name": "ROANOKE RIVER NEAR SCOTLAND NECK, NC",
-      "state": "NC"
     },
     {
       "id": "09379500",
@@ -2562,11 +2477,6 @@
       "id": "15214000",
       "name": "COPPER R AT MILLION DOLLAR BRIDGE NR CORDOVA AK",
       "state": "AK"
-    },
-    {
-      "id": "14019200",
-      "name": "COLUMBIA RIVER AT MCNARY DAM,NEAR UMATILLA, OR",
-      "state": "OR"
     },
     {
       "id": "09371010",
@@ -2594,29 +2504,9 @@
       "state": "ID"
     },
     {
-      "id": "03575500",
-      "name": "TENNESSEE RIVER AT WHITESBURG AL",
-      "state": "AL"
-    },
-    {
-      "id": "06439500",
-      "name": "CHEYENNE RIVER NEAR EAGLE BUTTE SD",
-      "state": "SD"
-    },
-    {
       "id": "05137500",
       "name": "RAINY RIVER NEAR BOAT LANDING AT WHEELERS POINT,MN",
       "state": "MN"
-    },
-    {
-      "id": "03238000",
-      "name": "OHIO RIVER AT MAYSVILLE, KY",
-      "state": "KY"
-    },
-    {
-      "id": "07344400",
-      "name": "Red River near Hosston, LA.",
-      "state": "LA"
     },
     {
       "id": "05124000",
@@ -2629,16 +2519,6 @@
       "state": "MS"
     },
     {
-      "id": "07250500",
-      "name": "AR River at Van Buren, AR",
-      "state": "AR"
-    },
-    {
-      "id": "034315005",
-      "name": "CUMBERLAND RIVER AT WOODLAND ST AT NASHVILLE, TN",
-      "state": "TN"
-    },
-    {
       "id": "06906500",
       "name": "Missouri River at Glasgow, MO",
       "state": "MO"
@@ -2647,11 +2527,6 @@
       "id": "03377500",
       "name": "WABASH RIVER AT MT. CARMEL, IL",
       "state": "IL"
-    },
-    {
-      "id": "05389500",
-      "name": "Mississippi River at McGregor, IA",
-      "state": "IA"
     },
     {
       "id": "07315500",
@@ -2719,11 +2594,6 @@
       "state": "NM"
     },
     {
-      "id": "02169625",
-      "name": "CONGAREE RIVER AT CONGAREE NP NEAR GADSDEN, SC",
-      "state": "SC"
-    },
-    {
       "id": "01096500",
       "name": "NASHUA RIVER AT EAST PEPPERELL, MA",
       "state": "MA"
@@ -2744,34 +2614,14 @@
       "state": "VT"
     },
     {
-      "id": "03033000",
-      "name": "Allegheny River near Rimer, PA",
-      "state": "PA"
-    },
-    {
       "id": "02343805",
       "name": "CHATTAHOOCHEE RIVER AT MILE 46 NEAR COLUMBIA, ALA",
       "state": "GA"
     },
     {
-      "id": "04085059",
-      "name": "FOX RIVER AT DE PERE, WI",
-      "state": "WI"
-    },
-    {
-      "id": "09383100",
-      "name": "COLORADO R ABV LITTLE COLORADO R NR DESERT VIEW",
-      "state": "AZ"
-    },
-    {
       "id": "02025500",
       "name": "JAMES RIVER AT HOLCOMB ROCK, VA",
       "state": "VA"
-    },
-    {
-      "id": "03201500",
-      "name": "OHIO RIVER AT POINT PLEASANT, WV",
-      "state": "WV"
     },
     {
       "id": "01076500",
@@ -2792,11 +2642,6 @@
       "id": "09234500",
       "name": "GREEN RIVER NEAR GREENDALE, UT",
       "state": "UT"
-    },
-    {
-      "id": "06645000",
-      "name": "NORTH PLATTE RIVER BELOW CASPER, WY",
-      "state": "WY"
     },
     {
       "id": "15024800",
@@ -2834,11 +2679,6 @@
       "state": "ID"
     },
     {
-      "id": "02423000",
-      "name": "ALABAMA RIVER AT SELMA AL",
-      "state": "AL"
-    },
-    {
       "id": "06477000",
       "name": "JAMES RIVER NEAR FORESTBURG,SD",
       "state": "SD"
@@ -2872,11 +2712,6 @@
       "id": "07249455",
       "name": "Arkansas River at Ft. Smith, Ar.",
       "state": "AR"
-    },
-    {
-      "id": "03426310",
-      "name": "CUMBERLAND RIVER AT OLD HICKORY DAM (TW), TN",
-      "state": "TN"
     },
     {
       "id": "06895500",
@@ -2994,11 +2829,6 @@
       "state": "GA"
     },
     {
-      "id": "04084500",
-      "name": "FOX R AT RAPIDE CROCHE DAM NEAR WRIGHTSTOWN, WI",
-      "state": "WI"
-    },
-    {
       "id": "09519000",
       "name": "ENTERPRISE CANAL AT GILLESPIE DAM, AZ",
       "state": "AZ"
@@ -3007,11 +2837,6 @@
       "id": "02024752",
       "name": "JAMES RIVER AT BLUE RIDGE PKWY NR BIG ISLAND, VA",
       "state": "VA"
-    },
-    {
-      "id": "03151000",
-      "name": "OHIO RIVER AT PARKERSBURG, WV",
-      "state": "WV"
     },
     {
       "id": "01081000",
@@ -3034,24 +2859,9 @@
       "state": "UT"
     },
     {
-      "id": "06642000",
-      "name": "NORTH PLATTE RIVER AT ALCOVA, WY",
-      "state": "WY"
-    },
-    {
       "id": "15564900",
       "name": "KOYUKUK R AT HUGHES AK",
       "state": "AK"
-    },
-    {
-      "id": "14102000",
-      "name": "DESCHUTES RIVER AT SHERARS BRIDGE, OR",
-      "state": "OR"
-    },
-    {
-      "id": "07123000",
-      "name": "ARKANSAS RIVER AT LA JUNTA, CO",
-      "state": "CO"
     },
     {
       "id": "12436500",
@@ -3089,11 +2899,6 @@
       "state": "MN"
     },
     {
-      "id": "03216000",
-      "name": "OHIO RIVER AT ASHLAND, KY",
-      "state": "KY"
-    },
-    {
       "id": "07348000",
       "name": "Twelvemile Bayou near Dixie, LA",
       "state": "LA"
@@ -3122,11 +2927,6 @@
       "id": "06894650",
       "name": "Missouri River at Napoleon, MO",
       "state": "MO"
-    },
-    {
-      "id": "05585500",
-      "name": "ILLINOIS RIVER AT MEREDOSIA, IL",
-      "state": "IL"
     },
     {
       "id": "05489500",
@@ -3274,11 +3074,6 @@
       "state": "UT"
     },
     {
-      "id": "06641000",
-      "name": "NORTH PLATTE RIVER BELOW PATHFINDER RESERVOIR, WY",
-      "state": "WY"
-    },
-    {
       "id": "15875000",
       "name": "COLVILLE R AT UMIAT AK",
       "state": "AK"
@@ -3287,11 +3082,6 @@
       "id": "14197900",
       "name": "WILLAMETTE RIVER AT NEWBERG, OR",
       "state": "OR"
-    },
-    {
-      "id": "07119700",
-      "name": "ARKANSAS RIVER AT CATLIN DAM, NEAR FOWLER, CO.",
-      "state": "CO"
     },
     {
       "id": "12399500",
@@ -3327,16 +3117,6 @@
       "id": "05283500",
       "name": "MISSISSIPPI RIVER AT US HWY 169 AT CHAMPLIN, MN",
       "state": "MN"
-    },
-    {
-      "id": "03438220",
-      "name": "CUMBERLAND RIVER NEAR GRAND RIVERS, KY",
-      "state": "KY"
-    },
-    {
-      "id": "07350020",
-      "name": "Loggy Bayou Near East Point,LA.",
-      "state": "LA"
     },
     {
       "id": "05117500",
@@ -3449,11 +3229,6 @@
       "state": "MA"
     },
     {
-      "id": "01356000",
-      "name": "MOHAWK RIVER AT VISCHER FERRY DAM NY",
-      "state": "NY"
-    },
-    {
       "id": "10321000",
       "name": "HUMBOLDT RV NR CARLIN, NV",
       "state": "NV"
@@ -3517,11 +3292,6 @@
       "id": "06317000",
       "name": "POWDER RIVER AT ARVADA, WY",
       "state": "WY"
-    },
-    {
-      "id": "15478000",
-      "name": "TANANA R AT BIG DELTA AK",
-      "state": "AK"
     },
     {
       "id": "13181000",
@@ -4064,11 +3834,6 @@
       "state": "AR"
     },
     {
-      "id": "07030000",
-      "name": "HATCHIE RIVER NEAR STANTON, TN",
-      "state": "TN"
-    },
-    {
       "id": "05490600",
       "name": "Des Moines River at St. Francisville, MO",
       "state": "MO"
@@ -4117,11 +3882,6 @@
       "id": "07144300",
       "name": "ARKANSAS R AT WICHITA, KS",
       "state": "KS"
-    },
-    {
-      "id": "03329500",
-      "name": "WABASH RIVER AT DELPHI, IN",
-      "state": "IN"
     },
     {
       "id": "01589025",
@@ -4199,11 +3959,6 @@
       "state": "WV"
     },
     {
-      "id": "01137940",
-      "name": "AMMONOOSUC RIVER BELOW LISBON DAM, AT LISBON, NH",
-      "state": "NH"
-    },
-    {
       "id": "08160400",
       "name": "Colorado Rv abv La Grange, TX",
       "state": "TX"
@@ -4247,11 +4002,6 @@
       "id": "11523000",
       "name": "KLAMATH R A ORLEANS",
       "state": "CA"
-    },
-    {
-      "id": "12391400",
-      "name": "Clark Fork bl Noxon Rapids Dam nr Noxon MT",
-      "state": "MT"
     },
     {
       "id": "13094000",
@@ -4509,16 +4259,6 @@
       "state": "MN"
     },
     {
-      "id": "03414000",
-      "name": "CUMBERLAND RIVER NEAR ROWENA, KY",
-      "state": "KY"
-    },
-    {
-      "id": "07380120",
-      "name": "Amite River at Port Vincent, LA",
-      "state": "LA"
-    },
-    {
       "id": "05059000",
       "name": "SHEYENNE RIVER NEAR KINDRED, ND",
       "state": "ND"
@@ -4749,11 +4489,6 @@
       "state": "KY"
     },
     {
-      "id": "07385500",
-      "name": "BAYOU TECHE @ ARNAUDVILLE, LA",
-      "state": "LA"
-    },
-    {
       "id": "06337000",
       "name": "LITTLE MISSOURI RIVER NEAR WATFORD CITY, ND",
       "state": "ND"
@@ -4772,11 +4507,6 @@
       "id": "03584600",
       "name": "ELK RIVER AT PROSPECT, TN",
       "state": "TN"
-    },
-    {
-      "id": "06922500",
-      "name": "Osage River at Warsaw, MO",
-      "state": "MO"
     },
     {
       "id": "05542500",
@@ -4832,11 +4562,6 @@
       "id": "01619500",
       "name": "ANTIETAM CREEK NEAR SHARPSBURG, MD",
       "state": "MD"
-    },
-    {
-      "id": "01368000",
-      "name": "Wallkill River near Unionville Ny",
-      "state": "NJ"
     },
     {
       "id": "04121970",
@@ -4979,24 +4704,9 @@
       "state": "MN"
     },
     {
-      "id": "03315500",
-      "name": "GREEN RIVER AT LOCK 4 AT WOODBURY, KY",
-      "state": "KY"
-    },
-    {
-      "id": "07353000",
-      "name": "Saline Byu nr Clarence, LA",
-      "state": "LA"
-    },
-    {
       "id": "05058700",
       "name": "SHEYENNE RIVER AT LISBON, ND",
       "state": "ND"
-    },
-    {
-      "id": "07288700",
-      "name": "BIG SUNFLOWER RIVER NR ANGUILLA, MS",
-      "state": "MS"
     },
     {
       "id": "07060500",
@@ -5217,11 +4927,6 @@
       "id": "03287250",
       "name": "KENTUCKY RIVER AT LOCK 5 NEAR TYRONE, KY",
       "state": "KY"
-    },
-    {
-      "id": "08012150",
-      "name": "Mermentau River At Mermentau, LA",
-      "state": "LA"
     },
     {
       "id": "05058500",
@@ -5524,11 +5229,6 @@
       "state": "FL"
     },
     {
-      "id": "07139500",
-      "name": "ARKANSAS R AT DODGE CITY, KS",
-      "state": "KS"
-    },
-    {
       "id": "03327500",
       "name": "WABASH RIVER AT PERU, IN",
       "state": "IN"
@@ -5634,11 +5334,6 @@
       "state": "WY"
     },
     {
-      "id": "15202000",
-      "name": "TAZLINA R NR GLENNALLEN AK",
-      "state": "AK"
-    },
-    {
       "id": "14372300",
       "name": "ROGUE RIVER NEAR AGNESS, OR",
       "state": "OR"
@@ -5714,11 +5409,6 @@
       "state": "TN"
     },
     {
-      "id": "06918070",
-      "name": "Osage River above Schell City, MO",
-      "state": "MO"
-    },
-    {
       "id": "05583000",
       "name": "SANGAMON RIVER NEAR OAKFORD, IL",
       "state": "IL"
@@ -5779,11 +5469,6 @@
       "state": "NJ"
     },
     {
-      "id": "04121650",
-      "name": "MUSKEGON RIVER AT BIG RAPIDS, MI",
-      "state": "MI"
-    },
-    {
       "id": "08329918",
       "name": "RIO GRANDE AT ALAMEDA BRIDGE AT ALAMEDA, NM",
       "state": "NM"
@@ -5819,11 +5504,6 @@
       "state": "PA"
     },
     {
-      "id": "02223382",
-      "name": "OCONEE RIVER NEAR DUBLIN, GA",
-      "state": "GA"
-    },
-    {
       "id": "04065106",
       "name": "MENOMINEE RIVER AT NIAGARA, WI",
       "state": "WI"
@@ -5837,11 +5517,6 @@
       "id": "01629500",
       "name": "S F SHENANDOAH RIVER NEAR LURAY, VA",
       "state": "VA"
-    },
-    {
-      "id": "03204000",
-      "name": "GUYANDOTTE RIVER AT BRANCHLAND, WV",
-      "state": "WV"
     },
     {
       "id": "01094000",
@@ -5877,11 +5552,6 @@
       "id": "11509500",
       "name": "KLAMATH RIVER AT KENO, OR",
       "state": "OR"
-    },
-    {
-      "id": "07099400",
-      "name": "ARKANSAS RIVER ABOVE PUEBLO, CO",
-      "state": "CO"
     },
     {
       "id": "12422000",
@@ -5954,11 +5624,6 @@
       "state": "MO"
     },
     {
-      "id": "05527000",
-      "name": "KANKAKEE RIVER AT CUSTER PARK, IL",
-      "state": "IL"
-    },
-    {
       "id": "05464730",
       "name": "Cedar River below Indian Creek at Cedar Rapids, IA",
       "state": "IA"
@@ -6029,11 +5694,6 @@
       "state": "SC"
     },
     {
-      "id": "01110500",
-      "name": "BLACKSTONE RIVER AT NORTHBRIDGE, MA",
-      "state": "MA"
-    },
-    {
       "id": "01349527",
       "name": "MOHAWK R ABOVE STATE HIGHWAY 30A AT FONDA NY",
       "state": "NY"
@@ -6072,11 +5732,6 @@
       "id": "02016500",
       "name": "JAMES RIVER AT LICK RUN, VA",
       "state": "VA"
-    },
-    {
-      "id": "01608070",
-      "name": "SOUTH BRANCH POTOMAC RIVER NEAR MOOREFIELD, WV",
-      "state": "WV"
     },
     {
       "id": "01089500",
@@ -6137,11 +5792,6 @@
       "id": "13077000",
       "name": "SNAKE RIVER AT NEELEY ID",
       "state": "ID"
-    },
-    {
-      "id": "02462951",
-      "name": "BLACK WARRIOR RIVER AT HOLT L&D NEAR HOLT AL.",
-      "state": "AL"
     },
     {
       "id": "06438000",
@@ -6212,16 +5862,6 @@
       "id": "01043500",
       "name": "Dead River near Dead River, Maine",
       "state": "ME"
-    },
-    {
-      "id": "01119384",
-      "name": "WILLIMANTIC RIVER NEAR MANSFIELD DEPOT, CT",
-      "state": "CT"
-    },
-    {
-      "id": "03138500",
-      "name": "Walhonding River below Mohawk Dam at Nellie OH",
-      "state": "OH"
     },
     {
       "id": "02234500",
@@ -6314,11 +5954,6 @@
       "state": "WV"
     },
     {
-      "id": "01150500",
-      "name": "MASCOMA RIVER AT MASCOMA, NH",
-      "state": "NH"
-    },
-    {
       "id": "08098290",
       "name": "Brazos Rv nr Highbank, TX",
       "state": "TX"
@@ -6349,16 +5984,6 @@
       "state": "OR"
     },
     {
-      "id": "07099200",
-      "name": "ARKANSAS RIVER NEAR PORTLAND, CO.",
-      "state": "CO"
-    },
-    {
-      "id": "12443500",
-      "name": "SIMILKAMEEN RIVER NEAR OROVILLE, WA",
-      "state": "WA"
-    },
-    {
       "id": "11361450",
       "name": "PIT R BL LK BRITTON DAM NR BURNEY CA",
       "state": "CA"
@@ -6372,11 +5997,6 @@
       "id": "12305000",
       "name": "KOOTENAI RIVER AT LEONIA, ID",
       "state": "ID"
-    },
-    {
-      "id": "02462500",
-      "name": "BLACK WARRIOR R AT BANKHEAD L&D NEAR BESSEMER AL",
-      "state": "AL"
     },
     {
       "id": "06447450",
@@ -6452,11 +6072,6 @@
       "id": "01119382",
       "name": "WILLIMANTIC RIVER AT MERROW RD. NEAR MERROW, CT",
       "state": "CT"
-    },
-    {
-      "id": "03122500",
-      "name": "Tuscarawas River below Dover Dam near Dover OH",
-      "state": "OH"
     },
     {
       "id": "02315500",
@@ -6559,11 +6174,6 @@
       "state": "TX"
     },
     {
-      "id": "02087570",
-      "name": "NEUSE RIVER AT SMITHFIELD, NC",
-      "state": "NC"
-    },
-    {
       "id": "09295100",
       "name": "DUCHESNE RIV ABV UINTA RIV, NR RANDLETT, UT",
       "state": "UT"
@@ -6627,11 +6237,6 @@
       "id": "03215000",
       "name": "BIG SANDY R AT LOUISA, KY",
       "state": "KY"
-    },
-    {
-      "id": "07349000",
-      "name": "Bayou Dorcheat near Minden, LA",
-      "state": "LA"
     },
     {
       "id": "06335500",
@@ -6819,11 +6424,6 @@
       "state": "OR"
     },
     {
-      "id": "07097000",
-      "name": "ARKANSAS RIVER AT PORTLAND, CO.",
-      "state": "CO"
-    },
-    {
       "id": "12500450",
       "name": "YAKIMA RIVER ABOVE AHTANUM CREEK AT UNION GAP, WA",
       "state": "WA"
@@ -6862,11 +6462,6 @@
       "id": "03254520",
       "name": "LICKING RIVER AT HWY 536 NEAR ALEXANDRIA, KY",
       "state": "KY"
-    },
-    {
-      "id": "07349890",
-      "name": "Red Chute Bayou near Elm Grove, LA.",
-      "state": "LA"
     },
     {
       "id": "06470500",
@@ -6999,11 +6594,6 @@
       "state": "GA"
     },
     {
-      "id": "05426031",
-      "name": "ROCK RIVER AT JEFFERSON, WI",
-      "state": "WI"
-    },
-    {
       "id": "09510000",
       "name": "VERDE RIVER BELOW BARTLETT DAM, AZ",
       "state": "AZ"
@@ -7089,19 +6679,9 @@
       "state": "SD"
     },
     {
-      "id": "05220600",
-      "name": "MISSISSIPPI RIVER AT PALISADE, MN",
-      "state": "MN"
-    },
-    {
       "id": "03253500",
       "name": "LICKING RIVER AT CATAWBA, KY",
       "state": "KY"
-    },
-    {
-      "id": "02491500",
-      "name": "Bogue Chitto River at Franklinton, LA",
-      "state": "LA"
     },
     {
       "id": "05051522",
@@ -7294,11 +6874,6 @@
       "state": "CO"
     },
     {
-      "id": "12199000",
-      "name": "SKAGIT RIVER NEAR SEDRO WOOLLEY, WA",
-      "state": "WA"
-    },
-    {
       "id": "11355010",
       "name": "PIT R BL PIT NO 1 PH NR FALL RIVER MILLS CA",
       "state": "CA"
@@ -7317,11 +6892,6 @@
       "id": "02425000",
       "name": "CAHABA RIVER NEAR MARION JUNCTION AL",
       "state": "AL"
-    },
-    {
-      "id": "06361000",
-      "name": "MOREAU RIVER AT PROMISE SD",
-      "state": "SD"
     },
     {
       "id": "05301000",
@@ -7449,19 +7019,9 @@
       "state": "NY"
     },
     {
-      "id": "10350500",
-      "name": "TRUCKEE RV AT CLARK, NV",
-      "state": "NV"
-    },
-    {
       "id": "01134500",
       "name": "MOOSE RIVER AT VICTORY, VT",
       "state": "VT"
-    },
-    {
-      "id": "03063000",
-      "name": "Monongahela R L&D8 (Lower Pool) @ Point Marion, PA",
-      "state": "PA"
     },
     {
       "id": "02202680",
@@ -7497,11 +7057,6 @@
       "id": "08090800",
       "name": "Brazos Rv nr Dennis, TX",
       "state": "TX"
-    },
-    {
-      "id": "02108566",
-      "name": "NORTHEAST CAPE FEAR R NR BURGAW, NC",
-      "state": "NC"
     },
     {
       "id": "10136600",
@@ -7784,19 +7339,9 @@
       "state": "ID"
     },
     {
-      "id": "02424590",
-      "name": "CAHABA RIVER NEAR SUTTLE, AL.",
-      "state": "AL"
-    },
-    {
       "id": "06360500",
       "name": "MOREAU RIVER NEAR WHITEHORSE,SD",
       "state": "SD"
-    },
-    {
-      "id": "05076500",
-      "name": "RED LAKE RIVER AT THIEF RIVER FALLS, MN",
-      "state": "MN"
     },
     {
       "id": "03282060",
@@ -7812,11 +7357,6 @@
       "id": "05051500",
       "name": "RED RIVER OF THE NORTH AT WAHPETON, ND",
       "state": "ND"
-    },
-    {
-      "id": "02441000",
-      "name": "TIBBEE CREEK NR TIBBEE, MS",
-      "state": "MS"
     },
     {
       "id": "07077555",
@@ -7954,11 +7494,6 @@
       "state": "VA"
     },
     {
-      "id": "03153500",
-      "name": "LITTLE KANAWHA RIVER AT GRANTSVILLE, WV",
-      "state": "WV"
-    },
-    {
       "id": "01091000",
       "name": "SOUTH BRANCH PISCATAQUOG RIVER NEAR GOFFSTOWN, NH",
       "state": "NH"
@@ -8017,11 +7552,6 @@
       "id": "13038500",
       "name": "SNAKE RIVER AT LORENZO ID",
       "state": "ID"
-    },
-    {
-      "id": "02362000",
-      "name": "CHOCTAWHATCHEE RIVER NEAR GENEVA, ALABAMA",
-      "state": "AL"
     },
     {
       "id": "06482020",
@@ -8339,11 +7869,6 @@
       "state": "FL"
     },
     {
-      "id": "06870200",
-      "name": "SMOKY HILL R AT NEW CAMBRIA, KS",
-      "state": "KS"
-    },
-    {
       "id": "03364000",
       "name": "EAST FORK WHITE RIVER AT COLUMBUS, IN",
       "state": "IN"
@@ -8644,11 +8169,6 @@
       "state": "VA"
     },
     {
-      "id": "03189600",
-      "name": "GAULEY RIVER BELOW SUMMERSVILLE DAM, WV",
-      "state": "WV"
-    },
-    {
       "id": "010642505",
       "name": "SACO RIVER AT RIVER STREET, AT BARTLETT, NH",
       "state": "NH"
@@ -8824,11 +8344,6 @@
       "state": "NM"
     },
     {
-      "id": "02176000",
-      "name": "COMBAHEE RIVER NEAR YEMASSEE, SC",
-      "state": "SC"
-    },
-    {
       "id": "01169000",
       "name": "NORTH RIVER AT SHATTUCKVILLE, MA",
       "state": "MA"
@@ -8904,19 +8419,9 @@
       "state": "AK"
     },
     {
-      "id": "14064500",
-      "name": "DESCHUTES R AT BENHAM FALLS NR BEND, OR",
-      "state": "OR"
-    },
-    {
       "id": "07094500",
       "name": "ARKANSAS RIVER AT PARKDALE, CO.",
       "state": "CO"
-    },
-    {
-      "id": "12450500",
-      "name": "METHOW RIVER AT PATEROS, WA",
-      "state": "WA"
     },
     {
       "id": "11150500",
@@ -9124,11 +8629,6 @@
       "state": "WY"
     },
     {
-      "id": "15291000",
-      "name": "SUSITNA R NR DENALI AK",
-      "state": "AK"
-    },
-    {
       "id": "14312000",
       "name": "SOUTH UMPQUA RIVER NEAR BROCKWAY, OR",
       "state": "OR"
@@ -9324,11 +8824,6 @@
       "state": "WV"
     },
     {
-      "id": "01145000",
-      "name": "MASCOMA RIVER AT WEST CANAAN, NH",
-      "state": "NH"
-    },
-    {
       "id": "07227500",
       "name": "Canadian Rv nr Amarillo, TX",
       "state": "TX"
@@ -9362,11 +8857,6 @@
       "id": "09171100",
       "name": "DOLORES RIVER NEAR BEDROCK, CO.",
       "state": "CO"
-    },
-    {
-      "id": "12155500",
-      "name": "SNOHOMISH RIVER AT SNOHOMISH, WA",
-      "state": "WA"
     },
     {
       "id": "11351948",
@@ -9457,11 +8947,6 @@
       "id": "01037000",
       "name": "Kenduskeag Stream near Bangor, Maine",
       "state": "ME"
-    },
-    {
-      "id": "03143500",
-      "name": "Wills Creek bl Wills Creek Dam at Wills Creek OH",
-      "state": "OH"
     },
     {
       "id": "02322800",
@@ -9799,11 +9284,6 @@
       "state": "WY"
     },
     {
-      "id": "15242000",
-      "name": "KASILOF R NR KASILOF AK",
-      "state": "AK"
-    },
-    {
       "id": "14152000",
       "name": "MIDDLE FORK WILLAMETTE RIVER AT JASPER, OR",
       "state": "OR"
@@ -9854,19 +9334,9 @@
       "state": "KY"
     },
     {
-      "id": "07349500",
-      "name": "Bodcau Bayou near Sarepta, LA",
-      "state": "LA"
-    },
-    {
       "id": "05053000",
       "name": "WILD RICE RIVER NEAR ABERCROMBIE, ND",
       "state": "ND"
-    },
-    {
-      "id": "02479160",
-      "name": "BLACK CREEK NR WIGGINS, MS",
-      "state": "MS"
     },
     {
       "id": "07056000",
@@ -9992,11 +9462,6 @@
       "id": "01674500",
       "name": "MATTAPONI RIVER NEAR BEULAHVILLE, VA",
       "state": "VA"
-    },
-    {
-      "id": "03195500",
-      "name": "ELK RIVER AT SUTTON, WV",
-      "state": "WV"
     },
     {
       "id": "01072870",
