@@ -1,0 +1,33 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; font-family: Inter, system-ui, -apple-system, sans-serif; background: #0b1020; color: #e7ecf3; }
+.topbar { padding: 14px 20px 10px; border-bottom: 1px solid #26314f; background: #131a2d; }
+.topbar h1 { margin: 0 0 4px; font-size: 20px; }
+.topbar p { margin: 0; font-size: 13px; color: #aab7d4; }
+.legend { margin-top: 6px; font-size: 12px; color: #aab7d4; display: flex; gap: 14px; align-items: center; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot-mt { background: #ff8a4c; }
+.dot-ak { background: #4cc8ff; }
+.dot-other { background: #b8c1d6; }
+
+#layout { display: grid; grid-template-columns: 1.5fr 1fr; height: calc(100vh - 70px); }
+#map { width: 100%; height: 100%; background: #0b1020; }
+#panel { padding: 18px 20px; overflow-y: auto; background: #0d1426; border-left: 1px solid #26314f; }
+#panel h2 { margin: 0 0 6px; font-size: 18px; }
+.meta { font-size: 13px; color: #aab7d4; margin-bottom: 12px; }
+.meta b { color: #e7ecf3; font-weight: 600; }
+.status { font-size: 12px; color: #8ec5ff; margin-bottom: 8px; min-height: 16px; }
+#forecast-summary { background: #131a2d; border: 1px solid #26314f; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+#forecast-summary table { width: 100%; border-collapse: collapse; }
+#forecast-summary td, #forecast-summary th { padding: 4px 6px; border-bottom: 1px solid #1f2942; font-size: 12px; text-align: left; }
+canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px; border: 1px solid #26314f; }
+#member-table { margin-top: 14px; font-size: 12px; }
+#member-table table { width: 100%; border-collapse: collapse; }
+#member-table th, #member-table td { padding: 4px 6px; border-bottom: 1px solid #1f2942; text-align: right; }
+#member-table th:first-child, #member-table td:first-child { text-align: left; }
+#refresh-btn { margin-top: 12px; padding: 6px 12px; background: #1d2742; color: #e7ecf3; border: 1px solid #33446f; border-radius: 6px; cursor: pointer; }
+#refresh-btn:hover { background: #283456; }
+.notes { margin-top: 8px; font-size: 11px; color: #d4a14a; }
+@media (max-width: 900px) {
+  #layout { grid-template-columns: 1fr; grid-template-rows: 60vh 40vh; height: auto; }
+  #panel { border-left: none; border-top: 1px solid #26314f; }
+}

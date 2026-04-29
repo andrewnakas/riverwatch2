@@ -1,0 +1,85 @@
+# RiverWatch2
+
+Live, on-demand river-discharge forecasts for a 40-station benchmark subset of USGS gauges.
+
+A Flask app serves a Leaflet map of all 40 sensors. Clicking any marker triggers
+a fresh forecast that runs the following models against live USGS NWIS daily
+discharge and Open-Meteo weather:
+
+- `persistence_lag1` — naive baseline (yhat = last observed)
+- `runoff_ridge` — Ridge regression on lagged log-discharge + day-of-year +
+  rolling precip / temperature / snowfall windows. Recursive multi-step.
+- `chronos_bolt` — [Amazon Chronos-Bolt](https://github.com/amazon-science/chronos-forecasting)
+  zero-shot foundation model (T5-based, ~50 MB, CPU inference). Optional but recommended.
+
+Each member is rolling-validated on the training window and combined into an
+inverse-MAE-weighted ensemble blend.
+
+## Quickstart
+
+```bash
+cd riverwatch2
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# (one-time) refresh USGS site metadata for the 40-station subset
+python scripts/fetch_station_metadata.py
+
+# serve the map UI
+python -m app.server --host 0.0.0.0 --port 8000
+# open http://localhost:8000
+```
+
+First forecast for a station takes 5-30 s (cold USGS + Open-Meteo fetch + Chronos
+init). Subsequent calls are cached for 30 minutes. Use the **Force refresh** button
+to bypass cache.
+
+## Benchmarking
+
+```bash
+python scripts/benchmark_40.py --label baseline --eval-days 14 --horizon 7
+```
+
+Writes `benchmarks/results_<label>_<ts>.json` with per-station and aggregate MAE
+for every member and the ensemble blend. Re-run with a new `--label` after each
+modeling change to keep a clean diff trail.
+
+## Project structure
+
+```
+app/
+  server.py        Flask app: /, /api/stations, /api/forecast/<id>
+  forecast.py      The three forecasters + ensemble blend
+  usgs.py          USGS NWIS daily + instantaneous discharge with caching
+  weather.py       Open-Meteo historical + forecast with caching
+  templates/       index.html
+  static/          app.js + styles.css
+data/
+  stations_40.json            Hand-picked 40-station benchmark subset
+  stations_40_enriched.json   With lat/lon + drainage + elevation from USGS
+  cache/                      On-disk JSON cache for USGS + Open-Meteo
+benchmarks/
+  results_*.json              Per-run benchmark snapshots
+scripts/
+  fetch_station_metadata.py   One-shot USGS site lookup for the subset
+  benchmark_40.py             Full-subset MAE evaluation
+```
+
+## What the 40-station subset is
+
+Picked from the upstream `north-america-river-watch` "mixed-corrected-cache"
+benchmark, sorted by ensemble MAE ascending and capped per-state for geographic
+spread (max 8 AK, 8 MT, 4 WY, 3 elsewhere). Skewed toward Mountain West +
+Yellowstone + Alaska panhandle hydrology, with sentinel CONUS sites for
+contrast.
+
+## Roadmap toward better MAE
+
+- [x] Baseline ensemble: persistence + ridge + Chronos-Bolt zero-shot
+- [ ] Try `chronos-bolt-base` (~200 MB) instead of `-small` for the foundation arm
+- [ ] Add elevation-aware Open-Meteo precip + degree-day melt features
+- [ ] Add SNOTEL SWE for stations that have a station within 50 km
+- [ ] Per-station ensemble weights persisted across runs (warm start blend)
+- [ ] Calibrate Chronos forecasts against a per-station seasonal scale factor
+- [ ] Try TimesFM-2 / Apex once they have a stable PyPI release

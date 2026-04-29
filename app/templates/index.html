@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiverWatch2 — live zero-shot forecasts (40-station benchmark)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>RiverWatch2</h1>
+    <p>Live on-demand zero-shot river-discharge forecasts for the 40-station benchmark subset. Click a marker to run a fresh forecast.</p>
+    <div class="legend">
+      <span class="dot dot-mt"></span> Mountain West
+      <span class="dot dot-ak"></span> Alaska
+      <span class="dot dot-other"></span> Other CONUS
+    </div>
+  </header>
+  <div id="layout">
+    <div id="map"></div>
+    <aside id="panel">
+      <div id="panel-empty">Select a station on the map to load its live forecast.</div>
+      <div id="panel-content" style="display:none">
+        <h2 id="station-title">—</h2>
+        <div id="station-meta" class="meta"></div>
+        <div id="forecast-status" class="status"></div>
+        <div id="forecast-summary"></div>
+        <canvas id="chart" width="640" height="320"></canvas>
+        <div id="member-table"></div>
+        <button id="refresh-btn" type="button">Force refresh</button>
+      </div>
+    </aside>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
