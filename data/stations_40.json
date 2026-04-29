@@ -1,5 +1,5 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: ~218 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, and Great Lakes / Driftless",
+  "description": "Live zero-shot river-discharge forecast subset: ~500 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, Great Lakes / Driftless, plus a balanced sweep of every other state",
   "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
@@ -1092,6 +1092,1416 @@
       "id": "01073000",
       "name": "OYSTER RIVER NEAR DURHAM, NH",
       "state": "NH"
+    },
+    {
+      "id": "07010000",
+      "name": "Mississippi River at St. Louis, MO",
+      "state": "MO"
+    },
+    {
+      "id": "06467500",
+      "name": "MISSOURI RIVER AT YANKTON, SD",
+      "state": "SD"
+    },
+    {
+      "id": "05378500",
+      "name": "MISSISSIPPI RIVER AT WINONA, MN",
+      "state": "MN"
+    },
+    {
+      "id": "03589500",
+      "name": "TENNESSEE RIVER AT FLORENCE AL",
+      "state": "AL"
+    },
+    {
+      "id": "07194500",
+      "name": "Arkansas River near Muskogee, OK",
+      "state": "OK"
+    },
+    {
+      "id": "03381700",
+      "name": "OHIO RIVER AT OLD SHAWNEETOWN, IL-KY",
+      "state": "KY"
+    },
+    {
+      "id": "06342500",
+      "name": "MISSOURI RIVER AT BISMARCK, ND",
+      "state": "ND"
+    },
+    {
+      "id": "07263450",
+      "name": "Arkansas River at Murray Dam near Little Rock, AR",
+      "state": "AR"
+    },
+    {
+      "id": "07289000",
+      "name": "MISSISSIPPI RIVER AT VICKSBURG, MS",
+      "state": "MS"
+    },
+    {
+      "id": "06813500",
+      "name": "Missouri River at Rulo, NE",
+      "state": "NE"
+    },
+    {
+      "id": "07374525",
+      "name": "Mississippi River at Belle Chasse, LA",
+      "state": "LA"
+    },
+    {
+      "id": "01184000",
+      "name": "CONNECTICUT RIVER AT THOMPSONVILLE, CT",
+      "state": "CT"
+    },
+    {
+      "id": "01113895",
+      "name": "BLACKSTONE R AT ROOSEVELT ST AT PAWTUCKET RI",
+      "state": "RI"
+    },
+    {
+      "id": "01481500",
+      "name": "BRANDYWINE CREEK AT WILMINGTON, DE",
+      "state": "DE"
+    },
+    {
+      "id": "01648010",
+      "name": "ROCK CREEK AT JOYCE RD WASHINGTON, DC",
+      "state": "DC"
+    },
+    {
+      "id": "03216070",
+      "name": "OHIO RIVER AT IRONTON, OH",
+      "state": "OH"
+    },
+    {
+      "id": "02359170",
+      "name": "APALACHICOLA RIVER NR SUMATRA,FLA.",
+      "state": "FL"
+    },
+    {
+      "id": "06892518",
+      "name": "KANSAS R NR LAKE QUIVIRA, KS",
+      "state": "KS"
+    },
+    {
+      "id": "07022000",
+      "name": "Mississippi River at Thebes, IL",
+      "state": "IL"
+    },
+    {
+      "id": "03303280",
+      "name": "OHIO RIVER AT CANNELTON DAM AT CANNELTON, IN",
+      "state": "IN"
+    },
+    {
+      "id": "01578310",
+      "name": "SUSQUEHANNA RIVER AT CONOWINGO, MD",
+      "state": "MD"
+    },
+    {
+      "id": "01036390",
+      "name": "Penobscot River at Eddington, Maine",
+      "state": "ME"
+    },
+    {
+      "id": "01463500",
+      "name": "Delaware River at Trenton NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "04165710",
+      "name": "DETROIT RIVER AT FORT WAYNE AT DETROIT, MI",
+      "state": "MI"
+    },
+    {
+      "id": "06601200",
+      "name": "Missouri River at Decatur, NE",
+      "state": "IA"
+    },
+    {
+      "id": "08361000",
+      "name": "RIO GRANDE BELOW ELEPHANT BUTTE DAM, NM",
+      "state": "NM"
+    },
+    {
+      "id": "07032000",
+      "name": "MISSISSIPPI RIVER AT MEMPHIS, TN",
+      "state": "TN"
+    },
+    {
+      "id": "02171645",
+      "name": "REDIV CANAL AT SANTEE RIVER NR ST STEPHEN, SC",
+      "state": "SC"
+    },
+    {
+      "id": "01172010",
+      "name": "CONNECTICUT R AT I-391 BRIDGE AT HOLYOKE, MA",
+      "state": "MA"
+    },
+    {
+      "id": "04264331",
+      "name": "ST. LAWRENCE R AT CORNWALL ONT NR MASSENA NY",
+      "state": "NY"
+    },
+    {
+      "id": "09421500",
+      "name": "COLORADO RV BLW HOOVER DAM, AZ-NV",
+      "state": "NV"
+    },
+    {
+      "id": "04290500",
+      "name": "WINOOSKI RIVER NEAR ESSEX JUNCTION, VT",
+      "state": "VT"
+    },
+    {
+      "id": "01576000",
+      "name": "Susquehanna River at Marietta, PA",
+      "state": "PA"
+    },
+    {
+      "id": "02226160",
+      "name": "ALTAMAHA RIVER NEAR EVERETT CITY, GA",
+      "state": "GA"
+    },
+    {
+      "id": "05344500",
+      "name": "MISSISSIPPI RIVER AT PRESCOTT, WI",
+      "state": "WI"
+    },
+    {
+      "id": "01144500",
+      "name": "CONNECTICUT RIVER AT WEST LEBANON, NH",
+      "state": "NH"
+    },
+    {
+      "id": "02079500",
+      "name": "ROANOKE RIVER AT BUGGS ISLAND, VA",
+      "state": "VA"
+    },
+    {
+      "id": "09522000",
+      "name": "COLORADO RIVER AT NIB, ABOVE MORELOS DAM, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "02081000",
+      "name": "ROANOKE RIVER NEAR SCOTLAND NECK, NC",
+      "state": "NC"
+    },
+    {
+      "id": "09328960",
+      "name": "COLORADO RIVER AT GYPSUM CANYON NEAR HITE, UT",
+      "state": "UT"
+    },
+    {
+      "id": "07336820",
+      "name": "Red River near De Kalb, TX",
+      "state": "TX"
+    },
+    {
+      "id": "03206000",
+      "name": "OHIO RIVER AT HUNTINGTON, WV",
+      "state": "WV"
+    },
+    {
+      "id": "06674500",
+      "name": "NORTH PLATTE RIVER AT WYOMING-NEBRASKA STATE LINE",
+      "state": "WY"
+    },
+    {
+      "id": "15565447",
+      "name": "YUKON R AT PILOT STATION AK",
+      "state": "AK"
+    },
+    {
+      "id": "14246900",
+      "name": "COLUMBIA RIVER AT PORT WESTWARD, NEAR QUINCY, OR",
+      "state": "OR"
+    },
+    {
+      "id": "07135500",
+      "name": "ARKANSAS RIVER AT HOLLY, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "14144700",
+      "name": "COLUMBIA RIVER AT VANCOUVER, WA",
+      "state": "WA"
+    },
+    {
+      "id": "09521100",
+      "name": "COLORADO R BLW YUMA MAIN CANAL WW AT YUMA, AZ",
+      "state": "CA"
+    },
+    {
+      "id": "06185500",
+      "name": "Missouri River near Culbertson MT",
+      "state": "MT"
+    },
+    {
+      "id": "13269000",
+      "name": "SNAKE RIVER AT WEISER ID",
+      "state": "ID"
+    },
+    {
+      "id": "06935965",
+      "name": "Missouri River at St. Charles, MO",
+      "state": "MO"
+    },
+    {
+      "id": "06439500",
+      "name": "CHEYENNE RIVER NEAR EAGLE BUTTE SD",
+      "state": "SD"
+    },
+    {
+      "id": "05355250",
+      "name": "MISSISSIPPI RIVER AT RED WING, MN",
+      "state": "MN"
+    },
+    {
+      "id": "03575500",
+      "name": "TENNESSEE RIVER AT WHITESBURG AL",
+      "state": "AL"
+    },
+    {
+      "id": "07165570",
+      "name": "Arkansas River near Haskell, OK",
+      "state": "OK"
+    },
+    {
+      "id": "03322420",
+      "name": "OHIO RIVER AT UNIONTOWN DAM, KY",
+      "state": "KY"
+    },
+    {
+      "id": "06330000",
+      "name": "MISSOURI RIVER NR WILLISTON, ND",
+      "state": "ND"
+    },
+    {
+      "id": "07263451",
+      "name": "Hydroplant @ Murray Dam @ Little Rock, AR",
+      "state": "AR"
+    },
+    {
+      "id": "07288955",
+      "name": "YAZOO RIVER BL STEELE BAYOU NR LONG LAKE, MS",
+      "state": "MS"
+    },
+    {
+      "id": "06807000",
+      "name": "Missouri River at Nebraska City, NE",
+      "state": "NE"
+    },
+    {
+      "id": "07374000",
+      "name": "Mississippi River at Baton Rouge, LA",
+      "state": "LA"
+    },
+    {
+      "id": "01205500",
+      "name": "HOUSATONIC RIVER AT STEVENSON, CT",
+      "state": "CT"
+    },
+    {
+      "id": "01112500",
+      "name": "BLACKSTONE RIVER AT WOONSOCKET, RI",
+      "state": "RI"
+    },
+    {
+      "id": "01479000",
+      "name": "WHITE CLAY CREEK NEAR NEWARK, DE",
+      "state": "DE"
+    },
+    {
+      "id": "01648000",
+      "name": "ROCK CREEK AT SHERRILL DRIVE WASHINGTON, DC",
+      "state": "DC"
+    },
+    {
+      "id": "03114306",
+      "name": "OHIO RIVER ABOVE SARDIS, OH",
+      "state": "OH"
+    },
+    {
+      "id": "02358754",
+      "name": "APALACHICOLA R.AB CHIPOLA CUTOFF NR WEWAHITCHKA,FL",
+      "state": "FL"
+    },
+    {
+      "id": "06892350",
+      "name": "KANSAS R AT DESOTO, KS",
+      "state": "KS"
+    },
+    {
+      "id": "07020500",
+      "name": "Mississippi River at Chester, IL",
+      "state": "IL"
+    },
+    {
+      "id": "03378500",
+      "name": "WABASH RIVER AT NEW HARMONY, IN",
+      "state": "IN"
+    },
+    {
+      "id": "01646502",
+      "name": "POTOMAC RIVER, ADJUSTED, NEAR WASH, DC",
+      "state": "MD"
+    },
+    {
+      "id": "01034500",
+      "name": "Penobscot River at West Enfield, Maine",
+      "state": "ME"
+    },
+    {
+      "id": "01457500",
+      "name": "Delaware River at Riegelsville NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "04159130",
+      "name": "ST. CLAIR RIVER AT PORT HURON, MI",
+      "state": "MI"
+    },
+    {
+      "id": "05474500",
+      "name": "Mississippi River at Keokuk, IA",
+      "state": "IA"
+    },
+    {
+      "id": "08359500",
+      "name": "RIO GRANDE AT NARROWS IN ELEPHANT BUTTE RES., NM",
+      "state": "NM"
+    },
+    {
+      "id": "03435000",
+      "name": "CUMBERLAND RIVER BELOW CHEATHAM DAM, TN",
+      "state": "TN"
+    },
+    {
+      "id": "02172002",
+      "name": "LAKE MOULTRIE TAILRACE CANAL AT MONCKS CORNER, SC",
+      "state": "SC"
+    },
+    {
+      "id": "01161280",
+      "name": "CONNECTICUT RIVER NEAR NORTHFIELD, MA",
+      "state": "MA"
+    },
+    {
+      "id": "04216000",
+      "name": "NIAGARA RIVER AT BUFFALO NY",
+      "state": "NY"
+    },
+    {
+      "id": "10335000",
+      "name": "HUMBOLDT RV NR RYE PATCH, NV",
+      "state": "NV"
+    },
+    {
+      "id": "04294000",
+      "name": "MISSISQUOI RIVER AT SWANTON, VT",
+      "state": "VT"
+    },
+    {
+      "id": "03086000",
+      "name": "Ohio River at Sewickley, PA",
+      "state": "PA"
+    },
+    {
+      "id": "02226000",
+      "name": "ALTAMAHA RIVER AT DOCTORTOWN, GA",
+      "state": "GA"
+    },
+    {
+      "id": "05369500",
+      "name": "CHIPPEWA RIVER AT DURAND, WI",
+      "state": "WI"
+    },
+    {
+      "id": "01092000",
+      "name": "MERRIMACK R NR GOFFS FALLS, BELOW MANCHESTER, NH",
+      "state": "NH"
+    },
+    {
+      "id": "02037500",
+      "name": "JAMES RIVER NEAR RICHMOND, VA",
+      "state": "VA"
+    },
+    {
+      "id": "09404120",
+      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
+      "state": "AZ"
+    },
+    {
+      "id": "02080500",
+      "name": "ROANOKE RIVER AT ROANOKE RAPIDS, NC",
+      "state": "NC"
+    },
+    {
+      "id": "09328920",
+      "name": "GREEN RIVER AT MINERAL BOTTOM NR CYNLNDS NTL PARK",
+      "state": "UT"
+    },
+    {
+      "id": "08116650",
+      "name": "Brazos Rv nr Rosharon, TX",
+      "state": "TX"
+    },
+    {
+      "id": "03201500",
+      "name": "OHIO RIVER AT POINT PLEASANT, WV",
+      "state": "WV"
+    },
+    {
+      "id": "06657000",
+      "name": "NORTH PLATTE RIVER BELOW WHALEN DIVERSION DAM, WY",
+      "state": "WY"
+    },
+    {
+      "id": "15453500",
+      "name": "YUKON R NR STEVENS VILLAGE AK",
+      "state": "AK"
+    },
+    {
+      "id": "14105700",
+      "name": "COLUMBIA RIVER AT THE DALLES, OR",
+      "state": "OR"
+    },
+    {
+      "id": "07134180",
+      "name": "ARKANSAS RIVER NEAR GRANADA, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "12472800",
+      "name": "COLUMBIA RIVER BELOW PRIEST RAPIDS DAM, WA",
+      "state": "WA"
+    },
+    {
+      "id": "09429600",
+      "name": "COLORADO RIVER BELOW LAGUNA DAM, AZ-CA",
+      "state": "CA"
+    },
+    {
+      "id": "06177000",
+      "name": "Missouri River near Wolf Point MT",
+      "state": "MT"
+    },
+    {
+      "id": "13213100",
+      "name": "SNAKE RIVER AT NYSSA OR",
+      "state": "ID"
+    },
+    {
+      "id": "06935550",
+      "name": "Missouri River near Labadie, MO",
+      "state": "MO"
+    },
+    {
+      "id": "06438500",
+      "name": "CHEYENNE RIVER NEAR PLAINVIEW,SD",
+      "state": "SD"
+    },
+    {
+      "id": "05331580",
+      "name": "MISSISSIPPI RIVER BELOW L&D 2 AT HASTINGS, MN",
+      "state": "MN"
+    },
+    {
+      "id": "02428400",
+      "name": "ALABAMA RIVER AT CLAIBORNE L&D NEAR MONROEVILLE",
+      "state": "AL"
+    },
+    {
+      "id": "07164500",
+      "name": "Arkansas River at Tulsa, OK",
+      "state": "OK"
+    },
+    {
+      "id": "03294500",
+      "name": "OHIO RIVER AT LOUISVILLE, KY",
+      "state": "KY"
+    },
+    {
+      "id": "05092000",
+      "name": "RED RIVER OF THE NORTH AT DRAYTON, ND",
+      "state": "ND"
+    },
+    {
+      "id": "07263500",
+      "name": "Arkansas River at Little Rock, AR",
+      "state": "AR"
+    },
+    {
+      "id": "07288800",
+      "name": "YAZOO RIVER AT REDWOOD, MS",
+      "state": "MS"
+    },
+    {
+      "id": "06610000",
+      "name": "Missouri River at Omaha, NE",
+      "state": "NE"
+    },
+    {
+      "id": "07381490",
+      "name": "Atchafalaya River at Simmesport, LA",
+      "state": "LA"
+    },
+    {
+      "id": "01200500",
+      "name": "HOUSATONIC RIVER AT GAYLORDSVILLE, CT",
+      "state": "CT"
+    },
+    {
+      "id": "01118500",
+      "name": "PAWCATUCK RIVER AT WESTERLY, RI",
+      "state": "RI"
+    },
+    {
+      "id": "01487000",
+      "name": "NANTICOKE RIVER NEAR BRIDGEVILLE, DE",
+      "state": "DE"
+    },
+    {
+      "id": "03150500",
+      "name": "Muskingum River at Beverly OH",
+      "state": "OH"
+    },
+    {
+      "id": "02358700",
+      "name": "APALACHICOLA RIVER NR BLOUNTSTOWN,FLORIDA",
+      "state": "FL"
+    },
+    {
+      "id": "06891080",
+      "name": "KANSAS R AT LAWRENCE, KS",
+      "state": "KS"
+    },
+    {
+      "id": "03612600",
+      "name": "OHIO RIVER AT OLMSTED, IL",
+      "state": "IL"
+    },
+    {
+      "id": "03343010",
+      "name": "WABASH RIVER AT MEMORIAL BRIDGE AT VINCENNES, IN",
+      "state": "IN"
+    },
+    {
+      "id": "01638500",
+      "name": "POTOMAC RIVER AT POINT OF ROCKS, MD",
+      "state": "MD"
+    },
+    {
+      "id": "01014000",
+      "name": "St. John River below Fish R, nr Fort Kent, Maine",
+      "state": "ME"
+    },
+    {
+      "id": "01446500",
+      "name": "Delaware River at Belvidere NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "04127885",
+      "name": "ST. MARYS RIVER AT SAULT STE. MARIE, ONTARIO",
+      "state": "MI"
+    },
+    {
+      "id": "05420460",
+      "name": "Beaver Slough at 3rd Street at Clinton, IA",
+      "state": "IA"
+    },
+    {
+      "id": "08355490",
+      "name": "RIO GRANDE ABOVE US HWY 380 NR SAN ANTONIO, NM",
+      "state": "NM"
+    },
+    {
+      "id": "03431790",
+      "name": "CUMBERLAND RIVER AT ASHLAND CITY, TN",
+      "state": "TN"
+    },
+    {
+      "id": "02171500",
+      "name": "SANTEE RIVER NEAR PINEVILLE, SC",
+      "state": "SC"
+    },
+    {
+      "id": "01100000",
+      "name": "MERRIMACK RIVER BL CONCORD RIVER AT LOWELL, MA",
+      "state": "MA"
+    },
+    {
+      "id": "01358000",
+      "name": "HUDSON RIVER AT GREEN ISLAND NY",
+      "state": "NY"
+    },
+    {
+      "id": "10333000",
+      "name": "HUMBOLDT RV NR IMLAY, NV",
+      "state": "NV"
+    },
+    {
+      "id": "04292500",
+      "name": "LAMOILLE RIVER AT EAST GEORGIA, VT",
+      "state": "VT"
+    },
+    {
+      "id": "03049500",
+      "name": "Allegheny River at Natrona, PA",
+      "state": "PA"
+    },
+    {
+      "id": "02225000",
+      "name": "ALTAMAHA RIVER NEAR BAXLEY, GA",
+      "state": "GA"
+    },
+    {
+      "id": "05404000",
+      "name": "WISCONSIN RIVER NEAR WISCONSIN DELLS, WI",
+      "state": "WI"
+    },
+    {
+      "id": "01081500",
+      "name": "MERRIMACK RIVER AT FRANKLIN JUNCTION, NH",
+      "state": "NH"
+    },
+    {
+      "id": "02035000",
+      "name": "JAMES RIVER AT CARTERSVILLE, VA",
+      "state": "VA"
+    },
+    {
+      "id": "09383100",
+      "name": "COLORADO R ABV LITTLE COLORADO R NR DESERT VIEW",
+      "state": "AZ"
+    },
+    {
+      "id": "02129000",
+      "name": "PEE DEE R NR ROCKINGHAM, NC",
+      "state": "NC"
+    },
+    {
+      "id": "09315000",
+      "name": "GREEN RIVER AT GREEN RIVER, UT",
+      "state": "UT"
+    },
+    {
+      "id": "08114000",
+      "name": "Brazos Rv at Richmond, TX",
+      "state": "TX"
+    },
+    {
+      "id": "03151000",
+      "name": "OHIO RIVER AT PARKERSBURG, WV",
+      "state": "WV"
+    },
+    {
+      "id": "06279500",
+      "name": "BIGHORN RIVER AT KANE, WY",
+      "state": "WY"
+    },
+    {
+      "id": "15356000",
+      "name": "YUKON R AT EAGLE AK",
+      "state": "AK"
+    },
+    {
+      "id": "14019200",
+      "name": "COLUMBIA RIVER AT MCNARY DAM,NEAR UMATILLA, OR",
+      "state": "OR"
+    },
+    {
+      "id": "07133000",
+      "name": "ARKANSAS RIVER AT LAMAR, CO",
+      "state": "CO"
+    },
+    {
+      "id": "13334300",
+      "name": "SNAKE RIVER NEAR ANATONE, WA",
+      "state": "WA"
+    },
+    {
+      "id": "09429490",
+      "name": "COLORADO RIVER ABOVE IMPERIAL DAM, AZ-CA",
+      "state": "CA"
+    },
+    {
+      "id": "06327500",
+      "name": "Yellowstone River at Glendive, MT",
+      "state": "MT"
+    },
+    {
+      "id": "06935450",
+      "name": "Missouri River at Washington, MO",
+      "state": "MO"
+    },
+    {
+      "id": "06478513",
+      "name": "JAMES RIVER NEAR YANKTON, SD",
+      "state": "SD"
+    },
+    {
+      "id": "05331000",
+      "name": "MISSISSIPPI RIVER AT ST. PAUL, MN",
+      "state": "MN"
+    },
+    {
+      "id": "02469761",
+      "name": "TOMBIGBEE R AT COFFEEVILLE L&D NR COFFEEVILLE, AL.",
+      "state": "AL"
+    },
+    {
+      "id": "07152500",
+      "name": "Arkansas River at Ralston, OK",
+      "state": "OK"
+    },
+    {
+      "id": "03292494",
+      "name": "OHIO RIVER AT WATER TOWER AT LOUISVILLE, KY",
+      "state": "KY"
+    },
+    {
+      "id": "05082500",
+      "name": "RED RIVER OF THE NORTH AT GRAND FORKS, ND",
+      "state": "ND"
+    },
+    {
+      "id": "07260800",
+      "name": "Arkansas River near Morrilton, AR",
+      "state": "AR"
+    },
+    {
+      "id": "301141089320300",
+      "name": "EAST PEARL RIVER AT CSX RAILROAD NR CLAIBORNE, MS",
+      "state": "MS"
+    },
+    {
+      "id": "06486000",
+      "name": "Missouri River at Sioux City, IA",
+      "state": "NE"
+    },
+    {
+      "id": "07355500",
+      "name": "Red River at Alexandria, LA",
+      "state": "LA"
+    },
+    {
+      "id": "01127000",
+      "name": "QUINEBAUG RIVER AT JEWETT CITY, CT",
+      "state": "CT"
+    },
+    {
+      "id": "01116500",
+      "name": "PAWTUXET RIVER AT CRANSTON, RI",
+      "state": "RI"
+    },
+    {
+      "id": "01478650",
+      "name": "WHITE CLAY CREEK AT NEWARK, DE",
+      "state": "DE"
+    },
+    {
+      "id": "03150000",
+      "name": "Muskingum River at McConnelsville OH",
+      "state": "OH"
+    },
+    {
+      "id": "02358000",
+      "name": "APALACHICOLA RIVER AT CHATTAHOOCHEE FLA",
+      "state": "FL"
+    },
+    {
+      "id": "06891000",
+      "name": "KANSAS R AT LECOMPTON, KS",
+      "state": "KS"
+    },
+    {
+      "id": "05587450",
+      "name": "Mississippi River at Grafton, IL",
+      "state": "IL"
+    },
+    {
+      "id": "03342000",
+      "name": "WABASH RIVER AT RIVERTON, IN",
+      "state": "IN"
+    },
+    {
+      "id": "01613000",
+      "name": "POTOMAC RIVER AT HANCOCK, MD",
+      "state": "MD"
+    },
+    {
+      "id": "01049265",
+      "name": "Kennebec River at North Sidney, Maine",
+      "state": "ME"
+    },
+    {
+      "id": "01389890",
+      "name": "Passaic River at Dundee Dam at Clifton NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "04157060",
+      "name": "SAGINAW RIVER AT MIDLAND STREET AT BAY CITY, MI",
+      "state": "MI"
+    },
+    {
+      "id": "05420500",
+      "name": "Mississippi River at Clinton, IA",
+      "state": "IA"
+    },
+    {
+      "id": "08355050",
+      "name": "RIO GRANDE AT BRIDGE NEAR ESCONDIDA, NM",
+      "state": "NM"
+    },
+    {
+      "id": "03431500",
+      "name": "CUMBERLAND RIVER AT NASHVILLE, TN",
+      "state": "TN"
+    },
+    {
+      "id": "02135200",
+      "name": "PEE DEE RIVER AT HWY 701 NR BUCKSPORT, SC",
+      "state": "SC"
+    },
+    {
+      "id": "01177000",
+      "name": "CHICOPEE RIVER AT INDIAN ORCHARD, MA",
+      "state": "MA"
+    },
+    {
+      "id": "04249000",
+      "name": "OSWEGO RIVER AT LOCK 7, OSWEGO NY",
+      "state": "NY"
+    },
+    {
+      "id": "10331500",
+      "name": "HUMBOLDT RV NR ROSE CK, NV",
+      "state": "NV"
+    },
+    {
+      "id": "04282500",
+      "name": "OTTER CREEK AT MIDDLEBURY, VT",
+      "state": "VT"
+    },
+    {
+      "id": "01538700",
+      "name": "Susquehanna River at Bloomsburg, PA",
+      "state": "PA"
+    },
+    {
+      "id": "02224940",
+      "name": "ALTAMAHA RIVER AT US 221, NR CHARLOTTEVILLE, GA",
+      "state": "GA"
+    },
+    {
+      "id": "05344490",
+      "name": "ST. CROIX RIVER AT PRESCOTT, WI",
+      "state": "WI"
+    },
+    {
+      "id": "01054000",
+      "name": "Androscoggin River near Gorham, NH",
+      "state": "NH"
+    },
+    {
+      "id": "02029000",
+      "name": "JAMES RIVER AT SCOTTSVILLE, VA",
+      "state": "VA"
+    },
+    {
+      "id": "09520500",
+      "name": "GILA RIVER NEAR DOME, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "02105769",
+      "name": "CAPE FEAR R AT LOCK 1 NR KELLY, NC",
+      "state": "NC"
+    },
+    {
+      "id": "09272400",
+      "name": "GREEN RIVER AT OURAY, UTAH",
+      "state": "UT"
+    },
+    {
+      "id": "08111850",
+      "name": "Brazos Rv at San Felipe, TX",
+      "state": "TX"
+    },
+    {
+      "id": "03198000",
+      "name": "KANAWHA RIVER AT CHARLESTON, WV",
+      "state": "WV"
+    },
+    {
+      "id": "06652000",
+      "name": "NORTH PLATTE RIVER AT ORIN, WY",
+      "state": "WY"
+    },
+    {
+      "id": "15304000",
+      "name": "KUSKOKWIM R AT CROOKED CREEK AK",
+      "state": "AK"
+    },
+    {
+      "id": "13290450",
+      "name": "SNAKE RIVER AT HELLS CANYON DAM ID-OR STATE LINE",
+      "state": "OR"
+    },
+    {
+      "id": "07130500",
+      "name": "ARKANSAS RIVER BELOW JOHN MARTIN RESERVOIR, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "12462600",
+      "name": "COLUMBIA RIVER BELOW ROCK ISLAND DAM, WA",
+      "state": "WA"
+    },
+    {
+      "id": "09429500",
+      "name": "COLORADO RIVER BELOW IMPERIAL DAM, AZ-CA",
+      "state": "CA"
+    },
+    {
+      "id": "06309000",
+      "name": "Yellowstone River at Miles City, MT",
+      "state": "MT"
+    },
+    {
+      "id": "06934500",
+      "name": "Missouri River at Hermann, MO",
+      "state": "MO"
+    },
+    {
+      "id": "06478500",
+      "name": "JAMES RIVER NEAR SCOTLAND,SD",
+      "state": "SD"
+    },
+    {
+      "id": "05083500",
+      "name": "RED RIVER OF THE NORTH AT OSLO, MN",
+      "state": "MN"
+    },
+    {
+      "id": "02469525",
+      "name": "TOMBIGBEE RIVER NEAR NANAFALIA, AL.",
+      "state": "AL"
+    },
+    {
+      "id": "07245000",
+      "name": "Canadian River near Whitefield, OK",
+      "state": "OK"
+    },
+    {
+      "id": "03277200",
+      "name": "OHIO RIVER AT MARKLAND DAM NEAR WARSAW, KY",
+      "state": "KY"
+    },
+    {
+      "id": "05070000",
+      "name": "RED RIVER OF THE NORTH NEAR THOMPSON, ND",
+      "state": "ND"
+    },
+    {
+      "id": "07250550",
+      "name": "AR River at James W. Trimble L&D nr Van Buren, AR",
+      "state": "AR"
+    },
+    {
+      "id": "02479310",
+      "name": "PASCAGOULA RIVER AT GRAHAM FERRY, MS",
+      "state": "MS"
+    },
+    {
+      "id": "06805500",
+      "name": "Platte River at Louisville, Nebr.",
+      "state": "NE"
+    },
+    {
+      "id": "07344400",
+      "name": "Red River near Hosston, LA.",
+      "state": "LA"
+    },
+    {
+      "id": "01199000",
+      "name": "HOUSATONIC RIVER AT FALLS VILLAGE, CT",
+      "state": "CT"
+    },
+    {
+      "id": "01115500",
+      "name": "NORTH BRANCH PAWTUXET RIVER AT FISKEVILLE, RI",
+      "state": "RI"
+    },
+    {
+      "id": "01484525",
+      "name": "MILLSBORO POND OUTLET AT MILLSBORO, DE",
+      "state": "DE"
+    },
+    {
+      "id": "04193500",
+      "name": "Maumee River at Waterville OH",
+      "state": "OH"
+    },
+    {
+      "id": "02323592",
+      "name": "SUWANNEE RIVER AB GOPHER RIVER NR SUWANNEE FL",
+      "state": "FL"
+    },
+    {
+      "id": "06889000",
+      "name": "KANSAS R AT TOPEKA, KS",
+      "state": "KS"
+    },
+    {
+      "id": "03399800",
+      "name": "OHIO RIVER AT SMITHLAND DAM, SMITHLAND, KY",
+      "state": "IL"
+    },
+    {
+      "id": "03341500",
+      "name": "WABASH RIVER AT TERRE HAUTE, IN",
+      "state": "IN"
+    },
+    {
+      "id": "01610000",
+      "name": "POTOMAC RIVER AT PAW PAW, WV",
+      "state": "MD"
+    },
+    {
+      "id": "01059000",
+      "name": "Androscoggin River near Auburn, Maine",
+      "state": "ME"
+    },
+    {
+      "id": "01403060",
+      "name": "Raritan River below Calco Dam at Bound Brook NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "04157005",
+      "name": "SAGINAW RIVER AT HOLLAND AVENUE AT SAGINAW, MI",
+      "state": "MI"
+    },
+    {
+      "id": "05411500",
+      "name": "Mississippi River at Clayton, IA",
+      "state": "IA"
+    },
+    {
+      "id": "08358400",
+      "name": "RIO GRANDE FLOODWAY AT SAN MARCIAL, NM",
+      "state": "NM"
+    },
+    {
+      "id": "034315005",
+      "name": "CUMBERLAND RIVER AT WOODLAND ST AT NASHVILLE, TN",
+      "state": "TN"
+    },
+    {
+      "id": "02131010",
+      "name": "PEE DEE RIVER BELOW PEE DEE, SC",
+      "state": "SC"
+    },
+    {
+      "id": "01170000",
+      "name": "DEERFIELD RIVER NEAR WEST DEERFIELD, MA",
+      "state": "MA"
+    },
+    {
+      "id": "04247055",
+      "name": "OSWEGO RIVER NEAR PHOENIX NY",
+      "state": "NY"
+    },
+    {
+      "id": "09419530",
+      "name": "VIRGIN RV BLW CONF OF MUDDY RV NR OVERTON, NV",
+      "state": "NV"
+    },
+    {
+      "id": "04293500",
+      "name": "MISSISQUOI RIVER NEAR EAST BERKSHIRE, VT",
+      "state": "VT"
+    },
+    {
+      "id": "01536500",
+      "name": "Susquehanna River at Wilkes-Barre, PA",
+      "state": "PA"
+    },
+    {
+      "id": "02198500",
+      "name": "SAVANNAH RIVER NEAR CLYO, GA",
+      "state": "GA"
+    },
+    {
+      "id": "05366800",
+      "name": "CHIPPEWA R AT GRAND AVE AT EAU CLAIRE, WI",
+      "state": "WI"
+    },
+    {
+      "id": "01053600",
+      "name": "Androscoggin River below Bog Brook at Cambridge NH",
+      "state": "NH"
+    },
+    {
+      "id": "03176500",
+      "name": "NEW RIVER AT GLEN LYN, VA",
+      "state": "VA"
+    },
+    {
+      "id": "09520280",
+      "name": "GILA RIVER NEAR DATELAND, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "02105500",
+      "name": "CAPE FEAR R AT WILM O HUSKE LOCK NR TARHEEL, NC",
+      "state": "NC"
+    },
+    {
+      "id": "09261000",
+      "name": "GREEN RIVER NEAR JENSEN, UT",
+      "state": "UT"
+    },
+    {
+      "id": "08447410",
+      "name": "Pecos Rv nr Langtry, TX",
+      "state": "TX"
+    },
+    {
+      "id": "03193000",
+      "name": "KANAWHA RIVER AT KANAWHA FALLS, WV",
+      "state": "WV"
+    },
+    {
+      "id": "09217000",
+      "name": "GREEN RIVER NEAR GREEN RIVER, WY",
+      "state": "WY"
+    },
+    {
+      "id": "15515500",
+      "name": "TANANA R AT NENANA AK",
+      "state": "AK"
+    },
+    {
+      "id": "13183000",
+      "name": "OWYHEE RIVER BELOW OWYHEE DAM, OR",
+      "state": "OR"
+    },
+    {
+      "id": "06759500",
+      "name": "SOUTH PLATTE RIVER AT FORT MORGAN, CO",
+      "state": "CO"
+    },
+    {
+      "id": "12453700",
+      "name": "COLUMBIA RIVER AT ROCKY REACH DAM, WA",
+      "state": "WA"
+    },
+    {
+      "id": "09429100",
+      "name": "COLORADO RIVER BELOW PALO VERDE DAM, AZ-CA",
+      "state": "CA"
+    },
+    {
+      "id": "06910450",
+      "name": "Missouri River at Jefferson City, MO",
+      "state": "MO"
+    },
+    {
+      "id": "06478000",
+      "name": "JAMES RIVER NEAR MITCHELL,SD",
+      "state": "SD"
+    },
+    {
+      "id": "05137500",
+      "name": "RAINY RIVER NEAR BOAT LANDING AT WHEELERS POINT,MN",
+      "state": "MN"
+    },
+    {
+      "id": "02423000",
+      "name": "ALABAMA RIVER AT SELMA AL",
+      "state": "AL"
+    },
+    {
+      "id": "07335500",
+      "name": "Red River at Arthur City, TX",
+      "state": "OK"
+    },
+    {
+      "id": "03238000",
+      "name": "OHIO RIVER AT MAYSVILLE, KY",
+      "state": "KY"
+    },
+    {
+      "id": "05064500",
+      "name": "RED RIVER OF THE NORTH AT HALSTAD, MN",
+      "state": "ND"
+    },
+    {
+      "id": "07250551",
+      "name": "ARK RIVER HYDROPLANT AT TRIMBLE L&D NR VAN BUREN,",
+      "state": "AR"
+    },
+    {
+      "id": "02479000",
+      "name": "PASCAGOULA RIVER AT MERRILL, MS",
+      "state": "MS"
+    },
+    {
+      "id": "06801000",
+      "name": "Platte River near Ashland, Nebr.",
+      "state": "NE"
+    },
+    {
+      "id": "07367005",
+      "name": "Ouachita River at West Monroe, LA",
+      "state": "LA"
+    },
+    {
+      "id": "01189995",
+      "name": "FARMINGTON RIVER AT TARIFFVILLE, CT",
+      "state": "CT"
+    },
+    {
+      "id": "01117500",
+      "name": "Pawcatuck River at Wood River Junction, RI",
+      "state": "RI"
+    },
+    {
+      "id": "01480015",
+      "name": "RED CLAY CREEK NEAR STANTON, DE",
+      "state": "DE"
+    },
+    {
+      "id": "03144500",
+      "name": "Muskingum River at Dresden OH",
+      "state": "OH"
+    },
+    {
+      "id": "02323500",
+      "name": "SUWANNEE RIVER NEAR WILCOX, FLA.",
+      "state": "FL"
+    },
+    {
+      "id": "06888990",
+      "name": "KANSAS R AB TOPEKA WEIR AT TOPEKA, KS",
+      "state": "KS"
+    },
+    {
+      "id": "03384500",
+      "name": "OHIO RIVER AT DAM 51 AT GOLCONDA, IL",
+      "state": "IL"
+    },
+    {
+      "id": "03374100",
+      "name": "WHITE RIVER AT HAZLETON, IN",
+      "state": "IN"
+    },
+    {
+      "id": "01643580",
+      "name": "MONOCACY RIVER NEAR DICKERSON, MD",
+      "state": "MD"
+    },
+    {
+      "id": "01047150",
+      "name": "Kennebec River near Madison, Maine",
+      "state": "ME"
+    },
+    {
+      "id": "01389500",
+      "name": "Passaic River at Little Falls NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "04119400",
+      "name": "GRAND RIVER NEAR EASTMANVILLE, MI",
+      "state": "MI"
+    },
+    {
+      "id": "05389500",
+      "name": "Mississippi River at McGregor, IA",
+      "state": "IA"
+    },
+    {
+      "id": "08354900",
+      "name": "RIO GRANDE FLOODWAY AT SAN ACACIA, NM",
+      "state": "NM"
+    },
+    {
+      "id": "03426310",
+      "name": "CUMBERLAND RIVER AT OLD HICKORY DAM (TW), TN",
+      "state": "TN"
+    },
+    {
+      "id": "02131000",
+      "name": "PEE DEE RIVER AT PEEDEE, SC",
+      "state": "SC"
+    },
+    {
+      "id": "01183500",
+      "name": "WESTFIELD RIVER NEAR WESTFIELD, MA",
+      "state": "MA"
+    },
+    {
+      "id": "01335754",
+      "name": "HUDSON RIVER ABOVE LOCK 1 NEAR WATERFORD NY",
+      "state": "NY"
+    },
+    {
+      "id": "10327500",
+      "name": "HUMBOLDT RV AT COMUS, NV",
+      "state": "NV"
+    },
+    {
+      "id": "01135500",
+      "name": "PASSUMPSIC RIVER AT PASSUMPSIC, VT",
+      "state": "VT"
+    },
+    {
+      "id": "03036500",
+      "name": "Allegheny River at Kittanning, PA",
+      "state": "PA"
+    },
+    {
+      "id": "02197500",
+      "name": "SAVANNAH R AT BURTONS FERRY BR NR MILLHAVEN, GA",
+      "state": "GA"
+    },
+    {
+      "id": "040851385",
+      "name": "FOX RIVER AT OIL TANK DEPOT AT GREEN BAY, WI",
+      "state": "WI"
+    },
+    {
+      "id": "01053500",
+      "name": "Androscoggin River at Errol, NH",
+      "state": "NH"
+    },
+    {
+      "id": "02026000",
+      "name": "JAMES RIVER AT BENT CREEK, VA",
+      "state": "VA"
+    },
+    {
+      "id": "09519800",
+      "name": "GILA RIVER BELOW PAINTED ROCK DAM, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "0212378405",
+      "name": "PEE DEE R AT HWY731 BL LK TILLERY NR NORWOOD, NC",
+      "state": "NC"
+    },
+    {
+      "id": "09379700",
+      "name": "SAN JUAN R BL PIUTE FARMS WASH NR MONUMENT VLY, UT",
+      "state": "UT"
     }
   ]
 }
