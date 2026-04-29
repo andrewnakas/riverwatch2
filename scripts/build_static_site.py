@@ -83,18 +83,39 @@ def main() -> int:
     ap.add_argument("--horizon", type=int, default=7)
     ap.add_argument("--no-forecasts", action="store_true",
                     help="copy assets but skip forecast generation (smoke test)")
+    ap.add_argument("--shard-id", type=int, default=0,
+                    help="this shard's index, 0..total_shards-1")
+    ap.add_argument("--total-shards", type=int, default=1,
+                    help="how many shards the build is split across")
     args = ap.parse_args()
 
-    _clean_dist()
-    _copy_assets()
+    sharded = args.total_shards > 1
+    is_first_shard = args.shard_id == 0
+
+    # In sharded mode the first shard owns the assets; subsequent shards
+    # only emit forecast JSON files (and a per-shard summary).
+    if not sharded or is_first_shard:
+        _clean_dist()
+        _copy_assets()
+    else:
+        DIST.mkdir(parents=True, exist_ok=True)
+        FORECAST_DIR.mkdir(parents=True, exist_ok=True)
 
     payload = json.loads(STATIONS_PATH.read_text())
-    stations = payload["stations"]
+    all_stations = payload["stations"]
     if args.limit:
-        stations = stations[: args.limit]
+        all_stations = all_stations[: args.limit]
 
-    # Stations payload (frontend reads this for marker placement)
-    (DIST / "stations.json").write_text(json.dumps({"stations": stations}, indent=2))
+    if not sharded or is_first_shard:
+        # The full station list lives once at dist/stations.json (asset shard owns it).
+        (DIST / "stations.json").write_text(json.dumps({"stations": all_stations}, indent=2))
+
+    # Slice this shard's portion of the station list. stride = total_shards
+    # gives every shard a similar runtime distribution (USGS hot/cold mix).
+    if sharded:
+        stations = all_stations[args.shard_id :: args.total_shards]
+    else:
+        stations = all_stations
 
     if args.no_forecasts:
         print("--no-forecasts: skipping live forecast runs")
@@ -102,8 +123,7 @@ def main() -> int:
 
     successes = 0
     failures: list[dict] = []
-    blend_maes: list[float] = []
-    member_rolling = {"persistence_lag1": [], "runoff_ridge": [], "chronos_bolt": []}
+    member_rolling: dict[str, list[float]] = {}
     t0 = time.time()
     for i, st in enumerate(stations, 1):
         sid = st["id"]
@@ -118,14 +138,17 @@ def main() -> int:
                 rm = f.rolling_mae.get(name)
                 if rm is not None and np.isfinite(rm):
                     member_rolling.setdefault(name, []).append(float(rm))
-            print(f"[{i:>2}/{len(stations)}] {sid} OK  chosen={f.chosen}  {time.time()-ts:5.1f}s")
+            shard_tag = f"shard {args.shard_id}/{args.total_shards}: " if sharded else ""
+            print(f"{shard_tag}[{i:>3}/{len(stations)}] {sid} OK  chosen={f.chosen}  {time.time()-ts:5.1f}s")
         except Exception as exc:
-            print(f"[{i:>2}/{len(stations)}] {sid} FAIL  {exc}")
+            print(f"[{i:>3}/{len(stations)}] {sid} FAIL  {exc}")
             failures.append({"station_id": sid, "error": str(exc)})
 
     summary = {
+        "shard_id": args.shard_id,
+        "total_shards": args.total_shards,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "stations_total": len(stations),
+        "stations_in_shard": len(stations),
         "stations_succeeded": successes,
         "stations_failed": [f["station_id"] for f in failures],
         "horizon_days": args.horizon,
@@ -135,8 +158,14 @@ def main() -> int:
         "build_seconds": round(time.time() - t0, 1),
         "failures": failures,
     }
-    (DIST / "index_summary.json").write_text(json.dumps(summary, indent=2))
-    print(f"\nBuilt dist/ in {summary['build_seconds']}s — {successes}/{len(stations)} stations")
+    if sharded:
+        (DIST / f"index_summary_shard_{args.shard_id}.json").write_text(json.dumps(summary, indent=2))
+    else:
+        # In single-shard / dev mode, also write top-level summary as before so
+        # the frontend's "Built ..." note still works locally.
+        summary["stations_total"] = len(stations)
+        (DIST / "index_summary.json").write_text(json.dumps(summary, indent=2))
+    print(f"\nShard {args.shard_id}/{args.total_shards} built in {summary['build_seconds']}s — {successes}/{len(stations)} stations")
     return 0 if successes > 0 else 1
 
 

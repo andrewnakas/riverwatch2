@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
   schedule:
-    # Every 2 hours, on the hour
-    - cron: "0 */2 * * *"
+    # Hourly (sharded build keeps wall-time well under an hour)
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -17,9 +17,16 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  TOTAL_SHARDS: 10
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     steps:
       - uses: actions/checkout@v4
 
@@ -40,19 +47,51 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-chronos-bolt-small-v1
 
-      - name: Cache USGS + Open-Meteo fetches
+      - name: Restore per-shard incremental data cache
         uses: actions/cache@v4
         with:
           path: data/cache
-          key: rw2-cache-${{ github.run_id }}
+          key: rw2-cache-shard-${{ matrix.shard }}-${{ github.run_id }}
           restore-keys: |
-            rw2-cache-
+            rw2-cache-shard-${{ matrix.shard }}-
+            rw2-cache-shard-
 
-      - name: Build static site
+      - name: Build shard ${{ matrix.shard }}/${{ env.TOTAL_SHARDS }}
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          python scripts/build_static_site.py --horizon 14
+          python scripts/build_static_site.py \
+            --shard-id ${{ matrix.shard }} \
+            --total-shards ${{ env.TOTAL_SHARDS }} \
+            --horizon 14
+
+      - name: Upload shard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-shard-${{ matrix.shard }}
+          path: dist
+          retention-days: 1
+          if-no-files-found: error
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: shard_dists
+          pattern: dist-shard-*
+
+      - name: Merge shards
+        run: |
+          python scripts/merge_shards.py --input-root shard_dists
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -60,7 +99,7 @@ jobs:
           path: dist
 
   deploy:
-    needs: build
+    needs: merge
     runs-on: ubuntu-latest
     environment:
       name: github-pages
