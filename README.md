@@ -15,6 +15,15 @@ discharge and Open-Meteo weather:
 Each member is rolling-validated on the training window and combined into an
 inverse-MAE-weighted ensemble blend.
 
+## Live demo
+
+GitHub Pages: **https://andrewnakas.github.io/riverwatch2**
+
+The Pages site is rebuilt every 2 hours by `.github/workflows/pages.yml` and on
+every push to `main`. It runs the same forecast pipeline as the Flask app, dumps
+each station's forecast to a static JSON file, and uploads `dist/` as the Pages
+artifact. The frontend reads those JSONs directly — no backend.
+
 ## Quickstart
 
 ```bash

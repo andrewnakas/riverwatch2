@@ -1,0 +1,70 @@
+name: Build & deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every 2 hours, on the hour
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies (CPU torch wheel)
+        run: |
+          python -m pip install --upgrade pip
+          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+
+      - name: Cache HuggingFace model weights
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-chronos-bolt-small-v1
+
+      - name: Cache USGS + Open-Meteo fetches
+        uses: actions/cache@v4
+        with:
+          path: data/cache
+          key: rw2-cache-${{ github.run_id }}
+          restore-keys: |
+            rw2-cache-
+
+      - name: Build static site
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python scripts/build_static_site.py --horizon 7
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -6,5 +6,6 @@ venv/
 data/cache/
 benchmarks/results_*.json
 # pinned baselines (e.g. baseline_v1.json) are kept in version control
+dist/
 .DS_Store
 *.egg-info/
