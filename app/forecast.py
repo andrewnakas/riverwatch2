@@ -43,7 +43,9 @@ class StationForecast:
     blend: List[dict]
     weights: Dict[str, float]
     rolling_mae: Dict[str, float]
-    chosen: str
+    rolling_mae_h7: Dict[str, float] = field(default_factory=dict)
+    rolling_mae_h14: Dict[str, float] = field(default_factory=dict)
+    chosen: str = ""
     notes: List[str] = field(default_factory=list)
 
 
@@ -67,13 +69,26 @@ def _build_features(q_hist: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
     if "precipitation_sum" in df.columns:
         for w in PRECIP_WINDOWS:
             df[f"precip_{w}d"] = df["precipitation_sum"].rolling(w, min_periods=1).sum()
+    if "rain_sum" in df.columns:
+        for w in [1, 3, 7]:
+            df[f"rain_{w}d"] = df["rain_sum"].rolling(w, min_periods=1).sum()
     if "temperature_2m_mean" in df.columns:
         for w in TEMP_WINDOWS:
             df[f"tmean_{w}d"] = df["temperature_2m_mean"].rolling(w, min_periods=1).mean()
         df["pos_dd_7d"] = df["temperature_2m_mean"].clip(lower=0).rolling(7, min_periods=1).sum()
+        df["pos_dd_30d"] = df["temperature_2m_mean"].clip(lower=0).rolling(30, min_periods=1).sum()
+    if "temperature_2m_max" in df.columns:
+        df["tmax_3d"] = df["temperature_2m_max"].rolling(3, min_periods=1).mean()
+        df["pos_dd_max_7d"] = df["temperature_2m_max"].clip(lower=0).rolling(7, min_periods=1).sum()
     if "snowfall_sum" in df.columns:
         df["snow_7d"] = df["snowfall_sum"].rolling(7, min_periods=1).sum()
         df["snow_30d"] = df["snowfall_sum"].rolling(30, min_periods=1).sum()
+        df["snow_90d"] = df["snowfall_sum"].rolling(90, min_periods=1).sum()
+    if "et0_fao_evapotranspiration" in df.columns:
+        df["et_7d"] = df["et0_fao_evapotranspiration"].rolling(7, min_periods=1).sum()
+        df["et_30d"] = df["et0_fao_evapotranspiration"].rolling(30, min_periods=1).sum()
+    if "shortwave_radiation_sum" in df.columns:
+        df["solar_7d"] = df["shortwave_radiation_sum"].rolling(7, min_periods=1).sum()
 
     doy = df.index.dayofyear
     df["doy_sin"] = np.sin(2 * np.pi * doy / 365.25)
@@ -93,6 +108,9 @@ def persistence_forecast(q_hist: pd.DataFrame, horizon: int) -> List[float]:
     return [last] * horizon
 
 
+RIDGE_ALPHAS = (0.3, 1.0, 3.0, 10.0)
+
+
 def runoff_ridge_forecast(
     q_hist: pd.DataFrame,
     wx_hist: pd.DataFrame,
@@ -102,8 +120,9 @@ def runoff_ridge_forecast(
     """Direct multi-step ridge: one model per horizon day, no recursion.
 
     Each model predicts log-discharge at t+h using only features known at t,
-    so there's no compounding inference error across the horizon.
-    Returns (predictions_cfs, rolling_validation_metrics).
+    so there's no compounding inference error across the horizon. Per-horizon
+    alpha is picked from RIDGE_ALPHAS on the trailing 30-day holdout.
+    Returns (predictions_cfs, {'mae_mean': ..., 'mae_h<n>': ... per horizon}).
     """
     if q_hist.empty:
         return [float("nan")] * horizon, {}
@@ -119,12 +138,9 @@ def runoff_ridge_forecast(
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     last_q = float(q_hist["q_cfs"].iloc[-1])
 
-    # Build training matrix once per horizon h: target = q_log shifted by -h
-    # (i.e. value h days into the future). Features come from the same row.
     preds: List[float] = []
-    horizon_maes: List[float] = []
+    per_horizon_mae: Dict[int, float] = {}
 
-    # The "now" row — features known as of last_date.
     feats_now = feats.loc[last_date, cols] if last_date in feats.index else feats[cols].dropna().iloc[-1]
     feats_now = feats_now.fillna(0.0)
 
@@ -135,10 +151,33 @@ def runoff_ridge_forecast(
         if len(train) < 30:
             preds.append(last_q)
             continue
+
+        # Pick alpha on a trailing 30-day holdout when we have enough data.
+        best_alpha = 1.0
+        if len(train) > 90:
+            cut = len(train) - 30
+            Xtr_v = train[cols].iloc[:cut].values
+            ytr_v = train["target_log"].iloc[:cut].values
+            Xv = train[cols].iloc[cut:].values
+            yv_log = train["target_log"].iloc[cut:].values
+            yv_true = np.expm1(yv_log)
+            sc_v = StandardScaler().fit(Xtr_v)
+            best_score = float("inf")
+            best_yhat = None
+            for alpha in RIDGE_ALPHAS:
+                m = Ridge(alpha=alpha, random_state=0).fit(sc_v.transform(Xtr_v), ytr_v)
+                yh = np.clip(np.expm1(m.predict(sc_v.transform(Xv))), 0, None)
+                mae = float(mean_absolute_error(yv_true, yh))
+                if mae < best_score:
+                    best_score = mae
+                    best_alpha = alpha
+                    best_yhat = yh
+            per_horizon_mae[h] = best_score
+
         Xtr = train[cols].values
         ytr = train["target_log"].values
         sc = StandardScaler().fit(Xtr)
-        model = Ridge(alpha=1.0, random_state=0).fit(sc.transform(Xtr), ytr)
+        model = Ridge(alpha=best_alpha, random_state=0).fit(sc.transform(Xtr), ytr)
         x = sc.transform(feats_now.values.reshape(1, -1))
         yhat_log = float(model.predict(x)[0])
         yhat = float(np.expm1(yhat_log))
@@ -146,18 +185,12 @@ def runoff_ridge_forecast(
             yhat = last_q
         preds.append(yhat)
 
-        # Rolling MAE at this horizon: hold out last 30 days
-        if len(train) > 90:
-            cut = len(train) - 30
-            sc_v = StandardScaler().fit(train[cols].iloc[:cut].values)
-            m_v = Ridge(alpha=1.0, random_state=0).fit(sc_v.transform(train[cols].iloc[:cut].values), train["target_log"].iloc[:cut].values)
-            yhat_v = np.expm1(m_v.predict(sc_v.transform(train[cols].iloc[cut:].values)))
-            yhat_v = np.clip(yhat_v, 0, None)
-            ytrue_v = np.expm1(train["target_log"].iloc[cut:].values)
-            horizon_maes.append(float(mean_absolute_error(ytrue_v, yhat_v)))
-
-    rolling_mae = {"mae_mean": float(np.mean(horizon_maes))} if horizon_maes else {}
-    return preds, rolling_mae
+    out: Dict[str, float] = {}
+    if per_horizon_mae:
+        out["mae_mean"] = float(np.mean(list(per_horizon_mae.values())))
+        for h, v in per_horizon_mae.items():
+            out[f"mae_h{h}"] = float(v)
+    return preds, out
 
 
 # ---------------------------------------------------------------------------
@@ -303,10 +336,38 @@ def forecast_station(
     persist_mae = _rolling_persistence_mae(q_hist, horizon)
     if persist_mae is not None:
         rolling_mae["persistence_lag1"] = persist_mae
+
+    persist_per_h = _rolling_persistence_mae_per_horizon(q_hist, horizon)
+    chronos_per_h: Dict[int, float] = {}
     if chronos_pred is not None:
-        chronos_mae = _rolling_chronos_mae(q_hist, horizon)
-        if chronos_mae is not None:
-            rolling_mae["chronos_bolt"] = chronos_mae
+        chronos_per_h = _rolling_chronos_mae_per_horizon(q_hist, horizon)
+        if chronos_per_h:
+            rolling_mae["chronos_bolt"] = float(np.mean(list(chronos_per_h.values())))
+
+    def _per_h_lookup(per_h: Dict[int, float], h: int) -> Optional[float]:
+        if per_h.get(h) is not None:
+            return per_h[h]
+        # fall back to nearest available horizon
+        if not per_h:
+            return None
+        keys = sorted(per_h.keys())
+        nearest = min(keys, key=lambda k: abs(k - h))
+        return per_h[nearest]
+
+    rolling_mae_h7: Dict[str, float] = {}
+    rolling_mae_h14: Dict[str, float] = {}
+    for h_target, target_dict in [(7, rolling_mae_h7), (14, rolling_mae_h14)]:
+        if h_target > horizon:
+            continue
+        v = _per_h_lookup(persist_per_h, h_target)
+        if v is not None:
+            target_dict["persistence_lag1"] = v
+        v = ridge_mae.get(f"mae_h{h_target}")
+        if v is not None:
+            target_dict["runoff_ridge"] = float(v)
+        v = _per_h_lookup(chronos_per_h, h_target)
+        if v is not None:
+            target_dict["chronos_bolt"] = v
 
     weights = _blend_weights(rolling_mae, list(members.keys()))
     blend_vals = []
@@ -323,6 +384,21 @@ def forecast_station(
 
     chosen = min(rolling_mae, key=lambda k: rolling_mae[k]) if rolling_mae else "runoff_ridge"
 
+    # Estimate ensemble MAE per horizon = weighted geometric mean of member MAEs.
+    # (Approximation: blend's MAE is roughly the weight-weighted member MAE,
+    # bounded above by min member MAE in the limit of all weight on one model.)
+    for target_dict in (rolling_mae_h7, rolling_mae_h14):
+        if not target_dict:
+            continue
+        s = 0.0; ws = 0.0
+        for name, w in weights.items():
+            v = target_dict.get(name)
+            if v is None or not math.isfinite(v):
+                continue
+            s += w * v; ws += w
+        if ws > 0:
+            target_dict["ensemble_blend"] = float(s / ws)
+
     history_out = [
         {"date": pd.Timestamp(d).date().isoformat(), "q_cfs": float(q)}
         for d, q in zip(q_hist["date"].tail(60), q_hist["q_cfs"].tail(60))
@@ -336,6 +412,8 @@ def forecast_station(
         blend=[{"date": d, "q_cfs": v} for d, v in zip(future_dates, blend_vals)],
         weights=weights,
         rolling_mae={k: float(v) for k, v in rolling_mae.items()},
+        rolling_mae_h7={k: float(v) for k, v in rolling_mae_h7.items()},
+        rolling_mae_h14={k: float(v) for k, v in rolling_mae_h14.items()},
         chosen=chosen,
         notes=notes,
     )
@@ -371,13 +449,35 @@ def _rolling_persistence_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[flo
     return float(np.mean(maes)) if maes else None
 
 
+def _rolling_persistence_mae_per_horizon(q_hist: pd.DataFrame, max_horizon: int) -> Dict[int, float]:
+    """Per-horizon persistence MAE: mae[h] = mean |q[t+h] - q[t]| on trailing 180d."""
+    if len(q_hist) < max_horizon + 30:
+        return {}
+    y = q_hist["q_cfs"].values
+    out: Dict[int, float] = {}
+    for h in range(1, max_horizon + 1):
+        diffs = np.abs(y[h:] - y[:-h])[-180:]
+        if len(diffs) == 0:
+            continue
+        out[h] = float(np.mean(diffs))
+    return out
+
+
 def _rolling_chronos_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
     """Backtest chronos on a single horizon-length holdout. Mean MAE over h=1..horizon."""
-    if len(q_hist) < horizon + 90:
+    res = _rolling_chronos_mae_per_horizon(q_hist, horizon)
+    if not res:
         return None
+    return float(np.mean(list(res.values())))
+
+
+def _rolling_chronos_mae_per_horizon(q_hist: pd.DataFrame, horizon: int) -> Dict[int, float]:
+    """Chronos backtest with per-horizon errors. One forward pass at length=horizon."""
+    if len(q_hist) < horizon + 90:
+        return {}
     pipe = _get_chronos()
     if pipe is None:
-        return None
+        return {}
     try:
         import torch
         ctx_len = len(q_hist) - horizon
@@ -390,7 +490,7 @@ def _rolling_chronos_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
         yhat = np.clip(np.array(quantiles[0, :, 0]), 0, None)
         ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values
         if len(ytrue) < horizon:
-            return None
-        return float(mean_absolute_error(ytrue, yhat))
+            return {}
+        return {h: float(abs(ytrue[h - 1] - yhat[h - 1])) for h in range(1, horizon + 1)}
     except Exception:
-        return None
+        return {}

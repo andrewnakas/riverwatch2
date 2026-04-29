@@ -24,6 +24,7 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 #member-table table { width: 100%; border-collapse: collapse; }
 #member-table th, #member-table td { padding: 4px 6px; border-bottom: 1px solid #1f2942; text-align: right; }
 #member-table th:first-child, #member-table td:first-child { text-align: left; }
+#member-table tr.ensemble-row td { color: #ffd166; font-weight: 600; border-top: 1px solid #33446f; }
 #refresh-btn { margin-top: 12px; padding: 6px 12px; background: #1d2742; color: #e7ecf3; border: 1px solid #33446f; border-radius: 6px; cursor: pointer; }
 #refresh-btn:hover { background: #283456; }
 .notes { margin-top: 8px; font-size: 11px; color: #d4a14a; }

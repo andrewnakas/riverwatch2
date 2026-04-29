@@ -1,119 +1,1197 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: original 42 benchmark picks + Missoula-area + Yellowstone mainstem + ~50 most-paddled free-flowing whitewater runs in the USA",
-  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, plus curated whitewater favorites (American Whitewater style listing) skewed toward snowmelt + free-flowing rivers (no dam-release runs). All gauges on USGS NWIS daily 00060 discharge.",
+  "description": "Live zero-shot river-discharge forecast subset: ~238 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, and Great Lakes / Driftless",
+  "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
-    {"id": "06192500", "name": "Yellowstone River near Livingston, MT", "state": "MT"},
-    {"id": "13337000", "name": "LOCHSA RIVER NR LOWELL ID", "state": "ID"},
-    {"id": "13336500", "name": "LOCHSA RIVER AT LOCHSA L.S. NR LOWELL ID", "state": "ID"},
-    {"id": "06036905", "name": "Firehole River near West Yellowstone MT", "state": "WY"},
-    {"id": "15056560", "name": "KLEHINI R NR KLUKWAN AK", "state": "AK"},
-    {"id": "02231000", "name": "ST. MARYS RIVER NEAR MACCLENNY, FL", "state": "FL"},
-    {"id": "06037100", "name": "Gibbon River at Madison Jct, YNP", "state": "WY"},
-    {"id": "06048650", "name": "E Gallatin R ab Water Reclamation Fa nr Bozeman MT", "state": "MT"},
-    {"id": "15052000", "name": "LEMON C NR JUNEAU AK", "state": "AK"},
-    {"id": "15055500", "name": "ANTLER R BL ANTLER LK NR AUKE BAY AK", "state": "AK"},
-    {"id": "06036805", "name": "Firehole River at Old Faithful, YNP", "state": "WY"},
-    {"id": "15052500", "name": "MENDENHALL R NR AUKE BAY AK", "state": "AK"},
-    {"id": "06195600", "name": "Shields River nr Livingston MT", "state": "MT"},
-    {"id": "06050000", "name": "Hyalite C at Hyalite R S nr Bozeman MT", "state": "MT"},
-    {"id": "10068500", "name": "BEAR RIVER AT PESCADERO ID", "state": "ID"},
-    {"id": "06036940", "name": "Tantalus Creek at Norris Junction, YNP", "state": "WY"},
-    {"id": "06708800", "name": "EAST PLUM CR ABV HASKINS GULCH NR CASTLE ROCK, CO", "state": "CO"},
-    {"id": "15008000", "name": "SALMON R NR HYDER AK", "state": "AK"},
-    {"id": "09180000", "name": "DOLORES RIVER NEAR CISCO, UT", "state": "UT"},
-    {"id": "15057596", "name": "SALMON R AT GUSTAVUS AK", "state": "AK"},
-    {"id": "15101490", "name": "GREENS C AT GREENS CREEK MINE NR JUNEAU AK", "state": "AK"},
-    {"id": "06814000", "name": "TURKEY C NR SENECA, KS", "state": "KS"},
-    {"id": "07207000", "name": "CIMARRON RIVER NEAR CIMARRON, NM", "state": "NM"},
-    {"id": "10125500", "name": "MALAD RIVER AT WOODRUFF ID", "state": "ID"},
-    {"id": "15088000", "name": "SAWMILL C NR SITKA AK", "state": "AK"},
-    {"id": "10039500", "name": "BEAR RIVER AT BORDER, WY", "state": "ID"},
-    {"id": "07203000", "name": "VERMEJO RIVER NEAR DAWSON, NM", "state": "NM"},
-    {"id": "06043120", "name": "Gallatin River above Deer Creek, near Big Sky, MT", "state": "MT"},
-    {"id": "09182400", "name": "CASTLE CREEK BELOW CASTLE VALLEY NEAR MOAB, UT", "state": "UT"},
-    {"id": "09379025", "name": "CHINLE CREEK AT CHINLE, AZ", "state": "AZ"},
-    {"id": "06620000", "name": "NORTH PLATTE RIVER NEAR NORTHGATE, CO", "state": "CO"},
-    {"id": "09379200", "name": "CHINLE CREEK NEAR MEXICAN WATER, AZ", "state": "AZ"},
-    {"id": "06052500", "name": "Gallatin River at Logan MT", "state": "MT"},
-    {"id": "09417500", "name": "MEADOW VALLEY WASH AT EAGLE CYN NR URSINE, NV", "state": "NV"},
-    {"id": "09382000", "name": "PARIA RIVER AT LEES FERRY, AZ", "state": "AZ"},
-    {"id": "09416000", "name": "MUDDY RV NR MOAPA, NV", "state": "NV"},
-    {"id": "09418500", "name": "MEADOW VALLEY WASH NR CALIENTE, NV", "state": "NV"},
-    {"id": "06043500", "name": "Gallatin River near Gallatin Gateway, MT", "state": "MT"},
-    {"id": "02176930", "name": "CHATTOOGA RIVER AT BURRELLS FORD, NR PINE MTN, GA", "state": "GA"},
-    {"id": "10251300", "name": "AMARGOSA RV AT TECOPA, CA", "state": "CA"},
-    {"id": "03274650", "name": "WHITEWATER RIVER NEAR ECONOMY, IN", "state": "IN"},
-    {"id": "05014500", "name": "Swiftcurrent Creek at Many Glacier MT", "state": "MT"},
-    {"id": "01428750", "name": "West Branch Lackawaxen River near Aldenville, PA", "state": "PA"},
-
-    {"id": "12340500", "name": "Clark Fork above Missoula MT", "state": "MT"},
-    {"id": "12340000", "name": "Blackfoot River near Bonner MT", "state": "MT"},
-    {"id": "12353000", "name": "Clark Fork below Missoula MT", "state": "MT"},
-    {"id": "12353500", "name": "Clark Fork at St Regis MT", "state": "MT"},
-    {"id": "12350250", "name": "Bitterroot River at Bell Crossing nr Victor MT", "state": "MT"},
-    {"id": "12352500", "name": "Rattlesnake Creek at Missoula MT", "state": "MT"},
-
-    {"id": "06214500", "name": "Yellowstone River at Billings MT", "state": "MT"},
-    {"id": "06329500", "name": "Yellowstone River near Sidney MT", "state": "MT"},
-    {"id": "06191500", "name": "Yellowstone River at Corwin Springs MT", "state": "MT"},
-    {"id": "06037500", "name": "Madison River near West Yellowstone MT", "state": "MT"},
-    {"id": "06038500", "name": "Gardner River near Mammoth, YNP", "state": "WY"},
-    {"id": "06024450", "name": "Lamar River near Tower Falls Ranger Station, YNP", "state": "WY"},
-    {"id": "06016000", "name": "Yellowstone River at Yellowstone Lk outlet, YNP", "state": "WY"},
-
-    {"id": "13317000", "name": "Salmon River at Whitebird ID (Main Salmon)", "state": "ID"},
-    {"id": "13310700", "name": "S F Salmon River near Krassel ID", "state": "ID"},
-    {"id": "13309220", "name": "MF Salmon River at Middle Fork Lodge ID", "state": "ID"},
-    {"id": "13340000", "name": "Clearwater River at Orofino ID", "state": "ID"},
-    {"id": "13338500", "name": "Selway River near Lowell ID", "state": "ID"},
-    {"id": "13302500", "name": "Salmon River at Salmon ID", "state": "ID"},
-    {"id": "13247500", "name": "Payette River near Horseshoe Bend ID", "state": "ID"},
-    {"id": "13251000", "name": "Payette River near Payette ID", "state": "ID"},
-    {"id": "13186000", "name": "South Fork Boise River nr Featherville ID", "state": "ID"},
-
-    {"id": "12413000", "name": "North Fork Coeur d'Alene River at Enaville ID", "state": "ID"},
-
-    {"id": "09085000", "name": "Roaring Fork River at Glenwood Springs CO", "state": "CO"},
-    {"id": "09080400", "name": "Crystal River abv Avalanche Cr nr Redstone CO", "state": "CO"},
-    {"id": "09124500", "name": "Lake Fork above Lake San Cristobal CO (Lake Fork Gunnison)", "state": "CO"},
-    {"id": "09110000", "name": "Taylor River at Almont CO", "state": "CO"},
-    {"id": "09128000", "name": "Gunnison River below Gunnison Tunnel CO (Black Canyon)", "state": "CO"},
-    {"id": "09239500", "name": "Yampa River at Steamboat Springs CO", "state": "CO"},
-    {"id": "09251000", "name": "Yampa River near Maybell CO", "state": "CO"},
-    {"id": "09304500", "name": "White River near Watson UT (Desolation/Gray Cyn)", "state": "UT"},
-    {"id": "09328500", "name": "San Rafael River near Green River UT", "state": "UT"},
-    {"id": "09380000", "name": "Colorado River at Lees Ferry AZ (Grand Canyon put-in)", "state": "AZ"},
-    {"id": "09185600", "name": "Colorado River near Cisco UT (Westwater)", "state": "UT"},
-
-    {"id": "09404200", "name": "Virgin River abv La Verkin Cr nr La Verkin UT (Zion Narrows)", "state": "UT"},
-
-    {"id": "12134500", "name": "Skykomish River near Gold Bar WA", "state": "WA"},
-    {"id": "12141300", "name": "Middle Fork Snoqualmie River near Tanner WA", "state": "WA"},
-    {"id": "12048000", "name": "Dungeness River near Sequim WA", "state": "WA"},
-    {"id": "14305500", "name": "Siletz River at Siletz OR", "state": "OR"},
-    {"id": "14162500", "name": "McKenzie River near Vida OR", "state": "OR"},
-    {"id": "14211720", "name": "Sandy River below Bull Run River near Bull Run OR", "state": "OR"},
-    {"id": "14377100", "name": "Illinois River near Kerby OR", "state": "OR"},
-    {"id": "11475000", "name": "Eel River at Scotia CA", "state": "CA"},
-    {"id": "11186000", "name": "Kern River near Kernville CA", "state": "CA"},
-    {"id": "11264500", "name": "Merced River at Happy Isles, Yosemite CA", "state": "CA"},
-    {"id": "11335000", "name": "Cosumnes River at Michigan Bar CA", "state": "CA"},
-    {"id": "11427000", "name": "North Fork American River at North Fork Dam CA", "state": "CA"},
-    {"id": "10336660", "name": "Truckee River at Farad CA", "state": "CA"},
-
-    {"id": "03473000", "name": "South Fork Holston River nr Damascus VA (Mt Rogers)", "state": "VA"},
-    {"id": "01605500", "name": "South Branch Potomac River at Franklin WV", "state": "WV"},
-    {"id": "03187500", "name": "Cranberry River near Richwood WV", "state": "WV"},
-    {"id": "03186500", "name": "Cherry River at Craigsville WV (Upper Gauley feeder)", "state": "WV"},
-    {"id": "01413500", "name": "East Branch Delaware River at Margaretville NY", "state": "NY"},
-    {"id": "01411500", "name": "Maurice River at Norma NJ", "state": "NJ"},
-    {"id": "01055000", "name": "Swift River near Roxbury ME (Magalloway/Rapid feeder)", "state": "ME"},
-    {"id": "01334500", "name": "Hoosic River near Williamstown MA (Deerfield watershed)", "state": "MA"},
-
-    {"id": "02053200", "name": "Smith River at Eden NC", "state": "NC"},
-    {"id": "03451500", "name": "French Broad River at Asheville NC", "state": "NC"},
-    {"id": "02177000", "name": "Chattooga River near Clayton GA (Section IV classic)", "state": "GA"},
-    {"id": "02338660", "name": "Chattahoochee River near Cornelia GA", "state": "GA"}
+    {
+      "id": "06192500",
+      "name": "Yellowstone River near Livingston, MT",
+      "state": "MT"
+    },
+    {
+      "id": "13337000",
+      "name": "LOCHSA RIVER NR LOWELL ID",
+      "state": "ID"
+    },
+    {
+      "id": "13336500",
+      "name": "LOCHSA RIVER AT LOCHSA L.S. NR LOWELL ID",
+      "state": "ID"
+    },
+    {
+      "id": "06036905",
+      "name": "Firehole River near West Yellowstone MT",
+      "state": "WY"
+    },
+    {
+      "id": "15056560",
+      "name": "KLEHINI R NR KLUKWAN AK",
+      "state": "AK"
+    },
+    {
+      "id": "02231000",
+      "name": "ST. MARYS RIVER NEAR MACCLENNY, FL",
+      "state": "FL"
+    },
+    {
+      "id": "06037100",
+      "name": "Gibbon River at Madison Jct, YNP",
+      "state": "WY"
+    },
+    {
+      "id": "06048650",
+      "name": "E Gallatin R ab Water Reclamation Fa nr Bozeman MT",
+      "state": "MT"
+    },
+    {
+      "id": "15052000",
+      "name": "LEMON C NR JUNEAU AK",
+      "state": "AK"
+    },
+    {
+      "id": "15055500",
+      "name": "ANTLER R BL ANTLER LK NR AUKE BAY AK",
+      "state": "AK"
+    },
+    {
+      "id": "06036805",
+      "name": "Firehole River at Old Faithful, YNP",
+      "state": "WY"
+    },
+    {
+      "id": "15052500",
+      "name": "MENDENHALL R NR AUKE BAY AK",
+      "state": "AK"
+    },
+    {
+      "id": "06195600",
+      "name": "Shields River nr Livingston MT",
+      "state": "MT"
+    },
+    {
+      "id": "06050000",
+      "name": "Hyalite C at Hyalite R S nr Bozeman MT",
+      "state": "MT"
+    },
+    {
+      "id": "10068500",
+      "name": "BEAR RIVER AT PESCADERO ID",
+      "state": "ID"
+    },
+    {
+      "id": "06036940",
+      "name": "Tantalus Creek at Norris Junction, YNP",
+      "state": "WY"
+    },
+    {
+      "id": "06708800",
+      "name": "EAST PLUM CR ABV HASKINS GULCH NR CASTLE ROCK, CO",
+      "state": "CO"
+    },
+    {
+      "id": "15008000",
+      "name": "SALMON R NR HYDER AK",
+      "state": "AK"
+    },
+    {
+      "id": "09180000",
+      "name": "DOLORES RIVER NEAR CISCO, UT",
+      "state": "UT"
+    },
+    {
+      "id": "15057596",
+      "name": "SALMON R AT GUSTAVUS AK",
+      "state": "AK"
+    },
+    {
+      "id": "15101490",
+      "name": "GREENS C AT GREENS CREEK MINE NR JUNEAU AK",
+      "state": "AK"
+    },
+    {
+      "id": "06814000",
+      "name": "TURKEY C NR SENECA, KS",
+      "state": "KS"
+    },
+    {
+      "id": "07207000",
+      "name": "CIMARRON RIVER NEAR CIMARRON, NM",
+      "state": "NM"
+    },
+    {
+      "id": "10125500",
+      "name": "MALAD RIVER AT WOODRUFF ID",
+      "state": "ID"
+    },
+    {
+      "id": "15088000",
+      "name": "SAWMILL C NR SITKA AK",
+      "state": "AK"
+    },
+    {
+      "id": "10039500",
+      "name": "BEAR RIVER AT BORDER, WY",
+      "state": "ID"
+    },
+    {
+      "id": "07203000",
+      "name": "VERMEJO RIVER NEAR DAWSON, NM",
+      "state": "NM"
+    },
+    {
+      "id": "06043120",
+      "name": "Gallatin River above Deer Creek, near Big Sky, MT",
+      "state": "MT"
+    },
+    {
+      "id": "09182400",
+      "name": "CASTLE CREEK BELOW CASTLE VALLEY NEAR MOAB, UT",
+      "state": "UT"
+    },
+    {
+      "id": "09379025",
+      "name": "CHINLE CREEK AT CHINLE, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "06620000",
+      "name": "NORTH PLATTE RIVER NEAR NORTHGATE, CO",
+      "state": "CO"
+    },
+    {
+      "id": "09379200",
+      "name": "CHINLE CREEK NEAR MEXICAN WATER, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "06052500",
+      "name": "Gallatin River at Logan MT",
+      "state": "MT"
+    },
+    {
+      "id": "09417500",
+      "name": "MEADOW VALLEY WASH AT EAGLE CYN NR URSINE, NV",
+      "state": "NV"
+    },
+    {
+      "id": "09382000",
+      "name": "PARIA RIVER AT LEES FERRY, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "09416000",
+      "name": "MUDDY RV NR MOAPA, NV",
+      "state": "NV"
+    },
+    {
+      "id": "09418500",
+      "name": "MEADOW VALLEY WASH NR CALIENTE, NV",
+      "state": "NV"
+    },
+    {
+      "id": "06043500",
+      "name": "Gallatin River near Gallatin Gateway, MT",
+      "state": "MT"
+    },
+    {
+      "id": "02176930",
+      "name": "CHATTOOGA RIVER AT BURRELLS FORD, NR PINE MTN, GA",
+      "state": "GA"
+    },
+    {
+      "id": "10251300",
+      "name": "AMARGOSA RV AT TECOPA, CA",
+      "state": "CA"
+    },
+    {
+      "id": "03274650",
+      "name": "WHITEWATER RIVER NEAR ECONOMY, IN",
+      "state": "IN"
+    },
+    {
+      "id": "05014500",
+      "name": "Swiftcurrent Creek at Many Glacier MT",
+      "state": "MT"
+    },
+    {
+      "id": "01428750",
+      "name": "West Branch Lackawaxen River near Aldenville, PA",
+      "state": "PA"
+    },
+    {
+      "id": "12340500",
+      "name": "Clark Fork above Missoula MT",
+      "state": "MT"
+    },
+    {
+      "id": "12340000",
+      "name": "Blackfoot River near Bonner MT",
+      "state": "MT"
+    },
+    {
+      "id": "12353000",
+      "name": "Clark Fork below Missoula MT",
+      "state": "MT"
+    },
+    {
+      "id": "12350250",
+      "name": "Bitterroot River at Bell Crossing nr Victor MT",
+      "state": "MT"
+    },
+    {
+      "id": "12352500",
+      "name": "Rattlesnake Creek at Missoula MT",
+      "state": "MT"
+    },
+    {
+      "id": "06214500",
+      "name": "Yellowstone River at Billings MT",
+      "state": "MT"
+    },
+    {
+      "id": "06329500",
+      "name": "Yellowstone River near Sidney MT",
+      "state": "MT"
+    },
+    {
+      "id": "06191500",
+      "name": "Yellowstone River at Corwin Springs MT",
+      "state": "MT"
+    },
+    {
+      "id": "06037500",
+      "name": "Madison River near West Yellowstone MT",
+      "state": "MT"
+    },
+    {
+      "id": "06038500",
+      "name": "Gardner River near Mammoth, YNP",
+      "state": "WY"
+    },
+    {
+      "id": "06024450",
+      "name": "Lamar River near Tower Falls Ranger Station, YNP",
+      "state": "WY"
+    },
+    {
+      "id": "06016000",
+      "name": "Yellowstone River at Yellowstone Lk outlet, YNP",
+      "state": "WY"
+    },
+    {
+      "id": "13317000",
+      "name": "Salmon River at Whitebird ID (Main Salmon)",
+      "state": "ID"
+    },
+    {
+      "id": "13310700",
+      "name": "S F Salmon River near Krassel ID",
+      "state": "ID"
+    },
+    {
+      "id": "13309220",
+      "name": "MF Salmon River at Middle Fork Lodge ID",
+      "state": "ID"
+    },
+    {
+      "id": "13340000",
+      "name": "Clearwater River at Orofino ID",
+      "state": "ID"
+    },
+    {
+      "id": "13338500",
+      "name": "Selway River near Lowell ID",
+      "state": "ID"
+    },
+    {
+      "id": "13302500",
+      "name": "Salmon River at Salmon ID",
+      "state": "ID"
+    },
+    {
+      "id": "13247500",
+      "name": "Payette River near Horseshoe Bend ID",
+      "state": "ID"
+    },
+    {
+      "id": "13251000",
+      "name": "Payette River near Payette ID",
+      "state": "ID"
+    },
+    {
+      "id": "13186000",
+      "name": "South Fork Boise River nr Featherville ID",
+      "state": "ID"
+    },
+    {
+      "id": "12413000",
+      "name": "North Fork Coeur d'Alene River at Enaville ID",
+      "state": "ID"
+    },
+    {
+      "id": "09085000",
+      "name": "Roaring Fork River at Glenwood Springs CO",
+      "state": "CO"
+    },
+    {
+      "id": "09080400",
+      "name": "Crystal River abv Avalanche Cr nr Redstone CO",
+      "state": "CO"
+    },
+    {
+      "id": "09124500",
+      "name": "Lake Fork above Lake San Cristobal CO (Lake Fork Gunnison)",
+      "state": "CO"
+    },
+    {
+      "id": "09110000",
+      "name": "Taylor River at Almont CO",
+      "state": "CO"
+    },
+    {
+      "id": "09128000",
+      "name": "Gunnison River below Gunnison Tunnel CO (Black Canyon)",
+      "state": "CO"
+    },
+    {
+      "id": "09239500",
+      "name": "Yampa River at Steamboat Springs CO",
+      "state": "CO"
+    },
+    {
+      "id": "09251000",
+      "name": "Yampa River near Maybell CO",
+      "state": "CO"
+    },
+    {
+      "id": "09304500",
+      "name": "White River near Watson UT (Desolation/Gray Cyn)",
+      "state": "UT"
+    },
+    {
+      "id": "09328500",
+      "name": "San Rafael River near Green River UT",
+      "state": "UT"
+    },
+    {
+      "id": "09380000",
+      "name": "Colorado River at Lees Ferry AZ (Grand Canyon put-in)",
+      "state": "AZ"
+    },
+    {
+      "id": "09185600",
+      "name": "Colorado River near Cisco UT (Westwater)",
+      "state": "UT"
+    },
+    {
+      "id": "09404200",
+      "name": "Virgin River abv La Verkin Cr nr La Verkin UT (Zion Narrows)",
+      "state": "UT"
+    },
+    {
+      "id": "12134500",
+      "name": "Skykomish River near Gold Bar WA",
+      "state": "WA"
+    },
+    {
+      "id": "12141300",
+      "name": "Middle Fork Snoqualmie River near Tanner WA",
+      "state": "WA"
+    },
+    {
+      "id": "12048000",
+      "name": "Dungeness River near Sequim WA",
+      "state": "WA"
+    },
+    {
+      "id": "14305500",
+      "name": "Siletz River at Siletz OR",
+      "state": "OR"
+    },
+    {
+      "id": "14162500",
+      "name": "McKenzie River near Vida OR",
+      "state": "OR"
+    },
+    {
+      "id": "14211720",
+      "name": "Sandy River below Bull Run River near Bull Run OR",
+      "state": "OR"
+    },
+    {
+      "id": "14377100",
+      "name": "Illinois River near Kerby OR",
+      "state": "OR"
+    },
+    {
+      "id": "11475000",
+      "name": "Eel River at Scotia CA",
+      "state": "CA"
+    },
+    {
+      "id": "11186000",
+      "name": "Kern River near Kernville CA",
+      "state": "CA"
+    },
+    {
+      "id": "11264500",
+      "name": "Merced River at Happy Isles, Yosemite CA",
+      "state": "CA"
+    },
+    {
+      "id": "11335000",
+      "name": "Cosumnes River at Michigan Bar CA",
+      "state": "CA"
+    },
+    {
+      "id": "11427000",
+      "name": "North Fork American River at North Fork Dam CA",
+      "state": "CA"
+    },
+    {
+      "id": "10336660",
+      "name": "Truckee River at Farad CA",
+      "state": "CA"
+    },
+    {
+      "id": "03473000",
+      "name": "South Fork Holston River nr Damascus VA (Mt Rogers)",
+      "state": "VA"
+    },
+    {
+      "id": "01605500",
+      "name": "South Branch Potomac River at Franklin WV",
+      "state": "WV"
+    },
+    {
+      "id": "03187500",
+      "name": "Cranberry River near Richwood WV",
+      "state": "WV"
+    },
+    {
+      "id": "03186500",
+      "name": "Cherry River at Craigsville WV (Upper Gauley feeder)",
+      "state": "WV"
+    },
+    {
+      "id": "01413500",
+      "name": "East Branch Delaware River at Margaretville NY",
+      "state": "NY"
+    },
+    {
+      "id": "01411500",
+      "name": "Maurice River at Norma NJ",
+      "state": "NJ"
+    },
+    {
+      "id": "01055000",
+      "name": "Swift River near Roxbury ME (Magalloway/Rapid feeder)",
+      "state": "ME"
+    },
+    {
+      "id": "01334500",
+      "name": "Hoosic River near Williamstown MA (Deerfield watershed)",
+      "state": "MA"
+    },
+    {
+      "id": "02053200",
+      "name": "Smith River at Eden NC",
+      "state": "NC"
+    },
+    {
+      "id": "03451500",
+      "name": "French Broad River at Asheville NC",
+      "state": "NC"
+    },
+    {
+      "id": "02177000",
+      "name": "Chattooga River near Clayton GA (Section IV classic)",
+      "state": "GA"
+    },
+    {
+      "id": "02338660",
+      "name": "Chattahoochee River near Cornelia GA",
+      "state": "GA"
+    },
+    {
+      "id": "15129000",
+      "name": "ALSEK R NR YAKUTAT AK",
+      "state": "AK"
+    },
+    {
+      "id": "15054000",
+      "name": "AUKE C AT AUKE BAY AK",
+      "state": "AK"
+    },
+    {
+      "id": "15087700",
+      "name": "INDIAN R AT SITKA AK",
+      "state": "AK"
+    },
+    {
+      "id": "15275100",
+      "name": "CHESTER C AT ARCTIC BOULEVARD AT ANCHORAGE AK",
+      "state": "AK"
+    },
+    {
+      "id": "15266300",
+      "name": "KENAI R AT SOLDOTNA AK",
+      "state": "AK"
+    },
+    {
+      "id": "12035000",
+      "name": "SATSOP RIVER NEAR SATSOP, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12082500",
+      "name": "NISQUALLY RIVER NEAR NATIONAL, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12089500",
+      "name": "NISQUALLY RIVER AT MCKENNA, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12114500",
+      "name": "CEDAR RIVER BELOW BEAR CREEK NEAR CEDAR FALLS, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12150800",
+      "name": "SNOHOMISH RIVER NEAR MONROE, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12119000",
+      "name": "CEDAR RIVER AT RENTON, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12189500",
+      "name": "SAUK RIVER NEAR SAUK, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12200500",
+      "name": "SKAGIT RIVER NEAR MOUNT VERNON, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12056500",
+      "name": "NF SKOKOMISH R BL STAIRCASE RPDS NR HOODSPORT, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12041200",
+      "name": "HOH RIVER AT US HIGHWAY 101 NEAR FORKS, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12039500",
+      "name": "QUINAULT RIVER AT QUINAULT LAKE, WA",
+      "state": "WA"
+    },
+    {
+      "id": "12010000",
+      "name": "NASELLE RIVER NEAR NASELLE, WA",
+      "state": "WA"
+    },
+    {
+      "id": "14306500",
+      "name": "ALSEA RIVER NEAR TIDEWATER, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14210000",
+      "name": "CLACKAMAS RIVER AT ESTACADA, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14211000",
+      "name": "CLACKAMAS RIVER NEAR CLACKAMAS, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14201500",
+      "name": "BUTTE CREEK AT MONITOR, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14375100",
+      "name": "SUCKER CREEK BLW LITTLE GRAYBACK CK, NR HOLLAND,OR",
+      "state": "OR"
+    },
+    {
+      "id": "14306900",
+      "name": "BIG CREEK NEAR ROOSEVELT BEACH, OREG.",
+      "state": "OR"
+    },
+    {
+      "id": "14308000",
+      "name": "SOUTH UMPQUA RIVER AT TILLER, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14325000",
+      "name": "SOUTH FORK COQUILLE RIVER AT POWERS, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14361500",
+      "name": "ROGUE RIVER AT GRANTS PASS, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14338000",
+      "name": "ELK CREEK NEAR TRAIL, OR",
+      "state": "OR"
+    },
+    {
+      "id": "14222500",
+      "name": "EAST FORK LEWIS RIVER NEAR HEISSON, WA",
+      "state": "WA"
+    },
+    {
+      "id": "11522500",
+      "name": "SALMON R A SOMES BAR CA",
+      "state": "CA"
+    },
+    {
+      "id": "11525500",
+      "name": "TRINITY R A LEWISTON CA",
+      "state": "CA"
+    },
+    {
+      "id": "11523200",
+      "name": "TRINITY R AB COFFEE C NR TRINITY CENTER CA",
+      "state": "CA"
+    },
+    {
+      "id": "11532500",
+      "name": "SMITH R NR CRESCENT CITY CA",
+      "state": "CA"
+    },
+    {
+      "id": "11530500",
+      "name": "KLAMATH R NR KLAMATH CA",
+      "state": "CA"
+    },
+    {
+      "id": "11516530",
+      "name": "KLAMATH R BL IRON GATE DAM CA",
+      "state": "CA"
+    },
+    {
+      "id": "11510700",
+      "name": "KLAMATH RIVER BLW JOHN C.BOYLE PWRPLNT, NR KENO,OR",
+      "state": "OR"
+    },
+    {
+      "id": "11383500",
+      "name": "DEER C NR VINA CA",
+      "state": "CA"
+    },
+    {
+      "id": "11218400",
+      "name": "NF KINGS R BL DINKEY C NR BALCH CAMP CA",
+      "state": "CA"
+    },
+    {
+      "id": "11218000",
+      "name": "DINKEY C A MOUTH CA",
+      "state": "CA"
+    },
+    {
+      "id": "11292000",
+      "name": "MF STANISLAUS R AT KENNEDY MDWS NR DARDANELLE CA",
+      "state": "CA"
+    },
+    {
+      "id": "11291000",
+      "name": "RELIEF RES NR BAKER STATION CA",
+      "state": "CA"
+    },
+    {
+      "id": "11289650",
+      "name": "TUOLUMNE R BL LAGRANGE DAM NR LAGRANGE CA",
+      "state": "CA"
+    },
+    {
+      "id": "11274500",
+      "name": "ORESTIMBA C NR NEWMAN CA",
+      "state": "CA"
+    },
+    {
+      "id": "11272500",
+      "name": "MERCED R NR STEVINSON CA",
+      "state": "CA"
+    },
+    {
+      "id": "09402500",
+      "name": "COLORADO RIVER NEAR GRAND CANYON, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "09404120",
+      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
+      "state": "AZ"
+    },
+    {
+      "id": "09415000",
+      "name": "VIRGIN RV AT LITTLEFIELD, AZ",
+      "state": "AZ"
+    },
+    {
+      "id": "09095500",
+      "name": "COLORADO RIVER NEAR CAMEO, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "09260000",
+      "name": "LITTLE SNAKE RIVER NEAR LILY, CO",
+      "state": "CO"
+    },
+    {
+      "id": "09255000",
+      "name": "SLATER FORK NEAR SLATER, CO",
+      "state": "CO"
+    },
+    {
+      "id": "09303000",
+      "name": "NORTH FORK WHITE RIVER AT BUFORD, CO",
+      "state": "CO"
+    },
+    {
+      "id": "09071100",
+      "name": "COLORADO RIVER NEAR GLENWOOD SPRINGS, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "09077200",
+      "name": "FRYINGPAN RIVER NEAR IVANHOE LAKE, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "09078475",
+      "name": "LAST CHANCE CREEK NEAR NORRIE, CO",
+      "state": "CO"
+    },
+    {
+      "id": "09109000",
+      "name": "TAYLOR RIVER BELOW TAYLOR PARK RESERVOIR, CO.",
+      "state": "CO"
+    },
+    {
+      "id": "09147500",
+      "name": "UNCOMPAHGRE RIVER AT COLONA, CO",
+      "state": "CO"
+    },
+    {
+      "id": "09163500",
+      "name": "COLORADO RIVER NEAR COLORADO-UTAH STATE LINE",
+      "state": "CO"
+    },
+    {
+      "id": "09180500",
+      "name": "COLORADO RIVER NEAR CISCO, UT",
+      "state": "UT"
+    },
+    {
+      "id": "09196500",
+      "name": "PINE CREEK ABOVE FREMONT LAKE, WY",
+      "state": "WY"
+    },
+    {
+      "id": "06224000",
+      "name": "BULL LAKE CREEK ABOVE BULL LAKE, WY",
+      "state": "WY"
+    },
+    {
+      "id": "06225500",
+      "name": "Wind River near Crowheart, WY",
+      "state": "WY"
+    },
+    {
+      "id": "06221400",
+      "name": "DINWOODY CREEK ABOVE LAKES, NEAR BURRIS, WY",
+      "state": "WY"
+    },
+    {
+      "id": "06218500",
+      "name": "WIND RIVER NEAR DUBOIS, WY",
+      "state": "WY"
+    },
+    {
+      "id": "06037000",
+      "name": "Gibbon River near West Yellowstone MT",
+      "state": "WY"
+    },
+    {
+      "id": "13342500",
+      "name": "CLEARWATER RIVER AT SPALDING ID",
+      "state": "ID"
+    },
+    {
+      "id": "13302005",
+      "name": "PAHSIMEROI RIVER AT ELLIS ID",
+      "state": "ID"
+    },
+    {
+      "id": "13266000",
+      "name": "WEISER RIVER NR WEISER ID",
+      "state": "ID"
+    },
+    {
+      "id": "13235000",
+      "name": "SOUTH FORK PAYETTE RIVER AT LOWMAN, ID",
+      "state": "ID"
+    },
+    {
+      "id": "13206000",
+      "name": "BOISE RIVER AT GLENWOOD BRIDGE NR BOISE ID",
+      "state": "ID"
+    },
+    {
+      "id": "13139510",
+      "name": "BIG WOOD RIVER AT HAILEY ID TOTAL FLOW",
+      "state": "ID"
+    },
+    {
+      "id": "13297380",
+      "name": "SALMON RIVER AB EAST FORK NR CLAYTON ID",
+      "state": "ID"
+    },
+    {
+      "id": "13295000",
+      "name": "VALLEY CREEK AT STANLEY ID",
+      "state": "ID"
+    },
+    {
+      "id": "06061500",
+      "name": "Prickly Pear Creek near Clancy MT",
+      "state": "MT"
+    },
+    {
+      "id": "06054500",
+      "name": "Missouri River at Toston MT",
+      "state": "MT"
+    },
+    {
+      "id": "06036650",
+      "name": "Jefferson River near Three Forks MT",
+      "state": "MT"
+    },
+    {
+      "id": "06080900",
+      "name": "Sun River bl Diversion Dam nr Augusta MT",
+      "state": "MT"
+    },
+    {
+      "id": "06179500",
+      "name": "West Fork Poplar River at international boundary",
+      "state": "?"
+    },
+    {
+      "id": "03065000",
+      "name": "DRY FORK AT HENDRICKS, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03071000",
+      "name": "CHEAT RIVER NEAR PISGAH, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03187000",
+      "name": "GAULEY RIVER AT CAMDEN ON GAULEY, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03114000",
+      "name": "Captina Creek at Armstrongs Mills OH",
+      "state": "OH"
+    },
+    {
+      "id": "03198350",
+      "name": "CLEAR FORK AT WHITESVILLE, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03183500",
+      "name": "GREENBRIER RIVER AT ALDERSON, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03066000",
+      "name": "BLACKWATER RIVER AT DAVIS, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03050000",
+      "name": "TYGART VALLEY RIVER NEAR DAILEY, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03062500",
+      "name": "DECKERS CREEK AT MORGANTOWN, WV",
+      "state": "WV"
+    },
+    {
+      "id": "03540500",
+      "name": "EMORY RIVER AT OAKDALE, TN",
+      "state": "TN"
+    },
+    {
+      "id": "03531500",
+      "name": "POWELL RIVER NEAR JONESVILLE, VA",
+      "state": "VA"
+    },
+    {
+      "id": "03532000",
+      "name": "POWELL RIVER NEAR ARTHUR, TN",
+      "state": "TN"
+    },
+    {
+      "id": "03207500",
+      "name": "LEVISA FORK NEAR GRUNDY, VA",
+      "state": "VA"
+    },
+    {
+      "id": "03220000",
+      "name": "Mill Creek near Bellepoint OH",
+      "state": "OH"
+    },
+    {
+      "id": "03471500",
+      "name": "S F HOLSTON RIVER AT RIVERSIDE, NEAR CHILHOWIE, VA",
+      "state": "VA"
+    },
+    {
+      "id": "03450000",
+      "name": "BEETREE CREEK NEAR SWANNANOA, NC",
+      "state": "NC"
+    },
+    {
+      "id": "03455500",
+      "name": "W F PIGEON R ABOVE LAKE LOGAN NR HAZELWOOD, NC",
+      "state": "NC"
+    },
+    {
+      "id": "02112120",
+      "name": "ROARING RIVER NEAR ROARING RIVER, NC",
+      "state": "NC"
+    },
+    {
+      "id": "02116500",
+      "name": "YADKIN RIVER AT YADKIN COLLEGE, NC",
+      "state": "NC"
+    },
+    {
+      "id": "03441000",
+      "name": "DAVIDSON RIVER NEAR BREVARD, NC",
+      "state": "NC"
+    },
+    {
+      "id": "02153551",
+      "name": "BROAD RIVER BELOW NINETYNINE ISLAND RESERVOIR, SC",
+      "state": "SC"
+    },
+    {
+      "id": "03161000",
+      "name": "SOUTH FORK NEW RIVER NEAR JEFFERSON, NC",
+      "state": "NC"
+    },
+    {
+      "id": "03164000",
+      "name": "NEW RIVER NEAR GALAX, VA",
+      "state": "VA"
+    },
+    {
+      "id": "03168000",
+      "name": "NEW RIVER AT ALLISONIA, VA",
+      "state": "VA"
+    },
+    {
+      "id": "02192500",
+      "name": "LITTLE RIVER NEAR MT. CARMEL, SC",
+      "state": "SC"
+    },
+    {
+      "id": "02338500",
+      "name": "CHATTAHOOCHEE RIVER AT GA 100, AT FRANKLIN, GA",
+      "state": "GA"
+    },
+    {
+      "id": "01421000",
+      "name": "EAST BRANCH DELAWARE RIVER AT FISHS EDDY NY",
+      "state": "NY"
+    },
+    {
+      "id": "01422000",
+      "name": "WEST BRANCH DELAWARE RIVER AT DELHI NY",
+      "state": "NY"
+    },
+    {
+      "id": "01500500",
+      "name": "SUSQUEHANNA RIVER AT UNADILLA NY",
+      "state": "NY"
+    },
+    {
+      "id": "01540500",
+      "name": "Susquehanna River at Danville, PA",
+      "state": "PA"
+    },
+    {
+      "id": "01554000",
+      "name": "Susquehanna River at Sunbury, PA",
+      "state": "PA"
+    },
+    {
+      "id": "01570500",
+      "name": "Susquehanna River at Harrisburg, PA",
+      "state": "PA"
+    },
+    {
+      "id": "01632000",
+      "name": "N F SHENANDOAH RIVER AT COOTES STORE, VA",
+      "state": "VA"
+    },
+    {
+      "id": "01646500",
+      "name": "POTOMAC RIVER NEAR WASH, DC LITTLE FALLS PUMP STA",
+      "state": "MD"
+    },
+    {
+      "id": "08158000",
+      "name": "Colorado Rv at Austin, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08167000",
+      "name": "Guadalupe Rv at Comfort, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08167500",
+      "name": "Guadalupe Rv nr Spring Branch, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08176500",
+      "name": "Guadalupe Rv at Victoria, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08151500",
+      "name": "Llano Rv at Llano, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08134000",
+      "name": "N Concho Rv nr Carlsbad, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08171000",
+      "name": "Blanco Rv at Wimberley, TX",
+      "state": "TX"
+    },
+    {
+      "id": "08178880",
+      "name": "Medina Rv at Bandera, TX",
+      "state": "TX"
+    },
+    {
+      "id": "05389000",
+      "name": "Yellow River near Ion, IA",
+      "state": "IA"
+    },
+    {
+      "id": "05407000",
+      "name": "WISCONSIN RIVER AT MUSCODA, WI",
+      "state": "WI"
+    },
+    {
+      "id": "05399500",
+      "name": "BIG EAU PLEINE RIVER AT STRATFORD, WI",
+      "state": "WI"
+    },
+    {
+      "id": "05543500",
+      "name": "ILLINOIS RIVER AT MARSEILLES, IL",
+      "state": "IL"
+    },
+    {
+      "id": "04085427",
+      "name": "MANITOWOC RIVER AT MANITOWOC, WI",
+      "state": "WI"
+    },
+    {
+      "id": "04059500",
+      "name": "FORD RIVER NEAR HYDE, MI",
+      "state": "MI"
+    },
+    {
+      "id": "04031000",
+      "name": "BLACK RIVER NEAR BESSEMER, MI",
+      "state": "MI"
+    },
+    {
+      "id": "04074950",
+      "name": "WOLF RIVER AT LANGLADE, WI",
+      "state": "WI"
+    },
+    {
+      "id": "05418500",
+      "name": "Maquoketa River near Maquoketa, IA",
+      "state": "IA"
+    },
+    {
+      "id": "01142500",
+      "name": "AYERS BROOK AT RANDOLPH, VT",
+      "state": "VT"
+    },
+    {
+      "id": "01130000",
+      "name": "UPPER AMMONOOSUC RIVER NEAR GROVETON, NH",
+      "state": "NH"
+    },
+    {
+      "id": "01131500",
+      "name": "CONNECTICUT RIVER NEAR DALTON, NH",
+      "state": "NH"
+    },
+    {
+      "id": "01138500",
+      "name": "CONNECTICUT RIVER AT WELLS RIVER, VT",
+      "state": "VT"
+    },
+    {
+      "id": "01144000",
+      "name": "WHITE RIVER AT WEST HARTFORD, VT",
+      "state": "VT"
+    },
+    {
+      "id": "01154500",
+      "name": "CONNECTICUT RIVER AT NORTH WALPOLE, NH",
+      "state": "NH"
+    },
+    {
+      "id": "01170500",
+      "name": "CONNECTICUT RIVER AT MONTAGUE CITY, MA",
+      "state": "MA"
+    },
+    {
+      "id": "01161000",
+      "name": "ASHUELOT RIVER AT HINSDALE, NH",
+      "state": "NH"
+    },
+    {
+      "id": "01073000",
+      "name": "OYSTER RIVER NEAR DURHAM, NH",
+      "state": "NH"
+    }
   ]
 }

@@ -73,6 +73,32 @@ function renderMeta(station) {
   `;
 }
 
+const MS_PER_DAY = 86400000;
+
+function pickDateTicks(xmin, xmax, targetCount = 7) {
+  const spanDays = Math.max(1, (xmax - xmin) / MS_PER_DAY);
+  const candidateSteps = [1, 2, 3, 7, 14, 30, 60, 90, 180, 365];
+  let step = candidateSteps[0];
+  for (const s of candidateSteps) {
+    if (spanDays / s <= targetCount) { step = s; break; }
+    step = s;
+  }
+  const ticks = [];
+  const startDay = Math.ceil(xmin / MS_PER_DAY);
+  for (let d = startDay; d * MS_PER_DAY <= xmax; d += step) {
+    ticks.push(d * MS_PER_DAY);
+  }
+  return { ticks, step };
+}
+
+function fmtTick(ts, step) {
+  const d = new Date(ts);
+  const mo = d.toLocaleString(undefined, { month: "short", timeZone: "UTC" });
+  const day = d.getUTCDate();
+  if (step >= 30) return `${mo} ${d.getUTCFullYear().toString().slice(2)}`;
+  return `${mo} ${day}`;
+}
+
 function drawChart(canvas, history, members, blend) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
@@ -94,22 +120,49 @@ function drawChart(canvas, history, members, blend) {
   const xmin = Math.min(...xs), xmax = Math.max(...xs);
   const ymin = 0, ymax = Math.max(...ys) * 1.15 || 1;
 
-  const pad = { l: 50, r: 14, t: 14, b: 28 };
+  const pad = { l: 64, r: 64, t: 18, b: 34 };
   const xToPx = x => pad.l + (x - xmin) / (xmax - xmin) * (w - pad.l - pad.r);
   const yToPx = y => h - pad.b - (y - ymin) / (ymax - ymin) * (h - pad.t - pad.b);
 
+  // Horizontal gridlines + dual CFS labels (left + right mirror)
   ctx.strokeStyle = "#1f2942"; ctx.lineWidth = 1;
+  ctx.font = "10px Inter, sans-serif";
   for (let i = 0; i <= 4; i++) {
     const y = pad.t + i * (h - pad.t - pad.b) / 4;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
     const yval = ymax - i * (ymax - ymin) / 4;
-    ctx.fillStyle = "#7c87a8"; ctx.font = "10px Inter, sans-serif"; ctx.textAlign = "right";
+    ctx.fillStyle = "#7c87a8";
+    ctx.textAlign = "right";
     ctx.fillText(fmtNumber(yval), pad.l - 4, y + 3);
+    ctx.textAlign = "left";
+    ctx.fillText(fmtNumber(yval), w - pad.r + 4, y + 3);
   }
+  // Y-axis "cfs" unit labels
+  ctx.fillStyle = "#aab7d4";
+  ctx.textAlign = "right";
+  ctx.fillText("cfs", pad.l - 4, pad.t - 4);
+  ctx.textAlign = "left";
+  ctx.fillText("cfs", w - pad.r + 4, pad.t - 4);
+
+  // X-axis: span-aware date ticks
+  const { ticks, step } = pickDateTicks(xmin, xmax, 7);
+  ctx.fillStyle = "#7c87a8";
   ctx.textAlign = "center";
-  for (const t of [xmin, (xmin + xmax) / 2, xmax]) {
-    const d = new Date(t).toISOString().slice(5, 10);
-    ctx.fillText(d, xToPx(t), h - 10);
+  ctx.strokeStyle = "#1f2942";
+  for (const t of ticks) {
+    if (t < xmin || t > xmax) continue;
+    const px = xToPx(t);
+    ctx.beginPath(); ctx.moveTo(px, h - pad.b); ctx.lineTo(px, h - pad.b + 3); ctx.stroke();
+    ctx.fillText(fmtTick(t, step), px, h - 14);
+  }
+  // Year strip if span crosses years
+  const y0 = new Date(xmin).getUTCFullYear();
+  const y1 = new Date(xmax).getUTCFullYear();
+  if (y0 !== y1 || step >= 30) {
+    ctx.font = "9px Inter, sans-serif";
+    ctx.fillStyle = "#5c6685";
+    ctx.fillText(`${y0}${y0 !== y1 ? "–" + y1 : ""}`, (pad.l + (w - pad.r)) / 2, h - 2);
+    ctx.font = "10px Inter, sans-serif";
   }
 
   if (history.length) {
@@ -117,6 +170,11 @@ function drawChart(canvas, history, members, blend) {
     ctx.strokeStyle = "#33446f"; ctx.setLineDash([4, 4]);
     ctx.beginPath(); ctx.moveTo(tx, pad.t); ctx.lineTo(tx, h - pad.b); ctx.stroke();
     ctx.setLineDash([]);
+    ctx.fillStyle = "#7c87a8";
+    ctx.textAlign = "center";
+    ctx.font = "9px Inter, sans-serif";
+    ctx.fillText("now", tx, pad.t - 2);
+    ctx.font = "10px Inter, sans-serif";
   }
 
   for (const s of series) {
@@ -169,6 +227,8 @@ function renderForecast(payload) {
 
   drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
 
+  const mae7 = payload.rolling_mae_h7 || {};
+  const mae14 = payload.rolling_mae_h14 || {};
   const rows = Object.entries(payload.weights || {})
     .sort((a, b) => b[1] - a[1])
     .map(([name, w]) => `
@@ -176,11 +236,21 @@ function renderForecast(payload) {
         <td>${name}</td>
         <td>${(w * 100).toFixed(1)}%</td>
         <td>${fmtNumber(payload.rolling_mae?.[name])}</td>
+        <td>${fmtNumber(mae7[name])}</td>
+        <td>${fmtNumber(mae14[name])}</td>
       </tr>`).join("");
+  const ensembleRow = (mae7.ensemble_blend != null || mae14.ensemble_blend != null) ? `
+      <tr class="ensemble-row">
+        <td>ensemble_blend</td>
+        <td>—</td>
+        <td>—</td>
+        <td>${fmtNumber(mae7.ensemble_blend)}</td>
+        <td>${fmtNumber(mae14.ensemble_blend)}</td>
+      </tr>` : "";
   document.getElementById("member-table").innerHTML = `
     <table>
-      <thead><tr><th>Member</th><th>Weight</th><th>Rolling MAE (cfs)</th></tr></thead>
-      <tbody>${rows}</tbody>
+      <thead><tr><th>Member</th><th>Weight</th><th>Rolling MAE (cfs)</th><th>MAE @ 7d</th><th>MAE @ 14d</th></tr></thead>
+      <tbody>${rows}${ensembleRow}</tbody>
     </table>
     <details class="mae-explainer">
       <summary>What is rolling MAE?</summary>

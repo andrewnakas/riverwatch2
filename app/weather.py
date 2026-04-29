@@ -24,9 +24,11 @@ DAILY_VARS = [
     "temperature_2m_max",
     "temperature_2m_min",
     "precipitation_sum",
+    "rain_sum",
     "snowfall_sum",
     "shortwave_radiation_sum",
     "windspeed_10m_max",
+    "et0_fao_evapotranspiration",
 ]
 
 
