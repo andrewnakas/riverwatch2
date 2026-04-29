@@ -28,10 +28,11 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 HORIZON_DAYS = 14
-TRAIN_LOOKBACK_DAYS = 1095
+TRAIN_LOOKBACK_DAYS = 1825  # 5 years to capture multi-year cycles
 LAGS = [1, 2, 3, 5, 7, 14, 30, 60]
 PRECIP_WINDOWS = [1, 3, 7, 14, 30]
 TEMP_WINDOWS = [3, 7, 14]
+PRECIP_LAGS = [1, 2, 3, 5, 7]  # explicit precip-day lags so ridge can learn basin lag time
 
 
 @dataclass
@@ -46,6 +47,7 @@ class StationForecast:
     rolling_mae_h7: Dict[str, float] = field(default_factory=dict)
     rolling_mae_h14: Dict[str, float] = field(default_factory=dict)
     chosen: str = ""
+    weights_strategy: str = ""
     notes: List[str] = field(default_factory=list)
 
 
@@ -69,6 +71,8 @@ def _build_features(q_hist: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
     if "precipitation_sum" in df.columns:
         for w in PRECIP_WINDOWS:
             df[f"precip_{w}d"] = df["precipitation_sum"].rolling(w, min_periods=1).sum()
+        for lag in PRECIP_LAGS:
+            df[f"precip_lag_{lag}"] = df["precipitation_sum"].shift(lag)
     if "rain_sum" in df.columns:
         for w in [1, 3, 7]:
             df[f"rain_{w}d"] = df["rain_sum"].rolling(w, min_periods=1).sum()
@@ -369,7 +373,28 @@ def forecast_station(
         if v is not None:
             target_dict["chronos_bolt"] = v
 
-    weights = _blend_weights(rolling_mae, list(members.keys()))
+    soft_weights = _blend_weights(rolling_mae, list(members.keys()))
+
+    # Per-station auto-pick: if the best member is decisively better than the
+    # runner-up (>= 30% lower MAE), snap weights to ~all on the winner. Stops
+    # the blend from being dragged by weak members on rivers where one model
+    # clearly dominates (e.g. snowmelt sites where ridge beats chronos badly).
+    weights = soft_weights
+    weights_strategy = "soft_blend_inv_mae2"
+    valid_mae = {k: v for k, v in rolling_mae.items()
+                 if k in members and v is not None and math.isfinite(v) and v > 0}
+    if len(valid_mae) >= 2:
+        ranked = sorted(valid_mae.items(), key=lambda kv: kv[1])
+        best_name, best_mae = ranked[0]
+        runner_mae = ranked[1][1]
+        if runner_mae > 0 and (runner_mae - best_mae) / runner_mae >= 0.30:
+            # Decisive winner: 90% on it, 10% spread evenly to keep some safety.
+            others = [n for n in members.keys() if n != best_name]
+            weights = {best_name: 0.9}
+            for n in others:
+                weights[n] = 0.1 / max(1, len(others))
+            weights_strategy = f"snap_to:{best_name}"
+
     blend_vals = []
     for h in range(horizon):
         s = 0.0
@@ -415,19 +440,25 @@ def forecast_station(
         rolling_mae_h7={k: float(v) for k, v in rolling_mae_h7.items()},
         rolling_mae_h14={k: float(v) for k, v in rolling_mae_h14.items()},
         chosen=chosen,
+        weights_strategy=weights_strategy,
         notes=notes,
     )
 
 
 def _blend_weights(rolling_mae: Dict[str, float], member_names: List[str]) -> Dict[str, float]:
-    """Inverse-MAE weighting, restricted to members we have."""
+    """Inverse-MAE-squared weighting: w ∝ 1/MAE^2.
+
+    Concentrates more aggressively on the best member than 1/MAE while still
+    falling back to the runner-up when MAEs are close. A single dominant model
+    with half the MAE of the next best gets ~4x its weight (vs 2x with linear).
+    """
     weights = {}
     for name in member_names:
         m = rolling_mae.get(name)
         if m is None or not math.isfinite(m) or m <= 0:
-            weights[name] = 0.05
+            weights[name] = 0.01
         else:
-            weights[name] = 1.0 / m
+            weights[name] = 1.0 / (m * m)
     total = sum(weights.values()) or 1.0
     return {k: v / total for k, v in weights.items()}
 

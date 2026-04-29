@@ -1,5 +1,5 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: ~500 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, Great Lakes / Driftless, plus a balanced sweep of every other state",
+  "description": "Live zero-shot river-discharge forecast subset: ~470 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, Great Lakes / Driftless, plus a balanced sweep of every other state",
   "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
@@ -1099,19 +1099,9 @@
       "state": "MO"
     },
     {
-      "id": "06467500",
-      "name": "MISSOURI RIVER AT YANKTON, SD",
-      "state": "SD"
-    },
-    {
       "id": "05378500",
       "name": "MISSISSIPPI RIVER AT WINONA, MN",
       "state": "MN"
-    },
-    {
-      "id": "03589500",
-      "name": "TENNESSEE RIVER AT FLORENCE AL",
-      "state": "AL"
     },
     {
       "id": "07194500",
@@ -1199,11 +1189,6 @@
       "state": "MD"
     },
     {
-      "id": "01036390",
-      "name": "Penobscot River at Eddington, Maine",
-      "state": "ME"
-    },
-    {
       "id": "01463500",
       "name": "Delaware River at Trenton NJ",
       "state": "NJ"
@@ -1274,19 +1259,9 @@
       "state": "NH"
     },
     {
-      "id": "02079500",
-      "name": "ROANOKE RIVER AT BUGGS ISLAND, VA",
-      "state": "VA"
-    },
-    {
       "id": "09522000",
       "name": "COLORADO RIVER AT NIB, ABOVE MORELOS DAM, AZ",
       "state": "AZ"
-    },
-    {
-      "id": "02081000",
-      "name": "ROANOKE RIVER NEAR SCOTLAND NECK, NC",
-      "state": "NC"
     },
     {
       "id": "09328960",
@@ -1297,11 +1272,6 @@
       "id": "07336820",
       "name": "Red River near De Kalb, TX",
       "state": "TX"
-    },
-    {
-      "id": "03206000",
-      "name": "OHIO RIVER AT HUNTINGTON, WV",
-      "state": "WV"
     },
     {
       "id": "06674500",
@@ -1349,34 +1319,14 @@
       "state": "MO"
     },
     {
-      "id": "06439500",
-      "name": "CHEYENNE RIVER NEAR EAGLE BUTTE SD",
-      "state": "SD"
-    },
-    {
       "id": "05355250",
       "name": "MISSISSIPPI RIVER AT RED WING, MN",
       "state": "MN"
     },
     {
-      "id": "03575500",
-      "name": "TENNESSEE RIVER AT WHITESBURG AL",
-      "state": "AL"
-    },
-    {
       "id": "07165570",
       "name": "Arkansas River near Haskell, OK",
       "state": "OK"
-    },
-    {
-      "id": "03322420",
-      "name": "OHIO RIVER AT UNIONTOWN DAM, KY",
-      "state": "KY"
-    },
-    {
-      "id": "06330000",
-      "name": "MISSOURI RIVER NR WILLISTON, ND",
-      "state": "ND"
     },
     {
       "id": "07263451",
@@ -1474,11 +1424,6 @@
       "state": "NM"
     },
     {
-      "id": "03435000",
-      "name": "CUMBERLAND RIVER BELOW CHEATHAM DAM, TN",
-      "state": "TN"
-    },
-    {
       "id": "02172002",
       "name": "LAKE MOULTRIE TAILRACE CANAL AT MONCKS CORNER, SC",
       "state": "SC"
@@ -1529,11 +1474,6 @@
       "state": "VA"
     },
     {
-      "id": "09404120",
-      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
-      "state": "AZ"
-    },
-    {
       "id": "02080500",
       "name": "ROANOKE RIVER AT ROANOKE RAPIDS, NC",
       "state": "NC"
@@ -1547,11 +1487,6 @@
       "id": "08116650",
       "name": "Brazos Rv nr Rosharon, TX",
       "state": "TX"
-    },
-    {
-      "id": "03201500",
-      "name": "OHIO RIVER AT POINT PLEASANT, WV",
-      "state": "WV"
     },
     {
       "id": "06657000",
@@ -1627,11 +1562,6 @@
       "id": "05092000",
       "name": "RED RIVER OF THE NORTH AT DRAYTON, ND",
       "state": "ND"
-    },
-    {
-      "id": "07263500",
-      "name": "Arkansas River at Little Rock, AR",
-      "state": "AR"
     },
     {
       "id": "07288800",
@@ -1774,11 +1704,6 @@
       "state": "VA"
     },
     {
-      "id": "09383100",
-      "name": "COLORADO R ABV LITTLE COLORADO R NR DESERT VIEW",
-      "state": "AZ"
-    },
-    {
       "id": "02129000",
       "name": "PEE DEE R NR ROCKINGHAM, NC",
       "state": "NC"
@@ -1794,11 +1719,6 @@
       "state": "TX"
     },
     {
-      "id": "03151000",
-      "name": "OHIO RIVER AT PARKERSBURG, WV",
-      "state": "WV"
-    },
-    {
       "id": "06279500",
       "name": "BIGHORN RIVER AT KANE, WY",
       "state": "WY"
@@ -1807,11 +1727,6 @@
       "id": "15356000",
       "name": "YUKON R AT EAGLE AK",
       "state": "AK"
-    },
-    {
-      "id": "14019200",
-      "name": "COLUMBIA RIVER AT MCNARY DAM,NEAR UMATILLA, OR",
-      "state": "OR"
     },
     {
       "id": "07133000",
@@ -1874,19 +1789,9 @@
       "state": "AR"
     },
     {
-      "id": "301141089320300",
-      "name": "EAST PEARL RIVER AT CSX RAILROAD NR CLAIBORNE, MS",
-      "state": "MS"
-    },
-    {
       "id": "06486000",
       "name": "Missouri River at Sioux City, IA",
       "state": "NE"
-    },
-    {
-      "id": "07355500",
-      "name": "Red River at Alexandria, LA",
-      "state": "LA"
     },
     {
       "id": "01127000",
@@ -2084,11 +1989,6 @@
       "state": "SD"
     },
     {
-      "id": "05083500",
-      "name": "RED RIVER OF THE NORTH AT OSLO, MN",
-      "state": "MN"
-    },
-    {
       "id": "02469525",
       "name": "TOMBIGBEE RIVER NEAR NANAFALIA, AL.",
       "state": "AL"
@@ -2122,11 +2022,6 @@
       "id": "06805500",
       "name": "Platte River at Louisville, Nebr.",
       "state": "NE"
-    },
-    {
-      "id": "07344400",
-      "name": "Red River near Hosston, LA.",
-      "state": "LA"
     },
     {
       "id": "01199000",
@@ -2189,19 +2084,9 @@
       "state": "MI"
     },
     {
-      "id": "05411500",
-      "name": "Mississippi River at Clayton, IA",
-      "state": "IA"
-    },
-    {
       "id": "08358400",
       "name": "RIO GRANDE FLOODWAY AT SAN MARCIAL, NM",
       "state": "NM"
-    },
-    {
-      "id": "034315005",
-      "name": "CUMBERLAND RIVER AT WOODLAND ST AT NASHVILLE, TN",
-      "state": "TN"
     },
     {
       "id": "02131010",
@@ -2269,11 +2154,6 @@
       "state": "UT"
     },
     {
-      "id": "08447410",
-      "name": "Pecos Rv nr Langtry, TX",
-      "state": "TX"
-    },
-    {
       "id": "03193000",
       "name": "KANAWHA RIVER AT KANAWHA FALLS, WV",
       "state": "WV"
@@ -2319,24 +2199,9 @@
       "state": "SD"
     },
     {
-      "id": "05137500",
-      "name": "RAINY RIVER NEAR BOAT LANDING AT WHEELERS POINT,MN",
-      "state": "MN"
-    },
-    {
-      "id": "02423000",
-      "name": "ALABAMA RIVER AT SELMA AL",
-      "state": "AL"
-    },
-    {
       "id": "07335500",
       "name": "Red River at Arthur City, TX",
       "state": "OK"
-    },
-    {
-      "id": "03238000",
-      "name": "OHIO RIVER AT MAYSVILLE, KY",
-      "state": "KY"
     },
     {
       "id": "05064500",
@@ -2394,11 +2259,6 @@
       "state": "KS"
     },
     {
-      "id": "03384500",
-      "name": "OHIO RIVER AT DAM 51 AT GOLCONDA, IL",
-      "state": "IL"
-    },
-    {
       "id": "03374100",
       "name": "WHITE RIVER AT HAZLETON, IN",
       "state": "IN"
@@ -2424,19 +2284,9 @@
       "state": "MI"
     },
     {
-      "id": "05389500",
-      "name": "Mississippi River at McGregor, IA",
-      "state": "IA"
-    },
-    {
       "id": "08354900",
       "name": "RIO GRANDE FLOODWAY AT SAN ACACIA, NM",
       "state": "NM"
-    },
-    {
-      "id": "03426310",
-      "name": "CUMBERLAND RIVER AT OLD HICKORY DAM (TW), TN",
-      "state": "TN"
     },
     {
       "id": "02131000",

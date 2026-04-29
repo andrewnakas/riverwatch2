@@ -204,9 +204,14 @@ function renderForecast(payload) {
   const blend = payload.blend || [];
   const t1 = blend[0]?.q_cfs;
   const t7 = blend[blend.length - 1]?.q_cfs;
+  const strat = payload.weights_strategy || "soft_blend";
+  const stratLabel = strat.startsWith("snap_to:")
+    ? `auto-snap to <b>${strat.split(":")[1]}</b>`
+    : "soft blend (1/MAE²)";
   sumEl.innerHTML = `
     <table>
       <tr><th>Chosen on rolling MAE</th><td>${payload.chosen}</td></tr>
+      <tr><th>Blend strategy</th><td>${stratLabel}</td></tr>
       <tr><th>Day +1 blend</th><td>${fmtNumber(t1)} cfs</td></tr>
       <tr><th>Day +7 blend</th><td>${fmtNumber(t7)} cfs</td></tr>
     </table>
@@ -254,10 +259,11 @@ function renderForecast(payload) {
       </p>
       <p>
         <b>How it drives the blend:</b> each member's weight is proportional to
-        <code>1 / rolling_mae</code>, so the forecaster with the smallest recent
-        error gets the biggest say in the orange dashed line above. If a model is
-        twice as accurate as another at this site, it carries roughly twice the
-        weight.
+        <code>1 / rolling_mae²</code>, so the forecaster with the smallest recent
+        error gets a much bigger say than under linear weighting. If one model is
+        decisively best at a site (≥30% lower MAE than the runner-up), the system
+        <i>snaps</i> 90% of the weight onto it instead — the "Blend strategy" row
+        above tells you when this happens.
       </p>
     </details>
     ${(payload.notes || []).length ? `<div class="notes">notes: ${payload.notes.join("; ")}</div>` : ""}

@@ -1,5 +1,5 @@
 {
-  "description": "Live zero-shot river-discharge forecast subset: ~500 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, Great Lakes / Driftless, plus a balanced sweep of every other state",
+  "description": "Live zero-shot river-discharge forecast subset: ~470 USGS gauges spanning popular USA whitewater + paddler-favored runs across the West, Mountain West, Appalachia, NE, Cascades, Sierra, Texas Hill Country, Great Lakes / Driftless, plus a balanced sweep of every other state",
   "selection_criteria": "Curated free-flowing + popular USGS gauges; verified IDs/names against USGS NWIS site service. Mix of pure-whitewater, regional flagship rivers, and snowmelt-anchor sites for forecast diversity.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
@@ -2627,15 +2627,6 @@
       "site_no": "07010000"
     },
     {
-      "id": "06467500",
-      "name": "MISSOURI RIVER AT YANKTON, SD",
-      "state": "SD",
-      "lat": 42.86608985,
-      "lon": -97.3939586,
-      "drain_area_sqmi": 279500.0,
-      "site_no": "06467500"
-    },
-    {
       "id": "05378500",
       "name": "MISSISSIPPI RIVER AT WINONA, MN",
       "state": "MN",
@@ -2643,15 +2634,6 @@
       "lon": -91.637823,
       "drain_area_sqmi": 59200.0,
       "site_no": "05378500"
-    },
-    {
-      "id": "03589500",
-      "name": "TENNESSEE RIVER AT FLORENCE AL",
-      "state": "AL",
-      "lat": 34.78703254,
-      "lon": -87.6700288,
-      "drain_area_sqmi": 30810.0,
-      "site_no": "03589500"
     },
     {
       "id": "07194500",
@@ -2807,15 +2789,6 @@
       "site_no": "01578310"
     },
     {
-      "id": "01036390",
-      "name": "Penobscot River at Eddington, Maine",
-      "state": "ME",
-      "lat": 44.82666667,
-      "lon": -68.6966667,
-      "drain_area_sqmi": 7515.0,
-      "site_no": "01036390"
-    },
-    {
       "id": "01463500",
       "name": "Delaware River at Trenton NJ",
       "state": "NJ",
@@ -2942,15 +2915,6 @@
       "site_no": "01144500"
     },
     {
-      "id": "02079500",
-      "name": "ROANOKE RIVER AT BUGGS ISLAND, VA",
-      "state": "VA",
-      "lat": 36.60319824,
-      "lon": -78.2977743,
-      "drain_area_sqmi": 7866.0,
-      "site_no": "02079500"
-    },
-    {
       "id": "09522000",
       "name": "COLORADO RIVER AT NIB, ABOVE MORELOS DAM, AZ",
       "state": "AZ",
@@ -2958,15 +2922,6 @@
       "lon": -114.7188444,
       "drain_area_sqmi": 246700.0,
       "site_no": "09522000"
-    },
-    {
-      "id": "02081000",
-      "name": "ROANOKE RIVER NEAR SCOTLAND NECK, NC",
-      "state": "NC",
-      "lat": 36.20916667,
-      "lon": -77.38388889,
-      "drain_area_sqmi": 8671.0,
-      "site_no": "02081000"
     },
     {
       "id": "09328960",
@@ -2985,15 +2940,6 @@
       "lon": -94.6943774,
       "drain_area_sqmi": 47268.0,
       "site_no": "07336820"
-    },
-    {
-      "id": "03206000",
-      "name": "OHIO RIVER AT HUNTINGTON, WV",
-      "state": "WV",
-      "lat": 38.41341549,
-      "lon": -82.500434,
-      "drain_area_sqmi": 55906.0,
-      "site_no": "03206000"
     },
     {
       "id": "06674500",
@@ -3077,15 +3023,6 @@
       "site_no": "06935965"
     },
     {
-      "id": "06439500",
-      "name": "CHEYENNE RIVER NEAR EAGLE BUTTE SD",
-      "state": "SD",
-      "lat": 44.69637199,
-      "lon": -101.2173711,
-      "drain_area_sqmi": 24235.0,
-      "site_no": "06439500"
-    },
-    {
       "id": "05355250",
       "name": "MISSISSIPPI RIVER AT RED WING, MN",
       "state": "MN",
@@ -3095,15 +3032,6 @@
       "site_no": "05355250"
     },
     {
-      "id": "03575500",
-      "name": "TENNESSEE RIVER AT WHITESBURG AL",
-      "state": "AL",
-      "lat": 34.57175806,
-      "lon": -86.5580466,
-      "drain_area_sqmi": 25610.0,
-      "site_no": "03575500"
-    },
-    {
       "id": "07165570",
       "name": "Arkansas River near Haskell, OK",
       "state": "OK",
@@ -3111,24 +3039,6 @@
       "lon": -95.6377778,
       "drain_area_sqmi": 75293.0,
       "site_no": "07165570"
-    },
-    {
-      "id": "03322420",
-      "name": "OHIO RIVER AT UNIONTOWN DAM, KY",
-      "state": "KY",
-      "lat": 37.79715556,
-      "lon": -87.9983356,
-      "drain_area_sqmi": 108000.0,
-      "site_no": "03322420"
-    },
-    {
-      "id": "06330000",
-      "name": "MISSOURI RIVER NR WILLISTON, ND",
-      "state": "ND",
-      "lat": 48.1080792,
-      "lon": -103.7146446,
-      "drain_area_sqmi": 164500.0,
-      "site_no": "06330000"
     },
     {
       "id": "07263451",
@@ -3302,15 +3212,6 @@
       "site_no": "08359500"
     },
     {
-      "id": "03435000",
-      "name": "CUMBERLAND RIVER BELOW CHEATHAM DAM, TN",
-      "state": "TN",
-      "lat": 36.32290298,
-      "lon": -87.2282645,
-      "drain_area_sqmi": 14163.0,
-      "site_no": "03435000"
-    },
-    {
       "id": "02172002",
       "name": "LAKE MOULTRIE TAILRACE CANAL AT MONCKS CORNER, SC",
       "state": "SC",
@@ -3401,15 +3302,6 @@
       "site_no": "02037500"
     },
     {
-      "id": "09404120",
-      "name": "COLORADO R ABV NATIONAL CANYON NR SUPAI",
-      "state": "AZ",
-      "lat": 36.25971509,
-      "lon": -112.8907702,
-      "drain_area_sqmi": 147931.0,
-      "site_no": "09404120"
-    },
-    {
       "id": "02080500",
       "name": "ROANOKE RIVER AT ROANOKE RAPIDS, NC",
       "state": "NC",
@@ -3435,15 +3327,6 @@
       "lon": -95.5824635,
       "drain_area_sqmi": 45339.0,
       "site_no": "08116650"
-    },
-    {
-      "id": "03201500",
-      "name": "OHIO RIVER AT POINT PLEASANT, WV",
-      "state": "WV",
-      "lat": 38.84396959,
-      "lon": -82.139589,
-      "drain_area_sqmi": 52796.0,
-      "site_no": "03201500"
     },
     {
       "id": "06657000",
@@ -3579,15 +3462,6 @@
       "lon": -97.1475697,
       "drain_area_sqmi": 34800.0,
       "site_no": "05092000"
-    },
-    {
-      "id": "07263500",
-      "name": "Arkansas River at Little Rock, AR",
-      "state": "AR",
-      "lat": 34.74933056,
-      "lon": -92.2667,
-      "drain_area_sqmi": 158000.0,
-      "site_no": "07263500"
     },
     {
       "id": "07288800",
@@ -3842,15 +3716,6 @@
       "site_no": "02035000"
     },
     {
-      "id": "09383100",
-      "name": "COLORADO R ABV LITTLE COLORADO R NR DESERT VIEW",
-      "state": "AZ",
-      "lat": 36.2040833,
-      "lon": -111.8007222,
-      "drain_area_sqmi": 114272.0,
-      "site_no": "09383100"
-    },
-    {
       "id": "02129000",
       "name": "PEE DEE R NR ROCKINGHAM, NC",
       "state": "NC",
@@ -3878,15 +3743,6 @@
       "site_no": "08114000"
     },
     {
-      "id": "03151000",
-      "name": "OHIO RIVER AT PARKERSBURG, WV",
-      "state": "WV",
-      "lat": 39.2681306,
-      "lon": -81.5637358,
-      "drain_area_sqmi": 35625.0,
-      "site_no": "03151000"
-    },
-    {
       "id": "06279500",
       "name": "BIGHORN RIVER AT KANE, WY",
       "state": "WY",
@@ -3903,15 +3759,6 @@
       "lon": -141.197778,
       "drain_area_sqmi": 111600.0,
       "site_no": "15356000"
-    },
-    {
-      "id": "14019200",
-      "name": "COLUMBIA RIVER AT MCNARY DAM,NEAR UMATILLA, OR",
-      "state": "OR",
-      "lat": 45.93268257,
-      "lon": -119.2965915,
-      "drain_area_sqmi": 214000.0,
-      "site_no": "14019200"
     },
     {
       "id": "07133000",
@@ -4022,15 +3869,6 @@
       "site_no": "07260800"
     },
     {
-      "id": "301141089320300",
-      "name": "EAST PEARL RIVER AT CSX RAILROAD NR CLAIBORNE, MS",
-      "state": "MS",
-      "lat": 30.1947222,
-      "lon": -89.5341667,
-      "drain_area_sqmi": 8674.0,
-      "site_no": "301141089320300"
-    },
-    {
       "id": "06486000",
       "name": "Missouri River at Sioux City, IA",
       "state": "NE",
@@ -4038,15 +3876,6 @@
       "lon": -96.4130833,
       "drain_area_sqmi": 314600.0,
       "site_no": "06486000"
-    },
-    {
-      "id": "07355500",
-      "name": "Red River at Alexandria, LA",
-      "state": "LA",
-      "lat": 31.31027778,
-      "lon": -92.4388333,
-      "drain_area_sqmi": 67500.0,
-      "site_no": "07355500"
     },
     {
       "id": "01127000",
@@ -4400,15 +4229,6 @@
       "site_no": "06478500"
     },
     {
-      "id": "05083500",
-      "name": "RED RIVER OF THE NORTH AT OSLO, MN",
-      "state": "MN",
-      "lat": 48.19387265,
-      "lon": -97.140628,
-      "drain_area_sqmi": 31200.0,
-      "site_no": "05083500"
-    },
-    {
       "id": "02469525",
       "name": "TOMBIGBEE RIVER NEAR NANAFALIA, AL.",
       "state": "AL",
@@ -4470,15 +4290,6 @@
       "lon": -96.1575,
       "drain_area_sqmi": 85370.0,
       "site_no": "06805500"
-    },
-    {
-      "id": "07344400",
-      "name": "Red River near Hosston, LA.",
-      "state": "LA",
-      "lat": 32.8931941,
-      "lon": -93.8224008,
-      "drain_area_sqmi": 57041.0,
-      "site_no": "07344400"
     },
     {
       "id": "01199000",
@@ -4589,15 +4400,6 @@
       "site_no": "04157005"
     },
     {
-      "id": "05411500",
-      "name": "Mississippi River at Clayton, IA",
-      "state": "IA",
-      "lat": 42.9035981,
-      "lon": -91.1451296,
-      "drain_area_sqmi": 79200.0,
-      "site_no": "05411500"
-    },
-    {
       "id": "08358400",
       "name": "RIO GRANDE FLOODWAY AT SAN MARCIAL, NM",
       "state": "NM",
@@ -4605,15 +4407,6 @@
       "lon": -106.997,
       "drain_area_sqmi": 27700.0,
       "site_no": "08358400"
-    },
-    {
-      "id": "034315005",
-      "name": "CUMBERLAND RIVER AT WOODLAND ST AT NASHVILLE, TN",
-      "state": "TN",
-      "lat": 36.16727879,
-      "lon": -86.7763875,
-      "drain_area_sqmi": 12842.0,
-      "site_no": "034315005"
     },
     {
       "id": "02131010",
@@ -4733,15 +4526,6 @@
       "site_no": "09261000"
     },
     {
-      "id": "08447410",
-      "name": "Pecos Rv nr Langtry, TX",
-      "state": "TX",
-      "lat": 29.8029823,
-      "lon": -101.4462223,
-      "drain_area_sqmi": 44015.0,
-      "site_no": "08447410"
-    },
-    {
       "id": "03193000",
       "name": "KANAWHA RIVER AT KANAWHA FALLS, WV",
       "state": "WV",
@@ -4823,24 +4607,6 @@
       "site_no": "06478000"
     },
     {
-      "id": "05137500",
-      "name": "RAINY RIVER NEAR BOAT LANDING AT WHEELERS POINT,MN",
-      "state": "MN",
-      "lat": 48.83188889,
-      "lon": -94.7041111,
-      "drain_area_sqmi": 21200.0,
-      "site_no": "05137500"
-    },
-    {
-      "id": "02423000",
-      "name": "ALABAMA RIVER AT SELMA AL",
-      "state": "AL",
-      "lat": 32.40569225,
-      "lon": -87.0186007,
-      "drain_area_sqmi": 17095.0,
-      "site_no": "02423000"
-    },
-    {
       "id": "07335500",
       "name": "Red River at Arthur City, TX",
       "state": "OK",
@@ -4848,15 +4614,6 @@
       "lon": -95.5019023,
       "drain_area_sqmi": 44445.0,
       "site_no": "07335500"
-    },
-    {
-      "id": "03238000",
-      "name": "OHIO RIVER AT MAYSVILLE, KY",
-      "state": "KY",
-      "lat": 38.68410948,
-      "lon": -83.7838888,
-      "drain_area_sqmi": 70130.0,
-      "site_no": "03238000"
     },
     {
       "id": "05064500",
@@ -4958,15 +4715,6 @@
       "site_no": "06888990"
     },
     {
-      "id": "03384500",
-      "name": "OHIO RIVER AT DAM 51 AT GOLCONDA, IL",
-      "state": "IL",
-      "lat": 37.3578302,
-      "lon": -88.4825424,
-      "drain_area_sqmi": 143900.0,
-      "site_no": "03384500"
-    },
-    {
       "id": "03374100",
       "name": "WHITE RIVER AT HAZLETON, IN",
       "state": "IN",
@@ -5012,15 +4760,6 @@
       "site_no": "04119400"
     },
     {
-      "id": "05389500",
-      "name": "Mississippi River at McGregor, IA",
-      "state": "IA",
-      "lat": 43.02701224,
-      "lon": -91.1726298,
-      "drain_area_sqmi": 67500.0,
-      "site_no": "05389500"
-    },
-    {
       "id": "08354900",
       "name": "RIO GRANDE FLOODWAY AT SAN ACACIA, NM",
       "state": "NM",
@@ -5028,15 +4767,6 @@
       "lon": -106.8908333,
       "drain_area_sqmi": 26770.0,
       "site_no": "08354900"
-    },
-    {
-      "id": "03426310",
-      "name": "CUMBERLAND RIVER AT OLD HICKORY DAM (TW), TN",
-      "state": "TN",
-      "lat": 36.29711845,
-      "lon": -86.6586324,
-      "drain_area_sqmi": 11673.0,
-      "site_no": "03426310"
     },
     {
       "id": "02131000",
