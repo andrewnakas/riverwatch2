@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 HORIZON_DAYS = 14
-TRAIN_LOOKBACK_DAYS = 1825  # 5 years to capture multi-year cycles
+TRAIN_LOOKBACK_DAYS = 3650  # 10 years to capture multi-year cycles
 LAGS = [1, 2, 3, 5, 7, 14, 30, 60]
 PRECIP_WINDOWS = [1, 3, 7, 14, 30]
 TEMP_WINDOWS = [3, 7, 14]

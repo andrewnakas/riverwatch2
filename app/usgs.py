@@ -9,6 +9,7 @@ not the full 5-year window.
 from __future__ import annotations
 
 import json
+import random
 import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -90,6 +91,7 @@ def fetch_daily_discharge(site_no: str, start: date, end: date, *, max_age_hours
             "siteStatus": "all",
         }
         url = DV_URL + "?" + urlencode(params)
+        time.sleep(0.05 + random.random() * 0.10)
         try:
             payload = _http_json(url)
         except Exception:
