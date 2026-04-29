@@ -1,6 +1,12 @@
 # RiverWatch2
 
-Live, on-demand river-discharge forecasts for a 43-station benchmark subset of USGS gauges (40 picks + Yellowstone-Livingston + 2× Lochsa).
+Live 14-day zero-shot discharge forecasts for ~100 USGS gauges on popular USA
+whitewater rivers — free-flowing only, no dam-release runs. Built from the
+original 43-station benchmark subset plus Missoula-area + Yellowstone mainstem
++ a curated American-Whitewater-style hot-list (Salmon / MF Salmon / Selway /
+Lochsa / Payette / Roaring Fork / Yampa / Gunnison / Lees Ferry / McKenzie /
+Skykomish / Eel / Kern / Merced / French Broad / Chattooga / Williams / Cherry
+/ Catskills / Maine, etc).
 
 A Flask app serves a Leaflet map of all 40 sensors. Clicking any marker triggers
 a fresh forecast that runs the following models against live USGS NWIS daily

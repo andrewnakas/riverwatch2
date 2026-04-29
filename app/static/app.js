@@ -173,6 +173,27 @@ function renderForecast(payload) {
       <thead><tr><th>Member</th><th>Weight</th><th>Rolling MAE (cfs)</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    <details class="mae-explainer">
+      <summary>What is rolling MAE?</summary>
+      <p>
+        <b>MAE = Mean Absolute Error</b>, in cubic-feet-per-second (cfs). It's the
+        average gap between what each forecaster predicted and what actually flowed,
+        across past days where we already know the answer.
+      </p>
+      <p>
+        <b>Rolling</b> means we backtest each forecaster against the most recent
+        history at this gauge — not a fixed test set. Persistence and Chronos use
+        a single horizon-length holdout; the ridge model holds out the trailing
+        30 days for every horizon-day. Lower is better.
+      </p>
+      <p>
+        <b>How it drives the blend:</b> each member's weight is proportional to
+        <code>1 / rolling_mae</code>, so the forecaster with the smallest recent
+        error gets the biggest say in the orange dashed line above. If a model is
+        twice as accurate as another at this site, it carries roughly twice the
+        weight.
+      </p>
+    </details>
     ${(payload.notes || []).length ? `<div class="notes">notes: ${payload.notes.join("; ")}</div>` : ""}
   `;
 }

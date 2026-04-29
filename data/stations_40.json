@@ -1,6 +1,6 @@
 {
-  "description": "42-station benchmark subset for live zero-shot river forecasting",
-  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, capped per-state for geographic diversity, plus Yellowstone-Livingston and Lochsa picks",
+  "description": "Live zero-shot river-discharge forecast subset: original 42 benchmark picks + Missoula-area + Yellowstone mainstem + ~50 most-paddled free-flowing whitewater runs in the USA",
+  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, plus curated whitewater favorites (American Whitewater style listing) skewed toward snowmelt + free-flowing rivers (no dam-release runs). All gauges on USGS NWIS daily 00060 discharge.",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
     {"id": "06192500", "name": "Yellowstone River near Livingston, MT", "state": "MT"},
@@ -45,6 +45,75 @@
     {"id": "10251300", "name": "AMARGOSA RV AT TECOPA, CA", "state": "CA"},
     {"id": "03274650", "name": "WHITEWATER RIVER NEAR ECONOMY, IN", "state": "IN"},
     {"id": "05014500", "name": "Swiftcurrent Creek at Many Glacier MT", "state": "MT"},
-    {"id": "01428750", "name": "West Branch Lackawaxen River near Aldenville, PA", "state": "PA"}
+    {"id": "01428750", "name": "West Branch Lackawaxen River near Aldenville, PA", "state": "PA"},
+
+    {"id": "12340500", "name": "Clark Fork above Missoula MT", "state": "MT"},
+    {"id": "12340000", "name": "Blackfoot River near Bonner MT", "state": "MT"},
+    {"id": "12353000", "name": "Clark Fork below Missoula MT", "state": "MT"},
+    {"id": "12353500", "name": "Clark Fork at St Regis MT", "state": "MT"},
+    {"id": "12350250", "name": "Bitterroot River at Bell Crossing nr Victor MT", "state": "MT"},
+    {"id": "12352500", "name": "Rattlesnake Creek at Missoula MT", "state": "MT"},
+
+    {"id": "06214500", "name": "Yellowstone River at Billings MT", "state": "MT"},
+    {"id": "06329500", "name": "Yellowstone River near Sidney MT", "state": "MT"},
+    {"id": "06191500", "name": "Yellowstone River at Corwin Springs MT", "state": "MT"},
+    {"id": "06037500", "name": "Madison River near West Yellowstone MT", "state": "MT"},
+    {"id": "06038500", "name": "Gardner River near Mammoth, YNP", "state": "WY"},
+    {"id": "06024450", "name": "Lamar River near Tower Falls Ranger Station, YNP", "state": "WY"},
+    {"id": "06016000", "name": "Yellowstone River at Yellowstone Lk outlet, YNP", "state": "WY"},
+
+    {"id": "13317000", "name": "Salmon River at Whitebird ID (Main Salmon)", "state": "ID"},
+    {"id": "13310700", "name": "S F Salmon River near Krassel ID", "state": "ID"},
+    {"id": "13309220", "name": "MF Salmon River at Middle Fork Lodge ID", "state": "ID"},
+    {"id": "13340000", "name": "Clearwater River at Orofino ID", "state": "ID"},
+    {"id": "13338500", "name": "Selway River near Lowell ID", "state": "ID"},
+    {"id": "13302500", "name": "Salmon River at Salmon ID", "state": "ID"},
+    {"id": "13247500", "name": "Payette River near Horseshoe Bend ID", "state": "ID"},
+    {"id": "13251000", "name": "Payette River near Payette ID", "state": "ID"},
+    {"id": "13186000", "name": "South Fork Boise River nr Featherville ID", "state": "ID"},
+
+    {"id": "12413000", "name": "North Fork Coeur d'Alene River at Enaville ID", "state": "ID"},
+
+    {"id": "09085000", "name": "Roaring Fork River at Glenwood Springs CO", "state": "CO"},
+    {"id": "09080400", "name": "Crystal River abv Avalanche Cr nr Redstone CO", "state": "CO"},
+    {"id": "09124500", "name": "Lake Fork above Lake San Cristobal CO (Lake Fork Gunnison)", "state": "CO"},
+    {"id": "09110000", "name": "Taylor River at Almont CO", "state": "CO"},
+    {"id": "09128000", "name": "Gunnison River below Gunnison Tunnel CO (Black Canyon)", "state": "CO"},
+    {"id": "09239500", "name": "Yampa River at Steamboat Springs CO", "state": "CO"},
+    {"id": "09251000", "name": "Yampa River near Maybell CO", "state": "CO"},
+    {"id": "09304500", "name": "White River near Watson UT (Desolation/Gray Cyn)", "state": "UT"},
+    {"id": "09328500", "name": "San Rafael River near Green River UT", "state": "UT"},
+    {"id": "09380000", "name": "Colorado River at Lees Ferry AZ (Grand Canyon put-in)", "state": "AZ"},
+    {"id": "09185600", "name": "Colorado River near Cisco UT (Westwater)", "state": "UT"},
+
+    {"id": "09404200", "name": "Virgin River abv La Verkin Cr nr La Verkin UT (Zion Narrows)", "state": "UT"},
+
+    {"id": "12134500", "name": "Skykomish River near Gold Bar WA", "state": "WA"},
+    {"id": "12141300", "name": "Middle Fork Snoqualmie River near Tanner WA", "state": "WA"},
+    {"id": "12048000", "name": "Dungeness River near Sequim WA", "state": "WA"},
+    {"id": "14305500", "name": "Siletz River at Siletz OR", "state": "OR"},
+    {"id": "14162500", "name": "McKenzie River near Vida OR", "state": "OR"},
+    {"id": "14211720", "name": "Sandy River below Bull Run River near Bull Run OR", "state": "OR"},
+    {"id": "14377100", "name": "Illinois River near Kerby OR", "state": "OR"},
+    {"id": "11475000", "name": "Eel River at Scotia CA", "state": "CA"},
+    {"id": "11186000", "name": "Kern River near Kernville CA", "state": "CA"},
+    {"id": "11264500", "name": "Merced River at Happy Isles, Yosemite CA", "state": "CA"},
+    {"id": "11335000", "name": "Cosumnes River at Michigan Bar CA", "state": "CA"},
+    {"id": "11427000", "name": "North Fork American River at North Fork Dam CA", "state": "CA"},
+    {"id": "10336660", "name": "Truckee River at Farad CA", "state": "CA"},
+
+    {"id": "03473000", "name": "South Fork Holston River nr Damascus VA (Mt Rogers)", "state": "VA"},
+    {"id": "01605500", "name": "South Branch Potomac River at Franklin WV", "state": "WV"},
+    {"id": "03187500", "name": "Cranberry River near Richwood WV", "state": "WV"},
+    {"id": "03186500", "name": "Cherry River at Craigsville WV (Upper Gauley feeder)", "state": "WV"},
+    {"id": "01413500", "name": "East Branch Delaware River at Margaretville NY", "state": "NY"},
+    {"id": "01411500", "name": "Maurice River at Norma NJ", "state": "NJ"},
+    {"id": "01055000", "name": "Swift River near Roxbury ME (Magalloway/Rapid feeder)", "state": "ME"},
+    {"id": "01334500", "name": "Hoosic River near Williamstown MA (Deerfield watershed)", "state": "MA"},
+
+    {"id": "02053200", "name": "Smith River at Eden NC", "state": "NC"},
+    {"id": "03451500", "name": "French Broad River at Asheville NC", "state": "NC"},
+    {"id": "02177000", "name": "Chattooga River near Clayton GA (Section IV classic)", "state": "GA"},
+    {"id": "02338660", "name": "Chattahoochee River near Cornelia GA", "state": "GA"}
   ]
 }
