@@ -1,6 +1,6 @@
 # RiverWatch2
 
-Live, on-demand river-discharge forecasts for a 40-station benchmark subset of USGS gauges.
+Live, on-demand river-discharge forecasts for a 43-station benchmark subset of USGS gauges (40 picks + Yellowstone-Livingston + 2× Lochsa).
 
 A Flask app serves a Leaflet map of all 40 sensors. Clicking any marker triggers
 a fresh forecast that runs the following models against live USGS NWIS daily
@@ -32,7 +32,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# (one-time) refresh USGS site metadata for the 40-station subset
+# (one-time) refresh USGS site metadata for the 43-station subset
 python scripts/fetch_station_metadata.py
 
 # serve the map UI
@@ -47,7 +47,7 @@ to bypass cache.
 ## Benchmarking
 
 ```bash
-python scripts/benchmark_40.py --label baseline --eval-days 14 --horizon 7
+python scripts/benchmark_40.py --label v2-h14 --eval-days 14 --horizon 14 --train-days 1095
 ```
 
 Writes `benchmarks/results_<label>_<ts>.json` with per-station and aggregate MAE
@@ -65,7 +65,7 @@ app/
   templates/       index.html
   static/          app.js + styles.css
 data/
-  stations_40.json            Hand-picked 40-station benchmark subset
+  stations_40.json            Hand-picked 43-station benchmark subset
   stations_40_enriched.json   With lat/lon + drainage + elevation from USGS
   cache/                      On-disk JSON cache for USGS + Open-Meteo
 benchmarks/
@@ -73,6 +73,7 @@ benchmarks/
 scripts/
   fetch_station_metadata.py   One-shot USGS site lookup for the subset
   benchmark_40.py             Full-subset MAE evaluation
+  build_static_site.py        Builds dist/ for GitHub Pages deploy
 ```
 
 ## What the 40-station subset is
@@ -83,30 +84,46 @@ spread (max 8 AK, 8 MT, 4 WY, 3 elsewhere). Skewed toward Mountain West +
 Yellowstone + Alaska panhandle hydrology, with sentinel CONUS sites for
 contrast.
 
-## Current baseline (`benchmarks/baseline_v1.json`)
+## Current baseline (`benchmarks/baseline_v2_h14.json`)
 
-14-day held-out eval window, 7-day forecast horizon, 38/40 stations succeeded
-(2 stations skipped: USGS hadn't reported recent enough daily values for the
-held-out window):
+14-day held-out eval window, **14-day** forecast horizon, 40/43 stations
+succeeded (3 AK stations skipped: USGS hadn't reported recent enough daily
+values for the held-out window):
 
-| forecaster        | mean MAE (cfs) |
-|-------------------|----------------|
-| persistence_lag1  | 18.05          |
-| runoff_ridge      | 20.66          |
-| chronos_bolt      | 21.25          |
-| **ensemble_blend**| **17.88**      |
+| forecaster        | mean MAE (cfs) | median MAE (cfs) |
+|-------------------|----------------|------------------|
+| persistence_lag1  | 88.58          | 11.73            |
+| runoff_ridge      | 114.50         | 12.37            |
+| chronos_bolt      | 98.22          | 10.29            |
+| **ensemble_blend**| **95.73**      | **7.93**         |
 
-The blend already beats every individual member because per-station
-inverse-MAE weights down-weight the foundation model on hard snowmelt sites
-(e.g. 06195600, 15052500) where it can't see the SWE / temperature forcing
-that ridge gets.
+Median MAE is the more useful number — the mean is skewed by a handful of
+high-discharge snowmelt stations (Lochsa, Gallatin, Big Sky) where every
+forecaster has cfs error in the hundreds. On the median, the blend (7.93)
+already beats every individual member.
+
+What's new vs. v1:
+- 14-day horizon (was 7)
+- 3 new stations: Yellowstone-Livingston (06192500), Lochsa nr Lowell
+  (13337000), Lochsa at L.S. (13336500)
+- Ridge switched from recursive to **direct multi-step** (one model per
+  horizon day, no compounding error)
+- Training lookback bumped from 540 → 1095 days
+- Chronos forecasts blended 50/50 with a per-station seasonal climatology
+  ratio so it can anchor on DOY without snow forcing
+- Rolling MAE for all members now computed on the full horizon, so blend
+  weights compare like-for-like
+
+(Previous 7-day baseline was `baseline_v1.json`: ensemble mean MAE 17.88
+across 40 stations.)
 
 ## Roadmap toward better MAE
 
 - [x] Baseline ensemble: persistence + ridge + Chronos-Bolt zero-shot
+- [x] Direct multi-step ridge (no recursion, no compounding error)
+- [x] Per-station seasonal scaling for Chronos via DOY climatology
 - [ ] Try `chronos-bolt-base` (~200 MB) instead of `-small` for the foundation arm
 - [ ] Add elevation-aware Open-Meteo precip + degree-day melt features
 - [ ] Add SNOTEL SWE for stations that have a station within 50 km
 - [ ] Per-station ensemble weights persisted across runs (warm start blend)
-- [ ] Calibrate Chronos forecasts against a per-station seasonal scale factor
 - [ ] Try TimesFM-2 / Apex once they have a stable PyPI release

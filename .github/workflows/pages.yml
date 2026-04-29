@@ -52,7 +52,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          python scripts/build_static_site.py --horizon 7
+          python scripts/build_static_site.py --horizon 14
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

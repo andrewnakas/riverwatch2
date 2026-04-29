@@ -1,4 +1,4 @@
-"""Flask server: map UI + on-demand forecast API for the 40-station subset."""
+"""Flask server: map UI + on-demand forecast API for the 43-station subset."""
 from __future__ import annotations
 
 import json

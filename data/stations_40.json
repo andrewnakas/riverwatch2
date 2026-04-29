@@ -1,8 +1,11 @@
 {
-  "description": "40-station benchmark subset for live zero-shot river forecasting",
-  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, capped per-state for geographic diversity",
+  "description": "42-station benchmark subset for live zero-shot river forecasting",
+  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, capped per-state for geographic diversity, plus Yellowstone-Livingston and Lochsa picks",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
+    {"id": "06192500", "name": "Yellowstone River near Livingston, MT", "state": "MT"},
+    {"id": "13337000", "name": "LOCHSA RIVER NR LOWELL ID", "state": "ID"},
+    {"id": "13336500", "name": "LOCHSA RIVER AT LOCHSA L.S. NR LOWELL ID", "state": "ID"},
     {"id": "06036905", "name": "Firehole River near West Yellowstone MT", "state": "WY"},
     {"id": "15056560", "name": "KLEHINI R NR KLUKWAN AK", "state": "AK"},
     {"id": "02231000", "name": "ST. MARYS RIVER NEAR MACCLENNY, FL", "state": "FL"},

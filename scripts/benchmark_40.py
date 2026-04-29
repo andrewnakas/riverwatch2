@@ -30,10 +30,9 @@ sys.path.insert(0, str(ROOT))
 from app import usgs, weather  # noqa: E402
 from app.forecast import (  # noqa: E402
     HORIZON_DAYS,
-    _build_features,
-    _feature_columns,
     _get_chronos,
-    _train_ridge,
+    _rolling_chronos_mae,
+    _rolling_persistence_mae,
     chronos_forecast,
     persistence_forecast,
     runoff_ridge_forecast,
@@ -96,11 +95,12 @@ def evaluate_one(station: dict, train_days: int, eval_days: int, horizon: int) -
     persist_pred = persistence_forecast(q_train, eval_horizon)
     out["members"]["persistence_lag1"] = _metric_pair(yt, persist_pred)
 
-    # 2) ridge (trained on q_train, with weather knowledge of the eval window)
+    # 2) ridge (direct multi-step on q_train, with weather knowledge of the eval window)
     try:
-        ridge_pred, _ = runoff_ridge_forecast(q_train, wx_hist, wx_future, eval_horizon)
+        ridge_pred, ridge_mae_info = runoff_ridge_forecast(q_train, wx_hist, wx_future, eval_horizon)
     except Exception as exc:
         ridge_pred = persist_pred
+        ridge_mae_info = {}
         out["ridge_error"] = str(exc)
     out["members"]["runoff_ridge"] = _metric_pair(yt, ridge_pred)
 
@@ -118,21 +118,12 @@ def evaluate_one(station: dict, train_days: int, eval_days: int, horizon: int) -
         member_preds["chronos_bolt"] = chronos_pred
 
     rolling_mae = {}
-    persist_resid = np.abs(np.diff(q_train["q_cfs"].values))
-    if len(persist_resid):
-        rolling_mae["persistence_lag1"] = float(np.mean(persist_resid[-180:]))
-    try:
-        feats = _build_features(q_train, pd.concat([wx_hist, wx_future], ignore_index=True))
-        cols = _feature_columns(feats)
-        if cols and len(feats.dropna(subset=cols + ["q_log"])) >= 90:
-            from app.forecast import _rolling_validate_ridge
-            rv = _rolling_validate_ridge(feats, cols)
-            if "mae_mean" in rv:
-                rolling_mae["runoff_ridge"] = rv["mae_mean"]
-    except Exception:
-        pass
+    pm = _rolling_persistence_mae(q_train, eval_horizon)
+    if pm is not None:
+        rolling_mae["persistence_lag1"] = pm
+    if "mae_mean" in ridge_mae_info:
+        rolling_mae["runoff_ridge"] = ridge_mae_info["mae_mean"]
     if chronos_pred is not None:
-        from app.forecast import _rolling_chronos_mae
         cm = _rolling_chronos_mae(q_train, eval_horizon)
         if cm is not None:
             rolling_mae["chronos_bolt"] = cm

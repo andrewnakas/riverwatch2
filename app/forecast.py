@@ -27,11 +27,11 @@ from . import usgs, weather
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-HORIZON_DAYS = 7
-TRAIN_LOOKBACK_DAYS = 540
-LAGS = [1, 2, 3, 5, 7, 14, 30]
-PRECIP_WINDOWS = [1, 3, 7, 14]
-TEMP_WINDOWS = [3, 7]
+HORIZON_DAYS = 14
+TRAIN_LOOKBACK_DAYS = 1095
+LAGS = [1, 2, 3, 5, 7, 14, 30, 60]
+PRECIP_WINDOWS = [1, 3, 7, 14, 30]
+TEMP_WINDOWS = [3, 7, 14]
 
 
 @dataclass
@@ -93,25 +93,16 @@ def persistence_forecast(q_hist: pd.DataFrame, horizon: int) -> List[float]:
     return [last] * horizon
 
 
-def _train_ridge(features: pd.DataFrame, cols: List[str]) -> tuple[Ridge, StandardScaler]:
-    train = features.dropna(subset=cols + ["q_log"])
-    if len(train) < 30:
-        raise RuntimeError(f"insufficient training rows: {len(train)}")
-    X = train[cols].values
-    y = train["q_log"].values
-    scaler = StandardScaler().fit(X)
-    model = Ridge(alpha=1.0, random_state=0).fit(scaler.transform(X), y)
-    return model, scaler
-
-
 def runoff_ridge_forecast(
     q_hist: pd.DataFrame,
     wx_hist: pd.DataFrame,
     wx_fcst: pd.DataFrame,
     horizon: int,
 ) -> tuple[List[float], Dict[str, float]]:
-    """Ridge on lagged log-discharge + weather rollups; recursive multi-step.
+    """Direct multi-step ridge: one model per horizon day, no recursion.
 
+    Each model predicts log-discharge at t+h using only features known at t,
+    so there's no compounding inference error across the horizon.
     Returns (predictions_cfs, rolling_validation_metrics).
     """
     if q_hist.empty:
@@ -125,105 +116,48 @@ def runoff_ridge_forecast(
     if not cols:
         return persistence_forecast(q_hist, horizon), {}
 
-    model, scaler = _train_ridge(feats, cols)
-
-    rolling_mae = _rolling_validate_ridge(feats, cols)
-
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     last_q = float(q_hist["q_cfs"].iloc[-1])
-    history = feats.copy()
-    # Forward-fill weather columns so rolling windows for future dates have inputs.
-    weather_cols = [c for c in history.columns if c in {
-        "precipitation_sum", "snowfall_sum",
-        "temperature_2m_mean", "temperature_2m_max", "temperature_2m_min",
-        "shortwave_radiation_sum", "windspeed_10m_max",
-    }]
-    if weather_cols:
-        history[weather_cols] = history[weather_cols].ffill().fillna(0.0)
 
+    # Build training matrix once per horizon h: target = q_log shifted by -h
+    # (i.e. value h days into the future). Features come from the same row.
     preds: List[float] = []
+    horizon_maes: List[float] = []
+
+    # The "now" row — features known as of last_date.
+    feats_now = feats.loc[last_date, cols] if last_date in feats.index else feats[cols].dropna().iloc[-1]
+    feats_now = feats_now.fillna(0.0)
+
     for h in range(1, horizon + 1):
-        target_date = last_date + timedelta(days=h)
-        if target_date not in history.index:
-            history.loc[target_date] = np.nan
-            history = history.sort_index()
-            if weather_cols:
-                history.loc[target_date, weather_cols] = history[weather_cols].iloc[-2]
-        history = _refresh_features_for_date(history, target_date)
-        row = history.loc[target_date, cols]
-        if row.isna().any():
-            fill_src = history[cols].dropna().iloc[-1] if history[cols].dropna().shape[0] else pd.Series(0.0, index=cols)
-            row = row.fillna(fill_src).fillna(0.0)
-        x = scaler.transform(row.values.reshape(1, -1))
+        df_h = feats.copy()
+        df_h["target_log"] = df_h["q_log"].shift(-h)
+        train = df_h.dropna(subset=cols + ["target_log"])
+        if len(train) < 30:
+            preds.append(last_q)
+            continue
+        Xtr = train[cols].values
+        ytr = train["target_log"].values
+        sc = StandardScaler().fit(Xtr)
+        model = Ridge(alpha=1.0, random_state=0).fit(sc.transform(Xtr), ytr)
+        x = sc.transform(feats_now.values.reshape(1, -1))
         yhat_log = float(model.predict(x)[0])
         yhat = float(np.expm1(yhat_log))
         if not math.isfinite(yhat) or yhat < 0:
             yhat = last_q
         preds.append(yhat)
-        history.at[target_date, "q_cfs"] = yhat
-        history.at[target_date, "q_log"] = float(np.log1p(max(yhat, 0)))
 
+        # Rolling MAE at this horizon: hold out last 30 days
+        if len(train) > 90:
+            cut = len(train) - 30
+            sc_v = StandardScaler().fit(train[cols].iloc[:cut].values)
+            m_v = Ridge(alpha=1.0, random_state=0).fit(sc_v.transform(train[cols].iloc[:cut].values), train["target_log"].iloc[:cut].values)
+            yhat_v = np.expm1(m_v.predict(sc_v.transform(train[cols].iloc[cut:].values)))
+            yhat_v = np.clip(yhat_v, 0, None)
+            ytrue_v = np.expm1(train["target_log"].iloc[cut:].values)
+            horizon_maes.append(float(mean_absolute_error(ytrue_v, yhat_v)))
+
+    rolling_mae = {"mae_mean": float(np.mean(horizon_maes))} if horizon_maes else {}
     return preds, rolling_mae
-
-
-def _refresh_features_for_date(history: pd.DataFrame, target_date) -> pd.DataFrame:
-    """Recompute lag features for `target_date` after we've inserted a synthetic row."""
-    for lag in LAGS:
-        src = history["q_cfs"].shift(lag)
-        history.loc[target_date, f"q_lag_{lag}"] = src.loc[target_date]
-        src_log = history["q_log"].shift(lag)
-        history.loc[target_date, f"qlog_lag_{lag}"] = src_log.loc[target_date]
-    if "precipitation_sum" in history.columns:
-        for w in PRECIP_WINDOWS:
-            roll = history["precipitation_sum"].rolling(w, min_periods=1).sum()
-            history.loc[target_date, f"precip_{w}d"] = roll.loc[target_date]
-    if "temperature_2m_mean" in history.columns:
-        for w in TEMP_WINDOWS:
-            roll = history["temperature_2m_mean"].rolling(w, min_periods=1).mean()
-            history.loc[target_date, f"tmean_{w}d"] = roll.loc[target_date]
-        roll = history["temperature_2m_mean"].clip(lower=0).rolling(7, min_periods=1).sum()
-        history.loc[target_date, "pos_dd_7d"] = roll.loc[target_date]
-    if "snowfall_sum" in history.columns:
-        for w, name in [(7, "snow_7d"), (30, "snow_30d")]:
-            roll = history["snowfall_sum"].rolling(w, min_periods=1).sum()
-            history.loc[target_date, name] = roll.loc[target_date]
-    doy = pd.Timestamp(target_date).dayofyear
-    history.loc[target_date, "doy_sin"] = np.sin(2 * np.pi * doy / 365.25)
-    history.loc[target_date, "doy_cos"] = np.cos(2 * np.pi * doy / 365.25)
-    return history
-
-
-def _rolling_validate_ridge(features: pd.DataFrame, cols: List[str]) -> Dict[str, float]:
-    """3-fold expanding-window validation on log-discharge."""
-    df = features.dropna(subset=cols + ["q_log"])
-    if len(df) < 90:
-        return {}
-    n = len(df)
-    fold_size = max(14, n // 6)
-    splits = []
-    for i in range(3):
-        cut = n - (3 - i) * fold_size
-        if cut < 60:
-            continue
-        train_idx = slice(0, cut)
-        test_idx = slice(cut, cut + fold_size)
-        if test_idx.stop > n:
-            continue
-        splits.append((train_idx, test_idx))
-    if not splits:
-        return {}
-    maes = []
-    for tr, te in splits:
-        Xtr = df.iloc[tr][cols].values
-        ytr = df.iloc[tr]["q_log"].values
-        Xte = df.iloc[te][cols].values
-        yte_cfs = df.iloc[te]["q_cfs"].values
-        sc = StandardScaler().fit(Xtr)
-        m = Ridge(alpha=1.0, random_state=0).fit(sc.transform(Xtr), ytr)
-        yhat_cfs = np.expm1(m.predict(sc.transform(Xte)))
-        yhat_cfs = np.clip(yhat_cfs, 0, None)
-        maes.append(mean_absolute_error(yte_cfs, yhat_cfs))
-    return {"mae_mean": float(np.mean(maes)), "folds": len(maes)}
 
 
 # ---------------------------------------------------------------------------
@@ -254,6 +188,39 @@ def _get_chronos():
     return _chronos_pipeline
 
 
+def _seasonal_scale(q_hist: pd.DataFrame, horizon: int) -> Optional[np.ndarray]:
+    """Per-DOY climatological ratio: q_climatology(t+h) / q_climatology(t).
+
+    Uses a ±7-day window around each DOY to get a smooth climatology. Returns
+    None if history is too short to estimate one full year.
+    """
+    if len(q_hist) < 540:
+        return None
+    df = q_hist.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df["doy"] = df["date"].dt.dayofyear
+    df["q_log"] = np.log1p(df["q_cfs"].clip(lower=0))
+    clim = df.groupby("doy")["q_log"].mean()
+    smoothed = pd.Series(
+        [clim.reindex(range(d - 7, d + 8)).dropna().mean() for d in range(1, 367)],
+        index=range(1, 367),
+    )
+    if smoothed.isna().all():
+        return None
+    last_date = df["date"].iloc[-1]
+    base_doy = int(last_date.dayofyear)
+    base = smoothed.get(base_doy, smoothed.dropna().mean())
+    out = []
+    for h in range(1, horizon + 1):
+        doy_h = ((base_doy - 1 + h) % 366) + 1
+        v = smoothed.get(doy_h, base)
+        if not np.isfinite(v) or not np.isfinite(base):
+            out.append(1.0)
+        else:
+            out.append(float(np.exp(v - base)))
+    return np.array(out)
+
+
 def chronos_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
     pipe = _get_chronos()
     if pipe is None or q_hist.empty:
@@ -261,13 +228,17 @@ def chronos_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
     try:
         import torch
         ctx = torch.tensor(q_hist["q_cfs"].astype(float).tolist())
-        # Chronos-Bolt returns quantile forecasts; take the median (q=0.5)
         quantiles, _mean = pipe.predict_quantiles(
             inputs=ctx,
             prediction_length=horizon,
             quantile_levels=[0.1, 0.5, 0.9],
         )
-        median = quantiles[0, :, 1].tolist()
+        median = np.array(quantiles[0, :, 1].tolist(), dtype=float)
+        scale = _seasonal_scale(q_hist, horizon)
+        if scale is not None:
+            last_q = float(q_hist["q_cfs"].iloc[-1])
+            seasonal = last_q * scale
+            median = 0.5 * median + 0.5 * seasonal
         return [max(0.0, float(x)) for x in median]
     except Exception as exc:
         print(f"[chronos] inference failed: {exc}")
@@ -329,7 +300,7 @@ def forecast_station(
         notes.append("chronos_bolt unavailable")
 
     rolling_mae = {"runoff_ridge": ridge_mae.get("mae_mean", float("inf"))}
-    persist_mae = _rolling_persistence_mae(q_hist)
+    persist_mae = _rolling_persistence_mae(q_hist, horizon)
     if persist_mae is not None:
         rolling_mae["persistence_lag1"] = persist_mae
     if chronos_pred is not None:
@@ -383,32 +354,42 @@ def _blend_weights(rolling_mae: Dict[str, float], member_names: List[str]) -> Di
     return {k: v / total for k, v in weights.items()}
 
 
-def _rolling_persistence_mae(q_hist: pd.DataFrame) -> Optional[float]:
-    if len(q_hist) < 30:
+def _rolling_persistence_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
+    """Mean MAE across h=1..horizon for persistence (yhat[t+h] = q[t]).
+
+    Computed on the trailing window so it's directly comparable to ridge/chronos.
+    """
+    if len(q_hist) < horizon + 30:
         return None
     y = q_hist["q_cfs"].values
-    return float(np.mean(np.abs(y[1:] - y[:-1])[-180:]))
+    maes = []
+    for h in range(1, horizon + 1):
+        diffs = np.abs(y[h:] - y[:-h])[-180:]
+        if len(diffs) == 0:
+            continue
+        maes.append(float(np.mean(diffs)))
+    return float(np.mean(maes)) if maes else None
 
 
 def _rolling_chronos_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
-    """Backtest chronos on a single 30-day holdout. Lightweight, single forward pass."""
-    if len(q_hist) < 120:
+    """Backtest chronos on a single horizon-length holdout. Mean MAE over h=1..horizon."""
+    if len(q_hist) < horizon + 90:
         return None
     pipe = _get_chronos()
     if pipe is None:
         return None
     try:
         import torch
-        ctx_len = len(q_hist) - 30
+        ctx_len = len(q_hist) - horizon
         ctx = torch.tensor(q_hist["q_cfs"].iloc[:ctx_len].astype(float).tolist())
         quantiles, _ = pipe.predict_quantiles(
             inputs=ctx,
-            prediction_length=30,
+            prediction_length=horizon,
             quantile_levels=[0.5],
         )
         yhat = np.clip(np.array(quantiles[0, :, 0]), 0, None)
-        ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + 30].values
-        if len(ytrue) < 30:
+        ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values
+        if len(ytrue) < horizon:
             return None
         return float(mean_absolute_error(ytrue, yhat))
     except Exception:

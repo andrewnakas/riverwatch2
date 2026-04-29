@@ -1,8 +1,44 @@
 {
-  "description": "40-station benchmark subset for live zero-shot river forecasting",
-  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, capped per-state for geographic diversity",
+  "description": "42-station benchmark subset for live zero-shot river forecasting",
+  "selection_criteria": "Top stations by ensemble MAE from upstream mixed-corrected-cache benchmark, capped per-state for geographic diversity, plus Yellowstone-Livingston and Lochsa picks",
   "source_benchmark": "andrewnakas/north-america-river-watch (2026-04-21 run)",
   "stations": [
+    {
+      "id": "06192500",
+      "name": "Yellowstone River near Livingston, MT",
+      "state": "MT",
+      "site_no": "06192500",
+      "lat": 45.5972111,
+      "lon": -110.5664972,
+      "drain_area_sqmi": 3551.0,
+      "alt_ft": 4542.49,
+      "huc_cd": "10070002",
+      "state_cd": "30"
+    },
+    {
+      "id": "13337000",
+      "name": "LOCHSA RIVER NR LOWELL ID",
+      "state": "ID",
+      "site_no": "13337000",
+      "lat": 46.1508333,
+      "lon": -115.5872222,
+      "drain_area_sqmi": 1178.0,
+      "alt_ft": 1462.5,
+      "huc_cd": "17060303",
+      "state_cd": "16"
+    },
+    {
+      "id": "13336500",
+      "name": "SELWAY RIVER NR LOWELL ID",
+      "state": "ID",
+      "site_no": "13336500",
+      "lat": 46.08666667,
+      "lon": -115.5138889,
+      "drain_area_sqmi": 1915.0,
+      "alt_ft": 1533.45,
+      "huc_cd": "17060302",
+      "state_cd": "16"
+    },
     {
       "id": "06036905",
       "name": "Firehole River near West Yellowstone MT",
@@ -10,9 +46,10 @@
       "site_no": "06036905",
       "lat": 44.6201833,
       "lon": -110.8635028,
+      "drain_area_sqmi": 261.0,
       "alt_ft": 7050.0,
       "huc_cd": "10020007",
-      "state_cd": ""
+      "state_cd": "56"
     },
     {
       "id": "15056560",
