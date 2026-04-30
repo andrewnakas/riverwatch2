@@ -1,9 +1,11 @@
 """Live river-discharge forecasting engine.
 
-Three forecasters are wired together and blended:
+Five forecasters are wired together and blended:
   1. persistence_lag1            — yhat[t+1] = q[t]
   2. runoff_ridge                — Ridge on lagged-discharge + DOY + recent precip/temp
   3. chronos_bolt (optional)     — Amazon Chronos-Bolt zero-shot foundation model
+  4. ttm (optional)              — IBM Tiny Time Mixers foundation model
+  5. timesfm (optional)          — Google TimesFM 2.0 zero-shot foundation model
 
 The ensemble is a per-station weighted blend selected on rolling validation.
 Each forecast call runs the models on demand against fresh USGS + Open-Meteo data.
@@ -22,13 +24,15 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 
-from . import usgs, weather
+from . import usgs, usgs_stats, weather
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 HORIZON_DAYS = 14
-TRAIN_LOOKBACK_DAYS = 10950  # 30 years (capped); per-sensor full available history
+TRAIN_LOOKBACK_DAYS = 36500  # 100 years (capped); USGS goes back this far for many gauges
+LOOKBACK_FLOOR = date(1900, 1, 1)  # never request data before this regardless of lookback
+MAPE_FLOOR_CFS = 1.0  # avoid blowup near zero-flow days
 LAGS = [1, 2, 3, 5, 7, 14, 30, 60]
 PRECIP_WINDOWS = [1, 3, 7, 14, 30]
 TEMP_WINDOWS = [3, 7, 14]
@@ -46,9 +50,15 @@ class StationForecast:
     rolling_mae: Dict[str, float]
     rolling_mae_h7: Dict[str, float] = field(default_factory=dict)
     rolling_mae_h14: Dict[str, float] = field(default_factory=dict)
+    rolling_mape: Dict[str, float] = field(default_factory=dict)
+    rolling_mape_h7: Dict[str, float] = field(default_factory=dict)
+    rolling_mape_h14: Dict[str, float] = field(default_factory=dict)
     chosen: str = ""
     weights_strategy: str = ""
     notes: List[str] = field(default_factory=list)
+    daily_stats: Optional[dict] = None
+    record_start: Optional[str] = None
+    record_end: Optional[str] = None
 
 
 def _build_features(q_hist: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
@@ -144,6 +154,7 @@ def runoff_ridge_forecast(
 
     preds: List[float] = []
     per_horizon_mae: Dict[int, float] = {}
+    per_horizon_mape: Dict[int, float] = {}
 
     feats_now = feats.loc[last_date, cols] if last_date in feats.index else feats[cols].dropna().iloc[-1]
     feats_now = feats_now.fillna(0.0)
@@ -177,6 +188,10 @@ def runoff_ridge_forecast(
                     best_alpha = alpha
                     best_yhat = yh
             per_horizon_mae[h] = best_score
+            if best_yhat is not None:
+                per_horizon_mape[h] = float(np.mean(
+                    np.abs(yv_true - best_yhat) / np.maximum(np.abs(yv_true), MAPE_FLOOR_CFS)
+                ))
 
         Xtr = train[cols].values
         ytr = train["target_log"].values
@@ -194,6 +209,8 @@ def runoff_ridge_forecast(
         out["mae_mean"] = float(np.mean(list(per_horizon_mae.values())))
         for h, v in per_horizon_mae.items():
             out[f"mae_h{h}"] = float(v)
+    if per_horizon_mape:
+        out["__mape_per_h"] = per_horizon_mape  # type: ignore[assignment]
     return preds, out
 
 
@@ -283,6 +300,122 @@ def chronos_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
 
 
 # ---------------------------------------------------------------------------
+# IBM TTM (Tiny Time Mixers) zero-shot
+# ---------------------------------------------------------------------------
+
+_ttm_pipeline = None
+_ttm_failed = False
+TTM_MODEL = "ibm-granite/granite-timeseries-ttm-r2"
+TTM_CONTEXT = 512  # TTM-r2 default 512-step context, supports up to 1536
+
+
+def _get_ttm():
+    global _ttm_pipeline, _ttm_failed
+    if _ttm_pipeline is not None or _ttm_failed:
+        return _ttm_pipeline
+    try:
+        from tsfm_public import TinyTimeMixerForPrediction  # type: ignore
+        _ttm_pipeline = TinyTimeMixerForPrediction.from_pretrained(
+            TTM_MODEL, prediction_filter_length=HORIZON_DAYS
+        )
+        _ttm_pipeline.eval()
+    except Exception as exc:
+        _ttm_failed = True
+        print(f"[ttm] disabled: {exc}")
+        _ttm_pipeline = None
+    return _ttm_pipeline
+
+
+def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
+    pipe = _get_ttm()
+    if pipe is None or q_hist.empty or len(q_hist) < TTM_CONTEXT:
+        return None
+    try:
+        import torch
+        # log1p stabilizes the heavy-tailed discharge distribution; reverse at the end.
+        series = np.log1p(q_hist["q_cfs"].astype(float).clip(lower=0).values[-TTM_CONTEXT:])
+        x = torch.tensor(series, dtype=torch.float32).reshape(1, TTM_CONTEXT, 1)
+        with torch.no_grad():
+            out = pipe(past_values=x)
+        # tsfm returns (B, prediction_length, C); horizon is the second axis
+        pred_log = out.prediction_outputs.squeeze(0).squeeze(-1).cpu().numpy()
+        pred = np.expm1(pred_log)[:horizon]
+        if len(pred) < horizon:
+            pad = [float(pred[-1])] * (horizon - len(pred))
+            pred = np.concatenate([pred, np.array(pad)])
+        scale = _seasonal_scale(q_hist, horizon)
+        if scale is not None:
+            last_q = float(q_hist["q_cfs"].iloc[-1])
+            seasonal = last_q * scale
+            pred = 0.5 * pred + 0.5 * seasonal
+        return [max(0.0, float(x)) for x in pred]
+    except Exception as exc:
+        print(f"[ttm] inference failed: {exc}")
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Google TimesFM 2.0 zero-shot
+# ---------------------------------------------------------------------------
+
+_timesfm_pipeline = None
+_timesfm_failed = False
+TIMESFM_CONTEXT = 512  # 2.0 supports up to 2048 but 512 keeps inference fast
+
+
+def _get_timesfm():
+    global _timesfm_pipeline, _timesfm_failed
+    if _timesfm_pipeline is not None or _timesfm_failed:
+        return _timesfm_pipeline
+    try:
+        import timesfm  # type: ignore
+        _timesfm_pipeline = timesfm.TimesFm(
+            hparams=timesfm.TimesFmHparams(
+                backend="cpu",
+                per_core_batch_size=1,
+                horizon_len=HORIZON_DAYS,
+                context_len=TIMESFM_CONTEXT,
+                num_layers=50,
+                use_positional_embedding=False,
+            ),
+            checkpoint=timesfm.TimesFmCheckpoint(
+                huggingface_repo_id="google/timesfm-2.0-500m-pytorch"
+            ),
+        )
+    except Exception as exc:
+        _timesfm_failed = True
+        print(f"[timesfm] disabled: {exc}")
+        _timesfm_pipeline = None
+    return _timesfm_pipeline
+
+
+def timesfm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
+    pipe = _get_timesfm()
+    if pipe is None or q_hist.empty:
+        return None
+    try:
+        ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TIMESFM_CONTEXT:]
+        # TimesFM API: forecast([series], freq=[0]) -> point_forecast, exp_quantiles
+        point, _ = pipe.forecast(
+            inputs=[ctx.tolist()],
+            freq=[0],  # 0 = high-frequency / daily
+        )
+        pred = np.array(point[0])[:horizon]
+        if len(pred) < horizon:
+            pad = [float(pred[-1])] * (horizon - len(pred))
+            pred = np.concatenate([pred, np.array(pad)])
+        scale = _seasonal_scale(q_hist, horizon)
+        if scale is not None:
+            last_q = float(q_hist["q_cfs"].iloc[-1])
+            seasonal = last_q * scale
+            pred = 0.5 * pred + 0.5 * seasonal
+        return [max(0.0, float(x)) for x in pred]
+    except Exception as exc:
+        print(f"[timesfm] inference failed: {exc}")
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Top-level orchestration
 # ---------------------------------------------------------------------------
 
@@ -296,6 +429,8 @@ def forecast_station(
 ) -> StationForecast:
     today = date.today()
     start = today - timedelta(days=history_days)
+    if start < LOOKBACK_FLOOR:
+        start = LOOKBACK_FLOOR
 
     notes: List[str] = []
     q_hist = usgs.fetch_daily_discharge(station_id, start, today)
@@ -336,6 +471,18 @@ def forecast_station(
     else:
         notes.append("chronos_bolt unavailable")
 
+    ttm_pred = ttm_forecast(q_hist, horizon)
+    if ttm_pred is not None:
+        members["ttm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, ttm_pred)]
+    else:
+        notes.append("ttm unavailable")
+
+    timesfm_pred = timesfm_forecast(q_hist, horizon)
+    if timesfm_pred is not None:
+        members["timesfm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, timesfm_pred)]
+    else:
+        notes.append("timesfm unavailable")
+
     rolling_mae = {"runoff_ridge": ridge_mae.get("mae_mean", float("inf"))}
     persist_mae = _rolling_persistence_mae(q_hist, horizon)
     if persist_mae is not None:
@@ -347,6 +494,16 @@ def forecast_station(
         chronos_per_h = _rolling_chronos_mae_per_horizon(q_hist, horizon)
         if chronos_per_h:
             rolling_mae["chronos_bolt"] = float(np.mean(list(chronos_per_h.values())))
+    ttm_per_h: Dict[int, float] = {}
+    if ttm_pred is not None:
+        ttm_per_h = _rolling_foundation_mae_per_horizon(q_hist, horizon, "ttm")
+        if ttm_per_h:
+            rolling_mae["ttm"] = float(np.mean(list(ttm_per_h.values())))
+    timesfm_per_h: Dict[int, float] = {}
+    if timesfm_pred is not None:
+        timesfm_per_h = _rolling_foundation_mae_per_horizon(q_hist, horizon, "timesfm")
+        if timesfm_per_h:
+            rolling_mae["timesfm"] = float(np.mean(list(timesfm_per_h.values())))
 
     def _per_h_lookup(per_h: Dict[int, float], h: int) -> Optional[float]:
         if per_h.get(h) is not None:
@@ -372,6 +529,53 @@ def forecast_station(
         v = _per_h_lookup(chronos_per_h, h_target)
         if v is not None:
             target_dict["chronos_bolt"] = v
+        v = _per_h_lookup(ttm_per_h, h_target)
+        if v is not None:
+            target_dict["ttm"] = v
+        v = _per_h_lookup(timesfm_per_h, h_target)
+        if v is not None:
+            target_dict["timesfm"] = v
+
+    # MAPE per member: same backtest set, just divide each abs error by max(y_true, MAPE_FLOOR_CFS).
+    persist_mape_per_h = _rolling_persistence_mape_per_horizon(q_hist, horizon)
+    chronos_mape_per_h: Dict[int, float] = {}
+    ttm_mape_per_h: Dict[int, float] = {}
+    timesfm_mape_per_h: Dict[int, float] = {}
+    ridge_mape_per_h: Dict[int, float] = ridge_mae.get("__mape_per_h", {}) or {}
+    if chronos_pred is not None:
+        chronos_mape_per_h = _rolling_foundation_mape_per_horizon(q_hist, horizon, "chronos_bolt")
+    if ttm_pred is not None:
+        ttm_mape_per_h = _rolling_foundation_mape_per_horizon(q_hist, horizon, "ttm")
+    if timesfm_pred is not None:
+        timesfm_mape_per_h = _rolling_foundation_mape_per_horizon(q_hist, horizon, "timesfm")
+
+    rolling_mape: Dict[str, float] = {}
+    if persist_mape_per_h:
+        rolling_mape["persistence_lag1"] = float(np.mean(list(persist_mape_per_h.values())))
+    if ridge_mape_per_h:
+        rolling_mape["runoff_ridge"] = float(np.mean(list(ridge_mape_per_h.values())))
+    if chronos_mape_per_h:
+        rolling_mape["chronos_bolt"] = float(np.mean(list(chronos_mape_per_h.values())))
+    if ttm_mape_per_h:
+        rolling_mape["ttm"] = float(np.mean(list(ttm_mape_per_h.values())))
+    if timesfm_mape_per_h:
+        rolling_mape["timesfm"] = float(np.mean(list(timesfm_mape_per_h.values())))
+
+    rolling_mape_h7: Dict[str, float] = {}
+    rolling_mape_h14: Dict[str, float] = {}
+    for h_target, target_dict in [(7, rolling_mape_h7), (14, rolling_mape_h14)]:
+        if h_target > horizon:
+            continue
+        for name, per_h in (
+            ("persistence_lag1", persist_mape_per_h),
+            ("runoff_ridge", ridge_mape_per_h),
+            ("chronos_bolt", chronos_mape_per_h),
+            ("ttm", ttm_mape_per_h),
+            ("timesfm", timesfm_mape_per_h),
+        ):
+            v = _per_h_lookup(per_h, h_target)
+            if v is not None:
+                target_dict[name] = float(v)
 
     soft_weights = _blend_weights(rolling_mae, list(members.keys()))
 
@@ -409,10 +613,10 @@ def forecast_station(
 
     chosen = min(rolling_mae, key=lambda k: rolling_mae[k]) if rolling_mae else "runoff_ridge"
 
-    # Estimate ensemble MAE per horizon = weighted geometric mean of member MAEs.
-    # (Approximation: blend's MAE is roughly the weight-weighted member MAE,
-    # bounded above by min member MAE in the limit of all weight on one model.)
-    for target_dict in (rolling_mae_h7, rolling_mae_h14):
+    # Estimate ensemble MAE/MAPE per horizon = weighted average of member values.
+    # (Approximation: blend's error is roughly the weight-weighted member error,
+    # bounded above by min member error in the limit of all weight on one model.)
+    for target_dict in (rolling_mae_h7, rolling_mae_h14, rolling_mape_h7, rolling_mape_h14):
         if not target_dict:
             continue
         s = 0.0; ws = 0.0
@@ -429,6 +633,21 @@ def forecast_station(
         for d, q in zip(q_hist["date"].tail(60), q_hist["q_cfs"].tail(60))
     ]
 
+    # Earliest q_hist date is our authoritative record-start (we fetched all the
+    # way back to LOOKBACK_FLOOR/start, USGS returned what it has).
+    record_start = pd.Timestamp(q_hist["date"].iloc[0]).date().isoformat() if len(q_hist) else None
+    record_end = pd.Timestamp(q_hist["date"].iloc[-1]).date().isoformat() if len(q_hist) else None
+
+    daily_stats = None
+    try:
+        daily_stats = usgs_stats.fetch_daily_stats(station_id)
+    except Exception as exc:
+        notes.append(f"daily_stats failed: {exc}")
+    if daily_stats and daily_stats.get("begin_date"):
+        # Prefer USGS's own record-start since it spans the entire WSC archive,
+        # not just our lookback window.
+        record_start = daily_stats["begin_date"]
+
     return StationForecast(
         station_id=station_id,
         issued_at=pd.Timestamp.utcnow().isoformat(),
@@ -439,9 +658,15 @@ def forecast_station(
         rolling_mae={k: float(v) for k, v in rolling_mae.items()},
         rolling_mae_h7={k: float(v) for k, v in rolling_mae_h7.items()},
         rolling_mae_h14={k: float(v) for k, v in rolling_mae_h14.items()},
+        rolling_mape={k: float(v) for k, v in rolling_mape.items()},
+        rolling_mape_h7={k: float(v) for k, v in rolling_mape_h7.items()},
+        rolling_mape_h14={k: float(v) for k, v in rolling_mape_h14.items()},
         chosen=chosen,
         weights_strategy=weights_strategy,
         notes=notes,
+        daily_stats=daily_stats,
+        record_start=record_start,
+        record_end=record_end,
     )
 
 
@@ -503,25 +728,88 @@ def _rolling_chronos_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
 
 
 def _rolling_chronos_mae_per_horizon(q_hist: pd.DataFrame, horizon: int) -> Dict[int, float]:
-    """Chronos backtest with per-horizon errors. One forward pass at length=horizon."""
+    """Chronos backtest with per-horizon errors."""
+    return _rolling_foundation_mae_per_horizon(q_hist, horizon, "chronos_bolt")
+
+
+def _foundation_predict_on_holdout(
+    q_hist: pd.DataFrame, horizon: int, model: str
+) -> Optional[tuple[np.ndarray, np.ndarray]]:
+    """Run the named foundation model on a held-out tail. Returns (yhat, ytrue)
+    aligned to h=1..horizon, or None if there's not enough history or the model
+    is unavailable."""
     if len(q_hist) < horizon + 90:
+        return None
+    ctx_len = len(q_hist) - horizon
+    hist_ctx = q_hist.iloc[:ctx_len].reset_index(drop=True)
+    ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values
+    if len(ytrue) < horizon:
+        return None
+
+    if model == "chronos_bolt":
+        pipe = _get_chronos()
+        if pipe is None:
+            return None
+        try:
+            import torch
+            ctx = torch.tensor(hist_ctx["q_cfs"].astype(float).tolist())
+            quantiles, _ = pipe.predict_quantiles(
+                inputs=ctx, prediction_length=horizon, quantile_levels=[0.5],
+            )
+            yhat = np.clip(np.array(quantiles[0, :, 0]), 0, None)
+        except Exception:
+            return None
+    elif model == "ttm":
+        pred = ttm_forecast(hist_ctx, horizon)
+        if pred is None:
+            return None
+        yhat = np.array(pred)
+    elif model == "timesfm":
+        pred = timesfm_forecast(hist_ctx, horizon)
+        if pred is None:
+            return None
+        yhat = np.array(pred)
+    else:
+        return None
+
+    if len(yhat) < horizon:
+        return None
+    return yhat[:horizon], ytrue[:horizon]
+
+
+def _rolling_foundation_mae_per_horizon(
+    q_hist: pd.DataFrame, horizon: int, model: str
+) -> Dict[int, float]:
+    """Per-horizon MAE on a single holdout for any foundation model."""
+    res = _foundation_predict_on_holdout(q_hist, horizon, model)
+    if res is None:
         return {}
-    pipe = _get_chronos()
-    if pipe is None:
+    yhat, ytrue = res
+    return {h: float(abs(ytrue[h - 1] - yhat[h - 1])) for h in range(1, horizon + 1)}
+
+
+def _rolling_foundation_mape_per_horizon(
+    q_hist: pd.DataFrame, horizon: int, model: str
+) -> Dict[int, float]:
+    """Per-horizon MAPE (1-cfs floor) on a single holdout for any foundation model."""
+    res = _foundation_predict_on_holdout(q_hist, horizon, model)
+    if res is None:
         return {}
-    try:
-        import torch
-        ctx_len = len(q_hist) - horizon
-        ctx = torch.tensor(q_hist["q_cfs"].iloc[:ctx_len].astype(float).tolist())
-        quantiles, _ = pipe.predict_quantiles(
-            inputs=ctx,
-            prediction_length=horizon,
-            quantile_levels=[0.5],
-        )
-        yhat = np.clip(np.array(quantiles[0, :, 0]), 0, None)
-        ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values
-        if len(ytrue) < horizon:
-            return {}
-        return {h: float(abs(ytrue[h - 1] - yhat[h - 1])) for h in range(1, horizon + 1)}
-    except Exception:
+    yhat, ytrue = res
+    return {h: float(abs(ytrue[h - 1] - yhat[h - 1]) / max(abs(ytrue[h - 1]), MAPE_FLOOR_CFS))
+            for h in range(1, horizon + 1)}
+
+
+def _rolling_persistence_mape_per_horizon(q_hist: pd.DataFrame, max_horizon: int) -> Dict[int, float]:
+    """Per-horizon persistence MAPE on trailing 180 days, with 1-cfs floor."""
+    if len(q_hist) < max_horizon + 30:
         return {}
+    y = q_hist["q_cfs"].values
+    out: Dict[int, float] = {}
+    for h in range(1, max_horizon + 1):
+        ytrue = y[h:][-180:]
+        ypred = y[:-h][-180:]
+        if len(ytrue) == 0:
+            continue
+        out[h] = float(np.mean(np.abs(ytrue - ypred) / np.maximum(np.abs(ytrue), MAPE_FLOOR_CFS)))
+    return out

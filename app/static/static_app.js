@@ -232,8 +232,14 @@ function renderForecast(payload) {
 
   drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
 
+  renderRecordStartAndStats(payload);
+
   const mae7 = payload.rolling_mae_h7 || {};
   const mae14 = payload.rolling_mae_h14 || {};
+  const mape = payload.rolling_mape || {};
+  const mape7 = payload.rolling_mape_h7 || {};
+  const mape14 = payload.rolling_mape_h14 || {};
+  const fmtPct = v => v == null || !isFinite(v) ? "—" : `${(v * 100).toFixed(1)}%`;
   const rows = Object.entries(payload.weights || {})
     .sort((a, b) => b[1] - a[1])
     .map(([name, w]) => `
@@ -243,6 +249,9 @@ function renderForecast(payload) {
         <td>${fmtNumber(payload.rolling_mae?.[name])}</td>
         <td>${fmtNumber(mae7[name])}</td>
         <td>${fmtNumber(mae14[name])}</td>
+        <td>${fmtPct(mape[name])}</td>
+        <td>${fmtPct(mape7[name])}</td>
+        <td>${fmtPct(mape14[name])}</td>
       </tr>`).join("");
   const ensembleRow = (mae7.ensemble_blend != null || mae14.ensemble_blend != null) ? `
       <tr class="ensemble-row">
@@ -251,10 +260,17 @@ function renderForecast(payload) {
         <td>—</td>
         <td>${fmtNumber(mae7.ensemble_blend)}</td>
         <td>${fmtNumber(mae14.ensemble_blend)}</td>
+        <td>—</td>
+        <td>${fmtPct(mape7.ensemble_blend)}</td>
+        <td>${fmtPct(mape14.ensemble_blend)}</td>
       </tr>` : "";
   document.getElementById("member-table").innerHTML = `
     <table>
-      <thead><tr><th>Member</th><th>Weight</th><th>Rolling MAE (cfs)</th><th>MAE @ 7d</th><th>MAE @ 14d</th></tr></thead>
+      <thead><tr>
+        <th>Member</th><th>Weight</th>
+        <th>MAE (cfs)</th><th>MAE @ 7d</th><th>MAE @ 14d</th>
+        <th>MAPE</th><th>MAPE @ 7d</th><th>MAPE @ 14d</th>
+      </tr></thead>
       <tbody>${rows}${ensembleRow}</tbody>
     </table>
     <details class="mae-explainer">
@@ -288,6 +304,175 @@ function renderForecast(payload) {
   `;
 }
 
+function todayStats(stats) {
+  if (!stats || !stats.rows) return null;
+  const t = new Date();
+  const md = `${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+  return stats.rows.find(r => r.month_day === md) || null;
+}
+
+function renderRecordStartAndStats(payload) {
+  const recEl = document.getElementById("record-start");
+  const statsEl = document.getElementById("daily-stats");
+  const canvas = document.getElementById("climatology-chart");
+
+  const start = payload.record_start;
+  const end = payload.record_end;
+  const stats = payload.daily_stats;
+  const today = todayStats(stats);
+
+  recEl.innerHTML = start
+    ? `<p class="record-start"><b>Record begins:</b> ${start}${end ? ` &middot; latest finalized: ${end}` : ""}</p>`
+    : "";
+
+  if (today) {
+    const mostRecent = (payload.history && payload.history.length)
+      ? payload.history[payload.history.length - 1].q_cfs : null;
+    const todayDate = new Date();
+    const monthName = todayDate.toLocaleString(undefined, { month: "short" });
+    statsEl.innerHTML = `
+      <details class="daily-stats" open>
+        <summary>Daily discharge statistics for ${monthName} ${todayDate.getDate()} (${stats.rows.length} day-of-year records)</summary>
+        <table class="climatology">
+          <thead><tr>
+            <th>Min${today.min_yr ? ` (${today.min_yr})` : ""}</th>
+            <th>25th</th><th>Median</th>
+            <th>Most Recent</th>
+            <th>Mean</th>
+            <th>75th</th>
+            <th>Max${today.max_yr ? ` (${today.max_yr})` : ""}</th>
+          </tr></thead>
+          <tbody><tr>
+            <td>${fmtNumber(today.min_va)}</td>
+            <td>${fmtNumber(today.p25_va)}</td>
+            <td>${fmtNumber(today.p50_va)}</td>
+            <td>${fmtNumber(mostRecent)}</td>
+            <td>${fmtNumber(today.mean_va)}</td>
+            <td>${fmtNumber(today.p75_va)}</td>
+            <td>${fmtNumber(today.max_va)}</td>
+          </tr></tbody>
+        </table>
+      </details>
+    `;
+  } else {
+    statsEl.innerHTML = "";
+  }
+
+  if (stats && stats.rows && stats.rows.length > 30) {
+    canvas.style.display = "block";
+    drawClimatology(canvas, stats.rows);
+  } else {
+    canvas.style.display = "none";
+  }
+}
+
+function drawClimatology(canvas, rows) {
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#0d1224";
+  ctx.fillRect(0, 0, W, H);
+
+  // Convert MM-DD to day-of-year for x-axis. Use 2024 (leap) as reference.
+  const xs = rows.map(r => {
+    const [m, d] = r.month_day.split("-").map(n => parseInt(n, 10));
+    return Math.floor((Date.UTC(2024, m - 1, d) - Date.UTC(2024, 0, 1)) / 86400000);
+  });
+  const series = ["min_va", "p25_va", "p50_va", "mean_va", "p75_va", "max_va"];
+  let yMax = 0;
+  for (const r of rows) for (const s of series) {
+    const v = r[s];
+    if (v != null && isFinite(v) && v > yMax) yMax = v;
+  }
+  if (yMax <= 0) return;
+
+  const pad = { l: 50, r: 12, t: 12, b: 22 };
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+  const useLog = yMax > 200;
+  const yMin = useLog ? Math.max(0.1, rows.reduce((a, r) => Math.min(a, r.min_va || a), yMax)) : 0;
+
+  const x2px = doy => pad.l + (doy / 365) * innerW;
+  const y2px = v => {
+    if (useLog) {
+      const lv = Math.log10(Math.max(v, yMin));
+      const lmax = Math.log10(yMax);
+      const lmin = Math.log10(yMin);
+      return pad.t + innerH - ((lv - lmin) / (lmax - lmin)) * innerH;
+    }
+    return pad.t + innerH - (v / yMax) * innerH;
+  };
+
+  // Axes & gridlines
+  ctx.strokeStyle = "#26304b";
+  ctx.fillStyle = "#7a86a6";
+  ctx.font = "11px sans-serif";
+  for (const [m, label] of [[0, "Jan"], [2, "Mar"], [4, "May"], [6, "Jul"], [8, "Sep"], [10, "Nov"]]) {
+    const doy = Math.floor((Date.UTC(2024, m, 1) - Date.UTC(2024, 0, 1)) / 86400000);
+    const x = x2px(doy);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + innerH); ctx.stroke();
+    ctx.fillText(label, x + 2, H - 6);
+  }
+  ctx.fillText(useLog ? `${yMax.toFixed(0)} cfs (log)` : `${yMax.toFixed(0)} cfs`, 4, pad.t + 10);
+  ctx.fillText("0 cfs", 4, pad.t + innerH);
+
+  const colors = {
+    min_va: "#3a4d8a",   // dark blue
+    p25_va: "#4a6db5",
+    p50_va: "#6da3ff",   // median emphasized
+    mean_va: "#ffd16a",
+    p75_va: "#4a6db5",
+    max_va: "#3a4d8a",
+  };
+  const widths = {
+    min_va: 1, p25_va: 1, p50_va: 2.5, mean_va: 2, p75_va: 1, max_va: 1,
+  };
+
+  // Light fill between p25 and p75 to highlight the typical band
+  ctx.fillStyle = "rgba(74, 109, 181, 0.18)";
+  ctx.beginPath();
+  let started = false;
+  for (let i = 0; i < rows.length; i++) {
+    const v = rows[i].p75_va;
+    if (v == null || !isFinite(v)) continue;
+    const x = x2px(xs[i]); const y = y2px(v);
+    started ? ctx.lineTo(x, y) : (ctx.moveTo(x, y), started = true);
+  }
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const v = rows[i].p25_va;
+    if (v == null || !isFinite(v)) continue;
+    ctx.lineTo(x2px(xs[i]), y2px(v));
+  }
+  ctx.closePath(); ctx.fill();
+
+  for (const s of series) {
+    ctx.strokeStyle = colors[s];
+    ctx.lineWidth = widths[s];
+    ctx.beginPath();
+    let firstPoint = true;
+    for (let i = 0; i < rows.length; i++) {
+      const v = rows[i][s];
+      if (v == null || !isFinite(v)) continue;
+      const x = x2px(xs[i]);
+      const y = y2px(v);
+      firstPoint ? (ctx.moveTo(x, y), firstPoint = false) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // Legend
+  ctx.font = "11px sans-serif";
+  let lx = pad.l + 8;
+  const ly = pad.t + 4;
+  for (const [s, label] of [["min_va", "min"], ["p25_va", "25th"], ["p50_va", "median"], ["mean_va", "mean"], ["p75_va", "75th"], ["max_va", "max"]]) {
+    ctx.fillStyle = colors[s];
+    ctx.fillRect(lx, ly + 6, 10, 3);
+    ctx.fillStyle = "#aab7d4";
+    ctx.fillText(label, lx + 14, ly + 11);
+    lx += ctx.measureText(label).width + 28;
+  }
+}
+
 async function selectStation(station) {
   document.getElementById("panel-empty").style.display = "none";
   document.getElementById("panel-content").style.display = "block";
@@ -296,6 +481,10 @@ async function selectStation(station) {
   document.getElementById("forecast-status").textContent = "Loading forecast…";
   document.getElementById("forecast-summary").innerHTML = "";
   document.getElementById("member-table").innerHTML = "";
+  document.getElementById("record-start").innerHTML = "";
+  document.getElementById("daily-stats").innerHTML = "";
+  const climCanvas = document.getElementById("climatology-chart");
+  if (climCanvas) climCanvas.style.display = "none";
 
   try {
     const r = await fetch(`forecasts/${station.id}.json`);
