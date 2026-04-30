@@ -31,6 +31,11 @@ DAILY_VARS = [
     "shortwave_radiation_sum",
     "windspeed_10m_max",
     "et0_fao_evapotranspiration",
+    # v11 covariates: soil columns drive baseflow recession; snow_depth tracks pack.
+    "soil_moisture_0_to_10cm_mean",
+    "soil_moisture_28_to_100cm_mean",
+    "soil_temperature_0_to_7cm_mean",
+    "snow_depth_max",
 ]
 
 
@@ -43,6 +48,9 @@ def _http_json(url: str, timeout: int = 60) -> dict:
     req = Request(url, headers={"User-Agent": "riverwatch2/0.1"})
     with urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+SCHEMA_VERSION = "v11"  # bumped when DAILY_VARS expands so we re-fetch missing cols
 
 
 def _record_path(lat: float, lon: float) -> Path:
@@ -68,11 +76,19 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
     first_known = rec.get("first_known") or (min(have.keys()) if have else None)
     fetched_at = rec.get("fetched_at", 0)
     age = time.time() - float(fetched_at) if fetched_at else float("inf")
+    rec_schema = rec.get("schema_version")
+    schema_stale = rec_schema != SCHEMA_VERSION  # added vars in v11
 
     needs_backward = bool(first_known) and first_known > start.isoformat()
     needs_forward = (not last_known) or (last_known < end.isoformat())
 
-    if not needs_backward and last_known and last_known >= end.isoformat() and age < max_age_hours * 3600:
+    if (
+        not schema_stale
+        and not needs_backward
+        and last_known
+        and last_known >= end.isoformat()
+        and age < max_age_hours * 3600
+    ):
         return _slice_hist_record(have, start, end)
 
     fwd_from = start
@@ -94,6 +110,12 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
     if needs_forward and fwd_from <= end:
         fetched_any = _fetch_and_merge_hist(lat, lon, have, fwd_from, end) or fetched_any
 
+    # Schema bump: existing cached rows are missing v11 columns. One-shot
+    # re-fetch of the full window populates them; subsequent calls hit the
+    # short-circuit path.
+    if schema_stale and have and not (needs_backward or needs_forward):
+        fetched_any = _fetch_and_merge_hist(lat, lon, have, start, end) or fetched_any
+
     if fetched_any and have:
         rec = {
             "lat": lat,
@@ -102,7 +124,13 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
             "first_known": min(have.keys()),
             "last_known": max(have.keys()),
             "fetched_at": time.time(),
+            "schema_version": SCHEMA_VERSION,
         }
+        rp.write_text(json.dumps(rec, separators=(",", ":")))
+    elif schema_stale and rec:
+        # No rows changed but we want to mark the cache as upgraded so we don't
+        # re-attempt forever. Only do this if we actually attempted a fetch.
+        rec["schema_version"] = SCHEMA_VERSION
         rp.write_text(json.dumps(rec, separators=(",", ":")))
 
     return _slice_hist_record(have, start, end)

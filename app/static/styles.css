@@ -36,6 +36,14 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .mae-explainer b { color: #e7ecf3; }
 .record-start { font-size: 12px; color: #8ec5ff; margin: 8px 0 4px; }
 .record-start b { color: #e7ecf3; }
+.snotel { margin: 8px 0 10px; padding: 8px 12px; background: #131a2d; border: 1px solid #26314f; border-radius: 8px; font-size: 12px; }
+.snotel-head { color: #aab7d4; margin-bottom: 4px; }
+.snotel-head b { color: #4cc8ff; }
+.snotel-sub { color: #7c87a8; margin-left: 6px; font-size: 11px; }
+.snotel-lbl { color: #7c87a8; font-size: 11px; }
+.snotel-table { width: 100%; margin-top: 4px; }
+.snotel-table td { padding: 2px 6px; }
+.snotel-asof { color: #5c6685; font-size: 10px; margin-top: 2px; text-align: right; }
 .daily-stats { margin: 4px 0 10px; font-size: 12px; color: #aab7d4; }
 .daily-stats summary { cursor: pointer; color: #8ec5ff; padding: 4px 0; }
 .daily-stats table.climatology { width: 100%; border-collapse: collapse; margin-top: 6px; }

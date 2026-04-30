@@ -57,8 +57,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/cache
-          key: rw2-cache-shard-${{ matrix.shard }}-${{ github.run_id }}
+          # v11: schema bump for openmeteo (added soil moisture / temp + snow_depth)
+          # and new snotel cache trees. Old shards are still useful for usgs_records.
+          key: rw2-cache-v11-shard-${{ matrix.shard }}-${{ github.run_id }}
           restore-keys: |
+            rw2-cache-v11-shard-${{ matrix.shard }}-
+            rw2-cache-v11-shard-
             rw2-cache-shard-${{ matrix.shard }}-
             rw2-cache-shard-
 

@@ -24,7 +24,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 
-from . import usgs, usgs_stats, weather
+from . import snotel, usgs, usgs_stats, weather
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -59,9 +59,15 @@ class StationForecast:
     daily_stats: Optional[dict] = None
     record_start: Optional[str] = None
     record_end: Optional[str] = None
+    snotel_site: Optional[dict] = None
+    snotel_summary: Optional[dict] = None
 
 
-def _build_features(q_hist: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
+def _build_features(
+    q_hist: pd.DataFrame,
+    wx: pd.DataFrame,
+    snotel_df: Optional[pd.DataFrame] = None,
+) -> pd.DataFrame:
     df = q_hist.copy()
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").asfreq("D")
@@ -71,6 +77,12 @@ def _build_features(q_hist: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
     wx2["date"] = pd.to_datetime(wx2["date"])
     wx2 = wx2.set_index("date").asfreq("D")
     df = df.join(wx2, how="left")
+
+    if snotel_df is not None and not snotel_df.empty:
+        s = snotel_df.copy()
+        s["date"] = pd.to_datetime(s["date"])
+        s = s.set_index("date").asfreq("D")
+        df = df.join(s[[c for c in ("swe_in", "snow_depth_in") if c in s.columns]], how="left")
 
     for lag in LAGS:
         df[f"q_lag_{lag}"] = df["q_cfs"].shift(lag)
@@ -98,11 +110,53 @@ def _build_features(q_hist: pd.DataFrame, wx: pd.DataFrame) -> pd.DataFrame:
         df["snow_7d"] = df["snowfall_sum"].rolling(7, min_periods=1).sum()
         df["snow_30d"] = df["snowfall_sum"].rolling(30, min_periods=1).sum()
         df["snow_90d"] = df["snowfall_sum"].rolling(90, min_periods=1).sum()
+        # 180d / 365d cumulative snowfall captures multi-season buildup that
+        # melts unevenly into spring runoff (v11).
+        df["snow_180d"] = df["snowfall_sum"].rolling(180, min_periods=1).sum()
+        df["snow_365d"] = df["snowfall_sum"].rolling(365, min_periods=1).sum()
     if "et0_fao_evapotranspiration" in df.columns:
         df["et_7d"] = df["et0_fao_evapotranspiration"].rolling(7, min_periods=1).sum()
         df["et_30d"] = df["et0_fao_evapotranspiration"].rolling(30, min_periods=1).sum()
+        df["et_180d"] = df["et0_fao_evapotranspiration"].rolling(180, min_periods=1).sum()
+        df["et_365d"] = df["et0_fao_evapotranspiration"].rolling(365, min_periods=1).sum()
     if "shortwave_radiation_sum" in df.columns:
         df["solar_7d"] = df["shortwave_radiation_sum"].rolling(7, min_periods=1).sum()
+    # v11: explicit cold-tail of temperature distribution helps freeze/thaw timing.
+    if "temperature_2m_min" in df.columns:
+        df["tmin_3d"] = df["temperature_2m_min"].rolling(3, min_periods=1).mean()
+        df["tmin_7d"] = df["temperature_2m_min"].rolling(7, min_periods=1).mean()
+        # Cumulative freezing-degree-days drive snowpack buildup.
+        df["neg_dd_30d"] = (-df["temperature_2m_min"]).clip(lower=0).rolling(30, min_periods=1).sum()
+    # v11: soil moisture acts as the catchment's "filled-bucket" indicator —
+    # deeper layers especially carry the slow-recession baseflow signal.
+    for col in ("soil_moisture_0_to_10cm_mean", "soil_moisture_28_to_100cm_mean"):
+        if col in df.columns:
+            short = "sm_top" if "0_to_10" in col else "sm_deep"
+            df[short] = df[col]
+            df[f"{short}_lag1"] = df[col].shift(1)
+            df[f"{short}_lag7"] = df[col].shift(7)
+            df[f"{short}_30d"] = df[col].rolling(30, min_periods=1).mean()
+    if "soil_temperature_0_to_7cm_mean" in df.columns:
+        df["soilt"] = df["soil_temperature_0_to_7cm_mean"]
+        df["soilt_7d"] = df["soil_temperature_0_to_7cm_mean"].rolling(7, min_periods=1).mean()
+    # v11: snow_depth_max gives a direct (rather than cumulative) pack measure;
+    # diff vs lagged values approximates the daily melt rate.
+    if "snow_depth_max" in df.columns:
+        df["snow_depth"] = df["snow_depth_max"]
+        df["snow_depth_lag1"] = df["snow_depth_max"].shift(1)
+        df["snow_depth_lag7"] = df["snow_depth_max"].shift(7)
+        df["snow_depth_change_7d"] = df["snow_depth_max"].diff(7)
+        # SWE proxy: snow_depth (m) * mean density of seasonal snowpack ~0.30.
+        df["swe_proxy"] = df["snow_depth_max"] * 0.30
+    # v11: real SNOTEL SWE (when within 50 km). The 7d/30d change captures
+    # active melt; the absolute value tracks how much spring runoff is loaded.
+    if "swe_in" in df.columns:
+        df["swe_lag1"] = df["swe_in"].shift(1)
+        df["swe_lag7"] = df["swe_in"].shift(7)
+        df["swe_change_7d"] = df["swe_in"].diff(7)
+        df["swe_change_30d"] = df["swe_in"].diff(30)
+    if "snow_depth_in" in df.columns:
+        df["sntl_depth_change_7d"] = df["snow_depth_in"].diff(7)
 
     doy = df.index.dayofyear
     df["doy_sin"] = np.sin(2 * np.pi * doy / 365.25)
@@ -130,6 +184,7 @@ def runoff_ridge_forecast(
     wx_hist: pd.DataFrame,
     wx_fcst: pd.DataFrame,
     horizon: int,
+    snotel_df: Optional[pd.DataFrame] = None,
 ) -> tuple[List[float], Dict[str, float]]:
     """Direct multi-step ridge: one model per horizon day, no recursion.
 
@@ -144,7 +199,7 @@ def runoff_ridge_forecast(
     wx_combined = pd.concat([wx_hist, wx_fcst], ignore_index=True)
     wx_combined = wx_combined.drop_duplicates(subset="date", keep="last").sort_values("date")
 
-    feats = _build_features(q_hist, wx_combined)
+    feats = _build_features(q_hist, wx_combined, snotel_df=snotel_df)
     cols = _feature_columns(feats)
     if not cols:
         return persistence_forecast(q_hist, horizon), {}
@@ -306,7 +361,7 @@ def chronos_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
 _ttm_pipeline = None
 _ttm_failed = False
 TTM_MODEL = "ibm-granite/granite-timeseries-ttm-r2"
-TTM_CONTEXT = 512  # TTM-r2 default 512-step context, supports up to 1536
+TTM_CONTEXT = 1536  # TTM-r2 supports up to 1536; longer ctx = better seasonality capture
 
 
 def _get_ttm():
@@ -328,12 +383,18 @@ def _get_ttm():
 
 def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
     pipe = _get_ttm()
-    if pipe is None or q_hist.empty or len(q_hist) < TTM_CONTEXT:
+    if pipe is None or q_hist.empty or len(q_hist) < 64:
         return None
     try:
         import torch
         # log1p stabilizes the heavy-tailed discharge distribution; reverse at the end.
-        series = np.log1p(q_hist["q_cfs"].astype(float).clip(lower=0).values[-TTM_CONTEXT:])
+        raw = q_hist["q_cfs"].astype(float).clip(lower=0).values
+        series = np.log1p(raw[-TTM_CONTEXT:])
+        # Left-pad to TTM_CONTEXT with the earliest observed value so the model still runs
+        # on shorter records.
+        if len(series) < TTM_CONTEXT:
+            pad_val = float(series[0]) if len(series) else 0.0
+            series = np.concatenate([np.full(TTM_CONTEXT - len(series), pad_val), series])
         x = torch.tensor(series, dtype=torch.float32).reshape(1, TTM_CONTEXT, 1)
         with torch.no_grad():
             out = pipe(past_values=x)
@@ -343,11 +404,6 @@ def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
         if len(pred) < horizon:
             pad = [float(pred[-1])] * (horizon - len(pred))
             pred = np.concatenate([pred, np.array(pad)])
-        scale = _seasonal_scale(q_hist, horizon)
-        if scale is not None:
-            last_q = float(q_hist["q_cfs"].iloc[-1])
-            seasonal = last_q * scale
-            pred = 0.5 * pred + 0.5 * seasonal
         return [max(0.0, float(x)) for x in pred]
     except Exception as exc:
         print(f"[ttm] inference failed: {exc}")
@@ -360,7 +416,7 @@ def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
 
 _timesfm_pipeline = None
 _timesfm_failed = False
-TIMESFM_CONTEXT = 512  # 2.0 supports up to 2048 but 512 keeps inference fast
+TIMESFM_CONTEXT = 2048  # TimesFM 2.0 supports up to 2048; longer ctx materially helps seasonality
 
 
 def _get_timesfm():
@@ -394,21 +450,19 @@ def timesfm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
     if pipe is None or q_hist.empty:
         return None
     try:
-        ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TIMESFM_CONTEXT:]
-        # TimesFM API: forecast([series], freq=[0]) -> point_forecast, exp_quantiles
+        # log1p stabilizes the heavy-tailed discharge distribution (same trick as TTM).
+        # TimesFM is trained on raw univariate series so we feed log-flow and expm1 the output.
+        raw_ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TIMESFM_CONTEXT:]
+        ctx = np.log1p(raw_ctx)
         point, _ = pipe.forecast(
             inputs=[ctx.tolist()],
             freq=[0],  # 0 = high-frequency / daily
         )
-        pred = np.array(point[0])[:horizon]
+        pred_log = np.array(point[0])[:horizon]
+        pred = np.expm1(pred_log)
         if len(pred) < horizon:
             pad = [float(pred[-1])] * (horizon - len(pred))
             pred = np.concatenate([pred, np.array(pad)])
-        scale = _seasonal_scale(q_hist, horizon)
-        if scale is not None:
-            last_q = float(q_hist["q_cfs"].iloc[-1])
-            seasonal = last_q * scale
-            pred = 0.5 * pred + 0.5 * seasonal
         return [max(0.0, float(x)) for x in pred]
     except Exception as exc:
         print(f"[timesfm] inference failed: {exc}")
@@ -449,6 +503,19 @@ def forecast_station(
         notes.append(f"weather forecast failed: {exc}")
         wx_fcst = pd.DataFrame(columns=["date"] + weather.DAILY_VARS)
 
+    snotel_df: Optional[pd.DataFrame] = None
+    snotel_meta: Optional[dict] = None
+    try:
+        site = snotel.nearest_site(station_id, lat, lon)
+        if site:
+            snotel_meta = site
+            snotel_df = snotel.fetch_swe_history(site["stationTriplet"], start, today)
+            if snotel_df is None or snotel_df.empty:
+                snotel_df = None
+    except Exception as exc:
+        notes.append(f"snotel failed: {exc}")
+        snotel_df = None
+
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     future_dates = [(last_date + timedelta(days=h)).date().isoformat() for h in range(1, horizon + 1)]
 
@@ -458,7 +525,9 @@ def forecast_station(
     members["persistence_lag1"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, persist)]
 
     try:
-        ridge_pred, ridge_mae = runoff_ridge_forecast(q_hist, wx_hist, wx_fcst, horizon)
+        ridge_pred, ridge_mae = runoff_ridge_forecast(
+            q_hist, wx_hist, wx_fcst, horizon, snotel_df=snotel_df
+        )
     except Exception as exc:
         notes.append(f"ridge failed: {exc}")
         ridge_pred = persist
@@ -584,7 +653,7 @@ def forecast_station(
     # the blend from being dragged by weak members on rivers where one model
     # clearly dominates (e.g. snowmelt sites where ridge beats chronos badly).
     weights = soft_weights
-    weights_strategy = "soft_blend_inv_mae2"
+    weights_strategy = "per_horizon_inv_mae2"
     valid_mae = {k: v for k, v in rolling_mae.items()
                  if k in members and v is not None and math.isfinite(v) and v > 0}
     if len(valid_mae) >= 2:
@@ -599,12 +668,51 @@ def forecast_station(
                 weights[n] = 0.1 / max(1, len(others))
             weights_strategy = f"snap_to:{best_name}"
 
+    # Per-horizon weights: for each horizon day, build inverse-MAE^2 weights from
+    # that horizon's rolling MAE. Falls back to the station-level `weights` when
+    # a per-horizon estimate is missing. Snap-to-winner is preserved (the winner
+    # already has 90% station-level weight, which dominates the per-horizon blend).
+    per_horizon_mae: Dict[int, Dict[str, float]] = {}
+    # Build per-h MAE table from members' available per-horizon dicts.
+    for h in range(1, horizon + 1):
+        per_h: Dict[str, float] = {}
+        if h == 7 and rolling_mae_h7:
+            per_h.update({k: v for k, v in rolling_mae_h7.items() if k in members})
+        elif h == 14 and rolling_mae_h14:
+            per_h.update({k: v for k, v in rolling_mae_h14.items() if k in members})
+        # interpolate linearly between mae@7 and mae@14 for h in 8..13
+        elif 8 <= h <= 13 and rolling_mae_h7 and rolling_mae_h14:
+            t = (h - 7) / 7.0
+            for name in members:
+                a = rolling_mae_h7.get(name)
+                b = rolling_mae_h14.get(name)
+                if a is None or b is None:
+                    continue
+                per_h[name] = float(a + t * (b - a))
+        elif h < 7 and rolling_mae_h7:
+            # Short horizons get the same weights as h=7 (best available estimate
+            # for early forecast quality). Persistence usually dominates here so
+            # this keeps it weighted appropriately.
+            per_h.update({k: v for k, v in rolling_mae_h7.items() if k in members})
+        per_horizon_mae[h] = per_h
+
+    def _weights_for_horizon(h: int) -> Dict[str, float]:
+        per_h = per_horizon_mae.get(h) or {}
+        if not per_h:
+            return weights
+        # When snap-to-winner triggered, keep snap behaviour at every horizon.
+        if weights_strategy.startswith("snap_to:"):
+            return weights
+        return _blend_weights(per_h, list(members.keys()))
+
     blend_vals = []
-    for h in range(horizon):
+    for h_idx in range(horizon):
+        h = h_idx + 1
+        ws = _weights_for_horizon(h)
         s = 0.0
         wsum = 0.0
-        for name, w in weights.items():
-            v = members[name][h]["q_cfs"]
+        for name, w in ws.items():
+            v = members[name][h_idx]["q_cfs"]
             if v is None or not math.isfinite(v):
                 continue
             s += w * v
@@ -648,6 +756,26 @@ def forecast_station(
         # not just our lookback window.
         record_start = daily_stats["begin_date"]
 
+    snotel_summary: Optional[dict] = None
+    if snotel_df is not None and not snotel_df.empty and "swe_in" in snotel_df.columns:
+        s = snotel_df.dropna(subset=["swe_in"]).reset_index(drop=True)
+        if len(s):
+            curr = float(s["swe_in"].iloc[-1])
+            d_now = s["date"].iloc[-1]
+            def _delta_at(target_offset: int) -> Optional[float]:
+                target_date = pd.Timestamp(d_now) - pd.Timedelta(days=target_offset)
+                # find nearest row at or before that date
+                eligible = s[pd.to_datetime(s["date"]) <= target_date]
+                if eligible.empty:
+                    return None
+                return curr - float(eligible["swe_in"].iloc[-1])
+            snotel_summary = {
+                "swe_in": curr,
+                "swe_change_7d": _delta_at(7),
+                "swe_change_30d": _delta_at(30),
+                "as_of": pd.Timestamp(d_now).date().isoformat(),
+            }
+
     return StationForecast(
         station_id=station_id,
         issued_at=pd.Timestamp.utcnow().isoformat(),
@@ -667,6 +795,8 @@ def forecast_station(
         daily_stats=daily_stats,
         record_start=record_start,
         record_end=record_end,
+        snotel_site=snotel_meta,
+        snotel_summary=snotel_summary,
     )
 
 
@@ -733,14 +863,19 @@ def _rolling_chronos_mae_per_horizon(q_hist: pd.DataFrame, horizon: int) -> Dict
 
 
 def _foundation_predict_on_holdout(
-    q_hist: pd.DataFrame, horizon: int, model: str
+    q_hist: pd.DataFrame, horizon: int, model: str, *, end_offset: int = 0
 ) -> Optional[tuple[np.ndarray, np.ndarray]]:
     """Run the named foundation model on a held-out tail. Returns (yhat, ytrue)
     aligned to h=1..horizon, or None if there's not enough history or the model
-    is unavailable."""
-    if len(q_hist) < horizon + 90:
+    is unavailable. `end_offset` shifts the holdout backwards by N days so we
+    can score multiple non-overlapping windows."""
+    needed = horizon + 90 + end_offset
+    if len(q_hist) < needed:
         return None
-    ctx_len = len(q_hist) - horizon
+    end_idx = len(q_hist) - end_offset
+    ctx_len = end_idx - horizon
+    if ctx_len < 64:
+        return None
     hist_ctx = q_hist.iloc[:ctx_len].reset_index(drop=True)
     ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values
     if len(ytrue) < horizon:
@@ -777,27 +912,50 @@ def _foundation_predict_on_holdout(
     return yhat[:horizon], ytrue[:horizon]
 
 
+# Three rolling, non-overlapping holdouts for foundation models. Each is
+# `horizon` days long. Offsets stagger by 30 days so we hit different seasons
+# without overlapping the test windows themselves.
+_FOUNDATION_HOLDOUT_OFFSETS = (0, 30, 60)
+
+
 def _rolling_foundation_mae_per_horizon(
     q_hist: pd.DataFrame, horizon: int, model: str
 ) -> Dict[int, float]:
-    """Per-horizon MAE on a single holdout for any foundation model."""
-    res = _foundation_predict_on_holdout(q_hist, horizon, model)
-    if res is None:
-        return {}
-    yhat, ytrue = res
-    return {h: float(abs(ytrue[h - 1] - yhat[h - 1])) for h in range(1, horizon + 1)}
+    """Per-horizon MAE averaged across `_FOUNDATION_HOLDOUT_OFFSETS`. Falls back
+    to whatever offsets returned data."""
+    accum: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+    for off in _FOUNDATION_HOLDOUT_OFFSETS:
+        res = _foundation_predict_on_holdout(q_hist, horizon, model, end_offset=off)
+        if res is None:
+            continue
+        yhat, ytrue = res
+        for h in range(1, horizon + 1):
+            accum[h].append(float(abs(ytrue[h - 1] - yhat[h - 1])))
+    out: Dict[int, float] = {}
+    for h, vs in accum.items():
+        if vs:
+            out[h] = float(np.mean(vs))
+    return out
 
 
 def _rolling_foundation_mape_per_horizon(
     q_hist: pd.DataFrame, horizon: int, model: str
 ) -> Dict[int, float]:
-    """Per-horizon MAPE (1-cfs floor) on a single holdout for any foundation model."""
-    res = _foundation_predict_on_holdout(q_hist, horizon, model)
-    if res is None:
-        return {}
-    yhat, ytrue = res
-    return {h: float(abs(ytrue[h - 1] - yhat[h - 1]) / max(abs(ytrue[h - 1]), MAPE_FLOOR_CFS))
-            for h in range(1, horizon + 1)}
+    """Per-horizon MAPE averaged across rolling holdouts (1-cfs floor)."""
+    accum: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+    for off in _FOUNDATION_HOLDOUT_OFFSETS:
+        res = _foundation_predict_on_holdout(q_hist, horizon, model, end_offset=off)
+        if res is None:
+            continue
+        yhat, ytrue = res
+        for h in range(1, horizon + 1):
+            denom = max(abs(ytrue[h - 1]), MAPE_FLOOR_CFS)
+            accum[h].append(float(abs(ytrue[h - 1] - yhat[h - 1]) / denom))
+    out: Dict[int, float] = {}
+    for h, vs in accum.items():
+        if vs:
+            out[h] = float(np.mean(vs))
+    return out
 
 
 def _rolling_persistence_mape_per_horizon(q_hist: pd.DataFrame, max_horizon: int) -> Dict[int, float]:

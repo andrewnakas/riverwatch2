@@ -84,19 +84,40 @@ function pickDateTicks(xmin, xmax, targetCount = 7) {
     step = s;
   }
   const ticks = [];
-  const startDay = Math.ceil(xmin / MS_PER_DAY);
-  for (let d = startDay; d * MS_PER_DAY <= xmax; d += step) {
-    ticks.push(d * MS_PER_DAY);
+  if (step >= 30) {
+    // Snap to month boundaries so labels read "May 1, Jun 1, …" rather than
+    // arbitrary 30-day offsets.
+    const startMonth = new Date(xmin);
+    startMonth.setUTCDate(1);
+    let cursor = startMonth.getTime();
+    while (cursor <= xmax) {
+      if (cursor >= xmin) ticks.push(cursor);
+      const dt = new Date(cursor);
+      dt.setUTCMonth(dt.getUTCMonth() + Math.max(1, Math.round(step / 30)));
+      cursor = dt.getTime();
+    }
+  } else {
+    const startDay = Math.ceil(xmin / MS_PER_DAY);
+    for (let d = startDay; d * MS_PER_DAY <= xmax; d += step) {
+      ticks.push(d * MS_PER_DAY);
+    }
   }
   return { ticks, step };
 }
 
-function fmtTick(ts, step) {
+function fmtTick(ts, step, prevYear) {
   const d = new Date(ts);
   const mo = d.toLocaleString(undefined, { month: "short", timeZone: "UTC" });
   const day = d.getUTCDate();
-  if (step >= 30) return `${mo} ${d.getUTCFullYear().toString().slice(2)}`;
-  return `${mo} ${day}`;
+  const yr = d.getUTCFullYear();
+  // Label crosses a year boundary -> stamp the year. Otherwise short label.
+  if (step >= 60) {
+    return prevYear !== yr ? `${mo} '${yr.toString().slice(2)}` : mo;
+  }
+  if (step >= 30) {
+    return prevYear !== yr ? `${mo} '${yr.toString().slice(2)}` : mo;
+  }
+  return prevYear !== yr ? `${mo} ${day} '${yr.toString().slice(2)}` : `${mo} ${day}`;
 }
 
 function drawChart(canvas, history, members, blend) {
@@ -144,26 +165,41 @@ function drawChart(canvas, history, members, blend) {
   ctx.textAlign = "left";
   ctx.fillText("cfs", w - pad.r + 4, pad.t - 4);
 
+  // Faint forecast-zone shading: distinguishes the prediction window visually.
+  if (history.length && blend.length) {
+    const txNow = xToPx(Date.parse(history[history.length - 1].date));
+    const xRight = w - pad.r;
+    if (xRight > txNow) {
+      ctx.fillStyle = "rgba(255, 209, 102, 0.05)";
+      ctx.fillRect(txNow, pad.t, xRight - txNow, h - pad.t - pad.b);
+    }
+  }
+
   // X-axis: span-aware date ticks
   const { ticks, step } = pickDateTicks(xmin, xmax, 7);
   ctx.fillStyle = "#7c87a8";
   ctx.textAlign = "center";
   ctx.strokeStyle = "#1f2942";
+  let prevYear = null;
   for (const t of ticks) {
     if (t < xmin || t > xmax) continue;
     const px = xToPx(t);
     ctx.beginPath(); ctx.moveTo(px, h - pad.b); ctx.lineTo(px, h - pad.b + 3); ctx.stroke();
-    ctx.fillText(fmtTick(t, step), px, h - 14);
+    const label = fmtTick(t, step, prevYear);
+    ctx.fillText(label, px, h - 14);
+    prevYear = new Date(t).getUTCFullYear();
   }
-  // Year strip if span crosses years
+  // Always show the start-year + end-year on the bottom strip so the user has
+  // an absolute anchor regardless of how the ticks fall.
   const y0 = new Date(xmin).getUTCFullYear();
   const y1 = new Date(xmax).getUTCFullYear();
-  if (y0 !== y1 || step >= 30) {
-    ctx.font = "9px Inter, sans-serif";
-    ctx.fillStyle = "#5c6685";
-    ctx.fillText(`${y0}${y0 !== y1 ? "–" + y1 : ""}`, (pad.l + (w - pad.r)) / 2, h - 2);
-    ctx.font = "10px Inter, sans-serif";
-  }
+  ctx.font = "9px Inter, sans-serif";
+  ctx.fillStyle = "#5c6685";
+  ctx.textAlign = "left";
+  ctx.fillText(String(y0), pad.l, h - 2);
+  ctx.textAlign = "right";
+  ctx.fillText(String(y1), w - pad.r, h - 2);
+  ctx.font = "10px Inter, sans-serif";
 
   if (history.length) {
     const tx = xToPx(Date.parse(history[history.length - 1].date));
@@ -174,6 +210,7 @@ function drawChart(canvas, history, members, blend) {
     ctx.textAlign = "center";
     ctx.font = "9px Inter, sans-serif";
     ctx.fillText("now", tx, pad.t - 2);
+    ctx.fillText("forecast →", tx + 32, pad.t - 2);
     ctx.font = "10px Inter, sans-serif";
   }
 
@@ -233,6 +270,7 @@ function renderForecast(payload) {
   drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
 
   renderRecordStartAndStats(payload);
+  renderSnotel(payload);
 
   const mae7 = payload.rolling_mae_h7 || {};
   const mae14 = payload.rolling_mae_h14 || {};
@@ -301,6 +339,36 @@ function renderForecast(payload) {
       </p>
     </details>
     ${(payload.notes || []).length ? `<div class="notes">notes: ${payload.notes.join("; ")}</div>` : ""}
+  `;
+}
+
+function renderSnotel(payload) {
+  const el = document.getElementById("snotel-block");
+  if (!el) return;
+  const site = payload.snotel_site;
+  const sum = payload.snotel_summary;
+  if (!site || !sum) {
+    el.innerHTML = "";
+    return;
+  }
+  const fmtDelta = v =>
+    v == null || !isFinite(v) ? "—" :
+      `${v >= 0 ? "+" : ""}${Number(v).toFixed(1)} in`;
+  el.innerHTML = `
+    <div class="snotel">
+      <div class="snotel-head">
+        <b>SNOTEL</b> ${site.name || site.stationTriplet}
+        <span class="snotel-sub">${site.distance_km} km · ${fmtNumber(site.elevation_ft)} ft</span>
+      </div>
+      <table class="snotel-table">
+        <tr>
+          <td><span class="snotel-lbl">SWE now</span><br/><b>${fmtNumber(sum.swe_in)} in</b></td>
+          <td><span class="snotel-lbl">7-day Δ</span><br/>${fmtDelta(sum.swe_change_7d)}</td>
+          <td><span class="snotel-lbl">30-day Δ</span><br/>${fmtDelta(sum.swe_change_30d)}</td>
+        </tr>
+      </table>
+      <div class="snotel-asof">as of ${sum.as_of}</div>
+    </div>
   `;
 }
 
@@ -483,6 +551,8 @@ async function selectStation(station) {
   document.getElementById("member-table").innerHTML = "";
   document.getElementById("record-start").innerHTML = "";
   document.getElementById("daily-stats").innerHTML = "";
+  const snEl = document.getElementById("snotel-block");
+  if (snEl) snEl.innerHTML = "";
   const climCanvas = document.getElementById("climatology-chart");
   if (climCanvas) climCanvas.style.display = "none";
 
