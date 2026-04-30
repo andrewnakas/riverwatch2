@@ -659,7 +659,62 @@ def _blend_median_asinh(vals_cfs: List[float], wts: List[float], qs: float) -> O
         return None
     return float(np.clip(np.sinh(z) * max(qs, 1e-9), 0.0, None))
 
-_BLEND_RULES = ("mean", "median", "mean_asinh", "median_asinh")
+def _blend_trimmed_mean_asinh(vals_cfs: List[float], wts: List[float], qs: float) -> Optional[float]:
+    """Drop the member furthest from the asinh-space weighted median, then
+    take the weighted mean of the rest in asinh space. Keeps the bulk of
+    the ensemble while excluding a single outlier — a cheap robust
+    estimator that often beats both mean and median when one member is
+    occasionally off."""
+    zs_pairs = [(float(np.arcsinh(v / max(qs, 1e-9))), float(w))
+                for v, w in zip(vals_cfs, wts)
+                if v is not None and math.isfinite(v) and w is not None and math.isfinite(w) and w > 0]
+    if len(zs_pairs) < 2:
+        return _blend_mean_asinh(vals_cfs, wts, qs)
+    zs_only = [z for z, _ in zs_pairs]
+    ws_only = [w for _, w in zs_pairs]
+    med = _weighted_median(zs_only, ws_only)
+    if med is None:
+        return _blend_mean_asinh(vals_cfs, wts, qs)
+    worst_idx = max(range(len(zs_pairs)), key=lambda i: abs(zs_pairs[i][0] - med))
+    kept = [zs_pairs[i] for i in range(len(zs_pairs)) if i != worst_idx]
+    if not kept:
+        return None
+    z = _weighted_mean([p[0] for p in kept], [p[1] for p in kept])
+    if z is None:
+        return None
+    return float(np.clip(np.sinh(z) * max(qs, 1e-9), 0.0, None))
+
+
+def _blend_clipped_mean_asinh(vals_cfs: List[float], wts: List[float], qs: float) -> Optional[float]:
+    """Weighted mean in asinh space, but clip every member to within
+    [median - 1.5*MAD, median + 1.5*MAD] of the asinh-space weighted
+    median. Robust to one or two outliers without dropping any member —
+    keeps the smoothing benefit of the mean."""
+    zs_pairs = [(float(np.arcsinh(v / max(qs, 1e-9))), float(w))
+                for v, w in zip(vals_cfs, wts)
+                if v is not None and math.isfinite(v) and w is not None and math.isfinite(w) and w > 0]
+    if not zs_pairs:
+        return None
+    zs_only = [z for z, _ in zs_pairs]
+    ws_only = [w for _, w in zs_pairs]
+    med = _weighted_median(zs_only, ws_only)
+    if med is None:
+        return _blend_mean_asinh(vals_cfs, wts, qs)
+    if len(zs_pairs) >= 3:
+        mad = float(np.median([abs(z - med) for z in zs_only]))
+        if mad > 0:
+            lo, hi = med - 1.5 * mad, med + 1.5 * mad
+            zs_only = [min(max(z, lo), hi) for z in zs_only]
+    z = _weighted_mean(zs_only, ws_only)
+    if z is None:
+        return None
+    return float(np.clip(np.sinh(z) * max(qs, 1e-9), 0.0, None))
+
+
+_BLEND_RULES = (
+    "mean", "median", "mean_asinh", "median_asinh",
+    "trimmed_mean_asinh", "clipped_mean_asinh",
+)
 
 def _apply_blend_rule(rule: str, vals_cfs: List[float], wts: List[float], qs: float) -> Optional[float]:
     if rule == "mean":
@@ -670,6 +725,10 @@ def _apply_blend_rule(rule: str, vals_cfs: List[float], wts: List[float], qs: fl
         return _blend_mean_asinh(vals_cfs, wts, qs)
     if rule == "median_asinh":
         return _blend_median_asinh(vals_cfs, wts, qs)
+    if rule == "trimmed_mean_asinh":
+        return _blend_trimmed_mean_asinh(vals_cfs, wts, qs)
+    if rule == "clipped_mean_asinh":
+        return _blend_clipped_mean_asinh(vals_cfs, wts, qs)
     return None
 
 

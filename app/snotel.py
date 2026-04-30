@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import time
 from datetime import date, timedelta
 from pathlib import Path
@@ -23,6 +24,13 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import pandas as pd
+
+
+def _no_fetch() -> bool:
+    """True when `RW2_NO_FETCH=1` is set — go cache-only and never hit the
+    NRCS API. CI uses this to keep deploys deterministic on whatever data
+    each shard's restored cache already has."""
+    return os.environ.get("RW2_NO_FETCH") == "1"
 
 ROOT = Path(__file__).resolve().parents[1] / "data" / "cache"
 SITES_DIR = ROOT / "snotel_sites"
@@ -98,6 +106,8 @@ def nearest_site(gauge_id: str, lat: float, lon: float) -> Optional[dict]:
         v = cache[gauge_id]
         if v is None or (isinstance(v, dict) and "stationTriplet" in v):
             return v
+    if _no_fetch():
+        return None
     sites = _load_all_sntl()
     best: Optional[dict] = None
     best_d = float("inf")
@@ -144,6 +154,8 @@ def fetch_swe_history(triplet: str, start: date, end: date, *, max_age_hours: in
     needs_forward = (not last_known) or (last_known < end.isoformat())
 
     if not needs_backward and last_known and last_known >= end.isoformat() and age < max_age_hours * 3600:
+        return _slice(have, start, end)
+    if _no_fetch():
         return _slice(have, start, end)
 
     fwd_from = start
