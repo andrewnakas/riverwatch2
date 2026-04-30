@@ -110,11 +110,9 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
     if needs_forward and fwd_from <= end:
         fetched_any = _fetch_and_merge_hist(lat, lon, have, fwd_from, end) or fetched_any
 
-    # Schema bump: existing cached rows are missing v11 columns. One-shot
-    # re-fetch of the full window populates them; subsequent calls hit the
-    # short-circuit path.
-    if schema_stale and have and not (needs_backward or needs_forward):
-        fetched_any = _fetch_and_merge_hist(lat, lon, have, start, end) or fetched_any
+    # NOTE: schema-stale backfill of historical openmeteo rows is intentionally
+    # disabled here so v11.1 ships fast on existing caches. New v11 columns
+    # populate naturally as each daily delta arrives going forward.
 
     if fetched_any and have:
         rec = {

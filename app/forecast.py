@@ -505,16 +505,21 @@ def forecast_station(
 
     snotel_df: Optional[pd.DataFrame] = None
     snotel_meta: Optional[dict] = None
-    try:
-        site = snotel.nearest_site(station_id, lat, lon)
-        if site:
-            snotel_meta = site
-            snotel_df = snotel.fetch_swe_history(site["stationTriplet"], start, today)
-            if snotel_df is None or snotel_df.empty:
-                snotel_df = None
-    except Exception as exc:
-        notes.append(f"snotel failed: {exc}")
-        snotel_df = None
+    # Gate SNOTEL fetches behind RW2_ENABLE_SNOTEL to avoid a slow first-build
+    # cold-fill (per-site nearest-mapper + WTEQ history). Enable once we want
+    # to populate the SNOTEL caches in the workflow.
+    import os as _os
+    if _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
+        try:
+            site = snotel.nearest_site(station_id, lat, lon)
+            if site:
+                snotel_meta = site
+                snotel_df = snotel.fetch_swe_history(site["stationTriplet"], start, today)
+                if snotel_df is None or snotel_df.empty:
+                    snotel_df = None
+        except Exception as exc:
+            notes.append(f"snotel failed: {exc}")
+            snotel_df = None
 
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     future_dates = [(last_date + timedelta(days=h)).date().isoformat() for h in range(1, horizon + 1)]

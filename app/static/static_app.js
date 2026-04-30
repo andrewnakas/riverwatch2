@@ -428,10 +428,98 @@ function renderRecordStartAndStats(payload) {
 
   if (stats && stats.rows && stats.rows.length > 30) {
     canvas.style.display = "block";
+    setupClimatologyControls(canvas, stats.rows);
     drawClimatology(canvas, stats.rows);
   } else {
     canvas.style.display = "none";
+    const ctrl = document.getElementById("climatology-controls");
+    if (ctrl) ctrl.innerHTML = "";
   }
+}
+
+// Predefined day-of-year ranges (start, end inclusive, in 0..365).
+// Spring is the default whitewater season for snow-fed western rivers.
+const SEASON_PRESETS = {
+  full:   { label: "All year", range: [0, 365] },
+  winter: { label: "Winter (Dec–Feb)", range: [335, 59] },  // wraps year boundary
+  spring: { label: "Spring (Mar–May)", range: [60, 151] },
+  summer: { label: "Summer (Jun–Aug)", range: [152, 243] },
+  fall:   { label: "Fall (Sep–Nov)", range: [244, 334] },
+  runoff: { label: "Runoff (Apr–Jul)", range: [91, 212] },
+};
+let _climState = { rows: [], range: [0, 365], dragStartDoy: null, dragEndDoy: null };
+
+function _doyRangeContains(range, doy) {
+  const [a, b] = range;
+  if (a <= b) return doy >= a && doy <= b;
+  return doy >= a || doy <= b; // wrap
+}
+
+function setupClimatologyControls(canvas, rows) {
+  const ctrl = document.getElementById("climatology-controls");
+  if (!ctrl) return;
+  _climState = { rows, range: [0, 365], dragStartDoy: null, dragEndDoy: null };
+  ctrl.innerHTML = `
+    <div class="clim-controls">
+      ${Object.entries(SEASON_PRESETS).map(([k, v]) =>
+        `<button data-season="${k}" class="clim-btn${k === "full" ? " active" : ""}">${v.label}</button>`).join("")}
+      <button id="clim-reset" class="clim-btn clim-reset">Reset zoom</button>
+      <span class="clim-hint">drag on chart to zoom</span>
+    </div>
+  `;
+  ctrl.querySelectorAll("button[data-season]").forEach(b => {
+    b.addEventListener("click", () => {
+      ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      _climState.range = SEASON_PRESETS[b.dataset.season].range.slice();
+      drawClimatology(canvas, _climState.rows);
+    });
+  });
+  document.getElementById("clim-reset")?.addEventListener("click", () => {
+    ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
+    ctrl.querySelector('[data-season="full"]')?.classList.add("active");
+    _climState.range = [0, 365];
+    drawClimatology(canvas, _climState.rows);
+  });
+
+  // Drag-to-zoom: capture range on canvas; release to apply.
+  const _toDoy = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const fracX = (e.clientX - rect.left) / rect.width;
+    // Match the drawing pad so the doy mapping stays in sync with the rendered axis.
+    const padL = 50, padR = 12;
+    const innerFrac = (fracX * canvas.width - padL) / (canvas.width - padL - padR);
+    return Math.max(0, Math.min(365, Math.round(innerFrac * 365)));
+  };
+  canvas.onmousedown = (e) => {
+    _climState.dragStartDoy = _toDoy(e);
+    _climState.dragEndDoy = _climState.dragStartDoy;
+    drawClimatology(canvas, _climState.rows);
+  };
+  canvas.onmousemove = (e) => {
+    if (_climState.dragStartDoy == null) return;
+    _climState.dragEndDoy = _toDoy(e);
+    drawClimatology(canvas, _climState.rows);
+  };
+  canvas.onmouseup = (e) => {
+    if (_climState.dragStartDoy == null) return;
+    const a = _climState.dragStartDoy;
+    const b = _toDoy(e);
+    _climState.dragStartDoy = null;
+    _climState.dragEndDoy = null;
+    if (Math.abs(b - a) >= 4) {
+      _climState.range = [Math.min(a, b), Math.max(a, b)];
+      ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
+    }
+    drawClimatology(canvas, _climState.rows);
+  };
+  canvas.onmouseleave = () => {
+    if (_climState.dragStartDoy != null) {
+      _climState.dragStartDoy = null;
+      _climState.dragEndDoy = null;
+      drawClimatology(canvas, _climState.rows);
+    }
+  };
 }
 
 function drawClimatology(canvas, rows) {
@@ -447,9 +535,18 @@ function drawClimatology(canvas, rows) {
     return Math.floor((Date.UTC(2024, m - 1, d) - Date.UTC(2024, 0, 1)) / 86400000);
   });
   const series = ["min_va", "p25_va", "p50_va", "mean_va", "p75_va", "max_va"];
+
+  // Filter rows to the active season/zoom range. y-axis recomputed on the
+  // visible subset so a tighter window auto-scales.
+  const range = (_climState && _climState.range) || [0, 365];
+  const visibleIdx = [];
+  for (let i = 0; i < xs.length; i++) {
+    if (_doyRangeContains(range, xs[i])) visibleIdx.push(i);
+  }
+  if (visibleIdx.length === 0) return;
   let yMax = 0;
-  for (const r of rows) for (const s of series) {
-    const v = r[s];
+  for (const i of visibleIdx) for (const s of series) {
+    const v = rows[i][s];
     if (v != null && isFinite(v) && v > yMax) yMax = v;
   }
   if (yMax <= 0) return;
@@ -458,9 +555,22 @@ function drawClimatology(canvas, rows) {
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
   const useLog = yMax > 200;
-  const yMin = useLog ? Math.max(0.1, rows.reduce((a, r) => Math.min(a, r.min_va || a), yMax)) : 0;
+  const yMin = useLog
+    ? Math.max(0.1, visibleIdx.reduce((a, i) => Math.min(a, rows[i].min_va || a), yMax))
+    : 0;
 
-  const x2px = doy => pad.l + (doy / 365) * innerW;
+  // Map a day-of-year back into the [0, 1] visible fraction. Handles wraparound
+  // by treating a wrapping range as continuous via modular shifting.
+  const [r0, r1] = range;
+  const wraps = r0 > r1;
+  const totalSpan = wraps ? (366 - r0 + r1) : (r1 - r0);
+  const safeSpan = Math.max(1, totalSpan);
+  const doyToFrac = (doy) => {
+    if (!wraps) return (doy - r0) / safeSpan;
+    return doy >= r0 ? (doy - r0) / safeSpan : (366 - r0 + doy) / safeSpan;
+  };
+
+  const x2px = doy => pad.l + Math.max(0, Math.min(1, doyToFrac(doy))) * innerW;
   const y2px = v => {
     if (useLog) {
       const lv = Math.log10(Math.max(v, yMin));
@@ -471,18 +581,24 @@ function drawClimatology(canvas, rows) {
     return pad.t + innerH - (v / yMax) * innerH;
   };
 
-  // Axes & gridlines
+  // Axes & gridlines: month markers that fall inside the visible range.
   ctx.strokeStyle = "#26304b";
   ctx.fillStyle = "#7a86a6";
   ctx.font = "11px sans-serif";
-  for (const [m, label] of [[0, "Jan"], [2, "Mar"], [4, "May"], [6, "Jul"], [8, "Sep"], [10, "Nov"]]) {
+  const months = [[0, "Jan"], [1, "Feb"], [2, "Mar"], [3, "Apr"], [4, "May"], [5, "Jun"],
+                  [6, "Jul"], [7, "Aug"], [8, "Sep"], [9, "Oct"], [10, "Nov"], [11, "Dec"]];
+  let lastLabelX = -Infinity;
+  for (const [m, label] of months) {
     const doy = Math.floor((Date.UTC(2024, m, 1) - Date.UTC(2024, 0, 1)) / 86400000);
+    if (!_doyRangeContains(range, doy)) continue;
     const x = x2px(doy);
+    if (x - lastLabelX < 28) continue; // skip if labels would overlap on a tight zoom
+    lastLabelX = x;
     ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + innerH); ctx.stroke();
     ctx.fillText(label, x + 2, H - 6);
   }
   ctx.fillText(useLog ? `${yMax.toFixed(0)} cfs (log)` : `${yMax.toFixed(0)} cfs`, 4, pad.t + 10);
-  ctx.fillText("0 cfs", 4, pad.t + innerH);
+  ctx.fillText(useLog ? `${yMin.toFixed(0)} cfs` : "0 cfs", 4, pad.t + innerH);
 
   const colors = {
     min_va: "#3a4d8a",   // dark blue
@@ -496,17 +612,22 @@ function drawClimatology(canvas, rows) {
     min_va: 1, p25_va: 1, p50_va: 2.5, mean_va: 2, p75_va: 1, max_va: 1,
   };
 
+  // For wraparound ranges, sort visible idxs by their fractional position so
+  // the polyline traverses left-to-right across the rendered chart.
+  const orderedIdx = visibleIdx.slice().sort((a, b) => doyToFrac(xs[a]) - doyToFrac(xs[b]));
+
   // Light fill between p25 and p75 to highlight the typical band
   ctx.fillStyle = "rgba(74, 109, 181, 0.18)";
   ctx.beginPath();
   let started = false;
-  for (let i = 0; i < rows.length; i++) {
+  for (const i of orderedIdx) {
     const v = rows[i].p75_va;
     if (v == null || !isFinite(v)) continue;
     const x = x2px(xs[i]); const y = y2px(v);
     started ? ctx.lineTo(x, y) : (ctx.moveTo(x, y), started = true);
   }
-  for (let i = rows.length - 1; i >= 0; i--) {
+  for (let k = orderedIdx.length - 1; k >= 0; k--) {
+    const i = orderedIdx[k];
     const v = rows[i].p25_va;
     if (v == null || !isFinite(v)) continue;
     ctx.lineTo(x2px(xs[i]), y2px(v));
@@ -518,7 +639,7 @@ function drawClimatology(canvas, rows) {
     ctx.lineWidth = widths[s];
     ctx.beginPath();
     let firstPoint = true;
-    for (let i = 0; i < rows.length; i++) {
+    for (const i of orderedIdx) {
       const v = rows[i][s];
       if (v == null || !isFinite(v)) continue;
       const x = x2px(xs[i]);
@@ -526,6 +647,19 @@ function drawClimatology(canvas, rows) {
       firstPoint ? (ctx.moveTo(x, y), firstPoint = false) : ctx.lineTo(x, y);
     }
     ctx.stroke();
+  }
+
+  // Drag-zoom selection overlay
+  if (_climState.dragStartDoy != null && _climState.dragEndDoy != null
+      && _climState.dragStartDoy !== _climState.dragEndDoy) {
+    const a = Math.min(_climState.dragStartDoy, _climState.dragEndDoy);
+    const b = Math.max(_climState.dragStartDoy, _climState.dragEndDoy);
+    const xa = x2px(a), xb = x2px(b);
+    ctx.fillStyle = "rgba(255, 209, 102, 0.15)";
+    ctx.fillRect(xa, pad.t, xb - xa, innerH);
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(xa, pad.t, xb - xa, innerH);
   }
 
   // Legend
@@ -555,6 +689,8 @@ async function selectStation(station) {
   if (snEl) snEl.innerHTML = "";
   const climCanvas = document.getElementById("climatology-chart");
   if (climCanvas) climCanvas.style.display = "none";
+  const climCtrl = document.getElementById("climatology-controls");
+  if (climCtrl) climCtrl.innerHTML = "";
 
   try {
     const r = await fetch(`forecasts/${station.id}.json`);

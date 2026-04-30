@@ -48,7 +48,13 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .daily-stats summary { cursor: pointer; color: #8ec5ff; padding: 4px 0; }
 .daily-stats table.climatology { width: 100%; border-collapse: collapse; margin-top: 6px; }
 .daily-stats table.climatology th, .daily-stats table.climatology td { padding: 4px 6px; border-bottom: 1px solid #1f2942; text-align: right; font-size: 11px; }
-#climatology-chart { width: 100%; max-width: 640px; margin: 6px 0 10px; border-radius: 8px; }
+#climatology-chart { width: 100%; max-width: 640px; margin: 6px 0 10px; border-radius: 8px; cursor: crosshair; }
+.clim-controls { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; align-items: center; }
+.clim-btn { padding: 3px 9px; background: #1d2742; color: #aab7d4; border: 1px solid #33446f; border-radius: 4px; font-size: 11px; cursor: pointer; }
+.clim-btn:hover { background: #283456; color: #e7ecf3; }
+.clim-btn.active { background: #2c3a64; color: #ffd166; border-color: #ffd166; }
+.clim-btn.clim-reset { margin-left: 8px; color: #ff8a8a; border-color: #553344; }
+.clim-hint { font-size: 11px; color: #5c6685; margin-left: auto; }
 @media (max-width: 900px) {
   #layout { grid-template-columns: 1fr; grid-template-rows: 60vh 40vh; height: auto; }
   #panel { border-left: none; border-top: 1px solid #26314f; }

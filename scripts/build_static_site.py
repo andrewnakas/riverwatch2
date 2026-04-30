@@ -72,8 +72,23 @@ def _copy_assets() -> None:
 
 
 def _to_jsonable(payload):
-    """Strip non-JSON-friendly bits (pandas Timestamps slip through asdict)."""
-    return json.loads(json.dumps(payload, default=str))
+    """Strip non-JSON-friendly bits (pandas Timestamps slip through asdict).
+
+    Also rewrite NaN/Inf -> None so the emitted JSON is valid; the browser's
+    JSON.parse rejects bare `Infinity` even though Python json.dumps writes it.
+    """
+    import math
+
+    def _scrub(v):
+        if isinstance(v, float):
+            return None if (math.isnan(v) or math.isinf(v)) else v
+        if isinstance(v, dict):
+            return {k: _scrub(x) for k, x in v.items()}
+        if isinstance(v, (list, tuple)):
+            return [_scrub(x) for x in v]
+        return v
+
+    return _scrub(json.loads(json.dumps(payload, default=str)))
 
 
 def main() -> int:

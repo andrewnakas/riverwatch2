@@ -108,7 +108,18 @@ def main() -> int:
         "shards": len(shard_summaries),
         "shard_summaries": shard_summaries,
     }
-    (DIST / "index_summary.json").write_text(json.dumps(summary, indent=2))
+    import math
+
+    def _scrub(v):
+        if isinstance(v, float):
+            return None if (math.isnan(v) or math.isinf(v)) else v
+        if isinstance(v, dict):
+            return {k: _scrub(x) for k, x in v.items()}
+        if isinstance(v, (list, tuple)):
+            return [_scrub(x) for x in v]
+        return v
+
+    (DIST / "index_summary.json").write_text(json.dumps(_scrub(summary), indent=2))
     print(f"  summary: {total_succeeded}/{total_in_shards} succeeded across {len(shard_summaries)} shards, longest shard {longest_shard}s")
     return 0
 
