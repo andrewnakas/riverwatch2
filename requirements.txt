@@ -2,6 +2,10 @@ flask>=3.0
 pandas>=2.0
 numpy>=1.24
 scikit-learn>=1.3
+# v12.4: LightGBM replaces ridge for the runoff member. Trees pick up
+# nonlinear thresholds (snowmelt, freeze-thaw, soil-moisture × precip)
+# that linear ridge can't. ~1MB wheel, no native deps on common Linux.
+lightgbm>=4.0
 requests>=2.31
 # Chronos-Bolt zero-shot foundation model (optional but heavily recommended)
 # Comment out if you don't want to download model weights (~50MB) on first run.

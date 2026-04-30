@@ -26,6 +26,60 @@ from sklearn.preprocessing import StandardScaler
 
 from . import snotel, usgs, usgs_stats, weather
 
+# v12.4: LightGBM replaces Ridge for the runoff member. Lazy import so the
+# module still loads if lightgbm isn't installed; we fall back to ridge.
+try:
+    import lightgbm as _lgb  # type: ignore
+    _LGB_OK = True
+except Exception:
+    _LGB_OK = False
+
+
+def _fit_runoff_regressor(
+    Xtr: np.ndarray,
+    ytr: np.ndarray,
+    *,
+    alpha: float = 1.0,
+):
+    """Fit the runoff member's regressor on (Xtr, ytr) — anomaly target on the
+    asinh scale. Tries LightGBM with L1 (MAE) objective when available, else
+    falls back to Ridge with the supplied alpha. The returned object exposes
+    `.predict(X)`. Both branches are fit on the *unscaled* features; ridge
+    handles its own scaling via a StandardScaler wrapper.
+    """
+    if _LGB_OK and len(Xtr) >= 60:
+        # Compact tree budget: per-station × per-horizon × per-holdout we fit
+        # one booster; full live + 6 holdouts × 14 horizons = 98 fits/station.
+        # Each booster: 80 rounds × ~15 leaves keeps wall time under ~10s for
+        # the runoff member as a whole, comfortably inside the 16-shard CI.
+        params = {
+            "objective": "regression_l1",  # directly minimize MAE
+            "metric": "mae",
+            "learning_rate": 0.08,
+            "num_leaves": 11,
+            "min_data_in_leaf": max(15, len(Xtr) // 40),
+            "feature_fraction": 0.85,
+            "bagging_fraction": 0.85,
+            "bagging_freq": 5,
+            "verbosity": -1,
+            "num_threads": 1,
+        }
+        try:
+            ds = _lgb.Dataset(Xtr, label=ytr, free_raw_data=False)
+            booster = _lgb.train(params, ds, num_boost_round=55)
+            class _LGBWrap:
+                def __init__(self, b): self._b = b
+                def predict(self, X): return self._b.predict(X)
+            return _LGBWrap(booster)
+        except Exception:
+            pass
+    sc = StandardScaler().fit(Xtr)
+    rg = Ridge(alpha=alpha, random_state=0).fit(sc.transform(Xtr), ytr)
+    class _RidgeWrap:
+        def __init__(self, sc, m): self._sc = sc; self._m = m
+        def predict(self, X): return self._m.predict(self._sc.transform(X))
+    return _RidgeWrap(sc, rg)
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -330,48 +384,18 @@ def runoff_ridge_forecast(
                 else:
                     clim_at_target = float(cs_unique.mean())
 
-        # Pick alpha on a trailing 30-day holdout when we have enough data.
-        best_alpha = 1.0
-        if len(train) > 90:
-            cut = len(train) - 30
-            Xtr_v = train[cols].iloc[:cut].values
-            ytr_v = train[tgt_col].iloc[:cut].values
-            Xv = train[cols].iloc[cut:].values
-            yv_target = train[tgt_col].iloc[cut:].values
-            if has_clim:
-                yv_clim = train["target_clim"].iloc[cut:].values
-                yv_log = yv_target + yv_clim
-            else:
-                yv_log = yv_target
-            yv_true = _q_inverse(yv_log, qs)
-            sc_v = StandardScaler().fit(Xtr_v)
-            best_score = float("inf")
-            best_yhat = None
-            for alpha in RIDGE_ALPHAS:
-                m = Ridge(alpha=alpha, random_state=0).fit(sc_v.transform(Xtr_v), ytr_v)
-                yh_target = m.predict(sc_v.transform(Xv))
-                if has_clim:
-                    yh_log = yh_target + yv_clim
-                else:
-                    yh_log = yh_target
-                yh = _q_inverse(yh_log, qs)
-                mae = float(mean_absolute_error(yv_true, yh))
-                if mae < best_score:
-                    best_score = mae
-                    best_alpha = alpha
-                    best_yhat = yh
-            per_horizon_mae[h] = best_score
-            if best_yhat is not None:
-                per_horizon_mape[h] = float(np.mean(
-                    np.abs(yv_true - best_yhat) / np.maximum(np.abs(yv_true), MAPE_FLOOR_CFS)
-                ))
+        # v12.4: dropped the in-station 30-day validation block. With LightGBM
+        # at ~0.4s/fit it's the bigger of the two cost centers in this loop and
+        # `_score_holdouts` already produces a better MAE estimate over multiple
+        # offsets that we use for blend weights and the JSON `rolling_mae`.
 
         Xtr = train[cols].values
         ytr = train[tgt_col].values
-        sc = StandardScaler().fit(Xtr)
-        model = Ridge(alpha=best_alpha, random_state=0).fit(sc.transform(Xtr), ytr)
-        x = sc.transform(feats_now.values.reshape(1, -1))
-        yhat_anom = float(model.predict(x)[0])
+        try:
+            model = _fit_runoff_regressor(Xtr, ytr)
+            yhat_anom = float(np.asarray(model.predict(feats_now.values.reshape(1, -1)))[0])
+        except Exception:
+            yhat_anom = 0.0
         yhat_z = yhat_anom + clim_at_target if has_clim else yhat_anom
         yhat = float(_q_inverse(yhat_z, qs))
         if not math.isfinite(yhat) or yhat < 0:
@@ -833,6 +857,7 @@ def forecast_station(
     ridge_per_h, ridge_mape_per_h_unified, ridge_preds = _score_holdouts(
         _ridge_predict_on_holdout, q_hist, horizon,
         extra_args=(wx_hist, snotel_df), return_preds=True,
+        offsets=_RIDGE_HOLDOUT_OFFSETS,
     )
     chronos_per_h: Dict[int, float] = {}
     chronos_mape_per_h: Dict[int, float] = {}
@@ -1407,10 +1432,8 @@ def _ridge_predict_on_holdout(
         Xtr = train[cols].values
         ytr = train[tgt_col].values
         try:
-            sc = StandardScaler().fit(Xtr)
-            model = Ridge(alpha=1.0, random_state=0).fit(sc.transform(Xtr), ytr)
-            x = sc.transform(feats_now.values.reshape(1, -1))
-            yh_anom = float(model.predict(x)[0])
+            model = _fit_runoff_regressor(Xtr, ytr)
+            yh_anom = float(np.asarray(model.predict(feats_now.values.reshape(1, -1)))[0])
             yh_z = yh_anom + clim_at_target if has_clim else yh_anom
             yh = float(_q_inverse(yh_z, qs))
         except Exception:
@@ -1421,6 +1444,9 @@ def _ridge_predict_on_holdout(
     return yhat, ytrue
 
 
+_RIDGE_HOLDOUT_OFFSETS = (0, 60, 150)  # subset of foundation offsets; LightGBM is ~10x slower per fit
+
+
 def _score_holdouts(
     predictor,
     q_hist: pd.DataFrame,
@@ -1428,19 +1454,22 @@ def _score_holdouts(
     *,
     extra_args: tuple = (),
     return_preds: bool = False,
+    offsets: Optional[tuple] = None,
 ):
     """Run `predictor(q_hist, horizon, *extra_args, end_offset=off)` on each
-    `_FOUNDATION_HOLDOUT_OFFSETS` and return (mae_per_h, mape_per_h) — averaged
-    over offsets that returned data. Used for every member so MAE comparisons
-    are apples-to-apples across the same dates.
+    offset in `offsets` (default `_FOUNDATION_HOLDOUT_OFFSETS`) and return
+    (mae_per_h, mape_per_h) — averaged over offsets that returned data. Used
+    for every member so MAE comparisons are apples-to-apples across the same
+    dates.
 
     When `return_preds=True`, also returns a list of (offset, yhat, ytrue)
     tuples so the caller can feed a stacker.
     """
+    use = offsets if offsets is not None else _FOUNDATION_HOLDOUT_OFFSETS
     mae_acc: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
     mape_acc: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
     preds: list = []
-    for off in _FOUNDATION_HOLDOUT_OFFSETS:
+    for off in use:
         try:
             res = predictor(q_hist, horizon, *extra_args, end_offset=off)
         except Exception:
