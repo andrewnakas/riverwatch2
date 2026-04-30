@@ -109,6 +109,19 @@ def main() -> int:
             if v is not None:
                 member_pool.setdefault(m, []).append(float(v))
 
+    # Weight the blend means by stations_with_blend_mae per shard.
+    def _weighted_mean(key: str) -> float | None:
+        num = 0.0
+        den = 0.0
+        for s in shard_summaries:
+            v = s.get(key)
+            n = s.get("stations_with_blend_mae") or 0
+            if v is None or n <= 0:
+                continue
+            num += float(v) * float(n)
+            den += float(n)
+        return (num / den) if den > 0 else None
+
     summary = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "stations_total": total_in_shards,
@@ -117,6 +130,10 @@ def main() -> int:
         "rolling_mae_mean_by_member": {
             m: (sum(vs) / len(vs)) if vs else None for m, vs in member_pool.items()
         },
+        "rolling_mae_blend_mean": _weighted_mean("rolling_mae_blend_mean"),
+        "rolling_mae_blend_h7_mean": _weighted_mean("rolling_mae_blend_h7_mean"),
+        "rolling_mae_blend_h14_mean": _weighted_mean("rolling_mae_blend_h14_mean"),
+        "stations_with_blend_mae": sum(s.get("stations_with_blend_mae") or 0 for s in shard_summaries),
         "build_seconds": longest_shard,
         "shards": len(shard_summaries),
         "shard_summaries": shard_summaries,

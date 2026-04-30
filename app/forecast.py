@@ -39,6 +39,31 @@ TEMP_WINDOWS = [3, 7, 14]
 PRECIP_LAGS = [1, 2, 3, 5, 7]  # explicit precip-day lags so ridge can learn basin lag time
 
 
+# v12: asinh transform replaces log1p. McInerney et al. 2023 (J. Hydrol.) and
+# Wang et al. 2012 (WRR) showed log-sinh / asinh consistently beats log1p on
+# daily discharge for intermittent and zero-flow streams. asinh(q/scale) is
+# defined and well-behaved at q=0, ~linear for q << scale (so small flows
+# don't get crushed), and ~log for q >> scale (so heavy tails still stabilize).
+# We use a per-station scale = max(median of strictly positive flows, 1 cfs)
+# so dry desert gauges and mainstem rivers each get a well-conditioned target.
+def _q_scale(q: pd.Series) -> float:
+    pos = q[q > 0]
+    if len(pos) == 0:
+        return 1.0
+    s = float(np.median(pos))
+    return max(s, 1.0)
+
+
+def _q_transform(q, scale: float):
+    """Forward asinh transform: domain [0, +inf), well-behaved at 0."""
+    return np.arcsinh(np.asarray(q, dtype=float) / max(scale, 1e-9))
+
+
+def _q_inverse(z, scale: float):
+    """Inverse asinh transform back to cfs; clamp at 0."""
+    return np.clip(np.sinh(np.asarray(z, dtype=float)) * max(scale, 1e-9), 0, None)
+
+
 @dataclass
 class StationForecast:
     station_id: str
@@ -53,6 +78,7 @@ class StationForecast:
     rolling_mape: Dict[str, float] = field(default_factory=dict)
     rolling_mape_h7: Dict[str, float] = field(default_factory=dict)
     rolling_mape_h14: Dict[str, float] = field(default_factory=dict)
+    rolling_mae_blend: Dict[int, float] = field(default_factory=dict)
     chosen: str = ""
     weights_strategy: str = ""
     notes: List[str] = field(default_factory=list)
@@ -93,7 +119,11 @@ def _build_features(
 
     for lag in LAGS:
         df[f"q_lag_{lag}"] = df["q_cfs"].shift(lag)
-    df["q_log"] = np.log1p(df["q_cfs"].clip(lower=0))
+    # asinh target: stable at 0, ~linear for small q, ~log for large q. Scale
+    # is per-station so the target dynamic range is comparable across gauges.
+    qs = _q_scale(df["q_cfs"].dropna())
+    df.attrs["q_scale"] = qs
+    df["q_log"] = _q_transform(df["q_cfs"].clip(lower=0), qs)  # name kept for grep-stability
     for lag in LAGS:
         df[f"qlog_lag_{lag}"] = df["q_log"].shift(lag)
 
@@ -210,6 +240,7 @@ def runoff_ridge_forecast(
     cols = _feature_columns(feats)
     if not cols:
         return persistence_forecast(q_hist, horizon), {}
+    qs = float(feats.attrs.get("q_scale", _q_scale(q_hist["q_cfs"])))
 
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     last_q = float(q_hist["q_cfs"].iloc[-1])
@@ -237,13 +268,13 @@ def runoff_ridge_forecast(
             ytr_v = train["target_log"].iloc[:cut].values
             Xv = train[cols].iloc[cut:].values
             yv_log = train["target_log"].iloc[cut:].values
-            yv_true = np.expm1(yv_log)
+            yv_true = _q_inverse(yv_log, qs)
             sc_v = StandardScaler().fit(Xtr_v)
             best_score = float("inf")
             best_yhat = None
             for alpha in RIDGE_ALPHAS:
                 m = Ridge(alpha=alpha, random_state=0).fit(sc_v.transform(Xtr_v), ytr_v)
-                yh = np.clip(np.expm1(m.predict(sc_v.transform(Xv))), 0, None)
+                yh = _q_inverse(m.predict(sc_v.transform(Xv)), qs)
                 mae = float(mean_absolute_error(yv_true, yh))
                 if mae < best_score:
                     best_score = mae
@@ -260,8 +291,8 @@ def runoff_ridge_forecast(
         sc = StandardScaler().fit(Xtr)
         model = Ridge(alpha=best_alpha, random_state=0).fit(sc.transform(Xtr), ytr)
         x = sc.transform(feats_now.values.reshape(1, -1))
-        yhat_log = float(model.predict(x)[0])
-        yhat = float(np.expm1(yhat_log))
+        yhat_z = float(model.predict(x)[0])
+        yhat = float(_q_inverse(yhat_z, qs))
         if not math.isfinite(yhat) or yhat < 0:
             yhat = last_q
         preds.append(yhat)
@@ -394,9 +425,12 @@ def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
         return None
     try:
         import torch
-        # log1p stabilizes the heavy-tailed discharge distribution; reverse at the end.
+        # asinh(q/scale) stabilizes the heavy-tailed discharge distribution and is
+        # well-behaved at q=0 (unlike log1p, which compresses small flows). Per-station
+        # scale keeps the input dynamic range similar across desert and big-river gauges.
         raw = q_hist["q_cfs"].astype(float).clip(lower=0).values
-        series = np.log1p(raw[-TTM_CONTEXT:])
+        qs = _q_scale(pd.Series(raw))
+        series = _q_transform(raw[-TTM_CONTEXT:], qs)
         # Left-pad to TTM_CONTEXT with the earliest observed value so the model still runs
         # on shorter records.
         if len(series) < TTM_CONTEXT:
@@ -406,8 +440,8 @@ def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
         with torch.no_grad():
             out = pipe(past_values=x)
         # tsfm returns (B, prediction_length, C); horizon is the second axis
-        pred_log = out.prediction_outputs.squeeze(0).squeeze(-1).cpu().numpy()
-        pred = np.expm1(pred_log)[:horizon]
+        pred_z = out.prediction_outputs.squeeze(0).squeeze(-1).cpu().numpy()
+        pred = _q_inverse(pred_z, qs)[:horizon]
         if len(pred) < horizon:
             pad = [float(pred[-1])] * (horizon - len(pred))
             pred = np.concatenate([pred, np.array(pad)])
@@ -457,16 +491,18 @@ def timesfm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
     if pipe is None or q_hist.empty:
         return None
     try:
-        # log1p stabilizes the heavy-tailed discharge distribution (same trick as TTM).
-        # TimesFM is trained on raw univariate series so we feed log-flow and expm1 the output.
+        # asinh(q/scale) stabilizes the heavy-tailed discharge distribution and is
+        # finite at q=0 (same trick as TTM); TimesFM is trained on raw univariate
+        # series so we feed transformed flow and inverse the output.
         raw_ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TIMESFM_CONTEXT:]
-        ctx = np.log1p(raw_ctx)
+        qs = _q_scale(pd.Series(raw_ctx))
+        ctx = _q_transform(raw_ctx, qs)
         point, _ = pipe.forecast(
             inputs=[ctx.tolist()],
             freq=[0],  # 0 = high-frequency / daily
         )
-        pred_log = np.array(point[0])[:horizon]
-        pred = np.expm1(pred_log)
+        pred_z = np.array(point[0])[:horizon]
+        pred = _q_inverse(pred_z, qs)
         if len(pred) < horizon:
             pad = [float(pred[-1])] * (horizon - len(pred))
             pred = np.concatenate([pred, np.array(pad)])
@@ -474,6 +510,109 @@ def timesfm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
     except Exception as exc:
         print(f"[timesfm] inference failed: {exc}")
         return None
+
+
+# ---------------------------------------------------------------------------
+# v12 ridge stacker meta-learner
+# ---------------------------------------------------------------------------
+
+# Stacker member order is fixed; missing members get persistence's value as a
+# neutral fallback so the design matrix has consistent columns across stations.
+_STACKER_MEMBERS = ("persistence_lag1", "runoff_ridge", "chronos_bolt", "ttm", "timesfm")
+
+
+def _stacker_static_features(station_attrs: Optional[dict], lat: float) -> List[float]:
+    """Three static catchment features: log(drain_area+1), log(alt+1), lat.
+    Pulled directly from the enriched stations JSON (no Caravan ETL needed)."""
+    da = 0.0
+    alt = 0.0
+    if station_attrs:
+        try:
+            da_v = station_attrs.get("drain_area_sqmi")
+            if da_v is not None and math.isfinite(float(da_v)):
+                da = max(float(da_v), 0.0)
+        except Exception:
+            pass
+        try:
+            alt_v = station_attrs.get("alt_ft")
+            if alt_v is not None and math.isfinite(float(alt_v)):
+                alt = max(float(alt_v), 0.0)
+        except Exception:
+            pass
+    return [math.log1p(da), math.log1p(alt), float(lat)]
+
+
+def _stacker_row(
+    z_per_member: Dict[str, float], target_doy: int, static_feats: List[float]
+) -> List[float]:
+    """Build one feature row in stacker space (asinh-transformed member preds +
+    DOY sin/cos + static catchment features)."""
+    row: List[float] = []
+    for m in _STACKER_MEMBERS:
+        row.append(z_per_member.get(m, z_per_member.get("persistence_lag1", 0.0)))
+    angle = 2 * math.pi * target_doy / 366.0
+    row.append(math.sin(angle))
+    row.append(math.cos(angle))
+    row.extend(static_feats)
+    return row
+
+
+def _fit_horizon_stackers(
+    qs: float,
+    member_preds: Dict[str, list],
+    horizon: int,
+    last_dates_by_offset: Dict[int, pd.Timestamp],
+    static_feats: List[float],
+) -> Dict[int, tuple]:
+    """For each horizon h, fit a ridge on (member-pred-z, doy, static) → ytrue-z
+    using rows pooled across the 3 holdout offsets. Returns {h: (scaler, model)}.
+
+    Skips a horizon if fewer than 2 holdout rows are available — caller falls
+    back to inverse-MAE² blend at that horizon.
+    """
+    out: Dict[int, tuple] = {}
+    for h in range(1, horizon + 1):
+        rows: List[List[float]] = []
+        targets: List[float] = []
+        # Pool across offsets that produced predictions for at least one member.
+        offsets_seen = set()
+        for m, plist in member_preds.items():
+            for off, _yhat, _ytrue in plist:
+                offsets_seen.add(off)
+        for off in sorted(offsets_seen):
+            z_per_member: Dict[str, float] = {}
+            ytrue_h: Optional[float] = None
+            for m in _STACKER_MEMBERS:
+                plist = member_preds.get(m) or []
+                for off_p, yhat, ytrue in plist:
+                    if off_p != off:
+                        continue
+                    if h - 1 < len(yhat):
+                        z_per_member[m] = float(_q_transform(np.array([yhat[h - 1]]), qs)[0])
+                    if ytrue_h is None and h - 1 < len(ytrue):
+                        ytrue_h = float(ytrue[h - 1])
+            if ytrue_h is None or not z_per_member:
+                continue
+            base = last_dates_by_offset.get(off)
+            if base is None:
+                continue
+            target_date = base + pd.Timedelta(days=h)
+            target_doy = target_date.dayofyear
+            rows.append(_stacker_row(z_per_member, target_doy, static_feats))
+            targets.append(float(_q_transform(np.array([ytrue_h]), qs)[0]))
+        if len(rows) < 2:
+            continue
+        try:
+            X = np.asarray(rows, dtype=float)
+            y = np.asarray(targets, dtype=float)
+            sc = StandardScaler().fit(X)
+            # Strong regularization: only 2-3 holdout rows, ~10 features. Without
+            # this the per-h ridge would memorize noise.
+            mdl = Ridge(alpha=10.0, random_state=0).fit(sc.transform(X), y)
+            out[h] = (sc, mdl)
+        except Exception:
+            continue
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -487,6 +626,7 @@ def forecast_station(
     *,
     horizon: int = HORIZON_DAYS,
     history_days: int = TRAIN_LOOKBACK_DAYS,
+    station_attrs: Optional[dict] = None,
 ) -> StationForecast:
     today = date.today()
     start = today - timedelta(days=history_days)
@@ -568,33 +708,38 @@ def forecast_station(
     # MAE values are directly comparable. Previously persistence used a 180-day
     # trailing window while foundation models used 3×horizon-day windows, which
     # warped the blend weights toward whichever member had the easier test set.
-    persist_per_h, persist_mape_per_h = _score_holdouts(
-        _persistence_predict_on_holdout, q_hist, horizon
+    # v12: also keep the (yhat, ytrue) tuples per offset so we can fit a per-h
+    # ridge stacker meta-learner on this station's own backtest residuals.
+    persist_per_h, persist_mape_per_h, persist_preds = _score_holdouts(
+        _persistence_predict_on_holdout, q_hist, horizon, return_preds=True
     )
-    ridge_per_h, ridge_mape_per_h_unified = _score_holdouts(
+    ridge_per_h, ridge_mape_per_h_unified, ridge_preds = _score_holdouts(
         _ridge_predict_on_holdout, q_hist, horizon,
-        extra_args=(wx_hist, snotel_df),
+        extra_args=(wx_hist, snotel_df), return_preds=True,
     )
     chronos_per_h: Dict[int, float] = {}
     chronos_mape_per_h: Dict[int, float] = {}
+    chronos_preds: list = []
     if chronos_pred is not None:
-        chronos_per_h, chronos_mape_per_h = _score_holdouts(
+        chronos_per_h, chronos_mape_per_h, chronos_preds = _score_holdouts(
             lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "chronos_bolt", end_offset=end_offset),
-            q_hist, horizon,
+            q_hist, horizon, return_preds=True,
         )
     ttm_per_h: Dict[int, float] = {}
     ttm_mape_per_h: Dict[int, float] = {}
+    ttm_preds: list = []
     if ttm_pred is not None:
-        ttm_per_h, ttm_mape_per_h = _score_holdouts(
+        ttm_per_h, ttm_mape_per_h, ttm_preds = _score_holdouts(
             lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "ttm", end_offset=end_offset),
-            q_hist, horizon,
+            q_hist, horizon, return_preds=True,
         )
     timesfm_per_h: Dict[int, float] = {}
     timesfm_mape_per_h: Dict[int, float] = {}
+    timesfm_preds: list = []
     if timesfm_pred is not None:
-        timesfm_per_h, timesfm_mape_per_h = _score_holdouts(
+        timesfm_per_h, timesfm_mape_per_h, timesfm_preds = _score_holdouts(
             lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "timesfm", end_offset=end_offset),
-            q_hist, horizon,
+            q_hist, horizon, return_preds=True,
         )
 
     rolling_mae: Dict[str, float] = {}
@@ -747,26 +892,152 @@ def forecast_station(
                 per_h = filtered
         return _blend_weights(per_h, list(per_h.keys()))
 
+    # v12: per-horizon ridge stacker meta-learner. Trains on this station's own
+    # 3 backtest holdouts (asinh-transformed member preds + DOY + static attrs).
+    # Falls back to the inverse-MAE² blend per-horizon when training data is
+    # insufficient (a member's preds list is empty, or fewer than 2 offsets
+    # produced data for that horizon).
+    qs_blend = _q_scale(q_hist["q_cfs"])
+    member_preds = {
+        "persistence_lag1": persist_preds,
+        "runoff_ridge": ridge_preds,
+        "chronos_bolt": chronos_preds,
+        "ttm": ttm_preds,
+        "timesfm": timesfm_preds,
+    }
+    last_dates_by_offset: Dict[int, pd.Timestamp] = {}
+    for off in _FOUNDATION_HOLDOUT_OFFSETS:
+        end_idx = len(q_hist) - off
+        ctx_len = end_idx - horizon
+        if ctx_len >= 1:
+            last_dates_by_offset[off] = pd.to_datetime(q_hist["date"].iloc[ctx_len - 1])
+    static_feats = _stacker_static_features(station_attrs, lat)
+    stackers = _fit_horizon_stackers(
+        qs_blend, member_preds, horizon, last_dates_by_offset, static_feats
+    )
+
+    # Live target dates for stacker prediction (one per horizon).
+    live_last_date = pd.to_datetime(q_hist["date"].iloc[-1])
+
     blend_vals = []
+    blend_strategy_per_h: Dict[int, str] = {}
     for h_idx in range(horizon):
         h = h_idx + 1
-        ws = _weights_for_horizon(h)
-        s = 0.0
-        wsum = 0.0
-        for name, w in ws.items():
-            v = members[name][h_idx]["q_cfs"]
-            if v is None or not math.isfinite(v):
+        used_stacker = False
+        if h in stackers:
+            sc, mdl = stackers[h]
+            z_per_member: Dict[str, float] = {}
+            for m in _STACKER_MEMBERS:
+                if m not in members:
+                    continue
+                v = members[m][h_idx]["q_cfs"]
+                if v is None or not math.isfinite(v):
+                    continue
+                z_per_member[m] = float(_q_transform(np.array([v]), qs_blend)[0])
+            if z_per_member:
+                target_doy = (live_last_date + pd.Timedelta(days=h)).dayofyear
+                row = _stacker_row(z_per_member, target_doy, static_feats)
+                try:
+                    z_pred = float(mdl.predict(sc.transform(np.array([row])))[0])
+                    yhat = float(_q_inverse(np.array([z_pred]), qs_blend)[0])
+                    if math.isfinite(yhat) and yhat >= 0:
+                        blend_vals.append(yhat)
+                        used_stacker = True
+                        blend_strategy_per_h[h] = "stacker"
+                except Exception:
+                    used_stacker = False
+        if not used_stacker:
+            ws = _weights_for_horizon(h)
+            s = 0.0
+            wsum = 0.0
+            for name, w in ws.items():
+                v = members[name][h_idx]["q_cfs"]
+                if v is None or not math.isfinite(v):
+                    continue
+                s += w * v
+                wsum += w
+            blend_vals.append(s / wsum if wsum > 0 else float("nan"))
+            blend_strategy_per_h[h] = "inv_mae2"
+
+    # v12: also score the blend on the SAME holdouts so we can quantify
+    # the stacker's MAE per horizon (not just member MAEs averaged with weights).
+    rolling_mae_blend: Dict[int, float] = {}
+    if stackers or member_preds:
+        # Build (offset, h) → blended yhat using same logic as live, then
+        # average |yhat-ytrue| across offsets per horizon.
+        per_h_errs: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+        offsets_with_data = sorted({
+            off for plist in member_preds.values() for (off, _, _) in plist
+        })
+        for off in offsets_with_data:
+            base = last_dates_by_offset.get(off)
+            if base is None:
                 continue
-            s += w * v
-            wsum += w
-        blend_vals.append(s / wsum if wsum > 0 else float("nan"))
+            ytrue_lookup: Dict[int, float] = {}
+            z_lookup: Dict[int, Dict[str, float]] = {}
+            for m, plist in member_preds.items():
+                for off_p, yhat, ytrue in plist:
+                    if off_p != off:
+                        continue
+                    for h in range(1, horizon + 1):
+                        if h - 1 >= len(yhat):
+                            continue
+                        z_lookup.setdefault(h, {})[m] = float(
+                            _q_transform(np.array([yhat[h - 1]]), qs_blend)[0]
+                        )
+                        if h not in ytrue_lookup and h - 1 < len(ytrue):
+                            ytrue_lookup[h] = float(ytrue[h - 1])
+            for h in range(1, horizon + 1):
+                if h not in ytrue_lookup:
+                    continue
+                used = False
+                if h in stackers:
+                    sc, mdl = stackers[h]
+                    z_per_member = z_lookup.get(h, {})
+                    if z_per_member:
+                        target_doy = (base + pd.Timedelta(days=h)).dayofyear
+                        row = _stacker_row(z_per_member, target_doy, static_feats)
+                        try:
+                            z_pred = float(mdl.predict(sc.transform(np.array([row])))[0])
+                            yhat_b = float(_q_inverse(np.array([z_pred]), qs_blend)[0])
+                            if math.isfinite(yhat_b) and yhat_b >= 0:
+                                per_h_errs[h].append(abs(yhat_b - ytrue_lookup[h]))
+                                used = True
+                        except Exception:
+                            pass
+                if not used:
+                    # Inverse-MAE² fallback path on this horizon.
+                    ws = _weights_for_horizon(h)
+                    z_per_member = z_lookup.get(h, {})
+                    s = 0.0
+                    wsum = 0.0
+                    for name, w in ws.items():
+                        if name not in z_per_member:
+                            continue
+                        # convert back from z to cfs
+                        cfs_v = float(_q_inverse(np.array([z_per_member[name]]), qs_blend)[0])
+                        if not math.isfinite(cfs_v):
+                            continue
+                        s += w * cfs_v
+                        wsum += w
+                    if wsum > 0:
+                        per_h_errs[h].append(abs(s / wsum - ytrue_lookup[h]))
+        for h, errs in per_h_errs.items():
+            if errs:
+                rolling_mae_blend[h] = float(np.mean(errs))
 
     chosen = min(rolling_mae, key=lambda k: rolling_mae[k]) if rolling_mae else "runoff_ridge"
 
-    # Estimate ensemble MAE/MAPE per horizon = weighted average of member values.
-    # (Approximation: blend's error is roughly the weight-weighted member error,
-    # bounded above by min member error in the limit of all weight on one model.)
-    for target_dict in (rolling_mae_h7, rolling_mae_h14, rolling_mape_h7, rolling_mape_h14):
+    # v12: ensemble blend MAE per horizon comes from the stacker-on-holdouts
+    # we just scored; for MAPE we still use the weighted-member approximation.
+    if rolling_mae_blend:
+        if 7 in rolling_mae_blend and 7 <= horizon:
+            rolling_mae_h7["ensemble_blend"] = float(rolling_mae_blend[7])
+        if 14 in rolling_mae_blend and 14 <= horizon:
+            rolling_mae_h14["ensemble_blend"] = float(rolling_mae_blend[14])
+        rolling_mae["ensemble_blend"] = float(np.mean(list(rolling_mae_blend.values())))
+
+    for target_dict in (rolling_mape_h7, rolling_mape_h14):
         if not target_dict:
             continue
         s = 0.0; ws = 0.0
@@ -831,6 +1102,7 @@ def forecast_station(
         rolling_mape={k: float(v) for k, v in rolling_mape.items()},
         rolling_mape_h7={k: float(v) for k, v in rolling_mape_h7.items()},
         rolling_mape_h14={k: float(v) for k, v in rolling_mape_h14.items()},
+        rolling_mae_blend={int(h): float(v) for h, v in rolling_mae_blend.items()},
         chosen=chosen,
         weights_strategy=weights_strategy,
         notes=notes,
@@ -992,6 +1264,7 @@ def _ridge_predict_on_holdout(
     cols = _feature_columns(feats)
     if not cols:
         return np.full(horizon, last_q), ytrue
+    qs = float(feats.attrs.get("q_scale", _q_scale(q_ctx["q_cfs"])))
 
     last_date = pd.to_datetime(q_ctx["date"].iloc[-1])
     feats_now = (
@@ -1013,7 +1286,7 @@ def _ridge_predict_on_holdout(
             sc = StandardScaler().fit(Xtr)
             model = Ridge(alpha=1.0, random_state=0).fit(sc.transform(Xtr), ytr)
             x = sc.transform(feats_now.values.reshape(1, -1))
-            yh = float(np.expm1(model.predict(x)[0]))
+            yh = float(_q_inverse(model.predict(x)[0], qs))
         except Exception:
             yh = last_q
         if not math.isfinite(yh) or yh < 0:
@@ -1028,13 +1301,19 @@ def _score_holdouts(
     horizon: int,
     *,
     extra_args: tuple = (),
-) -> tuple[Dict[int, float], Dict[int, float]]:
+    return_preds: bool = False,
+):
     """Run `predictor(q_hist, horizon, *extra_args, end_offset=off)` on each
     `_FOUNDATION_HOLDOUT_OFFSETS` and return (mae_per_h, mape_per_h) — averaged
     over offsets that returned data. Used for every member so MAE comparisons
-    are apples-to-apples across the same dates."""
+    are apples-to-apples across the same dates.
+
+    When `return_preds=True`, also returns a list of (offset, yhat, ytrue)
+    tuples so the caller can feed a stacker.
+    """
     mae_acc: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
     mape_acc: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+    preds: list = []
     for off in _FOUNDATION_HOLDOUT_OFFSETS:
         try:
             res = predictor(q_hist, horizon, *extra_args, end_offset=off)
@@ -1043,6 +1322,8 @@ def _score_holdouts(
         if res is None:
             continue
         yhat, ytrue = res
+        if return_preds:
+            preds.append((off, np.asarray(yhat, dtype=float), np.asarray(ytrue, dtype=float)))
         for h in range(1, horizon + 1):
             err = abs(float(ytrue[h - 1]) - float(yhat[h - 1]))
             mae_acc[h].append(err)
@@ -1050,6 +1331,8 @@ def _score_holdouts(
             mape_acc[h].append(err / denom)
     mae_out = {h: float(np.mean(v)) for h, v in mae_acc.items() if v}
     mape_out = {h: float(np.mean(v)) for h, v in mape_acc.items() if v}
+    if return_preds:
+        return mae_out, mape_out, preds
     return mae_out, mape_out
 
 

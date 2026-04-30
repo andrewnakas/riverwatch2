@@ -63,7 +63,7 @@ def api_forecast(station_id: str):
 
         meta = _stations[station_id]
         try:
-            f = forecast_station(station_id, meta["lat"], meta["lon"])
+            f = forecast_station(station_id, meta["lat"], meta["lon"], station_attrs=meta)
         except Exception as exc:
             return jsonify({"error": str(exc), "station_id": station_id}), 500
         payload = asdict(f)

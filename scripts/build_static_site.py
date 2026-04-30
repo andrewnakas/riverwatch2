@@ -170,12 +170,15 @@ def main() -> int:
     successes = 0
     failures: list[dict] = []
     member_rolling: dict[str, list[float]] = {}
+    blend_rolling: list[float] = []
+    blend_h7: list[float] = []
+    blend_h14: list[float] = []
     t0 = time.time()
     for i, st in enumerate(stations, 1):
         sid = st["id"]
         ts = time.time()
         try:
-            f = forecast_station(sid, st["lat"], st["lon"], horizon=args.horizon)
+            f = forecast_station(sid, st["lat"], st["lon"], horizon=args.horizon, station_attrs=st)
             data = asdict(f)
             data["station"] = st
             data["has_history_file"] = _emit_history(sid)
@@ -185,6 +188,15 @@ def main() -> int:
                 rm = f.rolling_mae.get(name)
                 if rm is not None and np.isfinite(rm):
                     member_rolling.setdefault(name, []).append(float(rm))
+            blend_mae = f.rolling_mae.get("ensemble_blend")
+            if blend_mae is not None and np.isfinite(blend_mae):
+                blend_rolling.append(float(blend_mae))
+            b7 = f.rolling_mae_h7.get("ensemble_blend") if f.rolling_mae_h7 else None
+            if b7 is not None and np.isfinite(b7):
+                blend_h7.append(float(b7))
+            b14 = f.rolling_mae_h14.get("ensemble_blend") if f.rolling_mae_h14 else None
+            if b14 is not None and np.isfinite(b14):
+                blend_h14.append(float(b14))
             shard_tag = f"shard {args.shard_id}/{args.total_shards}: " if sharded else ""
             print(f"{shard_tag}[{i:>3}/{len(stations)}] {sid} OK  chosen={f.chosen}  {time.time()-ts:5.1f}s")
         except Exception as exc:
@@ -202,6 +214,10 @@ def main() -> int:
         "rolling_mae_mean_by_member": {
             k: (mean(v) if v else None) for k, v in member_rolling.items()
         },
+        "rolling_mae_blend_mean": (mean(blend_rolling) if blend_rolling else None),
+        "rolling_mae_blend_h7_mean": (mean(blend_h7) if blend_h7 else None),
+        "rolling_mae_blend_h14_mean": (mean(blend_h14) if blend_h14 else None),
+        "stations_with_blend_mae": len(blend_rolling),
         "build_seconds": round(time.time() - t0, 1),
         "failures": failures,
     }
