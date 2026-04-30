@@ -9,6 +9,7 @@ not the full 5-year window.
 from __future__ import annotations
 
 import json
+import os
 import random
 import time
 from datetime import date, datetime, timedelta
@@ -18,6 +19,8 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import pandas as pd
+
+NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "usgs"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -65,6 +68,10 @@ def fetch_daily_discharge(site_no: str, start: date, end: date, *, max_age_hours
     have: dict[str, float] = rec.get("rows", {})
     last_known = rec.get("last_known")  # ISO string of latest date we hold
     first_known = rec.get("first_known") or (min(have.keys()) if have else None)
+
+    if NO_FETCH:
+        # Hard short-circuit: serve whatever the cache has, no network calls.
+        return _slice_record(have, start, end)
 
     needs_backward = bool(first_known) and first_known > start.isoformat()
     needs_forward = (not last_known) or (last_known < end.isoformat())

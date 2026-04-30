@@ -69,6 +69,9 @@ jobs:
       - name: Build shard ${{ matrix.shard }}/${{ env.TOTAL_SHARDS }}
         env:
           PYTHONUNBUFFERED: "1"
+          # Hard-disable all data fetches; this build re-renders the static
+          # site from whatever each shard's restored cache already has.
+          RW2_NO_FETCH: "1"
         run: |
           python scripts/build_static_site.py \
             --shard-id ${{ matrix.shard }} \

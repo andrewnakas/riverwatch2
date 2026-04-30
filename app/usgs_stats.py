@@ -12,12 +12,15 @@ a new water year of data.
 from __future__ import annotations
 
 import json
+import os
 import time
 from datetime import date
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+
+NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "usgs_stats"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -52,6 +55,14 @@ def fetch_daily_stats(site_no: str, *, max_age_seconds: int = STAT_TTL_SECONDS) 
             return json.loads(cache.read_text())
         except Exception:
             pass
+    if NO_FETCH:
+        # Return cached value if any, even if older than TTL; otherwise give up.
+        if cache.exists():
+            try:
+                return json.loads(cache.read_text())
+            except Exception:
+                return None
+        return None
 
     params = {
         "format": "rdb",

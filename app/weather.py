@@ -5,6 +5,7 @@ Open-Meteo is free, no key, returns daily aggregations.
 from __future__ import annotations
 
 import json
+import os
 import time
 from datetime import date, timedelta
 from pathlib import Path
@@ -12,6 +13,8 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import pandas as pd
+
+NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "openmeteo"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -78,6 +81,9 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
     age = time.time() - float(fetched_at) if fetched_at else float("inf")
     rec_schema = rec.get("schema_version")
     schema_stale = rec_schema != SCHEMA_VERSION  # added vars in v11
+
+    if NO_FETCH:
+        return _slice_hist_record(have, start, end)
 
     needs_backward = bool(first_known) and first_known > start.isoformat()
     needs_forward = (not last_known) or (last_known < end.isoformat())
@@ -185,6 +191,19 @@ def fetch_forecast(lat: float, lon: float, days: int = 14, *, max_age_hours: int
     today = date.today()
     end = today + timedelta(days=days)
     cache = _cache_path(lat, lon, today, end, "fcst")
+    if NO_FETCH:
+        # Use today's exact-match forecast cache if it exists; else pick the
+        # most recent fcst file for this lat/lon; else give up with empty df.
+        if cache.exists():
+            return _to_df(json.loads(cache.read_text()))
+        candidates = sorted(
+            CACHE_DIR.glob(f"fcst_{lat:.3f}_{lon:.3f}_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if candidates:
+            return _to_df(json.loads(candidates[0].read_text()))
+        return pd.DataFrame(columns=["date"] + DAILY_VARS)
     if cache.exists() and (time.time() - cache.stat().st_mtime) < max_age_hours * 3600:
         payload = json.loads(cache.read_text())
     else:
