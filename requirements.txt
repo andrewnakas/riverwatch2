@@ -9,7 +9,8 @@ chronos-forecasting>=1.4
 torch>=2.0
 # Two more zero-shot foundation models for the ensemble. Both are loaded lazily
 # and gracefully skipped at runtime if the import or weights download fails.
-# IBM TTM: ~1MB weights, fastest of the foundation models.
-tsfm_public @ git+https://github.com/IBM/tsfm.git
+# IBM TTM: ~1MB weights, fastest of the foundation models. Repo is published
+# under PyPI name "granite-tsfm"; we just install via that name.
+granite-tsfm>=0.2.0
 # Google TimesFM 2.0 PyTorch port; 200M params, ~800MB weights. Pulls jax-free.
 timesfm[torch]>=1.2.10
