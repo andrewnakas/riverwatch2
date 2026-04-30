@@ -38,6 +38,7 @@ def main() -> int:
         shutil.rmtree(DIST)
     DIST.mkdir(parents=True)
     (DIST / "forecasts").mkdir(parents=True)
+    (DIST / "history").mkdir(parents=True)
 
     shard_dirs = sorted([p for p in in_root.iterdir() if p.is_dir()])
     print(f"merging {len(shard_dirs)} shard dirs from {in_root}")
@@ -52,7 +53,7 @@ def main() -> int:
         print("ERROR: no shard contains index.html")
         return 1
     for item in asset_shard.iterdir():
-        if item.name in {"forecasts"} or item.name.startswith("index_summary_shard_"):
+        if item.name in {"forecasts", "history"} or item.name.startswith("index_summary_shard_"):
             continue
         dst = DIST / item.name
         if item.is_dir():
@@ -72,6 +73,18 @@ def main() -> int:
                 shutil.copy2(f, DIST / "forecasts" / f.name)
                 total_forecasts += 1
     print(f"  total forecasts merged: {total_forecasts}")
+
+    # 2b) History JSONs from every shard (lazy-fetched by the year-compare widget)
+    total_history = 0
+    for sd in shard_dirs:
+        hist = sd / "history"
+        if not hist.exists():
+            continue
+        for f in hist.iterdir():
+            if f.suffix == ".json":
+                shutil.copy2(f, DIST / "history" / f.name)
+                total_history += 1
+    print(f"  total history files merged: {total_history}")
 
     # 3) Merge summaries
     shard_summaries = []

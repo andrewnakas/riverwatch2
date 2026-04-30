@@ -40,6 +40,8 @@ SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
 SRC_STATIC = ROOT / "app" / "static"
 DIST = ROOT / "dist"
 FORECAST_DIR = DIST / "forecasts"
+HISTORY_DIR = DIST / "history"
+USGS_RECORDS_DIR = ROOT / "data" / "cache" / "usgs_records"
 
 
 def _clean_dist() -> None:
@@ -47,7 +49,35 @@ def _clean_dist() -> None:
         shutil.rmtree(DIST)
     DIST.mkdir(parents=True)
     FORECAST_DIR.mkdir(parents=True)
+    HISTORY_DIR.mkdir(parents=True)
     (DIST / "static").mkdir(parents=True)
+
+
+def _emit_history(site_no: str) -> bool:
+    """Copy the cached USGS daily-discharge record into dist/history/<id>.json.
+
+    The frontend lazy-fetches this only when the user opens the year-compare
+    widget on the climatology chart, so it's fine for it to be the larger of
+    the per-station files (a 100yr record is ~50KB compressed).
+    """
+    src = USGS_RECORDS_DIR / f"{site_no}.json"
+    if not src.exists():
+        return False
+    try:
+        rec = json.loads(src.read_text())
+    except Exception:
+        return False
+    rows = rec.get("rows") or {}
+    if not rows:
+        return False
+    payload = {
+        "site_no": site_no,
+        "first_known": rec.get("first_known") or (min(rows.keys()) if rows else None),
+        "last_known": rec.get("last_known") or (max(rows.keys()) if rows else None),
+        "rows": rows,  # {date: q_cfs}
+    }
+    (HISTORY_DIR / f"{site_no}.json").write_text(json.dumps(payload, separators=(",", ":")))
+    return True
 
 
 def _copy_assets() -> None:
@@ -115,6 +145,7 @@ def main() -> int:
     else:
         DIST.mkdir(parents=True, exist_ok=True)
         FORECAST_DIR.mkdir(parents=True, exist_ok=True)
+        HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 
     payload = json.loads(STATIONS_PATH.read_text())
     all_stations = payload["stations"]
@@ -147,6 +178,7 @@ def main() -> int:
             f = forecast_station(sid, st["lat"], st["lon"], horizon=args.horizon)
             data = asdict(f)
             data["station"] = st
+            data["has_history_file"] = _emit_history(sid)
             (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), indent=2))
             successes += 1
             for name, pts in f.members.items():

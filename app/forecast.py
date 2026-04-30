@@ -71,18 +71,25 @@ def _build_features(
     df = q_hist.copy()
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date").asfreq("D")
-    df["q_cfs"] = df["q_cfs"].interpolate(limit=3)
+    df["q_cfs"] = pd.to_numeric(df["q_cfs"], errors="coerce").interpolate(limit=3)
 
     wx2 = wx.copy()
     wx2["date"] = pd.to_datetime(wx2["date"])
     wx2 = wx2.set_index("date").asfreq("D")
+    # Old-cache rows have None for v11 columns, which makes the resulting Series
+    # object-dtype; arithmetic like .diff() then hits `None - float`. Coerce.
+    for c in wx2.columns:
+        wx2[c] = pd.to_numeric(wx2[c], errors="coerce")
     df = df.join(wx2, how="left")
 
     if snotel_df is not None and not snotel_df.empty:
         s = snotel_df.copy()
         s["date"] = pd.to_datetime(s["date"])
         s = s.set_index("date").asfreq("D")
-        df = df.join(s[[c for c in ("swe_in", "snow_depth_in") if c in s.columns]], how="left")
+        snotel_cols = [c for c in ("swe_in", "snow_depth_in") if c in s.columns]
+        for c in snotel_cols:
+            s[c] = pd.to_numeric(s[c], errors="coerce")
+        df = df.join(s[snotel_cols], how="left")
 
     for lag in LAGS:
         df[f"q_lag_{lag}"] = df["q_cfs"].shift(lag)

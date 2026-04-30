@@ -75,9 +75,9 @@ function renderMeta(station) {
 
 const MS_PER_DAY = 86400000;
 
-function pickDateTicks(xmin, xmax, targetCount = 7) {
+function pickDateTicks(xmin, xmax, targetCount = 12) {
   const spanDays = Math.max(1, (xmax - xmin) / MS_PER_DAY);
-  const candidateSteps = [1, 2, 3, 7, 14, 30, 60, 90, 180, 365];
+  const candidateSteps = [1, 2, 3, 5, 7, 10, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365];
   let step = candidateSteps[0];
   for (const s of candidateSteps) {
     if (spanDays / s <= targetCount) { step = s; break; }
@@ -120,7 +120,32 @@ function fmtTick(ts, step, prevYear) {
   return prevYear !== yr ? `${mo} ${day} '${yr.toString().slice(2)}` : `${mo} ${day}`;
 }
 
+// State for forecast chart's zoom slider. range = [frac0, frac1] in [0, 1] of the
+// full series x-extent. _fcst.full = {xmin, xmax}; the renderer uses range to
+// derive the visible window.
+let _fcst = { canvas: null, history: [], members: {}, blend: [], full: null, range: [0, 1] };
+
 function drawChart(canvas, history, members, blend) {
+  _fcst.canvas = canvas;
+  _fcst.history = history;
+  _fcst.members = members;
+  _fcst.blend = blend;
+  const allPts = [
+    ...history,
+    ...blend,
+    ...Object.values(members).flat(),
+  ];
+  if (!allPts.length) return;
+  const xs0 = allPts.map(p => Date.parse(p.date));
+  _fcst.full = { xmin: Math.min(...xs0), xmax: Math.max(...xs0) };
+  if (_fcst.range[0] >= _fcst.range[1]) _fcst.range = [0, 1];
+  _renderForecast();
+}
+
+function _renderForecast() {
+  const canvas = _fcst.canvas;
+  if (!canvas || !_fcst.full) return;
+  const history = _fcst.history, members = _fcst.members, blend = _fcst.blend;
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
@@ -134,12 +159,20 @@ function drawChart(canvas, history, members, blend) {
     series.push({ name, color: memColors[name] || "#cccccc", points: pts, dashed: true });
   }
 
-  const allPts = series.flatMap(s => s.points);
-  if (!allPts.length) return;
-  const xs = allPts.map(p => Date.parse(p.date));
-  const ys = allPts.map(p => p.q_cfs).filter(v => v != null && Number.isFinite(v));
-  const xmin = Math.min(...xs), xmax = Math.max(...xs);
-  const ymin = 0, ymax = Math.max(...ys) * 1.15 || 1;
+  const span = _fcst.full.xmax - _fcst.full.xmin || 1;
+  const xmin = _fcst.full.xmin + _fcst.range[0] * span;
+  const xmax = _fcst.full.xmin + _fcst.range[1] * span;
+
+  // y-extent over points visible in the current zoom window only
+  const ys = [];
+  for (const s of series) {
+    for (const p of s.points) {
+      const t = Date.parse(p.date);
+      if (t < xmin || t > xmax) continue;
+      if (p.q_cfs != null && Number.isFinite(p.q_cfs)) ys.push(p.q_cfs);
+    }
+  }
+  const ymin = 0, ymax = (ys.length ? Math.max(...ys) : 1) * 1.15 || 1;
 
   const pad = { l: 64, r: 64, t: 18, b: 34 };
   const xToPx = x => pad.l + (x - xmin) / (xmax - xmin) * (w - pad.l - pad.r);
@@ -148,10 +181,11 @@ function drawChart(canvas, history, members, blend) {
   // Horizontal gridlines + dual CFS labels (left + right mirror)
   ctx.strokeStyle = "#1f2942"; ctx.lineWidth = 1;
   ctx.font = "10px Inter, sans-serif";
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.t + i * (h - pad.t - pad.b) / 4;
+  const Y_DIVS = 8;
+  for (let i = 0; i <= Y_DIVS; i++) {
+    const y = pad.t + i * (h - pad.t - pad.b) / Y_DIVS;
     ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
-    const yval = ymax - i * (ymax - ymin) / 4;
+    const yval = ymax - i * (ymax - ymin) / Y_DIVS;
     ctx.fillStyle = "#7c87a8";
     ctx.textAlign = "right";
     ctx.fillText(fmtNumber(yval), pad.l - 4, y + 3);
@@ -175,8 +209,8 @@ function drawChart(canvas, history, members, blend) {
     }
   }
 
-  // X-axis: span-aware date ticks
-  const { ticks, step } = pickDateTicks(xmin, xmax, 7);
+  // X-axis: span-aware date ticks (denser so users can read exact dates)
+  const { ticks, step } = pickDateTicks(xmin, xmax, 12);
   ctx.fillStyle = "#7c87a8";
   ctx.textAlign = "center";
   ctx.strokeStyle = "#1f2942";
@@ -241,6 +275,112 @@ function drawChart(canvas, history, members, blend) {
   }
 }
 
+// ---- Reusable zoom-slider widget ----------------------------------------
+// Two fat handles (left + right) sized to represent the visible window. The
+// middle band is grabbable to slide the whole window. Reports range as
+// fractions in [0, 1] so callers can map to whatever axis they like.
+function makeZoomSlider(container, onChange, opts = {}) {
+  const minSpan = opts.minSpan ?? 0.02;
+  container.style.display = "block";
+  container.innerHTML = `
+    <div class="zs-track">
+      <div class="zs-window" data-zs="window"></div>
+      <div class="zs-handle" data-zs="left"></div>
+      <div class="zs-handle" data-zs="right"></div>
+      <div class="zs-label" data-zs="label"></div>
+    </div>
+  `;
+  const track = container.querySelector(".zs-track");
+  const winEl = container.querySelector('[data-zs="window"]');
+  const leftEl = container.querySelector('[data-zs="left"]');
+  const rightEl = container.querySelector('[data-zs="right"]');
+  const labelEl = container.querySelector('[data-zs="label"]');
+  let state = { lo: 0, hi: 1, fmt: opts.fmt || ((lo, hi) => `${(lo*100|0)}–${(hi*100|0)}%`) };
+  const layout = () => {
+    const w = track.clientWidth;
+    const x0 = state.lo * w, x1 = state.hi * w;
+    winEl.style.left = `${x0}px`;
+    winEl.style.width = `${Math.max(0, x1 - x0)}px`;
+    leftEl.style.left = `${x0 - 7}px`;
+    rightEl.style.left = `${x1 - 7}px`;
+    labelEl.textContent = state.fmt(state.lo, state.hi);
+  };
+  const setRange = (lo, hi) => {
+    lo = Math.max(0, Math.min(1, lo));
+    hi = Math.max(0, Math.min(1, hi));
+    if (hi - lo < minSpan) {
+      const c = (lo + hi) / 2;
+      lo = Math.max(0, c - minSpan / 2);
+      hi = Math.min(1, c + minSpan / 2);
+    }
+    state.lo = lo; state.hi = hi;
+    layout();
+    onChange([lo, hi]);
+  };
+  const fracFromEvent = (e) => {
+    const r = track.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  };
+  let drag = null;
+  const onDown = (kind) => (e) => {
+    e.preventDefault();
+    drag = { kind, startFrac: fracFromEvent(e), lo0: state.lo, hi0: state.hi };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp, { once: true });
+  };
+  const onMove = (e) => {
+    if (!drag) return;
+    const f = fracFromEvent(e);
+    if (drag.kind === "left") {
+      setRange(Math.min(f, drag.hi0 - minSpan), drag.hi0);
+    } else if (drag.kind === "right") {
+      setRange(drag.lo0, Math.max(f, drag.lo0 + minSpan));
+    } else if (drag.kind === "window") {
+      const span = drag.hi0 - drag.lo0;
+      let lo = drag.lo0 + (f - drag.startFrac);
+      lo = Math.max(0, Math.min(1 - span, lo));
+      setRange(lo, lo + span);
+    }
+  };
+  const onUp = () => {
+    drag = null;
+    document.removeEventListener("pointermove", onMove);
+  };
+  leftEl.addEventListener("pointerdown", onDown("left"));
+  rightEl.addEventListener("pointerdown", onDown("right"));
+  winEl.addEventListener("pointerdown", onDown("window"));
+  // Click on bare track recenters around click point (keep current span)
+  track.addEventListener("pointerdown", (e) => {
+    if (e.target !== track) return;
+    const f = fracFromEvent(e);
+    const span = state.hi - state.lo;
+    let lo = Math.max(0, Math.min(1 - span, f - span / 2));
+    setRange(lo, lo + span);
+  });
+  // Initial layout — onresize will keep things tidy if the panel resizes.
+  window.addEventListener("resize", layout);
+  state.set = setRange;
+  state.get = () => [state.lo, state.hi];
+  state.setFmt = (fn) => { state.fmt = fn; layout(); };
+  setRange(opts.initial?.[0] ?? 0, opts.initial?.[1] ?? 1);
+  return state;
+}
+
+// ---- Per-station discharge-history lazy fetch ----------------------------
+const _historyCache = new Map(); // siteId -> {rows: {date: q_cfs}, ...}
+async function loadStationHistory(siteId) {
+  if (_historyCache.has(siteId)) return _historyCache.get(siteId);
+  try {
+    const r = await fetch(`history/${siteId}.json`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    _historyCache.set(siteId, j);
+    return j;
+  } catch (_) {
+    return null;
+  }
+}
+
 function renderForecast(payload) {
   document.getElementById("panel-empty").style.display = "none";
   document.getElementById("panel-content").style.display = "block";
@@ -268,6 +408,7 @@ function renderForecast(payload) {
   `;
 
   drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
+  setupForecastZoom();
 
   renderRecordStartAndStats(payload);
   renderSnotel(payload);
@@ -428,12 +569,16 @@ function renderRecordStartAndStats(payload) {
 
   if (stats && stats.rows && stats.rows.length > 30) {
     canvas.style.display = "block";
-    setupClimatologyControls(canvas, stats.rows);
+    setupClimatologyControls(canvas, stats.rows, payload);
     drawClimatology(canvas, stats.rows);
   } else {
     canvas.style.display = "none";
     const ctrl = document.getElementById("climatology-controls");
     if (ctrl) ctrl.innerHTML = "";
+    const zoomEl = document.getElementById("climatology-zoom");
+    if (zoomEl) { zoomEl.style.display = "none"; zoomEl.innerHTML = ""; }
+    const yrEl = document.getElementById("year-overlay-controls");
+    if (yrEl) { yrEl.style.display = "none"; yrEl.innerHTML = ""; }
   }
 }
 
@@ -447,7 +592,14 @@ const SEASON_PRESETS = {
   fall:   { label: "Fall (Sep–Nov)", range: [244, 334] },
   runoff: { label: "Runoff (Apr–Jul)", range: [91, 212] },
 };
-let _climState = { rows: [], range: [0, 365], dragStartDoy: null, dragEndDoy: null };
+// _climState carries everything draw uses: rows = climatology table, range = DOY
+// window, overlayYears = water years user has toggled on, history = cached daily
+// rows {date: q_cfs} for this station, siteId for fetches.
+let _climState = {
+  rows: [], range: [0, 365], canvas: null,
+  siteId: null, history: null, overlayYears: new Set(), payload: null,
+  zoom: null,
+};
 
 function _doyRangeContains(range, doy) {
   const [a, b] = range;
@@ -455,71 +607,177 @@ function _doyRangeContains(range, doy) {
   return doy >= a || doy <= b; // wrap
 }
 
-function setupClimatologyControls(canvas, rows) {
+const YEAR_OVERLAY_COLORS = ["#ff8a4c", "#7be07b", "#ff6db6", "#9aa6ff", "#4cc8ff", "#ffd166", "#c084ff"];
+function _colorForYear(yr, idxOf) {
+  return YEAR_OVERLAY_COLORS[idxOf % YEAR_OVERLAY_COLORS.length];
+}
+
+let _fcstZoomMounted = false;
+function setupForecastZoom() {
+  const container = document.getElementById("chart-zoom");
+  if (!container) return;
+  if (_fcstZoomMounted) {
+    // re-mount cleanly between station selections
+    container.innerHTML = "";
+    _fcstZoomMounted = false;
+  }
+  const fmt = ([lo, hi]) => {
+    if (!_fcst.full) return "";
+    const span = _fcst.full.xmax - _fcst.full.xmin;
+    const a = new Date(_fcst.full.xmin + lo * span);
+    const b = new Date(_fcst.full.xmin + hi * span);
+    const f = d => `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear().toString().slice(2)}`;
+    return `${f(a)} – ${f(b)}`;
+  };
+  makeZoomSlider(container, ([lo, hi]) => {
+    _fcst.range = [lo, hi];
+    _renderForecast();
+  }, { initial: [0, 1], minSpan: 0.04, fmt: (lo, hi) => fmt([lo, hi]) });
+  _fcstZoomMounted = true;
+}
+
+function _doySpanFromRange(range) {
+  const [a, b] = range;
+  return a <= b ? (b - a) : (366 - a + b);
+}
+
+function setupClimatologyControls(canvas, rows, payload) {
   const ctrl = document.getElementById("climatology-controls");
-  if (!ctrl) return;
-  _climState = { rows, range: [0, 365], dragStartDoy: null, dragEndDoy: null };
+  const zoomEl = document.getElementById("climatology-zoom");
+  const yrEl = document.getElementById("year-overlay-controls");
+  if (!ctrl || !zoomEl || !yrEl) return;
+  _climState = {
+    rows, range: [0, 365], canvas,
+    siteId: payload.station?.id || null,
+    history: null, overlayYears: new Set(), payload, zoom: null,
+  };
   ctrl.innerHTML = `
     <div class="clim-controls">
       ${Object.entries(SEASON_PRESETS).map(([k, v]) =>
         `<button data-season="${k}" class="clim-btn${k === "full" ? " active" : ""}">${v.label}</button>`).join("")}
-      <button id="clim-reset" class="clim-btn clim-reset">Reset zoom</button>
-      <span class="clim-hint">drag on chart to zoom</span>
+      <button id="clim-reset" class="clim-btn clim-reset">Reset</button>
+      <span class="clim-hint">drag the slider below to zoom</span>
     </div>
   `;
+  const applyRange = (range) => {
+    _climState.range = range.slice();
+    // Sync slider position to match preset (express as fractions of the year)
+    if (_climState.zoom) {
+      const [a, b] = range;
+      if (a <= b) _climState.zoom.set(a / 365, b / 365);
+      else _climState.zoom.set(0, 1); // wrap → show full; user can drag
+    }
+    drawClimatology(canvas, _climState.rows);
+  };
   ctrl.querySelectorAll("button[data-season]").forEach(b => {
     b.addEventListener("click", () => {
       ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
       b.classList.add("active");
-      _climState.range = SEASON_PRESETS[b.dataset.season].range.slice();
-      drawClimatology(canvas, _climState.rows);
+      applyRange(SEASON_PRESETS[b.dataset.season].range);
     });
   });
   document.getElementById("clim-reset")?.addEventListener("click", () => {
     ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
     ctrl.querySelector('[data-season="full"]')?.classList.add("active");
-    _climState.range = [0, 365];
+    applyRange([0, 365]);
+    _climState.overlayYears.clear();
+    renderYearOverlayUI();
     drawClimatology(canvas, _climState.rows);
   });
 
-  // Drag-to-zoom: capture range on canvas; release to apply.
-  const _toDoy = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const fracX = (e.clientX - rect.left) / rect.width;
-    // Match the drawing pad so the doy mapping stays in sync with the rendered axis.
-    const padL = 50, padR = 12;
-    const innerFrac = (fracX * canvas.width - padL) / (canvas.width - padL - padR);
-    return Math.max(0, Math.min(365, Math.round(innerFrac * 365)));
+  // Zoom slider: maps fractions [0,1] of the year to DOY 0..365. Doesn't try
+  // to express wrap-around — when a wrap preset is active, slider shows full.
+  const fmt = ([lo, hi]) => {
+    const labelFor = (frac) => {
+      const day = Math.round(frac * 365);
+      const d = new Date(Date.UTC(2024, 0, day + 1));
+      return `${d.toLocaleString(undefined, { month: "short", timeZone: "UTC" })} ${d.getUTCDate()}`;
+    };
+    return `${labelFor(lo)} – ${labelFor(hi)}`;
   };
-  canvas.onmousedown = (e) => {
-    _climState.dragStartDoy = _toDoy(e);
-    _climState.dragEndDoy = _climState.dragStartDoy;
+  zoomEl.innerHTML = "";
+  _climState.zoom = makeZoomSlider(zoomEl, ([lo, hi]) => {
+    _climState.range = [Math.round(lo * 365), Math.round(hi * 365)];
+    ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
     drawClimatology(canvas, _climState.rows);
-  };
-  canvas.onmousemove = (e) => {
-    if (_climState.dragStartDoy == null) return;
-    _climState.dragEndDoy = _toDoy(e);
-    drawClimatology(canvas, _climState.rows);
-  };
-  canvas.onmouseup = (e) => {
-    if (_climState.dragStartDoy == null) return;
-    const a = _climState.dragStartDoy;
-    const b = _toDoy(e);
-    _climState.dragStartDoy = null;
-    _climState.dragEndDoy = null;
-    if (Math.abs(b - a) >= 4) {
-      _climState.range = [Math.min(a, b), Math.max(a, b)];
-      ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
+  }, { initial: [0, 1], minSpan: 0.02, fmt: (lo, hi) => fmt([lo, hi]) });
+
+  // Build year overlay UI now (before history fetch). The first click triggers fetch.
+  renderYearOverlayUI();
+}
+
+function _availableYearsFor(payload) {
+  // Prefer record_start/record_end; fall back to history dates.
+  const out = [];
+  const start = payload?.record_start;
+  const end = payload?.record_end;
+  if (start && end) {
+    const y0 = parseInt(start.slice(0, 4), 10);
+    const y1 = parseInt(end.slice(0, 4), 10);
+    if (Number.isFinite(y0) && Number.isFinite(y1)) {
+      for (let y = y1; y >= y0; y--) out.push(y);
     }
-    drawClimatology(canvas, _climState.rows);
-  };
-  canvas.onmouseleave = () => {
-    if (_climState.dragStartDoy != null) {
-      _climState.dragStartDoy = null;
-      _climState.dragEndDoy = null;
-      drawClimatology(canvas, _climState.rows);
-    }
-  };
+  }
+  return out;
+}
+
+async function ensureHistoryLoaded() {
+  if (_climState.history) return _climState.history;
+  if (!_climState.siteId) return null;
+  if (_climState.payload && _climState.payload.has_history_file === false) return null;
+  const yrEl = document.getElementById("year-overlay-controls");
+  const status = yrEl?.querySelector(".yr-status");
+  if (status) status.textContent = "loading record…";
+  const j = await loadStationHistory(_climState.siteId);
+  _climState.history = j || { rows: {} };
+  if (status) status.textContent = j ? `record loaded (${Object.keys(j.rows || {}).length.toLocaleString()} days)` : "no record file available";
+  return _climState.history;
+}
+
+function renderYearOverlayUI() {
+  const yrEl = document.getElementById("year-overlay-controls");
+  if (!yrEl) return;
+  const years = _availableYearsFor(_climState.payload);
+  if (!years.length) { yrEl.innerHTML = ""; yrEl.style.display = "none"; return; }
+  yrEl.style.display = "block";
+  const thisYear = new Date().getUTCFullYear();
+  const presets = [
+    { key: "this", label: "This year", year: thisYear },
+    { key: "last", label: "Last year", year: thisYear - 1 },
+  ].filter(p => years.includes(p.year));
+  const active = (y) => _climState.overlayYears.has(y) ? " active" : "";
+  const presetChips = presets.map(p => {
+    const cls = `yr-chip preset${active(p.year)}`;
+    const color = _climState.overlayYears.has(p.year) ? `style="background:${_colorForYear(p.year, [...years].indexOf(p.year))}; color:#0b1020"` : "";
+    return `<span class="${cls}" data-year="${p.year}" ${color}>${p.label} (${p.year})</span>`;
+  }).join("");
+  const yearChips = years.map(y => {
+    const isActive = _climState.overlayYears.has(y);
+    const idx = years.indexOf(y);
+    const c = _colorForYear(y, idx);
+    const style = isActive ? `style="background:${c}; color:#0b1020"` : "";
+    return `<span class="yr-chip${active(y)}" data-year="${y}" ${style}>${y}</span>`;
+  }).join("");
+  yrEl.innerHTML = `
+    <div class="yr-overlay-head">
+      <b>Compare years</b>
+      <span style="opacity:0.7">click any year to overlay it on the climatology</span>
+      <span class="yr-status"></span>
+    </div>
+    ${presetChips ? `<div class="yr-overlay-grid" style="max-height:none">${presetChips}</div>` : ""}
+    <div class="yr-overlay-grid">${yearChips}</div>
+  `;
+  yrEl.querySelectorAll(".yr-chip").forEach(el => {
+    el.addEventListener("click", async () => {
+      const y = parseInt(el.dataset.year, 10);
+      if (!Number.isFinite(y)) return;
+      if (_climState.overlayYears.has(y)) _climState.overlayYears.delete(y);
+      else _climState.overlayYears.add(y);
+      renderYearOverlayUI(); // re-render chip styles
+      await ensureHistoryLoaded();
+      drawClimatology(_climState.canvas, _climState.rows);
+    });
+  });
 }
 
 function drawClimatology(canvas, rows) {
@@ -581,24 +839,74 @@ function drawClimatology(canvas, rows) {
     return pad.t + innerH - (v / yMax) * innerH;
   };
 
-  // Axes & gridlines: month markers that fall inside the visible range.
+  // Axes & gridlines: dense vertical lines at every 1st/15th of each visible month
+  // when the zoom is wide; tighter ticks (every 5 days) when zoomed in. We label
+  // months at the 1st only so the axis doesn't look noisy.
   ctx.strokeStyle = "#26304b";
   ctx.fillStyle = "#7a86a6";
   ctx.font = "11px sans-serif";
   const months = [[0, "Jan"], [1, "Feb"], [2, "Mar"], [3, "Apr"], [4, "May"], [5, "Jun"],
                   [6, "Jul"], [7, "Aug"], [8, "Sep"], [9, "Oct"], [10, "Nov"], [11, "Dec"]];
+  // Pick a tick step in days based on the visible span so users can read exact
+  // dates: ≤14d every day, ≤45d every 2d, ≤90d every 5d, ≤180d every 15d, else month-1st.
+  let tickStep = 30;
+  if (totalSpan <= 14) tickStep = 1;
+  else if (totalSpan <= 45) tickStep = 2;
+  else if (totalSpan <= 90) tickStep = 5;
+  else if (totalSpan <= 180) tickStep = 15;
   let lastLabelX = -Infinity;
-  for (const [m, label] of months) {
-    const doy = Math.floor((Date.UTC(2024, m, 1) - Date.UTC(2024, 0, 1)) / 86400000);
-    if (!_doyRangeContains(range, doy)) continue;
-    const x = x2px(doy);
-    if (x - lastLabelX < 28) continue; // skip if labels would overlap on a tight zoom
-    lastLabelX = x;
-    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + innerH); ctx.stroke();
-    ctx.fillText(label, x + 2, H - 6);
+  // Walk DOYs; respect wrap by iterating along the visible window directly.
+  const visDoys = [];
+  if (!wraps) {
+    for (let d = r0; d <= r1; d += 1) visDoys.push(d);
+  } else {
+    for (let d = r0; d <= 365; d += 1) visDoys.push(d);
+    for (let d = 0; d <= r1; d += 1) visDoys.push(d);
   }
-  ctx.fillText(useLog ? `${yMax.toFixed(0)} cfs (log)` : `${yMax.toFixed(0)} cfs`, 4, pad.t + 10);
-  ctx.fillText(useLog ? `${yMin.toFixed(0)} cfs` : "0 cfs", 4, pad.t + innerH);
+  for (let i = 0; i < visDoys.length; i++) {
+    const doy = visDoys[i];
+    const refDate = new Date(Date.UTC(2024, 0, doy + 1));
+    const dom = refDate.getUTCDate();
+    const monthIdx = refDate.getUTCMonth();
+    const isFirst = dom === 1;
+    const isMid = dom === 15;
+    const isStep = (i % tickStep) === 0;
+    if (!isFirst && !isStep && !isMid) continue;
+    const x = x2px(doy);
+    // Minor gridline
+    if (isStep || isMid) {
+      ctx.strokeStyle = isFirst ? "#33446f" : "#1f2942";
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + innerH); ctx.stroke();
+    }
+    if (isFirst && (x - lastLabelX) > 26) {
+      lastLabelX = x;
+      ctx.strokeStyle = "#33446f";
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + innerH); ctx.stroke();
+      ctx.fillStyle = "#aab7d4";
+      ctx.fillText(months[monthIdx][1], x + 2, H - 6);
+    } else if ((isStep || isMid) && tickStep <= 5 && (x - lastLabelX) > 22) {
+      lastLabelX = x;
+      ctx.fillStyle = "#7a86a6";
+      ctx.fillText(`${months[monthIdx][1]} ${dom}`, x + 2, H - 6);
+    }
+  }
+  // y-axis gridlines + labels (8 divisions)
+  const Y_DIVS = 8;
+  for (let i = 0; i <= Y_DIVS; i++) {
+    const yv = useLog
+      ? Math.pow(10, Math.log10(yMin) + (Math.log10(yMax) - Math.log10(yMin)) * (1 - i / Y_DIVS))
+      : yMax * (1 - i / Y_DIVS);
+    const y = pad.t + (i / Y_DIVS) * innerH;
+    ctx.strokeStyle = "#1f2942";
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = "#7a86a6";
+    ctx.textAlign = "right";
+    ctx.fillText(fmtNumber(yv, yv < 100 ? 1 : 0), pad.l - 4, y + 3);
+    ctx.textAlign = "left";
+  }
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#aab7d4";
+  ctx.fillText(useLog ? "cfs (log)" : "cfs", 4, pad.t + 10);
 
   const colors = {
     min_va: "#3a4d8a",   // dark blue
@@ -649,20 +957,44 @@ function drawClimatology(canvas, rows) {
     ctx.stroke();
   }
 
-  // Drag-zoom selection overlay
-  if (_climState.dragStartDoy != null && _climState.dragEndDoy != null
-      && _climState.dragStartDoy !== _climState.dragEndDoy) {
-    const a = Math.min(_climState.dragStartDoy, _climState.dragEndDoy);
-    const b = Math.max(_climState.dragStartDoy, _climState.dragEndDoy);
-    const xa = x2px(a), xb = x2px(b);
-    ctx.fillStyle = "rgba(255, 209, 102, 0.15)";
-    ctx.fillRect(xa, pad.t, xb - xa, innerH);
-    ctx.strokeStyle = "#ffd166";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(xa, pad.t, xb - xa, innerH);
+  // Year overlays: draw selected water years as colored polylines on top of bands.
+  // Each year's daily flow is plotted as a function of DOY. Skips silently
+  // if history hasn't loaded yet — clicking a chip kicks off the fetch.
+  const histRows = _climState.history?.rows;
+  const overlayYears = [..._climState.overlayYears].sort();
+  if (histRows && overlayYears.length) {
+    const allYears = _availableYearsFor(_climState.payload);
+    for (const yr of overlayYears) {
+      const colorIdx = allYears.indexOf(yr);
+      const color = _colorForYear(yr, colorIdx >= 0 ? colorIdx : yr % YEAR_OVERLAY_COLORS.length);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      let started = false;
+      // Walk in DOY order respecting wrap so the line doesn't stitch across the chart.
+      const orderDoys = wraps
+        ? [...Array(366 - r0)].map((_, i) => r0 + i).concat([...Array(r1 + 1)].map((_, i) => i))
+        : [...Array(r1 - r0 + 1)].map((_, i) => r0 + i);
+      for (const doy of orderDoys) {
+        // Map (year, DOY) → 'YYYY-MM-DD'. Use Jan 1 + doy days (UTC).
+        const d = new Date(Date.UTC(yr, 0, 1));
+        d.setUTCDate(d.getUTCDate() + doy);
+        const iso = d.toISOString().slice(0, 10);
+        const v = histRows[iso];
+        if (v == null || !isFinite(v)) {
+          started = false; // gap in record → break the line
+          continue;
+        }
+        const x = x2px(doy);
+        const y = y2px(v);
+        if (!started) { ctx.moveTo(x, y); started = true; }
+        else { ctx.lineTo(x, y); }
+      }
+      ctx.stroke();
+    }
   }
 
-  // Legend
+  // Legend (climatology bands + active year overlays)
   ctx.font = "11px sans-serif";
   let lx = pad.l + 8;
   const ly = pad.t + 4;
@@ -672,6 +1004,19 @@ function drawClimatology(canvas, rows) {
     ctx.fillStyle = "#aab7d4";
     ctx.fillText(label, lx + 14, ly + 11);
     lx += ctx.measureText(label).width + 28;
+  }
+  if (overlayYears.length) {
+    const allYears = _availableYearsFor(_climState.payload);
+    for (const yr of overlayYears) {
+      const colorIdx = allYears.indexOf(yr);
+      const color = _colorForYear(yr, colorIdx >= 0 ? colorIdx : yr % YEAR_OVERLAY_COLORS.length);
+      ctx.fillStyle = color;
+      ctx.fillRect(lx, ly + 6, 10, 3);
+      ctx.fillStyle = "#aab7d4";
+      const label = String(yr);
+      ctx.fillText(label, lx + 14, ly + 11);
+      lx += ctx.measureText(label).width + 28;
+    }
   }
 }
 
@@ -691,6 +1036,14 @@ async function selectStation(station) {
   if (climCanvas) climCanvas.style.display = "none";
   const climCtrl = document.getElementById("climatology-controls");
   if (climCtrl) climCtrl.innerHTML = "";
+  const climZoom = document.getElementById("climatology-zoom");
+  if (climZoom) { climZoom.style.display = "none"; climZoom.innerHTML = ""; }
+  const yrCtrl = document.getElementById("year-overlay-controls");
+  if (yrCtrl) { yrCtrl.style.display = "none"; yrCtrl.innerHTML = ""; }
+  const fcstZoom = document.getElementById("chart-zoom");
+  if (fcstZoom) { fcstZoom.style.display = "none"; fcstZoom.innerHTML = ""; }
+  _fcstZoomMounted = false;
+  _fcst.range = [0, 1];
 
   try {
     const r = await fetch(`forecasts/${station.id}.json`);

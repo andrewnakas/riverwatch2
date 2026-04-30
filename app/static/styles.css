@@ -55,6 +55,70 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .clim-btn.active { background: #2c3a64; color: #ffd166; border-color: #ffd166; }
 .clim-btn.clim-reset { margin-left: 8px; color: #ff8a8a; border-color: #553344; }
 .clim-hint { font-size: 11px; color: #5c6685; margin-left: auto; }
+
+/* Zoom slider widget — two fat handles + draggable middle band */
+.zoom-slider {
+  position: relative;
+  height: 22px;
+  margin: -2px 0 12px;
+  background: #131a2d;
+  border: 1px solid #26314f;
+  border-radius: 6px;
+  user-select: none;
+  touch-action: none;
+}
+.zoom-slider .zs-track {
+  position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+}
+.zoom-slider .zs-window {
+  position: absolute;
+  top: 2px; bottom: 2px;
+  background: rgba(255, 209, 102, 0.20);
+  border: 1px solid rgba(255, 209, 102, 0.55);
+  border-radius: 4px;
+  cursor: grab;
+}
+.zoom-slider .zs-window:active { cursor: grabbing; }
+.zoom-slider .zs-handle {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 14px;
+  background: #ffd166;
+  border-radius: 4px;
+  cursor: ew-resize;
+  box-shadow: 0 0 0 1px #6a4d10 inset, 0 0 6px rgba(255, 209, 102, 0.4);
+}
+.zoom-slider .zs-handle::before {
+  content: ""; display: block; position: absolute;
+  left: 5px; top: 5px; width: 4px; bottom: 5px;
+  border-left: 1px solid #6a4d10;
+  border-right: 1px solid #6a4d10;
+}
+.zoom-slider .zs-label {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  font-size: 10px; color: #aab7d4; pointer-events: none;
+}
+
+/* Year-overlay multi-select */
+#year-overlay-controls { margin: 4px 0 12px; }
+.yr-overlay-head {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  font-size: 12px; color: #aab7d4; margin-bottom: 4px;
+}
+.yr-overlay-head b { color: #e7ecf3; }
+.yr-overlay-grid {
+  display: flex; flex-wrap: wrap; gap: 4px; max-height: 92px; overflow-y: auto;
+  padding: 4px; background: #131a2d; border: 1px solid #26314f; border-radius: 6px;
+}
+.yr-chip {
+  padding: 2px 8px; font-size: 11px; background: #1d2742; color: #aab7d4;
+  border: 1px solid #33446f; border-radius: 12px; cursor: pointer;
+}
+.yr-chip:hover { background: #283456; color: #e7ecf3; }
+.yr-chip.active { color: #0b1020; border-color: transparent; }
+.yr-chip.preset { background: #2c3a64; color: #8ec5ff; border-color: #33446f; }
+.yr-chip.preset.active { background: #ffd166; color: #0b1020; }
+.yr-status { font-size: 11px; color: #5c6685; margin-left: 6px; }
 @media (max-width: 900px) {
   #layout { grid-template-columns: 1fr; grid-template-rows: 60vh 40vh; height: auto; }
   #panel { border-left: none; border-top: 1px solid #26314f; }
