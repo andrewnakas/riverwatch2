@@ -564,27 +564,50 @@ def forecast_station(
     else:
         notes.append("timesfm unavailable")
 
-    rolling_mae = {"runoff_ridge": ridge_mae.get("mae_mean", float("inf"))}
-    persist_mae = _rolling_persistence_mae(q_hist, horizon)
-    if persist_mae is not None:
-        rolling_mae["persistence_lag1"] = persist_mae
-
-    persist_per_h = _rolling_persistence_mae_per_horizon(q_hist, horizon)
+    # v11.4: every member is scored on the SAME 3 holdout windows so per-h
+    # MAE values are directly comparable. Previously persistence used a 180-day
+    # trailing window while foundation models used 3×horizon-day windows, which
+    # warped the blend weights toward whichever member had the easier test set.
+    persist_per_h, persist_mape_per_h = _score_holdouts(
+        _persistence_predict_on_holdout, q_hist, horizon
+    )
+    ridge_per_h, ridge_mape_per_h_unified = _score_holdouts(
+        _ridge_predict_on_holdout, q_hist, horizon,
+        extra_args=(wx_hist, snotel_df),
+    )
     chronos_per_h: Dict[int, float] = {}
+    chronos_mape_per_h: Dict[int, float] = {}
     if chronos_pred is not None:
-        chronos_per_h = _rolling_chronos_mae_per_horizon(q_hist, horizon)
-        if chronos_per_h:
-            rolling_mae["chronos_bolt"] = float(np.mean(list(chronos_per_h.values())))
+        chronos_per_h, chronos_mape_per_h = _score_holdouts(
+            lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "chronos_bolt", end_offset=end_offset),
+            q_hist, horizon,
+        )
     ttm_per_h: Dict[int, float] = {}
+    ttm_mape_per_h: Dict[int, float] = {}
     if ttm_pred is not None:
-        ttm_per_h = _rolling_foundation_mae_per_horizon(q_hist, horizon, "ttm")
-        if ttm_per_h:
-            rolling_mae["ttm"] = float(np.mean(list(ttm_per_h.values())))
+        ttm_per_h, ttm_mape_per_h = _score_holdouts(
+            lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "ttm", end_offset=end_offset),
+            q_hist, horizon,
+        )
     timesfm_per_h: Dict[int, float] = {}
+    timesfm_mape_per_h: Dict[int, float] = {}
     if timesfm_pred is not None:
-        timesfm_per_h = _rolling_foundation_mae_per_horizon(q_hist, horizon, "timesfm")
-        if timesfm_per_h:
-            rolling_mae["timesfm"] = float(np.mean(list(timesfm_per_h.values())))
+        timesfm_per_h, timesfm_mape_per_h = _score_holdouts(
+            lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "timesfm", end_offset=end_offset),
+            q_hist, horizon,
+        )
+
+    rolling_mae: Dict[str, float] = {}
+    if persist_per_h:
+        rolling_mae["persistence_lag1"] = float(np.mean(list(persist_per_h.values())))
+    if ridge_per_h:
+        rolling_mae["runoff_ridge"] = float(np.mean(list(ridge_per_h.values())))
+    if chronos_per_h:
+        rolling_mae["chronos_bolt"] = float(np.mean(list(chronos_per_h.values())))
+    if ttm_per_h:
+        rolling_mae["ttm"] = float(np.mean(list(ttm_per_h.values())))
+    if timesfm_per_h:
+        rolling_mae["timesfm"] = float(np.mean(list(timesfm_per_h.values())))
 
     def _per_h_lookup(per_h: Dict[int, float], h: int) -> Optional[float]:
         if per_h.get(h) is not None:
@@ -601,46 +624,29 @@ def forecast_station(
     for h_target, target_dict in [(7, rolling_mae_h7), (14, rolling_mae_h14)]:
         if h_target > horizon:
             continue
-        v = _per_h_lookup(persist_per_h, h_target)
-        if v is not None:
-            target_dict["persistence_lag1"] = v
-        v = ridge_mae.get(f"mae_h{h_target}")
-        if v is not None:
-            target_dict["runoff_ridge"] = float(v)
-        v = _per_h_lookup(chronos_per_h, h_target)
-        if v is not None:
-            target_dict["chronos_bolt"] = v
-        v = _per_h_lookup(ttm_per_h, h_target)
-        if v is not None:
-            target_dict["ttm"] = v
-        v = _per_h_lookup(timesfm_per_h, h_target)
-        if v is not None:
-            target_dict["timesfm"] = v
+        for name, per_h in (
+            ("persistence_lag1", persist_per_h),
+            ("runoff_ridge", ridge_per_h),
+            ("chronos_bolt", chronos_per_h),
+            ("ttm", ttm_per_h),
+            ("timesfm", timesfm_per_h),
+        ):
+            v = _per_h_lookup(per_h, h_target)
+            if v is not None:
+                target_dict[name] = float(v)
 
-    # MAPE per member: same backtest set, just divide each abs error by max(y_true, MAPE_FLOOR_CFS).
-    persist_mape_per_h = _rolling_persistence_mape_per_horizon(q_hist, horizon)
-    chronos_mape_per_h: Dict[int, float] = {}
-    ttm_mape_per_h: Dict[int, float] = {}
-    timesfm_mape_per_h: Dict[int, float] = {}
-    ridge_mape_per_h: Dict[int, float] = ridge_mae.get("__mape_per_h", {}) or {}
-    if chronos_pred is not None:
-        chronos_mape_per_h = _rolling_foundation_mape_per_horizon(q_hist, horizon, "chronos_bolt")
-    if ttm_pred is not None:
-        ttm_mape_per_h = _rolling_foundation_mape_per_horizon(q_hist, horizon, "ttm")
-    if timesfm_pred is not None:
-        timesfm_mape_per_h = _rolling_foundation_mape_per_horizon(q_hist, horizon, "timesfm")
-
+    # MAPE comes from the same unified holdouts (no separate harness anymore).
+    ridge_mape_per_h = ridge_mape_per_h_unified
     rolling_mape: Dict[str, float] = {}
-    if persist_mape_per_h:
-        rolling_mape["persistence_lag1"] = float(np.mean(list(persist_mape_per_h.values())))
-    if ridge_mape_per_h:
-        rolling_mape["runoff_ridge"] = float(np.mean(list(ridge_mape_per_h.values())))
-    if chronos_mape_per_h:
-        rolling_mape["chronos_bolt"] = float(np.mean(list(chronos_mape_per_h.values())))
-    if ttm_mape_per_h:
-        rolling_mape["ttm"] = float(np.mean(list(ttm_mape_per_h.values())))
-    if timesfm_mape_per_h:
-        rolling_mape["timesfm"] = float(np.mean(list(timesfm_mape_per_h.values())))
+    for name, per_h in (
+        ("persistence_lag1", persist_mape_per_h),
+        ("runoff_ridge", ridge_mape_per_h),
+        ("chronos_bolt", chronos_mape_per_h),
+        ("ttm", ttm_mape_per_h),
+        ("timesfm", timesfm_mape_per_h),
+    ):
+        if per_h:
+            rolling_mape[name] = float(np.mean(list(per_h.values())))
 
     rolling_mape_h7: Dict[str, float] = {}
     rolling_mape_h14: Dict[str, float] = {}
@@ -658,7 +664,18 @@ def forecast_station(
             if v is not None:
                 target_dict[name] = float(v)
 
-    soft_weights = _blend_weights(rolling_mae, list(members.keys()))
+    # v11.4 station-level cap: drop any member whose station-mean MAE is worse
+    # than persistence's. Persistence stays in. Then build inverse-MAE² weights
+    # over the survivors.
+    persist_station = rolling_mae.get("persistence_lag1")
+    capped_mae = dict(rolling_mae)
+    if persist_station is not None and math.isfinite(persist_station):
+        capped_mae = {
+            k: v for k, v in rolling_mae.items()
+            if k == "persistence_lag1"
+            or (v is not None and math.isfinite(v) and v <= persist_station)
+        }
+    soft_weights = _blend_weights(capped_mae, list(capped_mae.keys()))
 
     # Per-station auto-pick: if the best member is decisively better than the
     # runner-up (>= 30% lower MAE), snap weights to ~all on the winner. Stops
@@ -666,7 +683,7 @@ def forecast_station(
     # clearly dominates (e.g. snowmelt sites where ridge beats chronos badly).
     weights = soft_weights
     weights_strategy = "per_horizon_inv_mae2"
-    valid_mae = {k: v for k, v in rolling_mae.items()
+    valid_mae = {k: v for k, v in capped_mae.items()
                  if k in members and v is not None and math.isfinite(v) and v > 0}
     if len(valid_mae) >= 2:
         ranked = sorted(valid_mae.items(), key=lambda kv: kv[1])
@@ -681,31 +698,30 @@ def forecast_station(
             weights_strategy = f"snap_to:{best_name}"
 
     # Per-horizon weights: for each horizon day, build inverse-MAE^2 weights from
-    # that horizon's rolling MAE. Falls back to the station-level `weights` when
-    # a per-horizon estimate is missing. Snap-to-winner is preserved (the winner
-    # already has 90% station-level weight, which dominates the per-horizon blend).
+    # that horizon's rolling MAE. v11.4: pull directly from each member's
+    # per-h dict (unified harness fills 1..H natively, no interpolation needed).
+    member_per_h = {
+        "persistence_lag1": persist_per_h,
+        "runoff_ridge": ridge_per_h,
+        "chronos_bolt": chronos_per_h,
+        "ttm": ttm_per_h,
+        "timesfm": timesfm_per_h,
+    }
     per_horizon_mae: Dict[int, Dict[str, float]] = {}
-    # Build per-h MAE table from members' available per-horizon dicts.
     for h in range(1, horizon + 1):
         per_h: Dict[str, float] = {}
-        if h == 7 and rolling_mae_h7:
-            per_h.update({k: v for k, v in rolling_mae_h7.items() if k in members})
-        elif h == 14 and rolling_mae_h14:
-            per_h.update({k: v for k, v in rolling_mae_h14.items() if k in members})
-        # interpolate linearly between mae@7 and mae@14 for h in 8..13
-        elif 8 <= h <= 13 and rolling_mae_h7 and rolling_mae_h14:
-            t = (h - 7) / 7.0
-            for name in members:
-                a = rolling_mae_h7.get(name)
-                b = rolling_mae_h14.get(name)
-                if a is None or b is None:
+        for name, ph in member_per_h.items():
+            if name not in members:
+                continue
+            v = ph.get(h)
+            if v is None:
+                # nearest-h fallback so we still emit weights when one offset
+                # window happened to miss this horizon
+                if not ph:
                     continue
-                per_h[name] = float(a + t * (b - a))
-        elif h < 7 and rolling_mae_h7:
-            # Short horizons get the same weights as h=7 (best available estimate
-            # for early forecast quality). Persistence usually dominates here so
-            # this keeps it weighted appropriately.
-            per_h.update({k: v for k, v in rolling_mae_h7.items() if k in members})
+                near = min(ph.keys(), key=lambda k: abs(k - h))
+                v = ph[near]
+            per_h[name] = float(v)
         per_horizon_mae[h] = per_h
 
     def _weights_for_horizon(h: int) -> Dict[str, float]:
@@ -715,7 +731,21 @@ def forecast_station(
         # When snap-to-winner triggered, keep snap behaviour at every horizon.
         if weights_strategy.startswith("snap_to:"):
             return weights
-        return _blend_weights(per_h, list(members.keys()))
+        # v11.4 "do no harm" cap: drop any member whose MAE at this horizon is
+        # WORSE than persistence at the same horizon. The blend has been losing
+        # ~5–10% on average to bad members getting non-trivial weight via
+        # inverse-MAE² (which gives weak members a small but harmful share).
+        # Persistence itself is always kept as the floor.
+        persist_v = per_h.get("persistence_lag1")
+        if persist_v is not None and math.isfinite(persist_v):
+            filtered = {
+                name: v for name, v in per_h.items()
+                if name == "persistence_lag1"
+                or (math.isfinite(v) and v <= persist_v)
+            }
+            if len(filtered) >= 1:
+                per_h = filtered
+        return _blend_weights(per_h, list(per_h.keys()))
 
     blend_vals = []
     for h_idx in range(horizon):
@@ -830,48 +860,22 @@ def _blend_weights(rolling_mae: Dict[str, float], member_names: List[str]) -> Di
     return {k: v / total for k, v in weights.items()}
 
 
+# v11.4 unified the per-member harnesses into `_score_holdouts` over the same
+# `_FOUNDATION_HOLDOUT_OFFSETS`. The thin shims below preserve the old function
+# names for scripts/benchmark_40.py without re-introducing the disparate
+# test-set bias they had before.
+
 def _rolling_persistence_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
-    """Mean MAE across h=1..horizon for persistence (yhat[t+h] = q[t]).
-
-    Computed on the trailing window so it's directly comparable to ridge/chronos.
-    """
-    if len(q_hist) < horizon + 30:
-        return None
-    y = q_hist["q_cfs"].values
-    maes = []
-    for h in range(1, horizon + 1):
-        diffs = np.abs(y[h:] - y[:-h])[-180:]
-        if len(diffs) == 0:
-            continue
-        maes.append(float(np.mean(diffs)))
-    return float(np.mean(maes)) if maes else None
-
-
-def _rolling_persistence_mae_per_horizon(q_hist: pd.DataFrame, max_horizon: int) -> Dict[int, float]:
-    """Per-horizon persistence MAE: mae[h] = mean |q[t+h] - q[t]| on trailing 180d."""
-    if len(q_hist) < max_horizon + 30:
-        return {}
-    y = q_hist["q_cfs"].values
-    out: Dict[int, float] = {}
-    for h in range(1, max_horizon + 1):
-        diffs = np.abs(y[h:] - y[:-h])[-180:]
-        if len(diffs) == 0:
-            continue
-        out[h] = float(np.mean(diffs))
-    return out
+    per_h, _ = _score_holdouts(_persistence_predict_on_holdout, q_hist, horizon)
+    return float(np.mean(list(per_h.values()))) if per_h else None
 
 
 def _rolling_chronos_mae(q_hist: pd.DataFrame, horizon: int) -> Optional[float]:
-    """Backtest chronos on a single horizon-length holdout. Mean MAE over h=1..horizon."""
-    res = _rolling_chronos_mae_per_horizon(q_hist, horizon)
-    if not res:
-        return None
-    return float(np.mean(list(res.values())))
-
-
-def _rolling_chronos_mae_per_horizon(q_hist: pd.DataFrame, horizon: int) -> Dict[int, float]:
-    """Chronos backtest with per-horizon errors."""
-    return _rolling_foundation_mae_per_horizon(q_hist, horizon, "chronos_bolt")
+    per_h, _ = _score_holdouts(
+        lambda q, h, *, end_offset: _foundation_predict_on_holdout(q, h, "chronos_bolt", end_offset=end_offset),
+        q_hist, horizon,
+    )
+    return float(np.mean(list(per_h.values()))) if per_h else None
 
 
 def _foundation_predict_on_holdout(
@@ -924,62 +928,128 @@ def _foundation_predict_on_holdout(
     return yhat[:horizon], ytrue[:horizon]
 
 
-# Three rolling, non-overlapping holdouts for foundation models. Each is
-# `horizon` days long. Offsets stagger by 30 days so we hit different seasons
-# without overlapping the test windows themselves.
+# Three rolling, non-overlapping holdouts. Each is `horizon` days long; offsets
+# stagger by 30 days so we hit different seasons without overlapping the test
+# windows. v11.4: every member (persistence, ridge, chronos, ttm, timesfm) is
+# scored on these SAME windows so per-horizon MAE comparisons are apples-to-apples
+# and the blend weights stop being warped by harness-mismatch.
 _FOUNDATION_HOLDOUT_OFFSETS = (0, 30, 60)
 
 
-def _rolling_foundation_mae_per_horizon(
-    q_hist: pd.DataFrame, horizon: int, model: str
-) -> Dict[int, float]:
-    """Per-horizon MAE averaged across `_FOUNDATION_HOLDOUT_OFFSETS`. Falls back
-    to whatever offsets returned data."""
-    accum: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+def _persistence_predict_on_holdout(
+    q_hist: pd.DataFrame, horizon: int, *, end_offset: int = 0
+) -> Optional[tuple[np.ndarray, np.ndarray]]:
+    """Persistence on the SAME held-out tail as the foundation models. Returns
+    (yhat[h=1..H], ytrue[h=1..H]) so it can share `_score_holdouts` with the rest."""
+    needed = horizon + 90 + end_offset
+    if len(q_hist) < needed:
+        return None
+    end_idx = len(q_hist) - end_offset
+    ctx_len = end_idx - horizon
+    if ctx_len < 64:
+        return None
+    last_q = float(q_hist["q_cfs"].iloc[ctx_len - 1])
+    yhat = np.full(horizon, last_q, dtype=float)
+    ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values.astype(float)
+    if len(ytrue) < horizon:
+        return None
+    return yhat, ytrue
+
+
+def _ridge_predict_on_holdout(
+    q_hist: pd.DataFrame,
+    wx_hist: pd.DataFrame,
+    horizon: int,
+    snotel_df: Optional[pd.DataFrame],
+    *,
+    end_offset: int = 0,
+) -> Optional[tuple[np.ndarray, np.ndarray]]:
+    """Ridge on the SAME held-out tail. Trains per-horizon models using only
+    rows whose target falls before the as-of date (no leakage), predicts the
+    next horizon days, and returns (yhat, ytrue).
+
+    No `wx_fcst` is passed: at an as-of date in the past we don't have access
+    to a future forecast that would have existed back then; we use only history.
+    """
+    needed = horizon + 90 + end_offset
+    if len(q_hist) < needed:
+        return None
+    end_idx = len(q_hist) - end_offset
+    ctx_len = end_idx - horizon
+    if ctx_len < 64:
+        return None
+
+    q_ctx = q_hist.iloc[:ctx_len].reset_index(drop=True)
+    ytrue = q_hist["q_cfs"].iloc[ctx_len:ctx_len + horizon].values.astype(float)
+    if len(ytrue) < horizon:
+        return None
+    last_q = float(q_ctx["q_cfs"].iloc[-1])
+
+    try:
+        feats = _build_features(q_ctx, wx_hist, snotel_df=snotel_df)
+    except Exception:
+        return None
+    cols = _feature_columns(feats)
+    if not cols:
+        return np.full(horizon, last_q), ytrue
+
+    last_date = pd.to_datetime(q_ctx["date"].iloc[-1])
+    feats_now = (
+        feats.loc[last_date, cols] if last_date in feats.index
+        else feats[cols].dropna().iloc[-1]
+    ).fillna(0.0)
+
+    yhat = np.empty(horizon, dtype=float)
+    for h in range(1, horizon + 1):
+        df_h = feats.copy()
+        df_h["target_log"] = df_h["q_log"].shift(-h)
+        train = df_h.dropna(subset=cols + ["target_log"])
+        if len(train) < 30:
+            yhat[h - 1] = last_q
+            continue
+        Xtr = train[cols].values
+        ytr = train["target_log"].values
+        try:
+            sc = StandardScaler().fit(Xtr)
+            model = Ridge(alpha=1.0, random_state=0).fit(sc.transform(Xtr), ytr)
+            x = sc.transform(feats_now.values.reshape(1, -1))
+            yh = float(np.expm1(model.predict(x)[0]))
+        except Exception:
+            yh = last_q
+        if not math.isfinite(yh) or yh < 0:
+            yh = last_q
+        yhat[h - 1] = yh
+    return yhat, ytrue
+
+
+def _score_holdouts(
+    predictor,
+    q_hist: pd.DataFrame,
+    horizon: int,
+    *,
+    extra_args: tuple = (),
+) -> tuple[Dict[int, float], Dict[int, float]]:
+    """Run `predictor(q_hist, horizon, *extra_args, end_offset=off)` on each
+    `_FOUNDATION_HOLDOUT_OFFSETS` and return (mae_per_h, mape_per_h) — averaged
+    over offsets that returned data. Used for every member so MAE comparisons
+    are apples-to-apples across the same dates."""
+    mae_acc: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+    mape_acc: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
     for off in _FOUNDATION_HOLDOUT_OFFSETS:
-        res = _foundation_predict_on_holdout(q_hist, horizon, model, end_offset=off)
+        try:
+            res = predictor(q_hist, horizon, *extra_args, end_offset=off)
+        except Exception:
+            res = None
         if res is None:
             continue
         yhat, ytrue = res
         for h in range(1, horizon + 1):
-            accum[h].append(float(abs(ytrue[h - 1] - yhat[h - 1])))
-    out: Dict[int, float] = {}
-    for h, vs in accum.items():
-        if vs:
-            out[h] = float(np.mean(vs))
-    return out
+            err = abs(float(ytrue[h - 1]) - float(yhat[h - 1]))
+            mae_acc[h].append(err)
+            denom = max(abs(float(ytrue[h - 1])), MAPE_FLOOR_CFS)
+            mape_acc[h].append(err / denom)
+    mae_out = {h: float(np.mean(v)) for h, v in mae_acc.items() if v}
+    mape_out = {h: float(np.mean(v)) for h, v in mape_acc.items() if v}
+    return mae_out, mape_out
 
 
-def _rolling_foundation_mape_per_horizon(
-    q_hist: pd.DataFrame, horizon: int, model: str
-) -> Dict[int, float]:
-    """Per-horizon MAPE averaged across rolling holdouts (1-cfs floor)."""
-    accum: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
-    for off in _FOUNDATION_HOLDOUT_OFFSETS:
-        res = _foundation_predict_on_holdout(q_hist, horizon, model, end_offset=off)
-        if res is None:
-            continue
-        yhat, ytrue = res
-        for h in range(1, horizon + 1):
-            denom = max(abs(ytrue[h - 1]), MAPE_FLOOR_CFS)
-            accum[h].append(float(abs(ytrue[h - 1] - yhat[h - 1]) / denom))
-    out: Dict[int, float] = {}
-    for h, vs in accum.items():
-        if vs:
-            out[h] = float(np.mean(vs))
-    return out
-
-
-def _rolling_persistence_mape_per_horizon(q_hist: pd.DataFrame, max_horizon: int) -> Dict[int, float]:
-    """Per-horizon persistence MAPE on trailing 180 days, with 1-cfs floor."""
-    if len(q_hist) < max_horizon + 30:
-        return {}
-    y = q_hist["q_cfs"].values
-    out: Dict[int, float] = {}
-    for h in range(1, max_horizon + 1):
-        ytrue = y[h:][-180:]
-        ypred = y[:-h][-180:]
-        if len(ytrue) == 0:
-            continue
-        out[h] = float(np.mean(np.abs(ytrue - ypred) / np.maximum(np.abs(ytrue), MAPE_FLOOR_CFS)))
-    return out
