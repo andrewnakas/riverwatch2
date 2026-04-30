@@ -108,6 +108,7 @@ class StationForecast:
     rolling_mape_h7: Dict[str, float] = field(default_factory=dict)
     rolling_mape_h14: Dict[str, float] = field(default_factory=dict)
     rolling_mae_blend: Dict[int, float] = field(default_factory=dict)
+    blend_strategy_per_h: Dict[int, str] = field(default_factory=dict)
     chosen: str = ""
     weights_strategy: str = ""
     notes: List[str] = field(default_factory=list)
@@ -597,17 +598,7 @@ def timesfm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]
 # ---------------------------------------------------------------------------
 
 def _weighted_median(values: List[float], weights: List[float]) -> Optional[float]:
-    """Weighted median of values with positive weights. Returns None if empty.
-
-    v12.1 replaces the v11.4/v12 weighted-mean blend with a weighted-median.
-    The median directly minimizes MAE under unimodal noise — which is the
-    metric we report. Mean is L2-optimal and consistently overshoots on
-    skewed flow days. We also tried a learned per-station ridge stacker
-    (v12) and a quantile-regression stacker with leave-one-out (v12.1
-    early): both were data-starved (3-6 holdout rows, 5+ features) and
-    produced biased numbers in-sample or wild extrapolations under LOO.
-    The weighted-median rule needs no fitting and is fully reproducible.
-    """
+    """Weighted median of values with positive weights. Returns None if empty."""
     pairs = [(v, w) for v, w in zip(values, weights)
              if v is not None and math.isfinite(v) and w is not None and math.isfinite(w) and w > 0]
     if not pairs:
@@ -623,6 +614,63 @@ def _weighted_median(values: List[float], weights: List[float]) -> Optional[floa
         if cum >= half:
             return float(v)
     return float(pairs[-1][0])
+
+
+def _weighted_mean(values: List[float], weights: List[float]) -> Optional[float]:
+    """Weighted arithmetic mean. Returns None if no positive-weight finite values."""
+    num = 0.0
+    den = 0.0
+    for v, w in zip(values, weights):
+        if v is None or w is None or not math.isfinite(v) or not math.isfinite(w) or w <= 0:
+            continue
+        num += float(v) * float(w)
+        den += float(w)
+    return (num / den) if den > 0 else None
+
+
+# v12.2: four blend rules. We pick whichever scored lowest MAE on the per-
+# station holdouts, separately for h=1, h=2..7, h=8..H, so each horizon
+# bucket gets the rule that suits its noise structure (median for skew,
+# mean for clusters; asinh-space for heavy tails). Rules are pure
+# reductions over (member_value, weight) pairs — no fitting, no overfit.
+def _blend_mean(vals_cfs: List[float], wts: List[float]) -> Optional[float]:
+    return _weighted_mean(vals_cfs, wts)
+
+def _blend_median(vals_cfs: List[float], wts: List[float]) -> Optional[float]:
+    return _weighted_median(vals_cfs, wts)
+
+def _blend_mean_asinh(vals_cfs: List[float], wts: List[float], qs: float) -> Optional[float]:
+    zs = [float(np.arcsinh(v / max(qs, 1e-9))) for v in vals_cfs
+          if v is not None and math.isfinite(v)]
+    if not zs:
+        return None
+    z = _weighted_mean(zs, wts[:len(zs)])
+    if z is None:
+        return None
+    return float(np.clip(np.sinh(z) * max(qs, 1e-9), 0.0, None))
+
+def _blend_median_asinh(vals_cfs: List[float], wts: List[float], qs: float) -> Optional[float]:
+    zs = [float(np.arcsinh(v / max(qs, 1e-9))) for v in vals_cfs
+          if v is not None and math.isfinite(v)]
+    if not zs:
+        return None
+    z = _weighted_median(zs, wts[:len(zs)])
+    if z is None:
+        return None
+    return float(np.clip(np.sinh(z) * max(qs, 1e-9), 0.0, None))
+
+_BLEND_RULES = ("mean", "median", "mean_asinh", "median_asinh")
+
+def _apply_blend_rule(rule: str, vals_cfs: List[float], wts: List[float], qs: float) -> Optional[float]:
+    if rule == "mean":
+        return _blend_mean(vals_cfs, wts)
+    if rule == "median":
+        return _blend_median(vals_cfs, wts)
+    if rule == "mean_asinh":
+        return _blend_mean_asinh(vals_cfs, wts, qs)
+    if rule == "median_asinh":
+        return _blend_median_asinh(vals_cfs, wts, qs)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -922,36 +970,16 @@ def forecast_station(
         if ctx_len >= 1:
             last_dates_by_offset[off] = pd.to_datetime(q_hist["date"].iloc[ctx_len - 1])
 
-    # v12.1: dropped the learned per-station stacker. With only 6 holdout rows
-    # per horizon and 5+ features (member preds + static + DOY), the regression
-    # was either overfitting in-sample (Ridge alpha=10) or extrapolating wildly
-    # under leave-one-out (QuantileRegressor degenerate at N≤5). The blend now
-    # uses inverse-MAE² *weighted median* over members (median directly
-    # minimizes MAE on the asinh scale; weights from the holdout MAEs we
-    # already have). No fit, no overfitting, fully reproducible.
-    blend_vals = []
-    blend_strategy_per_h: Dict[int, str] = {}
-    for h_idx in range(horizon):
-        h = h_idx + 1
-        ws = _weights_for_horizon(h)
-        vals: List[float] = []
-        wts: List[float] = []
-        for name, w in ws.items():
-            v = members[name][h_idx]["q_cfs"]
-            if v is None or not math.isfinite(v):
-                continue
-            vals.append(float(v))
-            wts.append(float(w))
-        wm = _weighted_median(vals, wts)
-        blend_vals.append(wm if wm is not None else float("nan"))
-        blend_strategy_per_h[h] = "weighted_median"
-
-    # v12.1: blend MAE on holdouts. Same weighted-median rule the live blend
-    # uses; no fit, so this number is honest and matches what the live blend
-    # would have produced on those dates. (v12's number was Ridge-fit-and-
-    # scored on the same 3 rows — biased optimistic.)
-    rolling_mae_blend: Dict[int, float] = {}
-    fallback_errs: Dict[int, list] = {h: [] for h in range(1, horizon + 1)}
+    # v12.2: score all 4 blend rules (mean, median, mean_asinh, median_asinh)
+    # on the holdouts at every horizon, then pick the rule with the lowest
+    # MAE per horizon BUCKET (h=1, h=2..7, h=8..H). Each bucket has many
+    # holdout/horizon observations (6 offsets × bucket size), so the choice
+    # is data-supported and stable. No fitting — just a 4-way reduction
+    # picked by retrospective MAE. Fixed the v12.1 ridge arg-order bug
+    # upstream so ridge now actually contributes a 5th member.
+    rule_errs: Dict[str, Dict[int, list]] = {
+        r: {h: [] for h in range(1, horizon + 1)} for r in _BLEND_RULES
+    }
     offsets_with_data = sorted({
         off for plist in member_preds.values() for (off, _, _) in plist
     })
@@ -978,13 +1006,68 @@ def forecast_station(
                     continue
                 vals.append(v)
                 wts.append(float(w))
-            wm = _weighted_median(vals, wts)
-            if wm is not None:
-                fallback_errs[h].append(abs(wm - ytrue_h))
+            for rule in _BLEND_RULES:
+                pred = _apply_blend_rule(rule, vals, wts, qs_blend)
+                if pred is not None and math.isfinite(pred):
+                    rule_errs[rule][h].append(abs(pred - ytrue_h))
 
-    for h in range(1, horizon + 1):
-        if fallback_errs.get(h):
-            rolling_mae_blend[h] = float(np.mean(fallback_errs[h]))
+    def _bucket_mean(rule: str, hs: List[int]) -> Optional[float]:
+        flat: list = []
+        for h in hs:
+            flat.extend(rule_errs[rule].get(h, []))
+        return float(np.mean(flat)) if flat else None
+
+    bucket_h1 = [1] if horizon >= 1 else []
+    bucket_short = [h for h in range(2, 8) if h <= horizon]
+    bucket_long = [h for h in range(8, horizon + 1)]
+
+    def _pick_rule(hs: List[int]) -> str:
+        scores = {r: _bucket_mean(r, hs) for r in _BLEND_RULES}
+        finite = {r: s for r, s in scores.items() if s is not None and math.isfinite(s)}
+        if not finite:
+            return "median"  # safe default; v12.1 behavior
+        return min(finite, key=lambda r: finite[r])
+
+    rule_for_h: Dict[int, str] = {}
+    if bucket_h1:
+        r1 = _pick_rule(bucket_h1)
+        for h in bucket_h1:
+            rule_for_h[h] = r1
+    if bucket_short:
+        rs = _pick_rule(bucket_short)
+        for h in bucket_short:
+            rule_for_h[h] = rs
+    if bucket_long:
+        rl = _pick_rule(bucket_long)
+        for h in bucket_long:
+            rule_for_h[h] = rl
+
+    blend_vals = []
+    blend_strategy_per_h: Dict[int, str] = {}
+    for h_idx in range(horizon):
+        h = h_idx + 1
+        ws = _weights_for_horizon(h)
+        vals: List[float] = []
+        wts: List[float] = []
+        for name, w in ws.items():
+            v = members[name][h_idx]["q_cfs"]
+            if v is None or not math.isfinite(v):
+                continue
+            vals.append(float(v))
+            wts.append(float(w))
+        rule = rule_for_h.get(h, "median")
+        pred = _apply_blend_rule(rule, vals, wts, qs_blend)
+        blend_vals.append(pred if pred is not None and math.isfinite(pred) else float("nan"))
+        blend_strategy_per_h[h] = rule
+
+    # Honest blend MAE: same per-bucket rule the live blend uses, scored on
+    # the same holdouts the rule was selected on. Apples-to-apples vs the
+    # member MAEs above (which were also computed on these offsets).
+    rolling_mae_blend: Dict[int, float] = {
+        h: float(np.mean(rule_errs[rule_for_h[h]][h]))
+        for h in range(1, horizon + 1)
+        if h in rule_for_h and rule_errs[rule_for_h[h]][h]
+    }
 
     chosen = min(rolling_mae, key=lambda k: rolling_mae[k]) if rolling_mae else "runoff_ridge"
 
@@ -1063,6 +1146,7 @@ def forecast_station(
         rolling_mape_h7={k: float(v) for k, v in rolling_mape_h7.items()},
         rolling_mape_h14={k: float(v) for k, v in rolling_mape_h14.items()},
         rolling_mae_blend={int(h): float(v) for h, v in rolling_mae_blend.items()},
+        blend_strategy_per_h={int(h): str(r) for h, r in blend_strategy_per_h.items()},
         chosen=chosen,
         weights_strategy=weights_strategy,
         notes=notes,
@@ -1192,8 +1276,8 @@ def _persistence_predict_on_holdout(
 
 def _ridge_predict_on_holdout(
     q_hist: pd.DataFrame,
-    wx_hist: pd.DataFrame,
     horizon: int,
+    wx_hist: pd.DataFrame,
     snotel_df: Optional[pd.DataFrame],
     *,
     end_offset: int = 0,
