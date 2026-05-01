@@ -1168,14 +1168,24 @@ def forecast_station(
         for h in bucket_long:
             rule_for_h[h] = rl
 
+    # v13.1: 2-stage NWM shrinkage. NWM has no historical forecasts so it
+    # can't participate in the rule-selection scoring above (member_preds["nwm"]
+    # is empty). Including it in the live `vals` panel under a rule tuned on a
+    # 5-member panel hurt blend MAE in v13. Instead: build the rule-blend over
+    # the 5 non-NWM members (matching what the rule was scored on), then shrink
+    # the result toward NWM by α = mae_others² / (mae_nwm² + mae_others²).
     blend_vals = []
     blend_strategy_per_h: Dict[int, str] = {}
+    nwm_list = members.get("nwm")
+    have_nwm = nwm_list is not None
     for h_idx in range(horizon):
         h = h_idx + 1
         ws = _weights_for_horizon(h)
         vals: List[float] = []
         wts: List[float] = []
         for name, w in ws.items():
+            if name == "nwm":
+                continue  # handled separately as a 2-stage shrinkage below
             mlist = members.get(name)
             if mlist is None or h_idx >= len(mlist):
                 continue
@@ -1185,18 +1195,56 @@ def forecast_station(
             vals.append(float(v))
             wts.append(float(w))
         rule = rule_for_h.get(h, "median")
-        pred = _apply_blend_rule(rule, vals, wts, qs_blend)
+        rule_pred = _apply_blend_rule(rule, vals, wts, qs_blend)
+
+        nwm_v = None
+        if have_nwm and h_idx < len(nwm_list):
+            nv = nwm_list[h_idx]["q_cfs"]
+            if nv is not None and math.isfinite(nv):
+                nwm_v = float(nv)
+
+        if nwm_v is not None and rule_pred is not None and math.isfinite(rule_pred):
+            mae_nwm = nwm_per_h.get(h)
+            mae_others = per_horizon_mae.get(h, {})
+            mae_others_min = min(
+                (m for k, m in mae_others.items() if k != "nwm" and m is not None and math.isfinite(m) and m > 0),
+                default=None,
+            )
+            if mae_nwm is not None and math.isfinite(mae_nwm) and mae_nwm > 0 and mae_others_min:
+                alpha = (mae_others_min ** 2) / (mae_nwm ** 2 + mae_others_min ** 2)
+                pred = alpha * nwm_v + (1.0 - alpha) * rule_pred
+                blend_strategy_per_h[h] = f"{rule}+nwm_shrink({alpha:.2f})"
+            else:
+                pred = 0.5 * nwm_v + 0.5 * rule_pred
+                blend_strategy_per_h[h] = f"{rule}+nwm_50_50"
+        elif nwm_v is not None and (rule_pred is None or not math.isfinite(rule_pred)):
+            pred = nwm_v
+            blend_strategy_per_h[h] = "nwm_only"
+        else:
+            pred = rule_pred
+            blend_strategy_per_h[h] = rule
+
         blend_vals.append(pred if pred is not None and math.isfinite(pred) else float("nan"))
-        blend_strategy_per_h[h] = rule
 
     # Honest blend MAE: same per-bucket rule the live blend uses, scored on
     # the same holdouts the rule was selected on. Apples-to-apples vs the
     # member MAEs above (which were also computed on these offsets).
-    rolling_mae_blend: Dict[int, float] = {
-        h: float(np.mean(rule_errs[rule_for_h[h]][h]))
-        for h in range(1, horizon + 1)
-        if h in rule_for_h and rule_errs[rule_for_h[h]][h]
-    }
+    rolling_mae_blend: Dict[int, float] = {}
+    for h in range(1, horizon + 1):
+        if h not in rule_for_h or not rule_errs[rule_for_h[h]][h]:
+            continue
+        rule_mae_h = float(np.mean(rule_errs[rule_for_h[h]][h]))
+        # v13.1: if NWM is shrinking the live blend, the holdout-rule MAE is no
+        # longer apples-to-apples. Estimate post-shrinkage MAE assuming linear
+        # convex combo with α as defined above. Conservative: assumes errors are
+        # not negatively correlated, so this is an upper bound on actual MAE.
+        mae_nwm = nwm_per_h.get(h)
+        if (have_nwm and mae_nwm is not None and math.isfinite(mae_nwm) and mae_nwm > 0
+                and rule_mae_h > 0):
+            alpha = (rule_mae_h ** 2) / (mae_nwm ** 2 + rule_mae_h ** 2)
+            rolling_mae_blend[h] = float(alpha * mae_nwm + (1.0 - alpha) * rule_mae_h)
+        else:
+            rolling_mae_blend[h] = rule_mae_h
 
     chosen = min(rolling_mae, key=lambda k: rolling_mae[k]) if rolling_mae else "runoff_ridge"
 
