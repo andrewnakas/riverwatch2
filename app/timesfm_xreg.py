@@ -49,10 +49,6 @@ from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-# Mirror the asinh transform used by every other foundation model member so
-# this one is on the same footing.
-from .forecast import _q_inverse, _q_scale, _q_transform
-
 # 2.5 supports up to 2048 like 2.0, but XReg shape mismatches blow up if the
 # covariate arrays don't match context length, so we keep this constant in one
 # place and feed both inputs at this length.
@@ -109,7 +105,11 @@ def _get_pipeline(*, require_xreg: bool):
             token=None,
         )
         # `return_backcast=True` is *required* for forecast_with_covariates.
-        # `infer_is_positive=True` matches our nonneg discharge transform.
+        # We feed raw nonneg CFS (no asinh) and let 2.5's built-in
+        # normalize_inputs handle the per-input scaling — the legacy 2.0 path
+        # used asinh because 2.0 lacked input normalization, but 2.5 does
+        # this natively and the asinh trick was producing wildly off-scale
+        # forecasts in the first deploy attempt.
         model.compile(
             ForecastConfig(
                 max_context=TFM25_CONTEXT,
@@ -117,7 +117,7 @@ def _get_pipeline(*, require_xreg: bool):
                 normalize_inputs=True,
                 use_continuous_quantile_head=False,
                 return_backcast=True,
-                infer_is_positive=False,  # we feed asinh(q/qs) which can be neg
+                infer_is_positive=True,  # discharge is nonneg; 2.5 enforces it
                 per_core_batch_size=1,
             )
         )
@@ -173,19 +173,19 @@ def forecast_univariate(q_hist: pd.DataFrame, horizon: int) -> Optional[List[flo
     Drop-in for the legacy 2.0 univariate path that lived in forecast.py. The
     2.5 weights/architecture are different enough that we can't share a model
     object with the 2.0 release; we just use 2.5 for both paths.
+
+    Feeds raw CFS (no asinh) and lets 2.5 normalize internally. The asinh path
+    we used with 2.0 produced ~4x-low forecasts in the first 2.5 deploy.
     """
     pipe = _get_pipeline(require_xreg=False)
     if pipe is None or q_hist.empty:
         return None
     try:
         raw_ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TFM25_CONTEXT:]
-        qs = _q_scale(pd.Series(raw_ctx))
-        ctx = _q_transform(raw_ctx, qs)
-        if len(ctx) < 60:
+        if len(raw_ctx) < 60:
             return None
-        point, _quant = pipe.forecast(horizon=horizon, inputs=[np.asarray(ctx)])
-        pred_z = np.asarray(point[0])[:horizon]
-        pred = _q_inverse(pred_z, qs)
+        point, _quant = pipe.forecast(horizon=horizon, inputs=[np.asarray(raw_ctx, dtype=np.float32)])
+        pred = np.asarray(point[0])[:horizon]
         if len(pred) < horizon:
             pad = np.full(horizon - len(pred), float(pred[-1]) if len(pred) else 0.0)
             pred = np.concatenate([pred, pad])
@@ -213,8 +213,7 @@ def forecast(
         return None
     try:
         raw = q_hist["q_cfs"].astype(float).clip(lower=0).to_numpy()
-        qs = _q_scale(pd.Series(raw))
-        ctx = _q_transform(raw[-TFM25_CONTEXT:], qs)
+        ctx = raw[-TFM25_CONTEXT:].astype(np.float32)
         ctx_len = int(len(ctx))
         if ctx_len < 60:  # too short for a useful linear xreg fit
             return None
@@ -259,10 +258,8 @@ def forecast(
             ridge=1.0,  # regularize the linear fit (small samples)
             force_on_cpu=True,  # avoid jax/cuda issues on CI runners
         )
-        # forecast_with_covariates returns (point, xreg_only). Use point
-        # (TimesFM + xreg combined).
-        pred_z = np.asarray(point_fc[0])[:horizon]
-        pred = _q_inverse(pred_z, qs)
+        # forecast_with_covariates returns (point, quantile). Use point.
+        pred = np.asarray(point_fc[0])[:horizon]
         if len(pred) < horizon:
             pad = np.full(horizon - len(pred), float(pred[-1]) if len(pred) else 0.0)
             pred = np.concatenate([pred, pad])
