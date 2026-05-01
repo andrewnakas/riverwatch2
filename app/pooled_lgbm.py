@@ -83,14 +83,23 @@ class PooledTrainer:
     comparable across basins.
     """
     horizon: int = 14
+    # Master column schema, locked at first add_station call. Subsequent
+    # stations are projected onto these columns (missing -> NaN, LightGBM
+    # handles NaN natively); columns the first station didn't have are dropped.
     feature_cols: List[str] = field(default_factory=list)
-    # rows[h] = list of (X_row, y) tuples for horizon h
-    _rows: Dict[int, List[Tuple[np.ndarray, float]]] = field(default_factory=dict)
+    _master_dyn_cols: Optional[List[str]] = None
+    # rows[h] = list of (X_batch, y_batch) per (station, horizon)
+    _rows: Dict[int, List[Tuple[np.ndarray, np.ndarray]]] = field(default_factory=dict)
     _models: Dict[int, object] = field(default_factory=dict)
     # cached per-station data needed at predict time
     _station_state: Dict[str, dict] = field(default_factory=dict)
     _seen_static_dim: Optional[int] = None
     _fitted: bool = False
+    # Cap rows per (station, horizon) so 119 stations × 100yr histories don't
+    # produce 30M-row training matrices per horizon. With cap=5000 we get
+    # ~600K rows/horizon — plenty for a 31-leaf tree to learn rainfall→runoff
+    # transfer functions, and CI memory + time stays bounded.
+    max_rows_per_station_per_h: int = 5000
 
     def __post_init__(self) -> None:
         self._rows = {h: [] for h in range(1, self.horizon + 1)}
@@ -118,27 +127,53 @@ class PooledTrainer:
             return
         if self._seen_static_dim is None:
             self._seen_static_dim = len(sv)
-            self.feature_cols = list(cols) + _STATIC_NAMES
         elif len(sv) != self._seen_static_dim:
             return  # malformed
+
+        # Lock master schema on first station: every later station gets
+        # projected onto these columns (missing -> NaN). _feature_columns drops
+        # cols with <10 non-null, so different stations have different col sets;
+        # naive concat then fails with shape mismatch.
+        if self._master_dyn_cols is None:
+            self._master_dyn_cols = list(cols)
+            self.feature_cols = self._master_dyn_cols + _STATIC_NAMES
+        master = self._master_dyn_cols
+
+        # Extract target series first (they may also be in master as features).
+        # q_log is the asinh-transformed observed flow; q_log_clim is its
+        # day-of-year climatology. Used to build per-h target = q_log.shift(-h)
+        # - q_log_clim.shift(-h).
+        if "q_log" not in feats_df.columns:
+            return  # malformed feats — can't build pooled targets
+        q_log_series = feats_df["q_log"]
+        q_log_clim_series = feats_df["q_log_clim"] if has_clim and "q_log_clim" in feats_df.columns else None
+        # Reindex feats to master schema. Pandas creates NaN for missing cols.
+        feats_master = feats_df.reindex(columns=master)
 
         # Use the same per-h target construction as the per-station LGBM:
         # target_anom = q_log.shift(-h) - q_log_clim.shift(-h) (or raw q_log).
         # v13.2 mem fix: store one (X, y) batch per (station, horizon) — NOT one
         # row per tuple. With 118 stations × 14 horizons × ~50K rows/station,
         # row-level tuples overflow RAM (~25 GB). Batched arrays keep it ~1.8 GB.
+        rng = np.random.default_rng(seed=hash(station_id) & 0xFFFFFFFF)
         for h in range(1, self.horizon + 1):
-            target_log = feats_df["q_log"].shift(-h)
-            if has_clim:
-                target = target_log - feats_df["q_log_clim"].shift(-h)
+            target_log = q_log_series.shift(-h)
+            if q_log_clim_series is not None:
+                target = target_log - q_log_clim_series.shift(-h)
             else:
                 target = target_log
-            df_h = feats_df[cols].copy()
-            df_h["__target__"] = target
-            train = df_h.dropna()
+            df_h = feats_master.copy()
+            df_h["__target__"] = target.values
+            # Drop only on target NaN; keep NaN feature cells (LightGBM handles).
+            train = df_h.dropna(subset=["__target__"])
             if len(train) < 60:
                 continue
-            X = train[cols].values.astype(np.float32)
+            # Subsample to cap rows per (station, horizon).
+            cap = self.max_rows_per_station_per_h
+            if len(train) > cap:
+                idx = rng.choice(len(train), size=cap, replace=False)
+                train = train.iloc[np.sort(idx)]
+            X = train[master].values.astype(np.float32)
             y = train["__target__"].values.astype(np.float32)
             # Append static-feature columns broadcast across all rows.
             X = np.concatenate([X, np.tile(sv, (X.shape[0], 1))], axis=1)
@@ -204,22 +239,21 @@ class PooledTrainer:
         clim_at_target_per_h: Dict[int, float],
     ) -> Optional[List[float]]:
         """Per-station live forecast using the pooled models."""
-        if not self._fitted or not self._models:
+        if not self._fitted or not self._models or self._master_dyn_cols is None:
             return None
         st = self._station_state.get(station_id)
         if st is None:
             return None
-        if list(cols) != st["cols"]:
-            return None  # feature schema must match training
         sv = st["static"]
         qs = st["qs"]
         has_clim = st["has_clim"]
 
-        # Live feature vector + static suffix (same construction as training).
-        x_live = np.concatenate([
-            feats_now[cols].fillna(0.0).values.astype(np.float32),
-            sv,
-        ]).reshape(1, -1)
+        # Project per-station feats_now onto master schema. Cols this station
+        # is missing become NaN (LightGBM handles natively, same as training).
+        master = self._master_dyn_cols
+        feats_now_dict = {c: float(feats_now.get(c, np.nan)) for c in master}
+        x_dyn = np.array([feats_now_dict[c] for c in master], dtype=np.float32)
+        x_live = np.concatenate([x_dyn, sv]).reshape(1, -1)
 
         out: List[float] = []
         for h in range(1, self.horizon + 1):
@@ -260,10 +294,10 @@ class PooledTrainer:
         on rows from this station's full history), but the per-station LGBM
         ridge has the same property and we score them apples-to-apples.
         """
-        if not self._fitted or not self._models:
+        if not self._fitted or not self._models or self._master_dyn_cols is None:
             return None
         st = self._station_state.get(station_id)
-        if st is None or list(cols) != st["cols"]:
+        if st is None:
             return None
         sv = st["static"]
         qs = st["qs"]
@@ -281,8 +315,14 @@ class PooledTrainer:
 
         if last_date not in feats_df.index:
             return None
-        feats_now = feats_df.loc[last_date, cols].fillna(0.0).values.astype(np.float32)
-        x_live = np.concatenate([feats_now, sv]).reshape(1, -1)
+        # Project per-station feats onto master schema (NaN for missing cols).
+        master = self._master_dyn_cols
+        row = feats_df.loc[last_date]
+        x_dyn = np.array(
+            [float(row[c]) if c in row.index else float("nan") for c in master],
+            dtype=np.float32,
+        )
+        x_live = np.concatenate([x_dyn, sv]).reshape(1, -1)
 
         last_doy = int(last_date.dayofyear)
         yhat = np.empty(horizon, dtype=float)
