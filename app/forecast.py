@@ -1159,11 +1159,25 @@ def forecast_station(
     # 1.4x horizon-decay factor brings it in line with what NWM medium_range
     # publications report (Cosgrove et al. 2024; ~30-50% MAE inflation across
     # h=1..h=10).
+    #
+    # v13.5: when the hindcast call fails (analysis_assimilation API hiccup,
+    # ungauged COMID, etc.) we fall back to 0.9 × persistence per-h. The 0.9
+    # factor reflects what v13 backtests showed: NWM is consistently a touch
+    # better than persistence at short leads. Without this fallback, NWM gets
+    # no rolling_mae entry → no inverse-MAE² blend weight → effectively
+    # dropped from the ensemble for this station, which is worse than using
+    # an approximate weight.
     nwm_per_h: Dict[int, float] = {}
-    if "nwm" in members and nwm_mae_estimate is not None and math.isfinite(nwm_mae_estimate):
-        for h in range(1, horizon + 1):
-            nwm_per_h[h] = float(nwm_mae_estimate * (1.0 + 0.04 * h))
-        rolling_mae["nwm"] = float(np.mean(list(nwm_per_h.values())))
+    if "nwm" in members:
+        if nwm_mae_estimate is not None and math.isfinite(nwm_mae_estimate):
+            for h in range(1, horizon + 1):
+                nwm_per_h[h] = float(nwm_mae_estimate * (1.0 + 0.04 * h))
+        elif persist_per_h:
+            for h, v in persist_per_h.items():
+                if v is not None and math.isfinite(v):
+                    nwm_per_h[h] = float(v) * 0.9
+        if nwm_per_h:
+            rolling_mae["nwm"] = float(np.mean(list(nwm_per_h.values())))
 
     def _per_h_lookup(per_h: Dict[int, float], h: int) -> Optional[float]:
         if per_h.get(h) is not None:

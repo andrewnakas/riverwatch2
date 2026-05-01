@@ -105,16 +105,22 @@ def _get_pipeline(*, require_xreg: bool):
             token=None,
         )
         # `return_backcast=True` is *required* for forecast_with_covariates.
-        # We feed raw nonneg CFS (no asinh) and let 2.5's built-in
-        # normalize_inputs handle the per-input scaling — the legacy 2.0 path
-        # used asinh because 2.0 lacked input normalization, but 2.5 does
-        # this natively and the asinh trick was producing wildly off-scale
-        # forecasts in the first deploy attempt.
+        # `normalize_inputs=False`: TimesFM 2.5 applies a global ReVIN BEFORE
+        # the decode call (timesfm_2p5_torch.py:413-417) and then applies its
+        # own internal patch-level ReVIN inside decode. Stacking the two is
+        # the "double normalization" pathology Google fixed with a nan_to_num
+        # band-aid in PR #381 (response to issue #321 NaN output): variance
+        # collapses to ~0, sigma → 0, and the autoregressive decode amplifies
+        # numerical noise into wild scales. Two earlier deploys (asinh + raw
+        # CFS) both produced TimesFM MAE ~6500 vs chronos's ~1500 — exactly
+        # this scale explosion. Disabling the outer normalize keeps only the
+        # patch-level mask-aware ReVIN, which is what TimesFM 2.0 used and
+        # what made it work fine for our 1893 gauges.
         model.compile(
             ForecastConfig(
                 max_context=TFM25_CONTEXT,
                 max_horizon=14,
-                normalize_inputs=True,
+                normalize_inputs=False,
                 use_continuous_quantile_head=False,
                 return_backcast=True,
                 infer_is_positive=True,  # discharge is nonneg; 2.5 enforces it
