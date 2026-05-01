@@ -33,7 +33,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.forecast import forecast_station  # noqa: E402
+from app.forecast import forecast_station, prepare_station_inputs  # noqa: E402
+from app.pooled_lgbm import PooledTrainer  # noqa: E402
 
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
 SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
@@ -174,11 +175,53 @@ def main() -> int:
     blend_h7: list[float] = []
     blend_h14: list[float] = []
     t0 = time.time()
+
+    # v13.2: 2-pass build. Pass 1 collects fetched + feature-engineered inputs
+    # for every station in this shard, accumulates pooled-LGBM training rows,
+    # and fits 14 per-horizon models. Pass 2 runs forecast_station with those
+    # cached inputs + the trained pooled predictor to produce the new
+    # `lgbm_pooled` ensemble member alongside the existing 6.
+    print(f"v13.2 pass 1: collecting inputs across {len(stations)} stations…")
+    pooled = PooledTrainer(horizon=args.horizon)
+    inputs_by_sid: dict[str, object] = {}
+    pass1_failures: list[str] = []
     for i, st in enumerate(stations, 1):
         sid = st["id"]
         ts = time.time()
         try:
-            f = forecast_station(sid, st["lat"], st["lon"], horizon=args.horizon, station_attrs=st)
+            si = prepare_station_inputs(
+                sid, st["lat"], st["lon"], horizon=args.horizon, station_attrs=st
+            )
+            inputs_by_sid[sid] = si
+            pooled.add_station(
+                sid, si.feats, st, si.cols, si.qs, si.has_clim,
+            )
+            if i % 25 == 0 or i == len(stations):
+                print(f"  pass1 [{i}/{len(stations)}] sid={sid} rows={pooled.n_rows()} {time.time()-ts:.1f}s")
+        except Exception as exc:
+            pass1_failures.append(sid)
+            print(f"  pass1 [{i}/{len(stations)}] sid={sid} FAIL {exc}")
+
+    pooled_ok = False
+    if pooled.n_rows() >= 1000:
+        t_fit = time.time()
+        print(f"v13.2 pass 1 fit: {pooled.n_rows()} rows across {len(inputs_by_sid)} stations…")
+        pooled_ok = pooled.fit()
+        print(f"  pooled fit: ok={pooled_ok} {time.time()-t_fit:.1f}s")
+    else:
+        print(f"v13.2 pass 1 skipped: only {pooled.n_rows()} pooled rows (need >=1000)")
+
+    print(f"v13.2 pass 2: per-station forecasts…")
+    for i, st in enumerate(stations, 1):
+        sid = st["id"]
+        ts = time.time()
+        try:
+            si = inputs_by_sid.get(sid)
+            f = forecast_station(
+                sid, st["lat"], st["lon"], horizon=args.horizon, station_attrs=st,
+                inputs=si,
+                pooled_predictor=pooled if pooled_ok else None,
+            )
             data = asdict(f)
             data["station"] = st
             data["has_history_file"] = _emit_history(sid)

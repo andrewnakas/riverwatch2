@@ -767,7 +767,31 @@ def _apply_blend_rule(rule: str, vals_cfs: List[float], wts: List[float], qs: fl
 # Top-level orchestration
 # ---------------------------------------------------------------------------
 
-def forecast_station(
+@dataclass
+class StationInputs:
+    """Bundle of fetched + feature-engineered data for one station, reusable
+    across the v13.2 2-pass build (pass 1 trains pooled-LGBM on these features
+    across all shard stations; pass 2 calls `forecast_station` with the same
+    inputs + the trained pooled predictor)."""
+    station_id: str
+    lat: float
+    lon: float
+    horizon: int
+    today: date
+    q_hist: pd.DataFrame
+    wx_hist: pd.DataFrame
+    wx_fcst: pd.DataFrame
+    snotel_df: Optional[pd.DataFrame]
+    snotel_meta: Optional[dict]
+    feats: pd.DataFrame
+    cols: List[str]
+    qs: float
+    has_clim: bool
+    notes: List[str]
+    attrs: Optional[dict]
+
+
+def prepare_station_inputs(
     station_id: str,
     lat: float,
     lon: float,
@@ -775,7 +799,14 @@ def forecast_station(
     horizon: int = HORIZON_DAYS,
     history_days: int = TRAIN_LOOKBACK_DAYS,
     station_attrs: Optional[dict] = None,
-) -> StationForecast:
+) -> StationInputs:
+    """Pass-1 helper: fetch + feature-engineer one station's data.
+
+    Returns a `StationInputs` bundle that can be fed to `pooled_lgbm.PooledTrainer`
+    for cross-station training and then passed back into `forecast_station` for
+    inference. Splitting fetch/feature-build out of `forecast_station` lets us
+    avoid refetching during pass 2.
+    """
     today = date.today()
     start = today - timedelta(days=history_days)
     if start < LOOKBACK_FLOOR:
@@ -800,9 +831,6 @@ def forecast_station(
 
     snotel_df: Optional[pd.DataFrame] = None
     snotel_meta: Optional[dict] = None
-    # Gate SNOTEL fetches behind RW2_ENABLE_SNOTEL to avoid a slow first-build
-    # cold-fill (per-site nearest-mapper + WTEQ history). Enable once we want
-    # to populate the SNOTEL caches in the workflow.
     import os as _os
     if _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
         try:
@@ -815,6 +843,98 @@ def forecast_station(
         except Exception as exc:
             notes.append(f"snotel failed: {exc}")
             snotel_df = None
+
+    # Build the per-station feature matrix once. wx_combined matches what
+    # runoff_ridge_forecast does for the live call; pooled training will see
+    # rows from history (where target is observed); inference will read the
+    # last row.
+    wx_combined = pd.concat([wx_hist, wx_fcst], ignore_index=True)
+    wx_combined = wx_combined.drop_duplicates(subset="date", keep="last").sort_values("date")
+    feats = _build_features(q_hist, wx_combined, snotel_df=snotel_df)
+    cols = _feature_columns(feats)
+    qs = float(feats.attrs.get("q_scale", _q_scale(q_hist["q_cfs"])))
+    has_clim = bool(feats.attrs.get("has_climatology"))
+
+    return StationInputs(
+        station_id=station_id,
+        lat=lat,
+        lon=lon,
+        horizon=horizon,
+        today=today,
+        q_hist=q_hist,
+        wx_hist=wx_hist,
+        wx_fcst=wx_fcst,
+        snotel_df=snotel_df,
+        snotel_meta=snotel_meta,
+        feats=feats,
+        cols=cols,
+        qs=qs,
+        has_clim=has_clim,
+        notes=notes,
+        attrs=station_attrs,
+    )
+
+
+def forecast_station(
+    station_id: str,
+    lat: float,
+    lon: float,
+    *,
+    horizon: int = HORIZON_DAYS,
+    history_days: int = TRAIN_LOOKBACK_DAYS,
+    station_attrs: Optional[dict] = None,
+    inputs: Optional["StationInputs"] = None,
+    pooled_predictor: Optional[object] = None,
+) -> StationForecast:
+    if inputs is not None:
+        # Pass-2 path: reuse inputs gathered in pass 1.
+        today = inputs.today
+        q_hist = inputs.q_hist
+        wx_hist = inputs.wx_hist
+        wx_fcst = inputs.wx_fcst
+        snotel_df = inputs.snotel_df
+        snotel_meta = inputs.snotel_meta
+        notes = list(inputs.notes)
+    else:
+        today = date.today()
+        start = today - timedelta(days=history_days)
+        if start < LOOKBACK_FLOOR:
+            start = LOOKBACK_FLOOR
+
+        notes = []
+        q_hist = usgs.fetch_daily_discharge(station_id, start, today)
+        if q_hist.empty:
+            raise RuntimeError(f"no USGS daily discharge for {station_id}")
+
+        try:
+            wx_hist = weather.fetch_history(lat, lon, start, today - timedelta(days=1))
+        except Exception as exc:
+            notes.append(f"weather history failed: {exc}")
+            wx_hist = pd.DataFrame(columns=["date"] + weather.DAILY_VARS)
+
+        try:
+            wx_fcst = weather.fetch_forecast(lat, lon, days=horizon + 2)
+        except Exception as exc:
+            notes.append(f"weather forecast failed: {exc}")
+            wx_fcst = pd.DataFrame(columns=["date"] + weather.DAILY_VARS)
+
+        snotel_df = None
+        snotel_meta = None
+        # Gate SNOTEL fetches behind RW2_ENABLE_SNOTEL to avoid a slow first-build
+        # cold-fill (per-site nearest-mapper + WTEQ history). Enable once we want
+        # to populate the SNOTEL caches in the workflow.
+        import os as _os
+        if _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
+            try:
+                site = snotel.nearest_site(station_id, lat, lon)
+                if site:
+                    snotel_meta = site
+                    snotel_df = snotel.fetch_swe_history(site["stationTriplet"], start, today)
+                    if snotel_df is None or snotel_df.empty:
+                        snotel_df = None
+            except Exception as exc:
+                notes.append(f"snotel failed: {exc}")
+                snotel_df = None
 
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     future_dates = [(last_date + timedelta(days=h)).date().isoformat() for h in range(1, horizon + 1)]
@@ -873,6 +993,47 @@ def forecast_station(
     except Exception as exc:
         notes.append(f"nwm failed: {exc}")
 
+    # v13.2: pooled-LGBM cross-station member. Uses same per-station feature
+    # set as runoff_ridge plus static basin attributes (lat/lon/elev/area/HUC2)
+    # so the tree can learn rainfall→runoff transfer functions conditioned on
+    # basin character. Only available when called via the 2-pass build (where
+    # PooledTrainer.fit() ran in pass 1).
+    lgbm_pooled_pred: Optional[List[float]] = None
+    if pooled_predictor is not None and inputs is not None:
+        try:
+            feats_now_row = (
+                inputs.feats.loc[pd.to_datetime(q_hist["date"].iloc[-1]), inputs.cols]
+                if pd.to_datetime(q_hist["date"].iloc[-1]) in inputs.feats.index
+                else inputs.feats[inputs.cols].dropna().iloc[-1]
+            )
+            # Build clim-at-target lookup once.
+            clim_at_target_per_h: Dict[int, float] = {}
+            if inputs.has_clim:
+                last_doy_local = int(pd.to_datetime(q_hist["date"].iloc[-1]).dayofyear)
+                for h in range(1, horizon + 1):
+                    target_doy = ((last_doy_local - 1 + h) % 366) + 1
+                    doy_match = inputs.feats.index.dayofyear == target_doy
+                    if doy_match.any():
+                        clim_at_target_per_h[h] = float(
+                            inputs.feats.loc[doy_match, "q_log_clim"].iloc[0]
+                        )
+                    else:
+                        cs = inputs.feats["q_log_clim"].dropna()
+                        clim_at_target_per_h[h] = float(cs.mean()) if len(cs) else 0.0
+            lgbm_pooled_pred = pooled_predictor.predict(
+                station_id, feats_now_row, inputs.cols,
+                last_q=float(q_hist["q_cfs"].iloc[-1]),
+                clim_at_target_per_h=clim_at_target_per_h,
+            )
+            if lgbm_pooled_pred is not None:
+                members["lgbm_pooled"] = [
+                    {"date": d, "q_cfs": v} for d, v in zip(future_dates, lgbm_pooled_pred)
+                ]
+            else:
+                notes.append("lgbm_pooled unavailable")
+        except Exception as exc:
+            notes.append(f"lgbm_pooled failed: {exc}")
+
     # v11.4: every member is scored on the SAME 3 holdout windows so per-h
     # MAE values are directly comparable. Previously persistence used a 180-day
     # trailing window while foundation models used 3×horizon-day windows, which
@@ -912,6 +1073,32 @@ def forecast_station(
             q_hist, horizon, return_preds=True,
         )
 
+    # v13.2: pooled-LGBM holdout scoring. Uses the SAME tail-offset windows as
+    # the per-station ridge for apples-to-apples MAE. The pooled predictor was
+    # trained on this station's full feats history (mildly leaky), but the
+    # per-station LGBM ridge has the same property.
+    lgbm_pooled_per_h: Dict[int, float] = {}
+    lgbm_pooled_preds: list = []
+    if lgbm_pooled_pred is not None and pooled_predictor is not None and inputs is not None:
+        per_h_errs: Dict[int, list[float]] = {h: [] for h in range(1, horizon + 1)}
+        for off in _RIDGE_HOLDOUT_OFFSETS:
+            try:
+                result = pooled_predictor.holdout_score_one(
+                    station_id, inputs.feats, inputs.cols, q_hist, off, horizon,
+                )
+            except Exception:
+                continue
+            if result is None:
+                continue
+            yhat, ytrue = result
+            for h in range(1, horizon + 1):
+                if h - 1 < len(yhat) and h - 1 < len(ytrue):
+                    per_h_errs[h].append(abs(float(yhat[h - 1]) - float(ytrue[h - 1])))
+            lgbm_pooled_preds.append((off, list(yhat), list(ytrue)))
+        for h, errs in per_h_errs.items():
+            if errs:
+                lgbm_pooled_per_h[h] = float(np.mean(errs))
+
     rolling_mae: Dict[str, float] = {}
     if persist_per_h:
         rolling_mae["persistence_lag1"] = float(np.mean(list(persist_per_h.values())))
@@ -923,6 +1110,8 @@ def forecast_station(
         rolling_mae["ttm"] = float(np.mean(list(ttm_per_h.values())))
     if timesfm_per_h:
         rolling_mae["timesfm"] = float(np.mean(list(timesfm_per_h.values())))
+    if lgbm_pooled_per_h:
+        rolling_mae["lgbm_pooled"] = float(np.mean(list(lgbm_pooled_per_h.values())))
 
     # v13: NWM gets a hindcast-derived MAE estimate (analysis_assimilation vs
     # observed). It's a floor on actual forecast skill, but applying a uniform
@@ -957,6 +1146,7 @@ def forecast_station(
             ("ttm", ttm_per_h),
             ("timesfm", timesfm_per_h),
             ("nwm", nwm_per_h),
+            ("lgbm_pooled", lgbm_pooled_per_h),
         ):
             v = _per_h_lookup(per_h, h_target)
             if v is not None:
@@ -1034,6 +1224,7 @@ def forecast_station(
         "ttm": ttm_per_h,
         "timesfm": timesfm_per_h,
         "nwm": nwm_per_h,
+        "lgbm_pooled": lgbm_pooled_per_h,
     }
     per_horizon_mae: Dict[int, Dict[str, float]] = {}
     for h in range(1, horizon + 1):
@@ -1088,6 +1279,7 @@ def forecast_station(
         "ttm": ttm_preds,
         "timesfm": timesfm_preds,
         "nwm": [],  # NWM is forecast-only (no historical forecasts available)
+        "lgbm_pooled": lgbm_pooled_preds,  # v13.2: pooled-LGBM holdout preds
     }
     last_dates_by_offset: Dict[int, pd.Timestamp] = {}
     for off in _FOUNDATION_HOLDOUT_OFFSETS:
