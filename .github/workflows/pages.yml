@@ -72,6 +72,11 @@ jobs:
           # Hard-disable all data fetches; this build re-renders the static
           # site from whatever each shard's restored cache already has.
           RW2_NO_FETCH: "1"
+          # v13: NWM is forecast-only (no historical archive), so we let it
+          # pull live from NWPS even when the rest of the system is in
+          # cache-only mode. ~100ms/gauge × 118 gauges/shard = +12s/shard.
+          RW2_ENABLE_NWM: "1"
+          RW2_NWM_ALLOW_FETCH: "1"
         run: |
           python scripts/build_static_site.py \
             --shard-id ${{ matrix.shard }} \

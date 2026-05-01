@@ -852,6 +852,27 @@ def forecast_station(
     else:
         notes.append("timesfm unavailable")
 
+    # v13: NOAA National Water Model (NWM) medium_range_blend → 6th member.
+    # Process-based distributed hydrology with channel routing, fundamentally
+    # different signal from the ML/zero-shot members. Off by default; enabled
+    # with RW2_ENABLE_NWM=1 once the crosswalk + cache are warm.
+    nwm_pred: Optional[List[float]] = None
+    nwm_mae_estimate: Optional[float] = None
+    try:
+        from . import nwm
+        nwm_pred = nwm.forecast_daily_cfs(station_id, horizon=horizon)
+        if nwm_pred is not None:
+            members["nwm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, nwm_pred)]
+            # Hindcast MAE via analysis_assimilation vs observed flow over the
+            # past 30 days. Cheap (one extra API call) and gives the blend a
+            # real MAE to weight against — without it the inverse-MAE² weight
+            # would default to a single fallback bucket.
+            nwm_mae_estimate = nwm.hindcast_mae(station_id, q_hist, lookback_days=30)
+        else:
+            notes.append("nwm unavailable")
+    except Exception as exc:
+        notes.append(f"nwm failed: {exc}")
+
     # v11.4: every member is scored on the SAME 3 holdout windows so per-h
     # MAE values are directly comparable. Previously persistence used a 180-day
     # trailing window while foundation models used 3×horizon-day windows, which
@@ -903,6 +924,17 @@ def forecast_station(
     if timesfm_per_h:
         rolling_mae["timesfm"] = float(np.mean(list(timesfm_per_h.values())))
 
+    # v13: NWM gets a hindcast-derived MAE estimate (analysis_assimilation vs
+    # observed). It's a floor on actual forecast skill, but applying a uniform
+    # 1.4x horizon-decay factor brings it in line with what NWM medium_range
+    # publications report (Cosgrove et al. 2024; ~30-50% MAE inflation across
+    # h=1..h=10).
+    nwm_per_h: Dict[int, float] = {}
+    if "nwm" in members and nwm_mae_estimate is not None and math.isfinite(nwm_mae_estimate):
+        for h in range(1, horizon + 1):
+            nwm_per_h[h] = float(nwm_mae_estimate * (1.0 + 0.04 * h))
+        rolling_mae["nwm"] = float(np.mean(list(nwm_per_h.values())))
+
     def _per_h_lookup(per_h: Dict[int, float], h: int) -> Optional[float]:
         if per_h.get(h) is not None:
             return per_h[h]
@@ -924,6 +956,7 @@ def forecast_station(
             ("chronos_bolt", chronos_per_h),
             ("ttm", ttm_per_h),
             ("timesfm", timesfm_per_h),
+            ("nwm", nwm_per_h),
         ):
             v = _per_h_lookup(per_h, h_target)
             if v is not None:
@@ -1000,6 +1033,7 @@ def forecast_station(
         "chronos_bolt": chronos_per_h,
         "ttm": ttm_per_h,
         "timesfm": timesfm_per_h,
+        "nwm": nwm_per_h,
     }
     per_horizon_mae: Dict[int, Dict[str, float]] = {}
     for h in range(1, horizon + 1):
@@ -1053,6 +1087,7 @@ def forecast_station(
         "chronos_bolt": chronos_preds,
         "ttm": ttm_preds,
         "timesfm": timesfm_preds,
+        "nwm": [],  # NWM is forecast-only (no historical forecasts available)
     }
     last_dates_by_offset: Dict[int, pd.Timestamp] = {}
     for off in _FOUNDATION_HOLDOUT_OFFSETS:
@@ -1141,7 +1176,10 @@ def forecast_station(
         vals: List[float] = []
         wts: List[float] = []
         for name, w in ws.items():
-            v = members[name][h_idx]["q_cfs"]
+            mlist = members.get(name)
+            if mlist is None or h_idx >= len(mlist):
+                continue
+            v = mlist[h_idx]["q_cfs"]
             if v is None or not math.isfinite(v):
                 continue
             vals.append(float(v))
