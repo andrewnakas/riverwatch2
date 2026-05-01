@@ -123,7 +123,10 @@ function fmtTick(ts, step, prevYear) {
 // State for forecast chart's zoom slider. range = [frac0, frac1] in [0, 1] of the
 // full series x-extent. _fcst.full = {xmin, xmax}; the renderer uses range to
 // derive the visible window.
-let _fcst = { canvas: null, history: [], members: {}, blend: [], full: null, range: [0, 1] };
+// `showMembers=false` (default) renders only history + blend so the casual
+// reader sees one clean curve. The toggle above the chart flips it to true
+// to expose every ensemble member as a faint dashed line.
+let _fcst = { canvas: null, history: [], members: {}, blend: [], full: null, range: [0, 1], showMembers: false };
 
 function drawChart(canvas, history, members, blend) {
   _fcst.canvas = canvas;
@@ -142,6 +145,11 @@ function drawChart(canvas, history, members, blend) {
   _renderForecast();
 }
 
+function setShowMembers(show) {
+  _fcst.showMembers = !!show;
+  _renderForecast();
+}
+
 function _renderForecast() {
   const canvas = _fcst.canvas;
   if (!canvas || !_fcst.full) return;
@@ -154,9 +162,15 @@ function _renderForecast() {
   const series = [];
   series.push({ name: "history", color: "#e7ecf3", points: history });
   series.push({ name: "blend", color: "#ffd166", points: blend, dashed: true, width: 3 });
-  const memColors = { persistence_lag1: "#5fa0ff", runoff_ridge: "#7be07b", chronos_bolt: "#ff8a4c" };
-  for (const [name, pts] of Object.entries(members)) {
-    series.push({ name, color: memColors[name] || "#cccccc", points: pts, dashed: true });
+  if (_fcst.showMembers) {
+    const memColors = {
+      persistence_lag1: "#5fa0ff", runoff_ridge: "#7be07b", chronos_bolt: "#ff8a4c",
+      ttm: "#c994ff", timesfm: "#ff6f91", timesfm_xreg: "#ffb3c1",
+      nwm: "#4cc8ff", lgbm_pooled: "#a8e6a3",
+    };
+    for (const [name, pts] of Object.entries(members)) {
+      series.push({ name, color: memColors[name] || "#cccccc", points: pts, dashed: true });
+    }
   }
 
   const span = _fcst.full.xmax - _fcst.full.xmin || 1;
@@ -1062,6 +1076,16 @@ async function selectStation(station) {
 const refreshBtn = document.getElementById("refresh-btn");
 if (refreshBtn) {
   refreshBtn.style.display = "none";  // not meaningful for static deploy
+}
+
+const memberToggle = document.getElementById("toggle-members");
+if (memberToggle) {
+  memberToggle.addEventListener("click", () => {
+    const next = !_fcst.showMembers;
+    setShowMembers(next);
+    memberToggle.setAttribute("aria-pressed", String(next));
+    memberToggle.textContent = next ? "Hide ensemble members" : "Show ensemble members";
+  });
 }
 
 loadStations();
