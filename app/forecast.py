@@ -125,6 +125,34 @@ def _q_inverse(z, scale: float):
     return np.clip(np.sinh(np.asarray(z, dtype=float)) * max(scale, 1e-9), 0, None)
 
 
+# v13.4: anchored bias correction. Every member's h=1 prediction should
+# join the observed line — when NWM (process model) or a foundation model
+# starts ~30% off the last observation, the chart looks broken AND early-
+# horizon MAE suffers. We compute Δ = yhat[0] - q_obs and subtract a
+# linearly decaying correction so by `decay_h` the original forecast is
+# restored. Different members get different decay horizons:
+#   - process/ML members with persistent bias (NWM, ridge, lgbm_pooled): 7d
+#   - foundation models (chronos, ttm, timesfm, timesfm_xreg): 4d (they
+#     revert to climatology fast on their own; over-correcting smears
+#     storm-response signal across more days than necessary)
+def _anchor_to_observed(
+    pred: List[float],
+    q_obs: float,
+    *,
+    decay_h: int,
+) -> List[float]:
+    if not pred:
+        return pred
+    delta = float(pred[0]) - float(q_obs)
+    if not np.isfinite(delta) or delta == 0.0:
+        return pred
+    out = []
+    for h, v in enumerate(pred, start=1):
+        weight = max(0.0, 1.0 - (h - 1) / max(1, decay_h))
+        out.append(max(0.0, float(v) - delta * weight))
+    return out
+
+
 def _doy_climatology(z_series: pd.Series, dates: pd.DatetimeIndex) -> Optional[pd.Series]:
     """Per-DOY mean of an asinh-transformed series, smoothed with a ±15-day
     rolling window. Returns a series indexed 1..366 or None if too thin.
@@ -895,6 +923,8 @@ def forecast_station(
 
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     future_dates = [(last_date + timedelta(days=h)).date().isoformat() for h in range(1, horizon + 1)]
+    # v13.4: anchor every member to the last observed flow. See _anchor_to_observed.
+    q_obs_last = float(q_hist["q_cfs"].iloc[-1])
 
     members: Dict[str, List[dict]] = {}
 
@@ -909,22 +939,26 @@ def forecast_station(
         notes.append(f"ridge failed: {exc}")
         ridge_pred = persist
         ridge_mae = {}
+    ridge_pred = _anchor_to_observed(list(ridge_pred), q_obs_last, decay_h=7)
     members["runoff_ridge"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, ridge_pred)]
 
     chronos_pred = chronos_forecast(q_hist, horizon)
     if chronos_pred is not None:
+        chronos_pred = _anchor_to_observed(list(chronos_pred), q_obs_last, decay_h=4)
         members["chronos_bolt"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, chronos_pred)]
     else:
         notes.append("chronos_bolt unavailable")
 
     ttm_pred = ttm_forecast(q_hist, horizon)
     if ttm_pred is not None:
+        ttm_pred = _anchor_to_observed(list(ttm_pred), q_obs_last, decay_h=4)
         members["ttm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, ttm_pred)]
     else:
         notes.append("ttm unavailable")
 
     timesfm_pred = timesfm_forecast(q_hist, horizon)
     if timesfm_pred is not None:
+        timesfm_pred = _anchor_to_observed(list(timesfm_pred), q_obs_last, decay_h=4)
         members["timesfm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, timesfm_pred)]
     else:
         notes.append("timesfm unavailable")
@@ -941,6 +975,7 @@ def forecast_station(
             static_attrs=station_attrs,
         )
         if timesfm_xreg_pred is not None:
+            timesfm_xreg_pred = _anchor_to_observed(list(timesfm_xreg_pred), q_obs_last, decay_h=4)
             members["timesfm_xreg"] = [
                 {"date": d, "q_cfs": v} for d, v in zip(future_dates, timesfm_xreg_pred)
             ]
@@ -959,6 +994,10 @@ def forecast_station(
         from . import nwm
         nwm_pred = nwm.forecast_daily_cfs(station_id, horizon=horizon)
         if nwm_pred is not None:
+            # NWM is the most visibly off-anchor member — process model uses
+            # its own initial condition, often disagrees with USGS observed
+            # by 20-40%. Anchor with a 7d decay so the chart joins cleanly.
+            nwm_pred = _anchor_to_observed(list(nwm_pred), q_obs_last, decay_h=7)
             members["nwm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, nwm_pred)]
             # Hindcast MAE via analysis_assimilation vs observed flow over the
             # past 30 days. Cheap (one extra API call) and gives the blend a
@@ -1003,6 +1042,7 @@ def forecast_station(
                 clim_at_target_per_h=clim_at_target_per_h,
             )
             if lgbm_pooled_pred is not None:
+                lgbm_pooled_pred = _anchor_to_observed(list(lgbm_pooled_pred), q_obs_last, decay_h=7)
                 members["lgbm_pooled"] = [
                     {"date": d, "q_cfs": v} for d, v in zip(future_dates, lgbm_pooled_pred)
                 ]
