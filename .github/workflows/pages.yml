@@ -47,8 +47,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
-          key: hf-models-v10-chronos-ttm-timesfm
+          key: hf-models-v13-chronos-ttm-timesfm-2p5
           restore-keys: |
+            hf-models-v13-
             hf-models-v10-
             hf-models-
             hf-chronos-bolt-small-v1
@@ -77,6 +78,11 @@ jobs:
           # cache-only mode. ~100ms/gauge × 118 gauges/shard = +12s/shard.
           RW2_ENABLE_NWM: "1"
           RW2_NWM_ALLOW_FETCH: "1"
+          # v13.3: TimesFM 2.5 + XReg covariates (precip/temp as future-known
+          # forcing). Adds ~700ms/station inference cost; budgets 138min over
+          # 1893 stations split across 16 shards (~13min/shard, fits the
+          # existing 350min timeout headroom).
+          RW2_ENABLE_TIMESFM_XREG: "1"
         run: |
           python scripts/build_static_site.py \
             --shard-id ${{ matrix.shard }} \

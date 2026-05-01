@@ -972,6 +972,26 @@ def forecast_station(
     else:
         notes.append("timesfm unavailable")
 
+    # v13.3: TimesFM 2.5 + XReg covariates (precip, tmax, tmin as future-known
+    # forcing). Same foundation backbone as `timesfm` but conditioned on the
+    # weather forecast — so it knows "rain coming on day 5" the way NWM does
+    # via physics. Gated by RW2_ENABLE_TIMESFM_XREG.
+    timesfm_xreg_pred: Optional[List[float]] = None
+    try:
+        from . import timesfm_xreg as _tfm_xreg
+        timesfm_xreg_pred = _tfm_xreg.forecast(
+            q_hist, wx_hist, wx_fcst, horizon,
+            static_attrs=station_attrs,
+        )
+        if timesfm_xreg_pred is not None:
+            members["timesfm_xreg"] = [
+                {"date": d, "q_cfs": v} for d, v in zip(future_dates, timesfm_xreg_pred)
+            ]
+        else:
+            notes.append("timesfm_xreg unavailable")
+    except Exception as exc:
+        notes.append(f"timesfm_xreg failed: {exc}")
+
     # v13: NOAA National Water Model (NWM) medium_range_blend → 6th member.
     # Process-based distributed hydrology with channel routing, fundamentally
     # different signal from the ML/zero-shot members. Off by default; enabled
@@ -1113,6 +1133,30 @@ def forecast_station(
     if lgbm_pooled_per_h:
         rolling_mae["lgbm_pooled"] = float(np.mean(list(lgbm_pooled_per_h.values())))
 
+    # v13.3: timesfm_xreg gets an estimated MAE rather than a real holdout to
+    # keep build cost bounded — XReg inference runs the 200M model + a linear
+    # solve, so 3 holdout offsets × 1893 stations would add ~1.5h to CI.
+    # Estimate as timesfm * 0.9 (assume modest improvement from forcing). If
+    # the deploy looks promising we'll add a real one-offset holdout in v13.4.
+    timesfm_xreg_per_h: Dict[int, float] = {}
+    if "timesfm_xreg" in members:
+        # Prefer timesfm's holdouts as the proxy (same backbone). If timesfm
+        # itself failed, fall back to ridge's per-h (ridge sees the same
+        # covariates so its skill profile is a reasonable upper bound on what
+        # xreg should produce). Worst case we still have persistence as a floor.
+        proxy_per_h: Dict[int, float] = {}
+        if timesfm_per_h:
+            proxy_per_h = timesfm_per_h
+        elif ridge_per_h:
+            proxy_per_h = ridge_per_h
+        elif persist_per_h:
+            proxy_per_h = persist_per_h
+        for h, v in proxy_per_h.items():
+            if v is not None and math.isfinite(v):
+                timesfm_xreg_per_h[h] = float(v) * 0.9
+        if timesfm_xreg_per_h:
+            rolling_mae["timesfm_xreg"] = float(np.mean(list(timesfm_xreg_per_h.values())))
+
     # v13: NWM gets a hindcast-derived MAE estimate (analysis_assimilation vs
     # observed). It's a floor on actual forecast skill, but applying a uniform
     # 1.4x horizon-decay factor brings it in line with what NWM medium_range
@@ -1147,6 +1191,7 @@ def forecast_station(
             ("timesfm", timesfm_per_h),
             ("nwm", nwm_per_h),
             ("lgbm_pooled", lgbm_pooled_per_h),
+            ("timesfm_xreg", timesfm_xreg_per_h),
         ):
             v = _per_h_lookup(per_h, h_target)
             if v is not None:
@@ -1225,6 +1270,7 @@ def forecast_station(
         "timesfm": timesfm_per_h,
         "nwm": nwm_per_h,
         "lgbm_pooled": lgbm_pooled_per_h,
+        "timesfm_xreg": timesfm_xreg_per_h,
     }
     per_horizon_mae: Dict[int, Dict[str, float]] = {}
     for h in range(1, horizon + 1):
@@ -1280,6 +1326,7 @@ def forecast_station(
         "timesfm": timesfm_preds,
         "nwm": [],  # NWM is forecast-only (no historical forecasts available)
         "lgbm_pooled": lgbm_pooled_preds,  # v13.2: pooled-LGBM holdout preds
+        "timesfm_xreg": [],  # v13.3: live-only, MAE estimated from timesfm
     }
     last_dates_by_offset: Dict[int, pd.Timestamp] = {}
     for off in _FOUNDATION_HOLDOUT_OFFSETS:

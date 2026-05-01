@@ -1,0 +1,209 @@
+"""TimesFM 2.5 with XReg covariates — 8th ensemble member.
+
+TimesFM 2.5 (Oct 2025) added in-context covariate support via XReg: the model
+takes past target observations PLUS past+future values of exogenous variables
+(precip, temp), fits a linear model on residuals, and combines with the
+foundation-model forecast.
+
+Why this is hydrologically promising:
+- TimesFM 2.0 is purely univariate — it sees only past discharge. It can't know
+  there's a 2" rain event arriving on day 5.
+- Adding precip + temp as XReg gives the foundation model the same kind of
+  forcing signal NWM uses (just learned implicitly rather than physics-based).
+- "timesfm + xreg" mode is the right choice for hydrology: the linear xreg
+  fits the *response* to forcing, then TimesFM forecasts the residual seasonal
+  pattern. (The "xreg + timesfm" alternative would treat covariates as a
+  *correction* to baseflow, which makes less physical sense for storm response.)
+
+Failure modes we handle gracefully:
+- jax not installed → return None (XReg requires jax via timesfm[xreg])
+- timesfm 2.5 weights not yet downloaded → falls through, blend just drops the
+  member like it does for any other missing forecast
+- XReg requires future covariates to extend exactly `horizon` days past the
+  context end; we trim/pad to that length before calling.
+
+Gated by RW2_ENABLE_TIMESFM_XREG to avoid breaking deploys until weights and
+jax wheels are warm in CI cache.
+"""
+from __future__ import annotations
+
+import os
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+
+# Mirror the asinh transform used by every other foundation model member so
+# this one is on the same footing.
+from .forecast import _q_inverse, _q_scale, _q_transform
+
+# 2.5 supports up to 2048 like 2.0, but XReg shape mismatches blow up if the
+# covariate arrays don't match context length, so we keep this constant in one
+# place and feed both inputs at this length.
+TFM25_CONTEXT = 2048
+TFM25_REPO = "google/timesfm-2.5-200m-pytorch"
+
+# Lazy globals
+_pipeline = None
+_load_failed = False
+
+
+def _enabled() -> bool:
+    return os.environ.get("RW2_ENABLE_TIMESFM_XREG") == "1"
+
+
+def _get_pipeline():
+    """Load TimesFM 2.5 + verify XReg deps. Cached after first call. Returns
+    None on any failure (xreg ImportError, missing weights, network failure).
+    """
+    global _pipeline, _load_failed
+    if _pipeline is not None or _load_failed:
+        return _pipeline
+    if not _enabled():
+        _load_failed = True
+        return None
+    try:
+        import timesfm  # type: ignore
+        from timesfm import TimesFM_2p5_200M_torch  # type: ignore
+        from timesfm import ForecastConfig  # type: ignore
+
+        # Check XReg deps before loading 400MB of weights — if jax/sklearn are
+        # missing, fail fast.
+        import jax  # type: ignore  # noqa: F401
+        import sklearn  # type: ignore  # noqa: F401
+
+        model = TimesFM_2p5_200M_torch.from_pretrained(TFM25_REPO)
+        # `return_backcast=True` is *required* for forecast_with_covariates.
+        # `infer_is_positive=True` matches our nonneg discharge transform.
+        model.compile(
+            ForecastConfig(
+                max_context=TFM25_CONTEXT,
+                max_horizon=14,
+                normalize_inputs=True,
+                use_continuous_quantile_head=False,
+                return_backcast=True,
+                infer_is_positive=False,  # we feed asinh(q/qs) which can be neg
+                per_core_batch_size=1,
+            )
+        )
+        _pipeline = model
+    except Exception as exc:
+        _load_failed = True
+        print(f"[timesfm_xreg] disabled: {exc}")
+        _pipeline = None
+    return _pipeline
+
+
+def _aligned_cov(
+    wx_hist: pd.DataFrame,
+    wx_fcst: pd.DataFrame,
+    cov_col: str,
+    *,
+    context_len: int,
+    horizon: int,
+) -> Optional[np.ndarray]:
+    """Build a covariate vector of length context_len + horizon, aligned so the
+    last `horizon` entries are the future-known forecast.
+
+    Open-Meteo can return NaN occasionally; we forward-fill and fall back to
+    zeros if a column is entirely missing.
+    """
+    if cov_col not in wx_hist.columns and cov_col not in wx_fcst.columns:
+        return None
+    h = wx_hist[["date", cov_col]].copy() if cov_col in wx_hist.columns else pd.DataFrame(columns=["date", cov_col])
+    f = wx_fcst[["date", cov_col]].copy() if cov_col in wx_fcst.columns else pd.DataFrame(columns=["date", cov_col])
+    combined = pd.concat([h, f], ignore_index=True)
+    if combined.empty:
+        return None
+    combined["date"] = pd.to_datetime(combined["date"])
+    combined = combined.drop_duplicates(subset="date", keep="last").sort_values("date").reset_index(drop=True)
+    s = pd.to_numeric(combined[cov_col], errors="coerce").ffill().bfill()
+    if s.isna().all():
+        return None
+    arr = s.fillna(0.0).to_numpy(dtype=np.float32)
+    # Last `horizon` are the future window; the rest is treated as past.
+    # We need exactly context_len + horizon entries. Trim from the front.
+    target_len = context_len + horizon
+    if len(arr) < target_len:
+        pad = np.full(target_len - len(arr), float(arr[0]), dtype=np.float32)
+        arr = np.concatenate([pad, arr])
+    elif len(arr) > target_len:
+        arr = arr[-target_len:]
+    return arr
+
+
+def forecast(
+    q_hist: pd.DataFrame,
+    wx_hist: pd.DataFrame,
+    wx_fcst: pd.DataFrame,
+    horizon: int,
+    *,
+    static_attrs: Optional[Dict[str, float]] = None,
+) -> Optional[List[float]]:
+    """Run TimesFM 2.5 + XReg with precip/temp as future-known forcing.
+
+    Returns horizon CFS values, or None if anything in the chain fails (the
+    blend drops missing members gracefully).
+    """
+    pipe = _get_pipeline()
+    if pipe is None or q_hist.empty:
+        return None
+    try:
+        raw = q_hist["q_cfs"].astype(float).clip(lower=0).to_numpy()
+        qs = _q_scale(pd.Series(raw))
+        ctx = _q_transform(raw[-TFM25_CONTEXT:], qs)
+        ctx_len = int(len(ctx))
+        if ctx_len < 60:  # too short for a useful linear xreg fit
+            return None
+
+        precip = _aligned_cov(wx_hist, wx_fcst, "precipitation_sum",
+                              context_len=ctx_len, horizon=horizon)
+        tmax = _aligned_cov(wx_hist, wx_fcst, "temperature_2m_max",
+                            context_len=ctx_len, horizon=horizon)
+        tmin = _aligned_cov(wx_hist, wx_fcst, "temperature_2m_min",
+                            context_len=ctx_len, horizon=horizon)
+        dyn_num = {}
+        if precip is not None:
+            dyn_num["precip"] = [precip.tolist()]
+        if tmax is not None:
+            dyn_num["tmax"] = [tmax.tolist()]
+        if tmin is not None:
+            dyn_num["tmin"] = [tmin.tolist()]
+        if not dyn_num:
+            return None  # no covariates → no point invoking xreg
+
+        # Static numerical: lat/lon/log_alt/log_area help the linear model
+        # condition on basin character (same intuition as pooled_lgbm).
+        stat_num = {}
+        if static_attrs:
+            for k in ("lat", "lon", "alt_ft", "drain_area_sqmi"):
+                v = static_attrs.get(k)
+                if v is None:
+                    continue
+                if k in ("alt_ft", "drain_area_sqmi"):
+                    try:
+                        v = float(np.log1p(max(0.0, float(v))))
+                    except Exception:
+                        continue
+                stat_num[f"s_{k}"] = [float(v)]
+
+        point_fc, _xreg_fc = pipe.forecast_with_covariates(
+            inputs=[ctx.tolist()],
+            dynamic_numerical_covariates=dyn_num,
+            static_numerical_covariates=stat_num if stat_num else None,
+            xreg_mode="timesfm + xreg",
+            normalize_xreg_target_per_input=True,
+            ridge=1.0,  # regularize the linear fit (small samples)
+            force_on_cpu=True,  # avoid jax/cuda issues on CI runners
+        )
+        # forecast_with_covariates returns (point, xreg_only). Use point
+        # (TimesFM + xreg combined).
+        pred_z = np.asarray(point_fc[0])[:horizon]
+        pred = _q_inverse(pred_z, qs)
+        if len(pred) < horizon:
+            pad = np.full(horizon - len(pred), float(pred[-1]) if len(pred) else 0.0)
+            pred = np.concatenate([pred, pad])
+        return [max(0.0, float(x)) for x in pred]
+    except Exception as exc:
+        print(f"[timesfm_xreg] inference failed: {exc}")
+        return None
