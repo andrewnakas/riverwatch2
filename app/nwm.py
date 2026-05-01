@@ -191,20 +191,35 @@ def _series_key(series: str) -> str:
 
 
 _HINDCAST_MIN_OVERLAP_DAYS = 7
+# Clamp the multiplicative bias so a freak overlap window can't push NWM's
+# forecast 10x off. 0.5..2.0 covers the realistic NWM bias range we see in
+# Cosgrove et al. 2024 (typical NWM bias is ±30%, never 2x+).
+_BIAS_SCALE_MIN = 0.5
+_BIAS_SCALE_MAX = 2.0
 
 
 def hindcast_mae(usgs_id: str, q_hist: pd.DataFrame, *, lookback_days: int = 30) -> Optional[float]:
-    """Estimate NWM's MAE on this gauge by comparing recent NWM analysis_assimilation
-    flow to the gauge's observed daily-mean flow. NWM's analysis is its post-fact
-    best estimate of true streamflow given assimilated observations, so this is
-    a *floor* on its forecast skill — actual h+N forecast MAE will be higher
-    due to forcing uncertainty over the horizon. Returns CFS or None.
+    """Back-compat wrapper around `hindcast_skill` returning just the MAE."""
+    skill = hindcast_skill(usgs_id, q_hist, lookback_days=lookback_days)
+    return None if skill is None else skill["mae"]
+
+
+def hindcast_skill(usgs_id: str, q_hist: pd.DataFrame, *, lookback_days: int = 30) -> Optional[dict]:
+    """Score NWM's recent analysis_assimilation flow against USGS observed.
+    Returns a dict with keys `mae` (cfs) and `bias_scale` (multiplicative
+    correction factor that maps NWM analysis flow to observed flow), or None
+    if the overlap is too short to be meaningful.
+
+    v14.1: also returns `bias_scale = mean(obs) / mean(nwm_analysis)`. NWM
+    consistently runs ~10-30% low or high on individual reaches because the
+    process model's calibration was tuned on a national mix. Multiplying the
+    live medium_range_blend forecast by this scale removes most of the
+    station-specific bias before our anchored decay even kicks in. Clamped
+    to [0.5, 2.0] so a freak overlap can't blow up the forecast.
 
     v13.6: require at least 7 overlapping days. With only 1-2 day overlap on
     new stations, sampling can yield absurdly low MAE (we saw 0.04 cfs on
-    01408029) that lets snap-to-winner give NWM 90% of the blend weight on
-    nothing. Fewer than 7 days → return None and the caller falls back to the
-    persistence-based MAE estimate.
+    01408029) and unstable bias scales.
     """
     if not _enabled():
         return None
@@ -221,7 +236,15 @@ def hindcast_mae(usgs_id: str, q_hist: pd.DataFrame, *, lookback_days: int = 30)
     if len(merged) < _HINDCAST_MIN_OVERLAP_DAYS:
         return None
     err = (merged["q_cfs_nwm"] - merged["q_cfs_obs"]).abs()
-    return float(err.mean()) if len(err) else None
+    if not len(err):
+        return None
+    nwm_mean = float(merged["q_cfs_nwm"].mean())
+    obs_mean = float(merged["q_cfs_obs"].mean())
+    if nwm_mean > 1e-3 and obs_mean > 1e-3:
+        bias_scale = max(_BIAS_SCALE_MIN, min(_BIAS_SCALE_MAX, obs_mean / nwm_mean))
+    else:
+        bias_scale = 1.0
+    return {"mae": float(err.mean()), "bias_scale": bias_scale, "n_days": int(len(merged))}
 
 
 def forecast_daily_cfs(usgs_id: str, horizon: int = 14) -> Optional[list[float]]:

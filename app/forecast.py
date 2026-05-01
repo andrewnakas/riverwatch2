@@ -13,6 +13,7 @@ Each forecast call runs the models on demand against fresh USGS + Open-Meteo dat
 from __future__ import annotations
 
 import math
+import os
 import warnings
 from dataclasses import dataclass, field
 from datetime import date, timedelta
@@ -994,16 +995,24 @@ def forecast_station(
         from . import nwm
         nwm_pred = nwm.forecast_daily_cfs(station_id, horizon=horizon)
         if nwm_pred is not None:
+            # v14.1: pull MAE *and* multiplicative bias scale in one call.
+            # `bias_scale = mean(obs)/mean(nwm_analysis)` over the last 30
+            # days — captures station-specific NWM under/over-prediction
+            # before we anchor. Multiplying scales the whole curve while
+            # preserving NWM's shape (rising recession etc.); the anchored
+            # decay then cleans up the day-1 join. NWM_BIAS_SCALE_OFF=1
+            # disables this if a deploy regresses.
+            skill = nwm.hindcast_skill(station_id, q_hist, lookback_days=30)
+            if skill is not None:
+                nwm_mae_estimate = skill["mae"]
+                if os.environ.get("NWM_BIAS_SCALE_OFF") != "1":
+                    bs = float(skill["bias_scale"])
+                    nwm_pred = [max(0.0, float(v) * bs) for v in nwm_pred]
             # NWM is the most visibly off-anchor member — process model uses
             # its own initial condition, often disagrees with USGS observed
             # by 20-40%. Anchor with a 7d decay so the chart joins cleanly.
             nwm_pred = _anchor_to_observed(list(nwm_pred), q_obs_last, decay_h=7)
             members["nwm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, nwm_pred)]
-            # Hindcast MAE via analysis_assimilation vs observed flow over the
-            # past 30 days. Cheap (one extra API call) and gives the blend a
-            # real MAE to weight against — without it the inverse-MAE² weight
-            # would default to a single fallback bucket.
-            nwm_mae_estimate = nwm.hindcast_mae(station_id, q_hist, lookback_days=30)
         else:
             notes.append("nwm unavailable")
     except Exception as exc:
