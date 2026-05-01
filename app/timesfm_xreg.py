@@ -1,4 +1,20 @@
-"""TimesFM 2.5 with XReg covariates — 8th ensemble member.
+"""TimesFM 2.5 — both the univariate and XReg-covariate forecast paths.
+
+This module owns the TimesFM 2.5 model loading. Two functions exposed:
+
+  forecast_univariate(q_hist, horizon)           — drop-in for the legacy
+                                                    timesfm 2.0 univariate
+                                                    member; uses the 2.5
+                                                    backbone with no covariates
+  forecast(q_hist, wx_hist, wx_fcst, horizon, *,
+           static_attrs=None)                    — XReg path with precip/temp
+                                                    as future-known forcing
+
+The 2.5 release dropped the legacy `timesfm.TimesFm` class entirely, so the
+earlier 2.0 path in forecast.py would fail under 2.5. Routing both members
+through this module means we only carry one set of model weights and one
+broken-API workaround (#412 — proxies kwarg).
+
 
 TimesFM 2.5 (Oct 2025) added in-context covariate support via XReg: the model
 takes past target observations PLUS past+future values of exogenous variables
@@ -52,27 +68,46 @@ def _enabled() -> bool:
     return os.environ.get("RW2_ENABLE_TIMESFM_XREG") == "1"
 
 
-def _get_pipeline():
-    """Load TimesFM 2.5 + verify XReg deps. Cached after first call. Returns
-    None on any failure (xreg ImportError, missing weights, network failure).
+def _get_pipeline(*, require_xreg: bool):
+    """Load TimesFM 2.5. Cached after first call. Returns None on any failure.
+
+    The XReg-only flag (`require_xreg=True`) gates the additional jax/sklearn
+    imports the covariate path needs. The univariate path always tries to load
+    — it replaces the legacy 2.0 `timesfm` ensemble member that we removed
+    when 2.5's API change made the old loader unusable.
     """
     global _pipeline, _load_failed
     if _pipeline is not None or _load_failed:
         return _pipeline
-    if not _enabled():
-        _load_failed = True
+    if require_xreg and not _enabled():
+        # Don't poison the cache — the univariate caller may still want to
+        # load even when the XReg gate is off.
         return None
     try:
         import timesfm  # type: ignore
         from timesfm import TimesFM_2p5_200M_torch  # type: ignore
         from timesfm import ForecastConfig  # type: ignore
 
-        # Check XReg deps before loading 400MB of weights — if jax/sklearn are
-        # missing, fail fast.
-        import jax  # type: ignore  # noqa: F401
-        import sklearn  # type: ignore  # noqa: F401
+        if require_xreg:
+            # Check XReg deps before loading 400MB of weights — if jax/sklearn are
+            # missing, fail fast.
+            import jax  # type: ignore  # noqa: F401
+            import sklearn  # type: ignore  # noqa: F401
 
-        model = TimesFM_2p5_200M_torch.from_pretrained(TFM25_REPO)
+        # Bypass TimesFM 2.5's `from_pretrained` because the upstream HF
+        # PyTorchModelHubMixin passes `proxies` (and other network kwargs)
+        # through to `__init__`, which only accepts `torch_compile`/`config`
+        # — see google-research/timesfm#412. The library's own `_from_pretrained`
+        # does the actual checkpoint download + model construction; we call
+        # it directly with the kwargs it does accept.
+        model = TimesFM_2p5_200M_torch._from_pretrained(
+            model_id=TFM25_REPO,
+            revision=None,
+            cache_dir=None,
+            force_download=False,
+            local_files_only=False,
+            token=None,
+        )
         # `return_backcast=True` is *required* for forecast_with_covariates.
         # `infer_is_positive=True` matches our nonneg discharge transform.
         model.compile(
@@ -132,6 +167,34 @@ def _aligned_cov(
     return arr
 
 
+def forecast_univariate(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
+    """TimesFM 2.5 univariate forecast — no covariates, just past discharge.
+
+    Drop-in for the legacy 2.0 univariate path that lived in forecast.py. The
+    2.5 weights/architecture are different enough that we can't share a model
+    object with the 2.0 release; we just use 2.5 for both paths.
+    """
+    pipe = _get_pipeline(require_xreg=False)
+    if pipe is None or q_hist.empty:
+        return None
+    try:
+        raw_ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TFM25_CONTEXT:]
+        qs = _q_scale(pd.Series(raw_ctx))
+        ctx = _q_transform(raw_ctx, qs)
+        if len(ctx) < 60:
+            return None
+        point, _quant = pipe.forecast(horizon=horizon, inputs=[np.asarray(ctx)])
+        pred_z = np.asarray(point[0])[:horizon]
+        pred = _q_inverse(pred_z, qs)
+        if len(pred) < horizon:
+            pad = np.full(horizon - len(pred), float(pred[-1]) if len(pred) else 0.0)
+            pred = np.concatenate([pred, pad])
+        return [max(0.0, float(x)) for x in pred]
+    except Exception as exc:
+        print(f"[timesfm_univariate] inference failed: {exc}")
+        return None
+
+
 def forecast(
     q_hist: pd.DataFrame,
     wx_hist: pd.DataFrame,
@@ -145,7 +208,7 @@ def forecast(
     Returns horizon CFS values, or None if anything in the chain fails (the
     blend drops missing members gracefully).
     """
-    pipe = _get_pipeline()
+    pipe = _get_pipeline(require_xreg=True)
     if pipe is None or q_hist.empty:
         return None
     try:

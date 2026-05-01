@@ -564,61 +564,18 @@ def ttm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
 
 
 # ---------------------------------------------------------------------------
-# Google TimesFM 2.0 zero-shot
+# Google TimesFM 2.5 zero-shot (univariate path)
 # ---------------------------------------------------------------------------
-
-_timesfm_pipeline = None
-_timesfm_failed = False
-TIMESFM_CONTEXT = 2048  # TimesFM 2.0 supports up to 2048; longer ctx materially helps seasonality
-
-
-def _get_timesfm():
-    global _timesfm_pipeline, _timesfm_failed
-    if _timesfm_pipeline is not None or _timesfm_failed:
-        return _timesfm_pipeline
-    try:
-        import timesfm  # type: ignore
-        _timesfm_pipeline = timesfm.TimesFm(
-            hparams=timesfm.TimesFmHparams(
-                backend="cpu",
-                per_core_batch_size=1,
-                horizon_len=HORIZON_DAYS,
-                context_len=TIMESFM_CONTEXT,
-                num_layers=50,
-                use_positional_embedding=False,
-            ),
-            checkpoint=timesfm.TimesFmCheckpoint(
-                huggingface_repo_id="google/timesfm-2.0-500m-pytorch"
-            ),
-        )
-    except Exception as exc:
-        _timesfm_failed = True
-        print(f"[timesfm] disabled: {exc}")
-        _timesfm_pipeline = None
-    return _timesfm_pipeline
+# v13.3: TimesFM 2.5 dropped the legacy `timesfm.TimesFm` class. Both the
+# univariate path (here) and the XReg path live in `app.timesfm_xreg`; this
+# function is just a thin pass-through so callers in this file don't need to
+# care which file owns the model.
 
 
 def timesfm_forecast(q_hist: pd.DataFrame, horizon: int) -> Optional[List[float]]:
-    pipe = _get_timesfm()
-    if pipe is None or q_hist.empty:
-        return None
     try:
-        # asinh(q/scale) stabilizes the heavy-tailed discharge distribution and is
-        # finite at q=0 (same trick as TTM); TimesFM is trained on raw univariate
-        # series so we feed transformed flow and inverse the output.
-        raw_ctx = q_hist["q_cfs"].astype(float).clip(lower=0).values[-TIMESFM_CONTEXT:]
-        qs = _q_scale(pd.Series(raw_ctx))
-        ctx = _q_transform(raw_ctx, qs)
-        point, _ = pipe.forecast(
-            inputs=[ctx.tolist()],
-            freq=[0],  # 0 = high-frequency / daily
-        )
-        pred_z = np.array(point[0])[:horizon]
-        pred = _q_inverse(pred_z, qs)
-        if len(pred) < horizon:
-            pad = [float(pred[-1])] * (horizon - len(pred))
-            pred = np.concatenate([pred, np.array(pad)])
-        return [max(0.0, float(x)) for x in pred]
+        from . import timesfm_xreg
+        return timesfm_xreg.forecast_univariate(q_hist, horizon)
     except Exception as exc:
         print(f"[timesfm] inference failed: {exc}")
         return None
