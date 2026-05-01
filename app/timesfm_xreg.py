@@ -105,22 +105,28 @@ def _get_pipeline(*, require_xreg: bool):
             token=None,
         )
         # `return_backcast=True` is *required* for forecast_with_covariates.
-        # `normalize_inputs=False`: TimesFM 2.5 applies a global ReVIN BEFORE
-        # the decode call (timesfm_2p5_torch.py:413-417) and then applies its
-        # own internal patch-level ReVIN inside decode. Stacking the two is
-        # the "double normalization" pathology Google fixed with a nan_to_num
-        # band-aid in PR #381 (response to issue #321 NaN output): variance
-        # collapses to ~0, sigma → 0, and the autoregressive decode amplifies
-        # numerical noise into wild scales. Two earlier deploys (asinh + raw
-        # CFS) both produced TimesFM MAE ~6500 vs chronos's ~1500 — exactly
-        # this scale explosion. Disabling the outer normalize keeps only the
-        # patch-level mask-aware ReVIN, which is what TimesFM 2.0 used and
-        # what made it work fine for our 1893 gauges.
+        #
+        # `normalize_inputs=False`: skip the outer ReVIN at
+        # timesfm_2p5_torch.py:413-417 and rely only on the model's internal
+        # patch-level mask-aware ReVIN (timesfm_2p5_torch.py:173, via
+        # update_running_stats). The outer ReVIN would just average against
+        # the patch-level one for non-stationary discharge series.
+        #
+        # `force_flip_invariance=False`: the default flip-invariance leg
+        # decodes BOTH `inputs` and `-inputs`, then averages
+        # `(f(x) - f(-x)) / 2` (timesfm_2p5_torch.py:431-443). For nonneg
+        # streamflow the flipped leg is run on a series TimesFM has never
+        # seen (negative discharge with patch-level ReVIN re-centering it
+        # to ~0 mean), and the average just adds noise. v13.5 backtests
+        # showed median TimesFM/Chronos MAE ratio of 3.2x with flip on;
+        # disabling it should narrow that gap. infer_is_positive=True still
+        # clips to >=0, so we keep the nonneg guarantee.
         model.compile(
             ForecastConfig(
                 max_context=TFM25_CONTEXT,
                 max_horizon=14,
                 normalize_inputs=False,
+                force_flip_invariance=False,
                 use_continuous_quantile_head=False,
                 return_backcast=True,
                 infer_is_positive=True,  # discharge is nonneg; 2.5 enforces it

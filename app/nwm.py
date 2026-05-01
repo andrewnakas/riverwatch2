@@ -190,12 +190,21 @@ def _series_key(series: str) -> str:
     }.get(series, series)
 
 
+_HINDCAST_MIN_OVERLAP_DAYS = 7
+
+
 def hindcast_mae(usgs_id: str, q_hist: pd.DataFrame, *, lookback_days: int = 30) -> Optional[float]:
     """Estimate NWM's MAE on this gauge by comparing recent NWM analysis_assimilation
     flow to the gauge's observed daily-mean flow. NWM's analysis is its post-fact
     best estimate of true streamflow given assimilated observations, so this is
     a *floor* on its forecast skill — actual h+N forecast MAE will be higher
     due to forcing uncertainty over the horizon. Returns CFS or None.
+
+    v13.6: require at least 7 overlapping days. With only 1-2 day overlap on
+    new stations, sampling can yield absurdly low MAE (we saw 0.04 cfs on
+    01408029) that lets snap-to-winner give NWM 90% of the blend weight on
+    nothing. Fewer than 7 days → return None and the caller falls back to the
+    persistence-based MAE estimate.
     """
     if not _enabled():
         return None
@@ -209,7 +218,7 @@ def hindcast_mae(usgs_id: str, q_hist: pd.DataFrame, *, lookback_days: int = 30)
     obs = q_hist[["date", "q_cfs"]].copy()
     obs["date"] = pd.to_datetime(obs["date"]).dt.date
     merged = nwm.merge(obs, on="date", suffixes=("_nwm", "_obs"))
-    if merged.empty:
+    if len(merged) < _HINDCAST_MIN_OVERLAP_DAYS:
         return None
     err = (merged["q_cfs_nwm"] - merged["q_cfs_obs"]).abs()
     return float(err.mean()) if len(err) else None
