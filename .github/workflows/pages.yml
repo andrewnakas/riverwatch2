@@ -10,7 +10,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # v14.2: snapshot job pushes to the nwm-archive orphan branch, so we need
+  # contents:write at workflow scope. The build/merge/deploy jobs don't need
+  # write — keeping it scoped to the snapshot job below would require a
+  # second permissions block, which Actions doesn't support cleanly.
+  contents: write
   pages: write
   id-token: write
 
@@ -121,6 +125,48 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+      # v14.2: build the day's NWM raw forecast snapshot from per-shard CSVs
+      # collected by the merge step, and push it to the orphan `nwm-archive`
+      # branch so we accumulate (issued_date, target_date, q_cfs_raw)
+      # tuples for a future residual learner. Best-effort — failures here
+      # never block the Pages deploy.
+      - name: Snapshot NWM raw forecasts to nwm-archive branch
+        if: always()
+        continue-on-error: true
+        run: |
+          set -e
+          python scripts/snapshot_nwm_archive.py
+          if [ ! -d archive ] || [ -z "$(find archive -name '*.csv.gz' -print -quit)" ]; then
+            echo "no archive file produced; skipping branch push"
+            exit 0
+          fi
+          # Configure git identity for the bot commit.
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          # Stash the archive dir before checking out the orphan branch
+          # (otherwise checkout would either clobber it or refuse).
+          mv archive /tmp/rw2_archive_payload
+          # Fetch (or create) the nwm-archive orphan branch.
+          if git ls-remote --exit-code --heads origin nwm-archive; then
+            git fetch origin nwm-archive --depth=1
+            git checkout nwm-archive
+          else
+            git checkout --orphan nwm-archive
+            git rm -rf --cached . || true
+            git clean -fd
+          fi
+          # Restore the new archive payload over the branch's tree.
+          mkdir -p archive
+          cp -r /tmp/rw2_archive_payload/* archive/
+          git add archive
+          if git diff --cached --quiet; then
+            echo "no archive changes to commit"
+            exit 0
+          fi
+          ISSUED=$(date -u +%Y-%m-%d)
+          git commit -m "v14.2 nwm-archive: snapshot ${ISSUED}"
+          git push origin nwm-archive
 
   deploy:
     needs: merge

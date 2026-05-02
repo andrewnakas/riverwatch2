@@ -20,6 +20,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
+# v14.2: NWM raw forecast snapshots collected per-shard go here, OUTSIDE
+# dist/ so they never reach the Pages artifact. The snapshot job picks this
+# up and pushes a single daily parquet to the nwm-archive orphan branch.
+ARCHIVE_STAGING = ROOT / "archive_staging"
 
 
 def main() -> int:
@@ -53,7 +57,8 @@ def main() -> int:
         print("ERROR: no shard contains index.html")
         return 1
     for item in asset_shard.iterdir():
-        if item.name in {"forecasts", "history"} or item.name.startswith("index_summary_shard_"):
+        # v14.2: _nwm_raw is staged outside dist/ so it doesn't ship to Pages.
+        if item.name in {"forecasts", "history", "_nwm_raw"} or item.name.startswith("index_summary_shard_"):
             continue
         dst = DIST / item.name
         if item.is_dir():
@@ -61,6 +66,22 @@ def main() -> int:
         else:
             shutil.copy2(item, dst)
     print(f"  assets from {asset_shard.name}")
+
+    # 1b) v14.2: collect per-shard NWM raw snapshots into archive_staging/.
+    # The snapshot CI job picks these up (outside dist/) and ships them.
+    if ARCHIVE_STAGING.exists():
+        shutil.rmtree(ARCHIVE_STAGING)
+    ARCHIVE_STAGING.mkdir(parents=True)
+    nwm_files_collected = 0
+    for sd in shard_dirs:
+        nwm_dir = sd / "_nwm_raw"
+        if not nwm_dir.exists():
+            continue
+        for f in nwm_dir.iterdir():
+            if f.suffix == ".gz":
+                shutil.copy2(f, ARCHIVE_STAGING / f.name)
+                nwm_files_collected += 1
+    print(f"  nwm raw shard files collected: {nwm_files_collected} → {ARCHIVE_STAGING}")
 
     # 2) Forecast JSONs from every shard
     total_forecasts = 0

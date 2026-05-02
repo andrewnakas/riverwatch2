@@ -174,6 +174,11 @@ def main() -> int:
     blend_rolling: list[float] = []
     blend_h7: list[float] = []
     blend_h14: list[float] = []
+    # v14.2: collect raw NWM medium_range_blend curves so the snapshot job can
+    # concat all 16 shards into one daily archive parquet on the nwm-archive
+    # branch. Tuple per row: (issued_date, station_id, target_date, horizon_day,
+    # q_cfs_raw, q_cfs_obs_today, bias_scale_used).
+    nwm_raw_rows: list[tuple] = []
     t0 = time.time()
 
     # v13.2: 2-pass build. Pass 1 collects fetched + feature-engineered inputs
@@ -227,6 +232,16 @@ def main() -> int:
             data["has_history_file"] = _emit_history(sid)
             (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), indent=2))
             successes += 1
+            # v14.2: capture the raw NWM curve for the snapshot job.
+            if f.nwm_raw_forecast:
+                issued = f.issued_at[:10]  # YYYY-MM-DD
+                q_obs_today = (f.history[-1]["q_cfs"] if f.history else None)
+                bs_used = f.nwm_bias_scale_used
+                for h_idx, pt in enumerate(f.nwm_raw_forecast, start=1):
+                    nwm_raw_rows.append((
+                        issued, sid, pt.get("date"), h_idx,
+                        pt.get("q_cfs"), q_obs_today, bs_used,
+                    ))
             for name, pts in f.members.items():
                 rm = f.rolling_mae.get(name)
                 if rm is not None and np.isfinite(rm):
@@ -264,6 +279,21 @@ def main() -> int:
         "build_seconds": round(time.time() - t0, 1),
         "failures": failures,
     }
+    # v14.2: emit this shard's NWM raw rows into dist/_nwm_raw/shard_N.csv.gz
+    # so the snapshot job can pick them up alongside the deploy artifact and
+    # ship one consolidated archive parquet per day to the nwm-archive branch.
+    if nwm_raw_rows:
+        import csv, gzip
+        nwm_dir = DIST / "_nwm_raw"
+        nwm_dir.mkdir(parents=True, exist_ok=True)
+        out_path = nwm_dir / f"shard_{args.shard_id}.csv.gz"
+        with gzip.open(out_path, "wt", newline="") as gz:
+            w = csv.writer(gz)
+            w.writerow(["issued_date", "station_id", "target_date",
+                        "horizon_day", "q_cfs_raw", "q_cfs_obs_today",
+                        "bias_scale_used"])
+            w.writerows(nwm_raw_rows)
+        print(f"v14.2: wrote {len(nwm_raw_rows)} NWM raw rows → {out_path}")
     if sharded:
         (DIST / f"index_summary_shard_{args.shard_id}.json").write_text(json.dumps(summary, indent=2))
     else:

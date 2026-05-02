@@ -207,6 +207,11 @@ class StationForecast:
     record_end: Optional[str] = None
     snotel_site: Optional[dict] = None
     snotel_summary: Optional[dict] = None
+    # v14.2: raw NWM medium_range_blend curve before v14.1 bias correction and
+    # anchored decay. Captured so we can archive (issued_date, target_date,
+    # q_cfs_raw) tuples and later train a residual learner against observed.
+    nwm_raw_forecast: Optional[List[dict]] = None
+    nwm_bias_scale_used: Optional[float] = None
 
 
 def _build_features(
@@ -990,11 +995,14 @@ def forecast_station(
     # different signal from the ML/zero-shot members. Off by default; enabled
     # with RW2_ENABLE_NWM=1 once the crosswalk + cache are warm.
     nwm_pred: Optional[List[float]] = None
+    nwm_pred_raw: Optional[List[float]] = None  # v14.2: pre-bias, pre-anchor
     nwm_mae_estimate: Optional[float] = None
+    nwm_bs_used: Optional[float] = None
     try:
         from . import nwm
         nwm_pred = nwm.forecast_daily_cfs(station_id, horizon=horizon)
         if nwm_pred is not None:
+            nwm_pred_raw = list(nwm_pred)  # v14.2: snapshot before any correction
             # v14.1: pull MAE *and* multiplicative bias scale in one call.
             # `bias_scale = mean(obs)/mean(nwm_analysis)` over the last 30
             # days — captures station-specific NWM under/over-prediction
@@ -1007,6 +1015,7 @@ def forecast_station(
                 nwm_mae_estimate = skill["mae"]
                 if os.environ.get("NWM_BIAS_SCALE_OFF") != "1":
                     bs = float(skill["bias_scale"])
+                    nwm_bs_used = bs
                     nwm_pred = [max(0.0, float(v) * bs) for v in nwm_pred]
             # NWM is the most visibly off-anchor member — process model uses
             # its own initial condition, often disagrees with USGS observed
@@ -1591,6 +1600,11 @@ def forecast_station(
         record_end=record_end,
         snotel_site=snotel_meta,
         snotel_summary=snotel_summary,
+        nwm_raw_forecast=(
+            [{"date": d, "q_cfs": float(v)} for d, v in zip(future_dates, nwm_pred_raw)]
+            if nwm_pred_raw is not None else None
+        ),
+        nwm_bias_scale_used=nwm_bs_used,
     )
 
 
