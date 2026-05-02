@@ -212,6 +212,10 @@ class StationForecast:
     # q_cfs_raw) tuples and later train a residual learner against observed.
     nwm_raw_forecast: Optional[List[dict]] = None
     nwm_bias_scale_used: Optional[float] = None
+    # v14.3: per-member multiplicative bias scales applied during build,
+    # derived from each member's holdout predictions vs truth. Empty dict
+    # means RW2_PER_MEMBER_BIAS_OFF=1 was set or no member had enough preds.
+    member_bias_scales: Dict[str, float] = field(default_factory=dict)
 
 
 def _build_features(
@@ -933,8 +937,18 @@ def forecast_station(
     q_obs_last = float(q_hist["q_cfs"].iloc[-1])
 
     members: Dict[str, List[dict]] = {}
+    # v14.3: stash raw (unanchored) member forecasts here. After holdout
+    # scoring runs we derive a per-member bias_scale = mean(obs)/mean(pred)
+    # from the in-scope `*_preds` lists, multiply each curve by it, then
+    # anchor and assign to `members[]` in a single post-pass. This generalizes
+    # the v14.1 NWM bias correction to every member. Tuple is
+    # (raw_pred_list, anchor_decay_h).
+    raw_member_preds: Dict[str, tuple] = {}
 
     persist = persistence_forecast(q_hist, horizon)
+    # persistence is by definition q_obs_last for all h, so anchor is a no-op
+    # and bias correction is a no-op too. Keep the assignment simple and skip
+    # the post-pass for this member.
     members["persistence_lag1"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, persist)]
 
     try:
@@ -945,27 +959,23 @@ def forecast_station(
         notes.append(f"ridge failed: {exc}")
         ridge_pred = persist
         ridge_mae = {}
-    ridge_pred = _anchor_to_observed(list(ridge_pred), q_obs_last, decay_h=7)
-    members["runoff_ridge"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, ridge_pred)]
+    raw_member_preds["runoff_ridge"] = (list(ridge_pred), 7)
 
     chronos_pred = chronos_forecast(q_hist, horizon)
     if chronos_pred is not None:
-        chronos_pred = _anchor_to_observed(list(chronos_pred), q_obs_last, decay_h=4)
-        members["chronos_bolt"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, chronos_pred)]
+        raw_member_preds["chronos_bolt"] = (list(chronos_pred), 4)
     else:
         notes.append("chronos_bolt unavailable")
 
     ttm_pred = ttm_forecast(q_hist, horizon)
     if ttm_pred is not None:
-        ttm_pred = _anchor_to_observed(list(ttm_pred), q_obs_last, decay_h=4)
-        members["ttm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, ttm_pred)]
+        raw_member_preds["ttm"] = (list(ttm_pred), 4)
     else:
         notes.append("ttm unavailable")
 
     timesfm_pred = timesfm_forecast(q_hist, horizon)
     if timesfm_pred is not None:
-        timesfm_pred = _anchor_to_observed(list(timesfm_pred), q_obs_last, decay_h=4)
-        members["timesfm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, timesfm_pred)]
+        raw_member_preds["timesfm"] = (list(timesfm_pred), 4)
     else:
         notes.append("timesfm unavailable")
 
@@ -981,10 +991,7 @@ def forecast_station(
             static_attrs=station_attrs,
         )
         if timesfm_xreg_pred is not None:
-            timesfm_xreg_pred = _anchor_to_observed(list(timesfm_xreg_pred), q_obs_last, decay_h=4)
-            members["timesfm_xreg"] = [
-                {"date": d, "q_cfs": v} for d, v in zip(future_dates, timesfm_xreg_pred)
-            ]
+            raw_member_preds["timesfm_xreg"] = (list(timesfm_xreg_pred), 4)
         else:
             notes.append("timesfm_xreg unavailable")
     except Exception as exc:
@@ -1003,13 +1010,12 @@ def forecast_station(
         nwm_pred = nwm.forecast_daily_cfs(station_id, horizon=horizon)
         if nwm_pred is not None:
             nwm_pred_raw = list(nwm_pred)  # v14.2: snapshot before any correction
-            # v14.1: pull MAE *and* multiplicative bias scale in one call.
-            # `bias_scale = mean(obs)/mean(nwm_analysis)` over the last 30
-            # days — captures station-specific NWM under/over-prediction
-            # before we anchor. Multiplying scales the whole curve while
-            # preserving NWM's shape (rising recession etc.); the anchored
-            # decay then cleans up the day-1 join. NWM_BIAS_SCALE_OFF=1
-            # disables this if a deploy regresses.
+            # v14.1: pull MAE *and* multiplicative bias scale from the recent
+            # `analysis_assimilation` overlap. NWM keeps this dedicated path
+            # (vs the v14.3 general per-member bias) because the analysis
+            # signal is grounded in NWM's own DA-corrected output — much
+            # cleaner than reconstructing forecast bias from holdout preds
+            # that don't exist for live-only members.
             skill = nwm.hindcast_skill(station_id, q_hist, lookback_days=30)
             if skill is not None:
                 nwm_mae_estimate = skill["mae"]
@@ -1017,11 +1023,13 @@ def forecast_station(
                     bs = float(skill["bias_scale"])
                     nwm_bs_used = bs
                     nwm_pred = [max(0.0, float(v) * bs) for v in nwm_pred]
-            # NWM is the most visibly off-anchor member — process model uses
-            # its own initial condition, often disagrees with USGS observed
-            # by 20-40%. Anchor with a 7d decay so the chart joins cleanly.
-            nwm_pred = _anchor_to_observed(list(nwm_pred), q_obs_last, decay_h=7)
-            members["nwm"] = [{"date": d, "q_cfs": v} for d, v in zip(future_dates, nwm_pred)]
+            # NWM goes through the v14.3 raw_member_preds pathway so it
+            # picks up the unified bias-then-anchor flow. Note: the v14.1
+            # bias_scale already applied above is *additional* to whatever
+            # the v14.3 holdout-derived bias_scale would do — but NWM has
+            # no holdout preds (live-forecast-only), so v14.3 will see an
+            # empty preds list for "nwm" and skip the general correction.
+            raw_member_preds["nwm"] = (list(nwm_pred), 7)
         else:
             notes.append("nwm unavailable")
     except Exception as exc:
@@ -1060,10 +1068,7 @@ def forecast_station(
                 clim_at_target_per_h=clim_at_target_per_h,
             )
             if lgbm_pooled_pred is not None:
-                lgbm_pooled_pred = _anchor_to_observed(list(lgbm_pooled_pred), q_obs_last, decay_h=7)
-                members["lgbm_pooled"] = [
-                    {"date": d, "q_cfs": v} for d, v in zip(future_dates, lgbm_pooled_pred)
-                ]
+                raw_member_preds["lgbm_pooled"] = (list(lgbm_pooled_pred), 7)
             else:
                 notes.append("lgbm_pooled unavailable")
         except Exception as exc:
@@ -1133,6 +1138,63 @@ def forecast_station(
         for h, errs in per_h_errs.items():
             if errs:
                 lgbm_pooled_per_h[h] = float(np.mean(errs))
+
+    # v14.3: per-member bias correction. v14.1 proved this works on NWM
+    # (median NWM/q_obs MAE dropped to 0.217, beating Chronos's 0.253 and
+    # persistence's 0.241 on a 50-station baseline). Generalize to every
+    # member that has holdout preds: compute bias_scale = mean(ytrue) /
+    # mean(yhat) over the in-scope `*_preds` lists, clamp [0.5, 2.0], and
+    # apply multiplicatively before anchoring. Persistence is excluded
+    # (lag-1 = q_obs_last → bias is by definition 1.0). NWM is excluded
+    # because it already has the dedicated v14.1 analysis_assimilation
+    # bias path above; passing an empty preds list here is a no-op.
+    # RW2_PER_MEMBER_BIAS_OFF=1 disables for emergency rollback.
+    _BIAS_SCALE_MIN = 0.5
+    _BIAS_SCALE_MAX = 2.0
+    member_preds_for_bias: Dict[str, list] = {
+        "runoff_ridge": ridge_preds,
+        "chronos_bolt": chronos_preds,
+        "ttm": ttm_preds,
+        "timesfm": timesfm_preds,
+        "timesfm_xreg": [],  # MAE estimated from timesfm; no real preds
+        "nwm": [],            # already corrected via v14.1 path
+        "lgbm_pooled": lgbm_pooled_preds,
+    }
+    member_bias_scales: Dict[str, float] = {}
+    if os.environ.get("RW2_PER_MEMBER_BIAS_OFF") != "1":
+        for name, preds in member_preds_for_bias.items():
+            if not preds:
+                continue
+            yhat_all: list = []
+            ytrue_all: list = []
+            for tup in preds:
+                # Each tup is (offset, yhat_list, ytrue_list).
+                if len(tup) < 3:
+                    continue
+                _, yhat, ytrue = tup
+                for v in yhat:
+                    if v is not None and math.isfinite(float(v)):
+                        yhat_all.append(float(v))
+                for v in ytrue:
+                    if v is not None and math.isfinite(float(v)):
+                        ytrue_all.append(float(v))
+            if not yhat_all or not ytrue_all:
+                continue
+            mean_pred = float(np.mean(yhat_all))
+            mean_obs = float(np.mean(ytrue_all))
+            if mean_pred > 1e-3 and mean_obs > 1e-3:
+                bs = max(_BIAS_SCALE_MIN, min(_BIAS_SCALE_MAX, mean_obs / mean_pred))
+                if abs(bs - 1.0) > 1e-6:
+                    member_bias_scales[name] = bs
+
+    # Apply bias_scale × anchor × write members[] in one pass.
+    for name, (raw_pred, decay_h) in raw_member_preds.items():
+        bs = member_bias_scales.get(name, 1.0)
+        corrected = [max(0.0, float(v) * bs) for v in raw_pred]
+        anchored = _anchor_to_observed(corrected, q_obs_last, decay_h=decay_h)
+        members[name] = [
+            {"date": d, "q_cfs": v} for d, v in zip(future_dates, anchored)
+        ]
 
     rolling_mae: Dict[str, float] = {}
     if persist_per_h:
@@ -1605,6 +1667,7 @@ def forecast_station(
             if nwm_pred_raw is not None else None
         ),
         nwm_bias_scale_used=nwm_bs_used,
+        member_bias_scales=dict(member_bias_scales),
     )
 
 
