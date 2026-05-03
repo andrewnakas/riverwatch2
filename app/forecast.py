@@ -17,7 +17,7 @@ import os
 import warnings
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -216,6 +216,13 @@ class StationForecast:
     # derived from each member's holdout predictions vs truth. Empty dict
     # means RW2_PER_MEMBER_BIAS_OFF=1 was set or no member had enough preds.
     member_bias_scales: Dict[str, float] = field(default_factory=dict)
+    # v14.4: panel needed to fit the pooled blend stacker and to recompute
+    # the live blend after stacker fit. Stripped from the JSON artifact by
+    # the build script before serialization (see scripts/build_static_site.py).
+    # Holds: member_preds (holdout panel), qs, attrs, members_panel (live
+    # forecast values per member at h=1..14), q_obs_today, issued_doy,
+    # target_doys, offset_to_issued_doy, offset_to_target_doys, q_obs_at_offset.
+    _v14_4_panel: Optional[Dict[str, Any]] = None
 
 
 def _build_features(
@@ -880,6 +887,7 @@ def forecast_station(
     station_attrs: Optional[dict] = None,
     inputs: Optional["StationInputs"] = None,
     pooled_predictor: Optional[object] = None,
+    stacker: Optional[object] = None,
 ) -> StationForecast:
     if inputs is not None:
         # Pass-2 path: reuse inputs gathered in pass 1.
@@ -1420,11 +1428,27 @@ def forecast_station(
         "timesfm_xreg": [],  # v13.3: live-only, MAE estimated from timesfm
     }
     last_dates_by_offset: Dict[int, pd.Timestamp] = {}
+    # v14.4: also stash the issued / target DOYs and observed q at issue time
+    # for each holdout offset so the pooled stacker can train on this station's
+    # holdout panel without us re-deriving them later. Keys: offset -> int/list.
+    offset_to_issued_doy: Dict[int, int] = {}
+    offset_to_target_doys: Dict[int, List[int]] = {}
+    q_obs_at_offset: Dict[int, float] = {}
     for off in _FOUNDATION_HOLDOUT_OFFSETS:
         end_idx = len(q_hist) - off
         ctx_len = end_idx - horizon
         if ctx_len >= 1:
-            last_dates_by_offset[off] = pd.to_datetime(q_hist["date"].iloc[ctx_len - 1])
+            last_d = pd.to_datetime(q_hist["date"].iloc[ctx_len - 1])
+            last_dates_by_offset[off] = last_d
+            issued_doy = int(last_d.dayofyear)
+            offset_to_issued_doy[off] = issued_doy
+            offset_to_target_doys[off] = [
+                ((issued_doy - 1 + h) % 366) + 1 for h in range(1, horizon + 1)
+            ]
+            try:
+                q_obs_at_offset[off] = float(q_hist["q_cfs"].iloc[ctx_len - 1])
+            except Exception:
+                pass
 
     # v12.2: score all 4 blend rules (mean, median, mean_asinh, median_asinh)
     # on the holdouts at every horizon, then pick the rule with the lowest
@@ -1508,8 +1532,45 @@ def forecast_station(
     blend_strategy_per_h: Dict[int, str] = {}
     nwm_list = members.get("nwm")
     have_nwm = nwm_list is not None
+
+    # v14.4: pooled blend stacker. If a fitted stacker is provided, ask it for
+    # the 14-horizon blend up front; per horizon we prefer its output and fall
+    # through to the v13.1 rule+NWM-shrinkage path only when the stacker has
+    # no trained model for that h or returns a non-finite value.
+    stacker_blend: Optional[List[Optional[float]]] = None
+    if stacker is not None and getattr(stacker, "fitted", False) and station_attrs is not None:
+        try:
+            members_panel: Dict[str, List[Optional[float]]] = {}
+            for m_name, mlist in members.items():
+                members_panel[m_name] = [
+                    (mlist[i]["q_cfs"] if mlist and i < len(mlist) else None)
+                    for i in range(horizon)
+                ]
+            issued_doy_now = int(last_date.dayofyear)
+            target_doys_now = [
+                ((issued_doy_now - 1 + h) % 366) + 1 for h in range(1, horizon + 1)
+            ]
+            stacker_blend = stacker.predict_blend(
+                station_id=station_id,
+                attrs=station_attrs,
+                qs=qs_blend,
+                members_panel=members_panel,
+                q_obs_today=q_obs_last,
+                issued_doy=issued_doy_now,
+                target_doys=target_doys_now,
+            )
+        except Exception:
+            stacker_blend = None
+
     for h_idx in range(horizon):
         h = h_idx + 1
+        # v14.4: stacker first if available for this horizon.
+        stacker_v = None
+        if stacker_blend is not None and h_idx < len(stacker_blend):
+            sv = stacker_blend[h_idx]
+            if sv is not None and math.isfinite(float(sv)):
+                stacker_v = float(sv)
+
         ws = _weights_for_horizon(h)
         vals: List[float] = []
         wts: List[float] = []
@@ -1533,7 +1594,10 @@ def forecast_station(
             if nv is not None and math.isfinite(nv):
                 nwm_v = float(nv)
 
-        if nwm_v is not None and rule_pred is not None and math.isfinite(rule_pred):
+        if stacker_v is not None:
+            pred = stacker_v
+            blend_strategy_per_h[h] = "lgbm_stacker"
+        elif nwm_v is not None and rule_pred is not None and math.isfinite(rule_pred):
             mae_nwm = nwm_per_h.get(h)
             mae_others = per_horizon_mae.get(h, {})
             mae_others_min = min(
@@ -1560,7 +1624,30 @@ def forecast_station(
     # the same holdouts the rule was selected on. Apples-to-apples vs the
     # member MAEs above (which were also computed on these offsets).
     rolling_mae_blend: Dict[int, float] = {}
+    # v14.4: when the stacker drives the live blend, score it on the same
+    # holdouts so `rolling_mae_blend` reflects the actual blend rule. Falls
+    # back to the rule-MAE path for any horizon where the stacker can't score.
+    stacker_blend_errs: Dict[int, List[float]] = {}
+    if (stacker is not None and getattr(stacker, "fitted", False)
+            and station_attrs is not None):
+        try:
+            stacker_blend_errs = stacker.score_holdouts(
+                station_id=station_id,
+                attrs=station_attrs,
+                qs=qs_blend,
+                member_preds=member_preds,
+                offset_to_issued_doy=offset_to_issued_doy,
+                offset_to_target_doys=offset_to_target_doys,
+                q_obs_at_offset=q_obs_at_offset,
+            )
+        except Exception:
+            stacker_blend_errs = {}
     for h in range(1, horizon + 1):
+        # Prefer stacker holdout MAE when available for this h.
+        s_errs = stacker_blend_errs.get(h) or []
+        if s_errs:
+            rolling_mae_blend[h] = float(np.mean(s_errs))
+            continue
         if h not in rule_for_h or not rule_errs[rule_for_h[h]][h]:
             continue
         rule_mae_h = float(np.mean(rule_errs[rule_for_h[h]][h]))
@@ -1639,6 +1726,32 @@ def forecast_station(
                 "as_of": pd.Timestamp(d_now).date().isoformat(),
             }
 
+    # v14.4: panel for the pooled blend stacker — fit on these holdouts across
+    # stations between pass-2 (collect) and pass-3 (rebuild blend with stacker).
+    issued_doy_now = int(last_date.dayofyear)
+    target_doys_now = [
+        ((issued_doy_now - 1 + h) % 366) + 1 for h in range(1, horizon + 1)
+    ]
+    members_panel_out: Dict[str, List[Optional[float]]] = {}
+    for m_name, mlist in members.items():
+        members_panel_out[m_name] = [
+            (mlist[i]["q_cfs"] if mlist and i < len(mlist) else None)
+            for i in range(horizon)
+        ]
+    v14_4_panel: Dict[str, Any] = {
+        "qs": float(qs_blend),
+        "attrs": dict(station_attrs) if station_attrs else None,
+        "member_preds": {k: list(v) for k, v in member_preds.items()},
+        "offset_to_issued_doy": dict(offset_to_issued_doy),
+        "offset_to_target_doys": {k: list(v) for k, v in offset_to_target_doys.items()},
+        "q_obs_at_offset": dict(q_obs_at_offset),
+        "members_panel": members_panel_out,
+        "q_obs_today": float(q_obs_last),
+        "issued_doy": issued_doy_now,
+        "target_doys": target_doys_now,
+        "horizon": int(horizon),
+    }
+
     return StationForecast(
         station_id=station_id,
         issued_at=pd.Timestamp.utcnow().isoformat(),
@@ -1668,7 +1781,95 @@ def forecast_station(
         ),
         nwm_bias_scale_used=nwm_bs_used,
         member_bias_scales=dict(member_bias_scales),
+        _v14_4_panel=v14_4_panel,
     )
+
+
+def recompute_blend_with_stacker(
+    f: StationForecast,
+    stacker: object,
+) -> StationForecast:
+    """Replace `f.blend` and `f.rolling_mae_blend` using a fitted stacker.
+
+    The build script calls this after pass-2 has produced StationForecasts
+    with their `_v14_4_panel` populated, and the pooled stacker has been
+    fit on the union of those panels. Cheap: 14 booster.predict calls per
+    station — no model inference, no fits.
+
+    For any horizon the stacker can't predict for, falls back to the
+    pre-existing blend/MAE the station already has from pass-2 (which was
+    computed via the v13.1 rule + NWM-shrinkage path).
+    """
+    panel = f._v14_4_panel
+    if panel is None or not getattr(stacker, "fitted", False):
+        return f
+    attrs = panel.get("attrs")
+    if attrs is None:
+        return f
+    qs = float(panel["qs"])
+    horizon = int(panel["horizon"])
+    members_panel = panel["members_panel"]
+    issued_doy = int(panel["issued_doy"])
+    target_doys = list(panel["target_doys"])
+
+    try:
+        stacker_blend = stacker.predict_blend(  # type: ignore[attr-defined]
+            station_id=f.station_id,
+            attrs=attrs,
+            qs=qs,
+            members_panel=members_panel,
+            q_obs_today=float(panel["q_obs_today"]),
+            issued_doy=issued_doy,
+            target_doys=target_doys,
+        )
+    except Exception:
+        stacker_blend = None
+    if stacker_blend is None:
+        return f
+
+    # Replace blend values per-h where the stacker produced a finite output;
+    # otherwise keep the existing blend value. dates come straight from f.blend.
+    new_blend: List[dict] = []
+    new_strategy = dict(f.blend_strategy_per_h)
+    for i in range(min(len(f.blend), horizon)):
+        cur = f.blend[i]
+        sv = stacker_blend[i] if i < len(stacker_blend) else None
+        if sv is not None and math.isfinite(float(sv)):
+            new_blend.append({"date": cur["date"], "q_cfs": float(sv)})
+            new_strategy[i + 1] = "lgbm_stacker"
+        else:
+            new_blend.append(cur)
+    f.blend = new_blend
+    f.blend_strategy_per_h = new_strategy
+
+    # Recompute rolling_mae_blend from this station's holdout panel under
+    # the stacker. Apples-to-apples with member MAEs (same offsets).
+    try:
+        s_errs = stacker.score_holdouts(  # type: ignore[attr-defined]
+            station_id=f.station_id,
+            attrs=attrs,
+            qs=qs,
+            member_preds=panel["member_preds"],
+            offset_to_issued_doy=panel["offset_to_issued_doy"],
+            offset_to_target_doys=panel["offset_to_target_doys"],
+            q_obs_at_offset=panel["q_obs_at_offset"],
+        )
+    except Exception:
+        s_errs = {}
+    if s_errs:
+        new_mae_blend = dict(f.rolling_mae_blend)
+        for h, errs in s_errs.items():
+            if errs:
+                new_mae_blend[int(h)] = float(np.mean(errs))
+        f.rolling_mae_blend = new_mae_blend
+        # Refresh the h7 / h14 / mean projections so index_summary picks it up.
+        if 7 in new_mae_blend and 7 <= horizon:
+            f.rolling_mae_h7["ensemble_blend"] = float(new_mae_blend[7])
+        if 14 in new_mae_blend and 14 <= horizon:
+            f.rolling_mae_h14["ensemble_blend"] = float(new_mae_blend[14])
+        if new_mae_blend:
+            f.rolling_mae["ensemble_blend"] = float(np.mean(list(new_mae_blend.values())))
+    return f
 
 
 def _blend_weights(rolling_mae: Dict[str, float], member_names: List[str]) -> Dict[str, float]:

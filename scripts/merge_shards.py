@@ -156,6 +156,9 @@ def main() -> int:
         "rolling_mae_blend_h14_mean": _weighted_mean("rolling_mae_blend_h14_mean"),
         "stations_with_blend_mae": sum(s.get("stations_with_blend_mae") or 0 for s in shard_summaries),
         "build_seconds": longest_shard,
+        # v14.4: roll up stacker observability across shards.
+        "stacker_shards_fit": sum(1 for s in shard_summaries if s.get("stacker_used")),
+        "stacker_shards_total": len(shard_summaries),
         "shards": len(shard_summaries),
         "shard_summaries": shard_summaries,
     }

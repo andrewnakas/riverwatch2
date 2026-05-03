@@ -33,8 +33,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.forecast import forecast_station, prepare_station_inputs  # noqa: E402
+from app.forecast import forecast_station, prepare_station_inputs, recompute_blend_with_stacker  # noqa: E402
 from app.pooled_lgbm import PooledTrainer  # noqa: E402
+from app.stacker import StackerTrainer  # noqa: E402
 
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
 SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
@@ -216,7 +217,14 @@ def main() -> int:
     else:
         print(f"v13.2 pass 1 skipped: only {pooled.n_rows()} pooled rows (need >=1000)")
 
+    # v14.4: pass 2 = produce per-station forecasts (v13.1 rule + NWM-shrinkage
+    # blend), holding them in memory; we feed their `_v14_4_panel`s into the
+    # pooled stacker. Pass 3 fits the stacker on the panel union and rewrites
+    # each station's blend + rolling_mae_blend in place. JSON is only written
+    # after pass 3 so we never publish the rule-blend version.
     print(f"v13.2 pass 2: per-station forecasts…")
+    forecasts_by_sid: dict[str, object] = {}
+    station_by_sid: dict[str, dict] = {}
     for i, st in enumerate(stations, 1):
         sid = st["id"]
         ts = time.time()
@@ -227,7 +235,67 @@ def main() -> int:
                 inputs=si,
                 pooled_predictor=pooled if pooled_ok else None,
             )
+            forecasts_by_sid[sid] = f
+            station_by_sid[sid] = st
+            shard_tag = f"shard {args.shard_id}/{args.total_shards}: " if sharded else ""
+            print(f"{shard_tag}[{i:>3}/{len(stations)}] {sid} OK  chosen={f.chosen}  {time.time()-ts:5.1f}s")
+        except Exception as exc:
+            print(f"[{i:>3}/{len(stations)}] {sid} FAIL  {exc}")
+            failures.append({"station_id": sid, "error": str(exc)})
+
+    # v14.4 pass 2.5: aggregate holdout panels into a pooled blend stacker
+    # and fit per-horizon LightGBMs. Skipped if disabled or insufficient data.
+    import os as _os
+    stacker_ok = False
+    stacker_obj: object = None
+    if _os.environ.get("RW2_STACKER_OFF") == "1":
+        print("v14.4 stacker: disabled via RW2_STACKER_OFF=1")
+    else:
+        st_train = StackerTrainer(horizon=args.horizon)
+        for sid, f in forecasts_by_sid.items():
+            panel = getattr(f, "_v14_4_panel", None)
+            if panel is None or panel.get("attrs") is None:
+                continue
+            try:
+                st_train.add_station(
+                    sid,
+                    panel["attrs"],
+                    panel["qs"],
+                    panel["member_preds"],
+                    panel["offset_to_issued_doy"],
+                )
+            except Exception as exc:
+                print(f"  stacker.add_station FAIL {sid}: {exc}")
+        n_rows = st_train.n_rows()
+        # 6 offsets × 14 h × 118 stations ≈ 10K rows max per shard, so a
+        # 200-row floor on any single horizon is comfortable.
+        if n_rows >= 200:
+            t_fit = time.time()
+            print(f"v14.4 stacker fit: {n_rows} rows across {len(forecasts_by_sid)} stations…")
+            stacker_ok = st_train.fit()
+            stacker_obj = st_train if stacker_ok else None
+            print(f"  stacker fit: ok={stacker_ok} {time.time()-t_fit:.1f}s")
+        else:
+            print(f"v14.4 stacker skipped: only {n_rows} pooled rows (need >=200)")
+
+    # v14.4 pass 3: rewrite each station's blend and write JSON.
+    print(f"v14.4 pass 3: finalize + write per-station JSON…")
+    for i, st in enumerate(stations, 1):
+        sid = st["id"]
+        f = forecasts_by_sid.get(sid)
+        if f is None:
+            continue  # pass-2 failure; already recorded
+        try:
+            if stacker_ok and stacker_obj is not None:
+                f = recompute_blend_with_stacker(f, stacker_obj)
+            # Strip the in-memory panel before serializing — large dict, not for Pages.
+            try:
+                f._v14_4_panel = None
+            except Exception:
+                pass
             data = asdict(f)
+            # asdict still includes _v14_4_panel as None; drop the key entirely.
+            data.pop("_v14_4_panel", None)
             data["station"] = st
             data["has_history_file"] = _emit_history(sid)
             (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), indent=2))
@@ -255,8 +323,6 @@ def main() -> int:
             b14 = f.rolling_mae_h14.get("ensemble_blend") if f.rolling_mae_h14 else None
             if b14 is not None and np.isfinite(b14):
                 blend_h14.append(float(b14))
-            shard_tag = f"shard {args.shard_id}/{args.total_shards}: " if sharded else ""
-            print(f"{shard_tag}[{i:>3}/{len(stations)}] {sid} OK  chosen={f.chosen}  {time.time()-ts:5.1f}s")
         except Exception as exc:
             print(f"[{i:>3}/{len(stations)}] {sid} FAIL  {exc}")
             failures.append({"station_id": sid, "error": str(exc)})
@@ -278,6 +344,12 @@ def main() -> int:
         "stations_with_blend_mae": len(blend_rolling),
         "build_seconds": round(time.time() - t0, 1),
         "failures": failures,
+        # v14.4: stacker observability
+        "stacker_used": bool(stacker_ok),
+        "stacker_horizons_fit": (
+            sorted(int(h) for h in (stacker_obj._models.keys()))  # type: ignore[attr-defined]
+            if stacker_ok and stacker_obj is not None else []
+        ),
     }
     # v14.2: emit this shard's NWM raw rows into dist/_nwm_raw/shard_N.csv.gz
     # so the snapshot job can pick them up alongside the deploy artifact and
