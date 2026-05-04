@@ -73,6 +73,18 @@ STATIC_NAMES = (
     "issued_doy_cos",
 )
 
+# v14.5a: GAGES-II static augmentation. Order locked, NaN for stations
+# without a GAGES-II row (~32% of actives). LightGBM treats NaN as its own
+# split direction so missing rows don't poison the panel.
+GAGES2_KEYS = (
+    "FORESTNLCD06", "DEVNLCD06", "WOODYWETNLCD06", "EMERGWETNLCD06",
+    "HGA_PCT", "HGB_PCT", "HGC_PCT", "HGD_PCT",
+    "AWCAVE", "PERMAVE",
+    "ELEV_MEAN_M_BASIN", "SLOPE_PCT",
+    "BFI_AVE", "TOPWET", "RUNAVE7100",
+    "PPTAVG_BASIN", "T_AVG_BASIN", "SNOW_PCT_PRECIP",
+)
+
 
 def _row_features(
     member_vals_asinh: Dict[str, float],
@@ -81,11 +93,14 @@ def _row_features(
     target_doy: int,
     issued_doy: int,
 ) -> List[float]:
-    """Build a single feature row in MEMBER_ORDER + STATIC_NAMES order.
+    """Build a single feature row in MEMBER_ORDER + STATIC_NAMES + GAGES2_KEYS order.
 
     Member values are in asinh space (already divided by qs and asinh'd) so
     their ranges across stations are comparable — without that, a station
     with q_scale=10000 dominates one with q_scale=10.
+
+    v14.5a: appends 18 GAGES-II columns from `static_vec[4:22]` (NaN when
+    that station isn't in the GAGES-II 9067-gauge table).
     """
     row: List[float] = []
     for m in MEMBER_ORDER:
@@ -99,14 +114,21 @@ def _row_features(
     row.append(math.cos(target_rad))
     row.append(math.sin(issued_rad))
     row.append(math.cos(issued_rad))
+    # v14.5a: append GAGES-II static columns. Always exactly len(GAGES2_KEYS)
+    # so the booster sees a stable schema; missing rows are NaN.
+    if len(static_vec) >= 4 + len(GAGES2_KEYS):
+        row.extend(float(x) for x in static_vec[4:4 + len(GAGES2_KEYS)])
+    else:
+        row.extend([float("nan")] * len(GAGES2_KEYS))
     return row
 
 
 def _static_vec_from_attrs(attrs: dict) -> Optional[List[float]]:
-    """Pack the 4 static cells we need from a station attrs dict.
+    """Pack the static cells we need from a station attrs dict.
 
-    Returns None if lat/lon are missing — those are the only required ones.
-    Drainage area and altitude default to 0 (log1p(0)=0) when absent.
+    Layout: [log_drain_area, lat, lon, log_alt, *GAGES2_KEYS values].
+    Returns None if lat/lon are missing. GAGES-II values are NaN per-cell
+    when the station isn't covered (~32% of actives).
     """
     try:
         lat = float(attrs.get("lat"))
@@ -117,12 +139,28 @@ def _static_vec_from_attrs(attrs: dict) -> Optional[List[float]]:
         return None
     area = float(attrs.get("drain_area_sqmi", 0) or 0)
     alt = float(attrs.get("alt_ft", 0) or 0)
-    return [
+    base = [
         math.log1p(max(area, 0.0)),
         lat,
         lon,
         math.log1p(max(alt, 0.0)),
     ]
+    g2: list[float] = []
+    for k in GAGES2_KEYS:
+        v = attrs.get(k)
+        if v is None:
+            g2.append(float("nan"))
+            continue
+        try:
+            f = float(v)
+        except Exception:
+            g2.append(float("nan"))
+            continue
+        if not math.isfinite(f):
+            g2.append(float("nan"))
+        else:
+            g2.append(f)
+    return base + g2
 
 
 @dataclass
@@ -153,7 +191,7 @@ class StackerTrainer:
 
     @property
     def feature_names(self) -> List[str]:
-        return list(MEMBER_ORDER) + list(STATIC_NAMES)
+        return list(MEMBER_ORDER) + list(STATIC_NAMES) + [f"g2_{k}" for k in GAGES2_KEYS]
 
     def add_station(
         self,

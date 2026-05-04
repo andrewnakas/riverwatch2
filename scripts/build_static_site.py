@@ -36,6 +36,7 @@ sys.path.insert(0, str(ROOT))
 from app.forecast import forecast_station, prepare_station_inputs, recompute_blend_with_stacker  # noqa: E402
 from app.pooled_lgbm import PooledTrainer  # noqa: E402
 from app.stacker import StackerTrainer  # noqa: E402
+from app.gages2 import enrich_station_attrs, coverage_summary as gages2_coverage  # noqa: E402
 
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
 SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
@@ -164,6 +165,20 @@ def main() -> int:
         stations = all_stations[args.shard_id :: args.total_shards]
     else:
         stations = all_stations
+
+    # v14.5a: enrich station dicts in place with curated GAGES-II static
+    # attributes (~68% coverage). Stations without a GAGES-II row are
+    # untouched and the new feature cells stay NaN at LightGBM training time.
+    g2_summary = gages2_coverage()
+    print(f"v14.5a GAGES-II: {g2_summary['stations_with_gages2']} rows in table, "
+          f"{len(g2_summary['keys'])} keys per station")
+    enriched_in_shard = 0
+    for st in stations:
+        before = len(st)
+        enrich_station_attrs(st)
+        if len(st) > before:
+            enriched_in_shard += 1
+    print(f"v14.5a GAGES-II: enriched {enriched_in_shard}/{len(stations)} stations in this shard")
 
     if args.no_forecasts:
         print("--no-forecasts: skipping live forecast runs")

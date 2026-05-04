@@ -38,6 +38,19 @@ except Exception:
 # magnitude (small headwater creeks to mainstems).
 STATIC_KEYS = ("lat", "lon", "alt_ft", "drain_area_sqmi", "huc_cd")
 
+# v14.5a: GAGES-II augmentation. ~68% coverage; missing columns become NaN
+# at row-build time and LightGBM splits on the missingness mask. Order is
+# locked so the booster sees a stable feature schema across stations and
+# across pooled vs stacker (the stacker reuses the same suffix block).
+GAGES2_STATIC_KEYS = (
+    "FORESTNLCD06", "DEVNLCD06", "WOODYWETNLCD06", "EMERGWETNLCD06",
+    "HGA_PCT", "HGB_PCT", "HGC_PCT", "HGD_PCT",
+    "AWCAVE", "PERMAVE",
+    "ELEV_MEAN_M_BASIN", "SLOPE_PCT",
+    "BFI_AVE", "TOPWET", "RUNAVE7100",
+    "PPTAVG_BASIN", "T_AVG_BASIN", "SNOW_PCT_PRECIP",
+)
+
 
 def _huc2(huc: Optional[str]) -> int:
     """First two HUC digits = HUC-2 region (1-21 in CONUS, treat unknown as 0)."""
@@ -51,7 +64,12 @@ def _huc2(huc: Optional[str]) -> int:
 
 def _static_vec(attrs: dict) -> Optional[np.ndarray]:
     """Pack static features into a fixed-length vector. Missing static fields
-    return None so we don't pollute the pooled training set with zeros."""
+    return None so we don't pollute the pooled training set with zeros.
+
+    v14.5a: appends 18 GAGES-II columns when present (else NaN). LightGBM
+    handles NaN as its own split, so missing GAGES-II rows on ~32% of our
+    stations don't poison the training panel.
+    """
     try:
         lat = float(attrs.get("lat"))
         lon = float(attrs.get("lon"))
@@ -62,15 +80,34 @@ def _static_vec(attrs: dict) -> Optional[np.ndarray]:
         return None
     if not math.isfinite(lat) or not math.isfinite(lon):
         return None
-    return np.array([
+    base = [
         lat, lon,
         np.log1p(max(alt, 0.0)),
         np.log1p(max(area, 0.0)),
         float(huc2),
-    ], dtype=np.float32)
+    ]
+    g2: list[float] = []
+    for k in GAGES2_STATIC_KEYS:
+        v = attrs.get(k)
+        if v is None:
+            g2.append(np.float32("nan"))
+            continue
+        try:
+            f = float(v)
+        except Exception:
+            g2.append(np.float32("nan"))
+            continue
+        if not math.isfinite(f):
+            g2.append(np.float32("nan"))
+        else:
+            g2.append(f)
+    return np.array(base + g2, dtype=np.float32)
 
 
-_STATIC_NAMES = ["s_lat", "s_lon", "s_log_alt", "s_log_area", "s_huc2"]
+_STATIC_NAMES = (
+    ["s_lat", "s_lon", "s_log_alt", "s_log_area", "s_huc2"]
+    + [f"g2_{k}" for k in GAGES2_STATIC_KEYS]
+)
 
 
 @dataclass
