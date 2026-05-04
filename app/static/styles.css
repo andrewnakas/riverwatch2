@@ -124,6 +124,39 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .yr-chip.preset.active { background: #ffd166; color: #0b1020; }
 .yr-status { font-size: 11px; color: #5c6685; margin-left: 6px; }
 @media (max-width: 900px) {
-  #layout { grid-template-columns: 1fr; grid-template-rows: 60vh 40vh; height: auto; }
-  #panel { border-left: none; border-top: 1px solid #26314f; }
+  /* v14.5b-frontend: on mobile, stack map + panel as block-level so the page
+     scrolls naturally. Previously the layout was a fixed grid (60vh + 40vh =
+     100vh) with the panel scrolling internally — Leaflet's touch-drag would
+     eat any swipe-up attempt to reach the forecast. Block layout lets the
+     viewport scroll past the map normally. */
+  body { overflow-y: auto; }
+  html, body { height: auto; min-height: 100%; }
+  #layout {
+    display: block;
+    height: auto;
+    grid-template-columns: none;
+    grid-template-rows: none;
+  }
+  #map {
+    height: 50vh;          /* shorter on mobile so the panel header peeks in */
+    min-height: 280px;
+    /* Contain pan/zoom gestures inside the map; the page itself handles
+       vertical scroll via the surrounding block flow. */
+    touch-action: pan-x pan-y;
+  }
+  #panel {
+    height: auto;
+    overflow: visible;     /* page scrolls; panel grows to fit content */
+    border-left: none;
+    border-top: 1px solid #26314f;
+    padding: 14px 16px;
+  }
+  /* Subtle hint that there's a forecast below the map when nothing is loaded. */
+  #panel-empty::after {
+    content: "↓ scroll to read tips";
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #5c6685;
+  }
 }
