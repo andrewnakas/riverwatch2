@@ -25,7 +25,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 
-from . import snotel, usgs, usgs_stats, weather
+from . import nbm as _nbm, snotel, usgs, usgs_stats, weather
 
 # v12.4: LightGBM replaces Ridge for the runoff member. Lazy import so the
 # module still loads if lightgbm isn't installed; we fall back to ridge.
@@ -791,6 +791,7 @@ class StationInputs:
     has_clim: bool
     notes: List[str]
     attrs: Optional[dict]
+    nbm_df: Optional[pd.DataFrame] = None  # v14.5b: NOAA NBM forecast covariates (11d horizon)
 
 
 def prepare_station_inputs(
@@ -831,6 +832,21 @@ def prepare_station_inputs(
         notes.append(f"weather forecast failed: {exc}")
         wx_fcst = pd.DataFrame(columns=["date"] + weather.DAILY_VARS)
 
+    # v14.5b: NOAA NBM forecast (11-day horizon). Patch wx_fcst's
+    # precipitation_sum + temperature_2m_mean with NBM values where
+    # available — NBM is the calibrated U.S. operational blend, more
+    # accurate than Open-Meteo's generic global blend on CONUS gauges.
+    # All downstream consumers (ridge, lgbm_pooled, timesfm_xreg) see
+    # the patched wx_fcst transparently. Out-of-CONUS gauges and h=12-14
+    # keep the Open-Meteo values.
+    try:
+        nbm_df = _nbm.fetch_forecast(lat, lon, days=_nbm.NBM_MAX_DAYS)
+        if not nbm_df.empty:
+            wx_fcst = _nbm.patch_wx_fcst(wx_fcst, nbm_df)
+    except Exception as exc:
+        notes.append(f"nbm forecast failed: {exc}")
+        nbm_df = _nbm._empty()
+
     snotel_df: Optional[pd.DataFrame] = None
     snotel_meta: Optional[dict] = None
     import os as _os
@@ -852,6 +868,13 @@ def prepare_station_inputs(
     # last row.
     wx_combined = pd.concat([wx_hist, wx_fcst], ignore_index=True)
     wx_combined = wx_combined.drop_duplicates(subset="date", keep="last").sort_values("date")
+    # v14.5b: stitch NBM forecast columns onto wx_combined. Only the future tail
+    # has NBM rows (no historical NBM here), so the merge is left-join on date —
+    # NaN before today, NBM values for h=1..11. _build_features doesn't roll
+    # nbm_* into windows, but ridge / lgbm_pooled / timesfm_xreg pick up the
+    # raw daily values via _feature_columns.
+    if nbm_df is not None and not nbm_df.empty:
+        wx_combined = wx_combined.merge(nbm_df, on="date", how="left")
     feats = _build_features(q_hist, wx_combined, snotel_df=snotel_df)
     cols = _feature_columns(feats)
     qs = float(feats.attrs.get("q_scale", _q_scale(q_hist["q_cfs"])))
@@ -874,6 +897,7 @@ def prepare_station_inputs(
         has_clim=has_clim,
         notes=notes,
         attrs=station_attrs,
+        nbm_df=nbm_df,
     )
 
 
@@ -897,6 +921,7 @@ def forecast_station(
         wx_fcst = inputs.wx_fcst
         snotel_df = inputs.snotel_df
         snotel_meta = inputs.snotel_meta
+        nbm_df = inputs.nbm_df
         notes = list(inputs.notes)
     else:
         today = date.today()
@@ -920,6 +945,16 @@ def forecast_station(
         except Exception as exc:
             notes.append(f"weather forecast failed: {exc}")
             wx_fcst = pd.DataFrame(columns=["date"] + weather.DAILY_VARS)
+
+        # v14.5b: NOAA NBM forecast (11-day horizon). Patch wx_fcst with
+        # NBM's calibrated CONUS values where available.
+        try:
+            nbm_df = _nbm.fetch_forecast(lat, lon, days=_nbm.NBM_MAX_DAYS)
+            if not nbm_df.empty:
+                wx_fcst = _nbm.patch_wx_fcst(wx_fcst, nbm_df)
+        except Exception as exc:
+            notes.append(f"nbm forecast failed: {exc}")
+            nbm_df = _nbm._empty()
 
         snotel_df = None
         snotel_meta = None
@@ -961,7 +996,7 @@ def forecast_station(
 
     try:
         ridge_pred, ridge_mae = runoff_ridge_forecast(
-            q_hist, wx_hist, wx_fcst, horizon, snotel_df=snotel_df
+            q_hist, wx_hist, wx_fcst, horizon, snotel_df=snotel_df,
         )
     except Exception as exc:
         notes.append(f"ridge failed: {exc}")
