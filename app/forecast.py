@@ -25,7 +25,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 
-from . import nbm as _nbm, snotel, usgs, usgs_stats, weather
+from . import nbm as _nbm, snodas as _snodas, snotel, usgs, usgs_stats, weather
 
 # v12.4: LightGBM replaces Ridge for the runoff member. Lazy import so the
 # module still loads if lightgbm isn't installed; we fall back to ridge.
@@ -850,7 +850,19 @@ def prepare_station_inputs(
     snotel_df: Optional[pd.DataFrame] = None
     snotel_meta: Optional[dict] = None
     import os as _os
-    if _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
+    # v14.5c: SNODAS gridded SWE/melt is the primary CONUS-wide snow source.
+    # No nearest-site lookup needed — the extract job pre-samples band 1034/1044
+    # at every station's centroid, so any station inside the CONUS grid lands
+    # an extract. Falls through (returns empty df) for off-CONUS gauges, in
+    # which case SNOTEL still gets a shot when RW2_ENABLE_SNOTEL=1.
+    try:
+        snodas_df = _snodas.fetch_swe_history(station_id, start, today)
+        if snodas_df is not None and not snodas_df.empty:
+            snotel_df = snodas_df
+            snotel_meta = {"source": "snodas", "stationTriplet": "SNODAS"}
+    except Exception as exc:
+        notes.append(f"snodas failed: {exc}")
+    if snotel_df is None and _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
         try:
             site = snotel.nearest_site(station_id, lat, lon)
             if site:
@@ -958,11 +970,17 @@ def forecast_station(
 
         snotel_df = None
         snotel_meta = None
-        # Gate SNOTEL fetches behind RW2_ENABLE_SNOTEL to avoid a slow first-build
-        # cold-fill (per-site nearest-mapper + WTEQ history). Enable once we want
-        # to populate the SNOTEL caches in the workflow.
         import os as _os
-        if _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
+        # v14.5c: SNODAS first (CONUS-wide gridded, pre-extracted). SNOTEL is
+        # the off-CONUS / fallback path behind RW2_ENABLE_SNOTEL.
+        try:
+            snodas_df = _snodas.fetch_swe_history(station_id, start, today)
+            if snodas_df is not None and not snodas_df.empty:
+                snotel_df = snodas_df
+                snotel_meta = {"source": "snodas", "stationTriplet": "SNODAS"}
+        except Exception as exc:
+            notes.append(f"snodas failed: {exc}")
+        if snotel_df is None and _os.environ.get("RW2_ENABLE_SNOTEL") == "1":
             try:
                 site = snotel.nearest_site(station_id, lat, lon)
                 if site:

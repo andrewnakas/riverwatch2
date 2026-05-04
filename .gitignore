@@ -4,6 +4,9 @@ __pycache__/
 venv/
 .env
 data/cache/
+# v14.5c: SNODAS extracts are produced fresh by the workflow's pre-build
+# `snodas-extract` job and shipped to shards via artifact. No need to track.
+data/snodas_extracts/
 benchmarks/results_*.json
 # pinned baselines (e.g. baseline_v1.json) are kept in version control
 dist/

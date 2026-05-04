@@ -26,7 +26,32 @@ env:
   TOTAL_SHARDS: 16
 
 jobs:
+  # v14.5c: refresh SNODAS gridded SWE/melt extracts once per build, before
+  # the matrix shards fan out. The build steps run with RW2_NO_FETCH=1 so they
+  # rely entirely on the extracts dir being up-to-date. Fetching here keeps
+  # NSIDC traffic to one daily-delta call (typically <1min) instead of 16.
+  snodas-extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install minimal SNODAS deps
+        run: pip install numpy
+      - name: Refresh SNODAS extracts (last 14 days)
+        run: python scripts/build_snodas_extracts.py --days 14
+      - name: Upload extracts artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snodas-extracts
+          path: data/snodas_extracts
+          retention-days: 1
+          if-no-files-found: warn
+
   build:
+    needs: snodas-extract
     runs-on: ubuntu-latest
     timeout-minutes: 350  # cold 30yr backfill can take hours; subsequent runs are 1-day deltas
     strategy:
@@ -35,6 +60,12 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download fresh SNODAS extracts
+        uses: actions/download-artifact@v4
+        with:
+          name: snodas-extracts
+          path: data/snodas_extracts
 
       - uses: actions/setup-python@v5
         with:
