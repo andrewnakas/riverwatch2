@@ -167,17 +167,27 @@ def _process_one_day(d: date, stations: list[dict], idxs: list[Optional[tuple[in
     Returns {station_id: {swe_in, melt_24h_mm}} on success, None on failure
     (network, missing file, decode error)."""
     url = _tar_url_for(d)
-    try:
-        with _http_open(url, timeout=120) as resp:
-            tar_bytes = resp.read()
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            print(f"  {d}: 404 (likely not yet released or never published)", flush=True)
-        else:
-            print(f"  {d}: HTTP {e.code} {e.reason}", flush=True)
-        return None
-    except Exception as e:
-        print(f"  {d}: fetch failed: {e}", flush=True)
+    # Retry transient network errors (DNS blips, timeouts) up to 4 times with
+    # exponential backoff. 404s short-circuit immediately — those days are
+    # legitimately missing from the archive.
+    tar_bytes = None
+    last_exc: Optional[Exception] = None
+    for attempt in range(4):
+        try:
+            with _http_open(url, timeout=120) as resp:
+                tar_bytes = resp.read()
+            break
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                print(f"  {d}: 404 (likely not yet released or never published)", flush=True)
+                return None
+            last_exc = e
+        except Exception as e:
+            last_exc = e
+        # backoff: 2, 4, 8, 16s
+        time.sleep(2 ** (attempt + 1))
+    if tar_bytes is None:
+        print(f"  {d}: fetch failed after retries: {last_exc}", flush=True)
         return None
 
     swe_grid = _extract_band_from_tar(tar_bytes, VAR_SWE)
