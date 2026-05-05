@@ -20,6 +20,7 @@ of hitting Flask.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 import time
@@ -38,7 +39,10 @@ from app.pooled_lgbm import PooledTrainer  # noqa: E402
 from app.stacker import StackerTrainer  # noqa: E402
 from app.gages2 import enrich_station_attrs, coverage_summary as gages2_coverage  # noqa: E402
 
-STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
+# v15.0: optional env override so we can point the build at the
+# 9851-gauge stations_v15.json without code changes. Default keeps the
+# legacy 1893-gauge curated list so local dev / benchmarks don't break.
+STATIONS_PATH = Path(os.environ.get("RW2_STATIONS_FILE") or (ROOT / "data" / "stations_40_enriched.json"))
 SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
 SRC_STATIC = ROOT / "app" / "static"
 DIST = ROOT / "dist"

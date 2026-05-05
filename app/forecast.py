@@ -1058,6 +1058,22 @@ def forecast_station(
     except Exception as exc:
         notes.append(f"timesfm_xreg failed: {exc}")
 
+    # v15.1: EA-LSTM (NeuralHydrology) → 8th member. Entity-aware LSTM
+    # conditioned on static catchment attributes; pretrained checkpoint
+    # path comes from RW2_EALSTM_CKPT_PATH. Returns None when the gate is
+    # off, weights are missing, or attribute schema doesn't match — the
+    # blend then drops the member exactly like timesfm_xreg.
+    try:
+        from . import ealstm as _ealstm
+        ealstm_pred_rows = _ealstm.forecast(
+            q_hist, wx_hist, wx_fcst, station_attrs or {}, horizon,
+        )
+        if ealstm_pred_rows:
+            ealstm_pred = [r["q_cfs"] for r in ealstm_pred_rows]
+            raw_member_preds["ealstm"] = (ealstm_pred, 4)
+    except Exception as exc:
+        notes.append(f"ealstm failed: {exc}")
+
     # v13: NOAA National Water Model (NWM) medium_range_blend → 6th member.
     # Process-based distributed hydrology with channel routing, fundamentally
     # different signal from the ML/zero-shot members. Off by default; enabled

@@ -40,7 +40,9 @@ from typing import Optional
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
+# v15.0: env override mirrors build_static_site.py so the same workflow
+# step picks up the same station list.
+STATIONS_PATH = Path(os.environ.get("RW2_STATIONS_FILE") or (ROOT / "data" / "stations_40_enriched.json"))
 EXTRACTS_DIR = ROOT / "data" / "snodas_extracts"
 EXTRACTS_DIR.mkdir(parents=True, exist_ok=True)
 

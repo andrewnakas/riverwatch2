@@ -38,6 +38,21 @@ STATE_CODES = [
     "TN","TX","UT","VT","VA","WA","WV","WI","WY","PR","VI",
 ]
 
+# FIPS numeric → 2-letter postal. NWIS RDB returns numeric state_cd in the
+# expanded output; the legacy stations_40_enriched.json uses 2-letter codes
+# and the frontend's colorForState() hashes the 2-letter form, so we
+# normalize here to keep map coloring consistent across legacy + v15.
+FIPS_TO_POSTAL = {
+    "01":"AL","02":"AK","04":"AZ","05":"AR","06":"CA","08":"CO","09":"CT",
+    "10":"DE","11":"DC","12":"FL","13":"GA","15":"HI","16":"ID","17":"IL",
+    "18":"IN","19":"IA","20":"KS","21":"KY","22":"LA","23":"ME","24":"MD",
+    "25":"MA","26":"MI","27":"MN","28":"MS","29":"MO","30":"MT","31":"NE",
+    "32":"NV","33":"NH","34":"NJ","35":"NM","36":"NY","37":"NC","38":"ND",
+    "39":"OH","40":"OK","41":"OR","42":"PA","44":"RI","45":"SC","46":"SD",
+    "47":"TN","48":"TX","49":"UT","50":"VT","51":"VA","53":"WA","54":"WV",
+    "55":"WI","56":"WY","72":"PR","78":"VI",
+}
+
 
 def _fetch_state(state: str, *, retries: int = 3, timeout: int = 90) -> list[dict]:
     """Pull every active dv-flow gauge in one state."""
@@ -111,12 +126,14 @@ def _to_station(row: dict) -> dict | None:
     if lat is None or lon is None:
         return None
 
+    fips = (row.get("state_cd") or "").strip()
+    postal = FIPS_TO_POSTAL.get(fips, fips)
     return {
         "id": site_no,
         "site_no": site_no,
         "name": (row.get("station_nm") or "").strip(),
-        "state": (row.get("state_cd") or "").strip(),
-        "state_cd": (row.get("state_cd") or "").strip(),
+        "state": postal,
+        "state_cd": fips,
         "huc_cd": (row.get("huc_cd") or "").strip() or None,
         "lat": lat,
         "lon": lon,
