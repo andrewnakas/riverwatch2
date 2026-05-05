@@ -10,6 +10,12 @@ data/cache/
 data/snodas_extracts/
 benchmarks/results_*.json
 # pinned baselines (e.g. baseline_v1.json) are kept in version control
+# v15.1: NWM residual models are large pickled LightGBM bundles — once
+# we have a real training run we can either commit them (~1-5MB each)
+# or stash them on an orphan branch like nwm-archive. For now, until
+# the v14.2 archive has 30+ days of history, the dir is empty so we
+# ignore it.
+data/nwm_residual_models/
 dist/
 .DS_Store
 *.egg-info/

@@ -1112,6 +1112,24 @@ def forecast_station(
     except Exception as exc:
         notes.append(f"nwm failed: {exc}")
 
+    # v15.1: learned NWM residual. Adds a 9th member that takes the v14.1
+    # bias-corrected NWM and applies a per-horizon LightGBM correction
+    # trained on the v14.2 nwm-archive (issued/target/horizon × q_obs).
+    # Gated by RW2_ENABLE_NWM_RESIDUAL=1 and silently no-ops if the
+    # per-horizon model files aren't present yet.
+    if nwm_pred is not None and nwm_pred_raw is not None:
+        try:
+            from . import nwm_residual as _nwm_resid
+            q_obs_today = float(q_hist["q_cfs"].iloc[-1]) if len(q_hist) else None
+            issued = pd.to_datetime(q_hist["date"].iloc[-1]) if len(q_hist) else pd.Timestamp.utcnow()
+            resid_pred = _nwm_resid.apply_residual(
+                nwm_pred_raw, list(nwm_pred), nwm_bs_used, q_obs_today, issued,
+            )
+            if resid_pred is not None:
+                raw_member_preds["nwm_residual"] = (list(resid_pred), 7)
+        except Exception as exc:
+            notes.append(f"nwm_residual failed: {exc}")
+
     # v13.2: pooled-LGBM cross-station member. Uses same per-station feature
     # set as runoff_ridge plus static basin attributes (lat/lon/elev/area/HUC2)
     # so the tree can learn rainfall→runoff transfer functions conditioned on

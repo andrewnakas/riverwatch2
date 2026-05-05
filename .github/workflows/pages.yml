@@ -3,10 +3,14 @@ name: Build & deploy GitHub Pages
 on:
   push:
     branches: [main]
-  # Hourly cron temporarily paused while v9 backfills 30yr per-sensor history
-  # from cold cache. Re-enable once builds are back to ~1-day-delta runtimes.
-  # schedule:
-  #   - cron: "0 * * * *"
+  # v15.1: re-enabled at 6-hour cadence. Builds are back to 23-35min on
+  # warm cache, and we want the v14.2 nwm-archive branch to accumulate
+  # faster — the residual learner needs 30+ days of forecast/obs pairs
+  # before there's enough signal to train. 4 runs/day × 14 horizons ×
+  # 1893 stations = ~106k rows/day. (Hourly would be wasteful — most of
+  # NWM's medium_range_blend doesn't refresh that often anyway.)
+  schedule:
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 permissions:
