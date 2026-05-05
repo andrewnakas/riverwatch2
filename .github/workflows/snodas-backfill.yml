@@ -1,0 +1,130 @@
+name: SNODAS historical backfill
+
+# v14.5c-bf: one-time (or rerunnable) historical SNODAS backfill on GitHub
+# infrastructure. Walks the NSIDC G02158 archive from --start to --end (the
+# default covers 2020-10-01 → "yesterday") and pushes per-station extracts
+# to the orphan `snodas-archive` branch. The pages.yml `snodas-extract` job
+# can optionally restore from this branch before layering the daily delta.
+#
+# Manual-trigger only — this is heavy (2042 days × ~10s/day at GHA's
+# bandwidth = ~6 hours) and we don't want it firing on every push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Start date (YYYY-MM-DD)"
+        required: false
+        default: "2020-10-01"
+      end:
+        description: "End date (YYYY-MM-DD, default = yesterday)"
+        required: false
+        default: ""
+      restore_from_archive:
+        description: "Restore existing snodas-archive contents before fetching deltas (recommended for rerun)"
+        required: false
+        default: "true"
+        type: choice
+        options: ["true", "false"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "snodas-backfill"
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 720  # 12 hours; cold full backfill is ~6-9hrs
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal SNODAS deps
+        run: pip install numpy
+
+      - name: Restore from snodas-archive branch (if it exists)
+        if: ${{ github.event.inputs.restore_from_archive == 'true' }}
+        run: |
+          set -e
+          mkdir -p data/snodas_extracts
+          if git ls-remote --exit-code --heads origin snodas-archive; then
+            echo "snodas-archive branch exists — pulling existing extracts"
+            git fetch origin snodas-archive --depth=1
+            # Worktree-checkout the archive branch into a sibling dir, copy the
+            # extracts over, then drop the worktree. Avoids stomping the main
+            # working tree (which is on `main` and has source code we need).
+            git worktree add /tmp/snodas-archive snodas-archive
+            if [ -d /tmp/snodas-archive/data/snodas_extracts ]; then
+              cp -r /tmp/snodas-archive/data/snodas_extracts/* data/snodas_extracts/ 2>/dev/null || true
+            fi
+            git worktree remove /tmp/snodas-archive --force
+            echo "restored $(ls data/snodas_extracts | wc -l) per-station extract files"
+          else
+            echo "snodas-archive branch does not exist yet — starting cold"
+          fi
+
+      - name: Run SNODAS backfill
+        env:
+          # Be a polite NSIDC client over a long walk. 1.5s/day pause is in
+          # the noise vs the 5-15s download but avoids triggering rate limits.
+          SNODAS_FETCH_PAUSE_S: "1.5"
+        run: |
+          END="${{ github.event.inputs.end }}"
+          if [ -z "$END" ]; then
+            END=$(date -u -d 'yesterday' +%Y-%m-%d)
+          fi
+          echo "::notice::Backfilling ${{ github.event.inputs.start }} → $END"
+          python scripts/build_snodas_extracts.py \
+            --start "${{ github.event.inputs.start }}" \
+            --end   "$END"
+
+      - name: Push extracts to snodas-archive branch
+        run: |
+          set -e
+          if [ ! -d data/snodas_extracts ] || [ -z "$(ls data/snodas_extracts 2>/dev/null)" ]; then
+            echo "::error::No extracts produced; refusing to push empty archive"
+            exit 1
+          fi
+          # Stash the extracts before checking out the orphan branch.
+          mv data/snodas_extracts /tmp/snodas_payload
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          if git ls-remote --exit-code --heads origin snodas-archive; then
+            git fetch origin snodas-archive --depth=1
+            git checkout snodas-archive
+          else
+            git checkout --orphan snodas-archive
+            git rm -rf --cached . || true
+            git clean -fd
+          fi
+          mkdir -p data/snodas_extracts
+          # Replace, don't merge: this run is the canonical state. A re-run
+          # always restores the archive before fetching deltas, so the new
+          # tree should be a strict superset.
+          rm -rf data/snodas_extracts/*
+          cp -r /tmp/snodas_payload/* data/snodas_extracts/
+          # Single dummy README so the branch isn't suspicious-looking on GH.
+          cat > README.md <<'EOF'
+          # snodas-archive
+
+          Per-station NOHRSC SNODAS daily SWE/melt extracts produced by
+          `.github/workflows/snodas-backfill.yml`. Each `data/snodas_extracts/{station_id}.json`
+          maps ISO date → `{swe_in, melt_24h_mm}`.
+
+          Schema and source documented in `app/snodas.py` on `main`.
+          EOF
+          git add data/snodas_extracts README.md
+          if git diff --cached --quiet; then
+            echo "no extract changes to commit"
+            exit 0
+          fi
+          ISSUED=$(date -u +%Y-%m-%d)
+          git commit -m "snodas-archive: ${{ github.event.inputs.start }} → ${ISSUED}"
+          git push origin snodas-archive
+          echo "::notice::Pushed snodas-archive at ${ISSUED}"

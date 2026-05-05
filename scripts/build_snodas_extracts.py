@@ -27,6 +27,7 @@ import argparse
 import gzip
 import io
 import json
+import os
 import sys
 import tarfile
 import time
@@ -277,17 +278,37 @@ def main() -> int:
         else:
             records[sid] = {}
 
+    # Off-CONUS stations (idx is None) never get an extract, and a handful
+    # of in-grid stations land on permanently-no-data pixels (coastline,
+    # grid edges) so they never produce records either. We can't know which
+    # is which a priori, so the skip predicate uses a coverage threshold:
+    # if ≥99% of in-grid stations have the date, the day is considered
+    # complete. Empirically the dead-pixel set is ~10/1849 = 0.6%.
+    in_grid_ids = [
+        str(s.get("id")) for s, ix in zip(stations, idxs) if ix is not None
+    ]
+    skip_threshold = max(1, int(len(in_grid_ids) * 0.99))
+
     n_added = 0
     n_skipped = 0
     n_failed = 0
+    # Small inter-day pause to be a polite NSIDC client during long backfills.
+    # Tar-download dominates wall time anyway (~5-10s/day) so this is in noise,
+    # but it avoids triggering rate-limit / connection-refused responses on
+    # multi-thousand-day walks.
+    fetch_pause_s = float(os.environ.get("SNODAS_FETCH_PAUSE_S", "0.5"))
     t0 = time.time()
     for i, d in enumerate(days, 1):
         d_iso = d.isoformat()
-        # If every station already has this date, skip the network round-trip.
-        if all(d_iso in records.get(str(s.get("id")), {}) for s in stations):
+        # If ≥99% of in-grid stations already have this date, skip the
+        # network call (the missing fraction is permanently dead pixels).
+        coverage = sum(1 for sid in in_grid_ids if d_iso in records.get(sid, {}))
+        if coverage >= skip_threshold:
             n_skipped += 1
             continue
         day_out = _process_one_day(d, stations, idxs)
+        if fetch_pause_s > 0:
+            time.sleep(fetch_pause_s)
         if day_out is None:
             n_failed += 1
             continue

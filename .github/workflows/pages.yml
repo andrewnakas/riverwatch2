@@ -30,6 +30,11 @@ jobs:
   # the matrix shards fan out. The build steps run with RW2_NO_FETCH=1 so they
   # rely entirely on the extracts dir being up-to-date. Fetching here keeps
   # NSIDC traffic to one daily-delta call (typically <1min) instead of 16.
+  #
+  # v14.5c-bf: if the orphan `snodas-archive` branch exists (populated by
+  # `.github/workflows/snodas-backfill.yml`), we restore its full historical
+  # extracts dir first, then layer the daily delta on top. The build script
+  # is incremental — it skips dates already present.
   snodas-extract:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -40,6 +45,21 @@ jobs:
           python-version: "3.11"
       - name: Install minimal SNODAS deps
         run: pip install numpy
+      - name: Restore SNODAS history from snodas-archive branch (if it exists)
+        run: |
+          set -e
+          mkdir -p data/snodas_extracts
+          if git ls-remote --exit-code --heads origin snodas-archive; then
+            git fetch origin snodas-archive --depth=1
+            git worktree add /tmp/snodas-archive snodas-archive
+            if [ -d /tmp/snodas-archive/data/snodas_extracts ]; then
+              cp -r /tmp/snodas-archive/data/snodas_extracts/* data/snodas_extracts/ 2>/dev/null || true
+            fi
+            git worktree remove /tmp/snodas-archive --force
+            echo "restored $(ls data/snodas_extracts | wc -l) per-station extract files from snodas-archive"
+          else
+            echo "snodas-archive does not exist yet — starting with empty extracts dir"
+          fi
       - name: Refresh SNODAS extracts (last 14 days)
         run: python scripts/build_snodas_extracts.py --days 14
       - name: Upload extracts artifact
