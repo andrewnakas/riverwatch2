@@ -114,7 +114,41 @@ def fetch_daily_discharge(site_no: str, start: date, end: date, *, max_age_hours
 
 
 def _fetch_and_merge(site_no: str, have: dict[str, float], start: date, end: date) -> bool:
-    """Fetch [start, end] from USGS and merge into `have`. Returns True if anything was added."""
+    """Fetch [start, end] from USGS and merge into `have`. Returns True if any
+    new rows were added.
+
+    v15.0-retry: at high concurrency (16-32 shards × 600 stations/shard
+    cold-fetching 100yr windows) the USGS dv endpoint rate-limits and
+    occasionally 503s. We chunk cold windows into 10-year slices and retry
+    each chunk with exponential backoff before giving up. This converts
+    one transient blip from "this gauge is permanently failed" into
+    "this chunk re-fetches on the next run."
+    """
+    span_days = (end - start).days
+    # Chunk anything bigger than ~12 years so a single 503 doesn't cost
+    # us 100 years. The dv endpoint streams the full range in one
+    # response, so smaller chunks also keep peak memory & timeout pressure
+    # down.
+    CHUNK_YEARS = 10
+    if span_days > CHUNK_YEARS * 366:
+        cur = start
+        any_added = False
+        while cur <= end:
+            chunk_end = min(end, cur + timedelta(days=CHUNK_YEARS * 366 - 1))
+            any_added = _fetch_chunk_with_retry(site_no, have, cur, chunk_end) or any_added
+            cur = chunk_end + timedelta(days=1)
+        return any_added
+    return _fetch_chunk_with_retry(site_no, have, start, end)
+
+
+def _fetch_chunk_with_retry(
+    site_no: str, have: dict[str, float], start: date, end: date,
+    *, retries: int = 4,
+) -> bool:
+    """One [start, end] fetch with exponential backoff. Returns True iff new
+    rows were merged into `have`. A failed fetch (after all retries) returns
+    False but does NOT poison `have` — the next run can try again, since the
+    cache record's last_known/first_known are only updated on success."""
     params = {
         "format": "json",
         "sites": site_no,
@@ -124,10 +158,20 @@ def _fetch_and_merge(site_no: str, have: dict[str, float], start: date, end: dat
         "siteStatus": "all",
     }
     url = DV_URL + "?" + urlencode(params)
-    time.sleep(0.05 + random.random() * 0.10)
-    try:
-        payload = _http_json(url)
-    except Exception:
+    last_exc: Exception | None = None
+    for attempt in range(retries):
+        # Initial jitter before every attempt (including the first) so 600+
+        # shards don't synchronize their ramp.
+        time.sleep(0.05 + random.random() * 0.20 + attempt * (1.0 + random.random() * 1.0) * (2 ** attempt))
+        try:
+            payload = _http_json(url)
+            break
+        except Exception as exc:
+            last_exc = exc
+            continue
+    else:
+        # All retries exhausted — record the failure path so build logs are
+        # actionable, but don't raise.
         return False
     df_new = _parse_dv(payload)
     added = False

@@ -39,7 +39,14 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TOTAL_SHARDS: 16
+  # v15.0: 64 shards. The 16- and 32-shard bootstrap runs both hit the
+  # 350-min job timeout while cold-fetching 100yr USGS history for the
+  # ~7958 newly-onboarded gauges, even with retry/backoff in place. At
+  # 64 shards each shard owns ~154 stations, so the cold path fits well
+  # under timeout and warm runs (1-day deltas) cost only the matrix
+  # spin-up overhead. GHA matrix cap is 256, so we have headroom if
+  # USGS gets slower.
+  TOTAL_SHARDS: 64
 
 jobs:
   # v14.5c: refresh SNODAS gridded SWE/melt extracts once per build, before
@@ -97,7 +104,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+                32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+                48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
     steps:
       - uses: actions/checkout@v4
 
