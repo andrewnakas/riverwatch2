@@ -35,7 +35,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  # v15.0 bootstrap: bootstrap dispatches get their own concurrency group
+  # so a pending push/schedule run can't queue ahead of an in-flight cold
+  # fetch. Regular runs continue to share the "pages" group at workflow
+  # scope; the github-pages *environment* enforces its own deploy-side
+  # serialization (and the deploy job is skipped on bootstrap entirely).
+  group: ${{ github.event.inputs.bootstrap_v15 == 'true' && format('pages-bootstrap-{0}', github.run_id) || 'pages' }}
   cancel-in-progress: false
 
 env:
@@ -261,6 +266,14 @@ jobs:
   deploy:
     needs: merge
     runs-on: ubuntu-latest
+    # v15.0 bootstrap: skip the Pages deploy on bootstrap dispatches.
+    # Bootstrap is a cache-warming run (its build artifact is incomplete by
+    # design — many gauges fail in cache-only fallbacks until the cold
+    # fetch lands them). Joining the github-pages environment here would
+    # also let a higher-priority push/schedule run cancel the bootstrap
+    # mid-fetch, which is exactly what just happened. The next regular
+    # run after bootstrap inherits the warm cache and deploys cleanly.
+    if: ${{ github.event.inputs.bootstrap_v15 != 'true' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
