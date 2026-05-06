@@ -177,13 +177,16 @@ function _renderForecast() {
   const xmin = _fcst.full.xmin + _fcst.range[0] * span;
   const xmax = _fcst.full.xmin + _fcst.range[1] * span;
 
-  // y-extent over points visible in the current zoom window only
+  // y-extent over points visible in the current zoom window only.
+  // v15.2: band_hi/band_lo extend the upper bound when intervals are present.
   const ys = [];
   for (const s of series) {
     for (const p of s.points) {
       const t = Date.parse(p.date);
       if (t < xmin || t > xmax) continue;
       if (p.q_cfs != null && Number.isFinite(p.q_cfs)) ys.push(p.q_cfs);
+      if (Number.isFinite(p.band_hi)) ys.push(p.band_hi);
+      if (Number.isFinite(p.band_lo)) ys.push(p.band_lo);
     }
   }
   const ymin = 0, ymax = (ys.length ? Math.max(...ys) : 1) * 1.15 || 1;
@@ -262,6 +265,29 @@ function _renderForecast() {
     ctx.font = "10px Inter, sans-serif";
   }
 
+  // v15.2: split-conformal 90% prediction band behind the blend line.
+  // Drawn first so the blend stroke sits on top.
+  const bandPts = blend.filter(p =>
+    p && Number.isFinite(p.q_cfs) && Number.isFinite(p.band_lo) && Number.isFinite(p.band_hi)
+  );
+  if (bandPts.length >= 2) {
+    ctx.fillStyle = "rgba(255, 209, 102, 0.18)";
+    ctx.beginPath();
+    bandPts.forEach((p, i) => {
+      const x = xToPx(Date.parse(p.date));
+      const y = yToPx(p.band_hi);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    for (let i = bandPts.length - 1; i >= 0; i--) {
+      const p = bandPts[i];
+      const x = xToPx(Date.parse(p.date));
+      const y = yToPx(Math.max(0, p.band_lo));
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
   for (const s of series) {
     if (!s.points.length) continue;
     ctx.strokeStyle = s.color;
@@ -286,6 +312,13 @@ function _renderForecast() {
     ctx.fillStyle = "#aab7d4";
     ctx.fillText(s.name, lx + 14, ly);
     lx += ctx.measureText(s.name).width + 36;
+  }
+  // v15.2: legend swatch for the conformal band, only when shown.
+  if (bandPts.length >= 2) {
+    ctx.fillStyle = "rgba(255, 209, 102, 0.35)";
+    ctx.fillRect(lx, ly - 9, 10, 8);
+    ctx.fillStyle = "#aab7d4";
+    ctx.fillText("90% band", lx + 14, ly);
   }
 }
 

@@ -1750,6 +1750,29 @@ def forecast_station(
         else:
             rolling_mae_blend[h] = rule_mae_h
 
+    # v15.2: split-conformal per-horizon prediction bands. Calibrate against
+    # the same holdout absolute-error pool we just used for rolling_mae_blend
+    # (stacker-on-holdouts when fitted, else the live rule's holdout errors).
+    # 90% interval ⇒ q = 0.90 quantile of |err_h|. Symmetric band around the
+    # blend point. Empty pool for a horizon ⇒ no band emitted (frontend
+    # tolerates missing keys).
+    CONFORMAL_Q = 0.90
+    conformal_band_per_h: Dict[int, float] = {}
+    for h in range(1, horizon + 1):
+        pool = stacker_blend_errs.get(h) or []
+        if not pool:
+            r = rule_for_h.get(h)
+            if r is not None:
+                pool = rule_errs.get(r, {}).get(h, []) or []
+        if not pool:
+            continue
+        try:
+            q = float(np.quantile(np.asarray(pool, dtype=float), CONFORMAL_Q))
+        except Exception:
+            continue
+        if math.isfinite(q) and q >= 0:
+            conformal_band_per_h[h] = q
+
     chosen = min(rolling_mae, key=lambda k: rolling_mae[k]) if rolling_mae else "runoff_ridge"
 
     # v12: ensemble blend MAE per horizon comes from the stacker-on-holdouts
@@ -1844,7 +1867,21 @@ def forecast_station(
         issued_at=pd.Timestamp.utcnow().isoformat(),
         history=history_out,
         members=members,
-        blend=[{"date": d, "q_cfs": v} for d, v in zip(future_dates, blend_vals)],
+        blend=[
+            (
+                {"date": d, "q_cfs": v}
+                if (h not in conformal_band_per_h
+                    or v is None
+                    or not (isinstance(v, float) and math.isfinite(v)))
+                else {
+                    "date": d,
+                    "q_cfs": v,
+                    "band_lo": max(0.0, float(v) - conformal_band_per_h[h]),
+                    "band_hi": float(v) + conformal_band_per_h[h],
+                }
+            )
+            for h, (d, v) in enumerate(zip(future_dates, blend_vals), start=1)
+        ],
         weights=weights,
         rolling_mae={k: float(v) for k, v in rolling_mae.items()},
         rolling_mae_h7={k: float(v) for k, v in rolling_mae_h7.items()},
@@ -1916,13 +1953,22 @@ def recompute_blend_with_stacker(
 
     # Replace blend values per-h where the stacker produced a finite output;
     # otherwise keep the existing blend value. dates come straight from f.blend.
+    # v15.2: re-center conformal bands on the new blend value, preserving the
+    # original half-width (cur["band_hi"] - cur["q_cfs"]). The half-width
+    # itself gets refreshed below from `s_errs` if available.
     new_blend: List[dict] = []
     new_strategy = dict(f.blend_strategy_per_h)
     for i in range(min(len(f.blend), horizon)):
         cur = f.blend[i]
         sv = stacker_blend[i] if i < len(stacker_blend) else None
         if sv is not None and math.isfinite(float(sv)):
-            new_blend.append({"date": cur["date"], "q_cfs": float(sv)})
+            entry: dict = {"date": cur["date"], "q_cfs": float(sv)}
+            if "band_hi" in cur and "q_cfs" in cur:
+                hw = float(cur["band_hi"]) - float(cur["q_cfs"])
+                if math.isfinite(hw) and hw >= 0:
+                    entry["band_lo"] = max(0.0, float(sv) - hw)
+                    entry["band_hi"] = float(sv) + hw
+            new_blend.append(entry)
             new_strategy[i + 1] = "lgbm_stacker"
         else:
             new_blend.append(cur)
@@ -1949,6 +1995,25 @@ def recompute_blend_with_stacker(
             if errs:
                 new_mae_blend[int(h)] = float(np.mean(errs))
         f.rolling_mae_blend = new_mae_blend
+        # v15.2: refresh conformal half-widths from the stacker-on-holdouts
+        # error pool we just collected. Same q=0.90 as the pre-stacker pass.
+        for h, errs in s_errs.items():
+            if not errs:
+                continue
+            try:
+                hw = float(np.quantile(np.asarray(errs, dtype=float), 0.90))
+            except Exception:
+                continue
+            if not (math.isfinite(hw) and hw >= 0):
+                continue
+            idx = int(h) - 1
+            if 0 <= idx < len(f.blend):
+                pt = f.blend[idx]
+                q = pt.get("q_cfs")
+                if q is None or not (isinstance(q, float) and math.isfinite(q)):
+                    continue
+                pt["band_lo"] = max(0.0, float(q) - hw)
+                pt["band_hi"] = float(q) + hw
         # Refresh the h7 / h14 / mean projections so index_summary picks it up.
         if 7 in new_mae_blend and 7 <= horizon:
             f.rolling_mae_h7["ensemble_blend"] = float(new_mae_blend[7])
