@@ -39,10 +39,11 @@ from app.pooled_lgbm import PooledTrainer  # noqa: E402
 from app.stacker import StackerTrainer  # noqa: E402
 from app.gages2 import enrich_station_attrs, coverage_summary as gages2_coverage  # noqa: E402
 
-# v15.0: optional env override so we can point the build at the
-# 9851-gauge stations_v15.json without code changes. Default keeps the
-# legacy 1893-gauge curated list so local dev / benchmarks don't break.
-STATIONS_PATH = Path(os.environ.get("RW2_STATIONS_FILE") or (ROOT / "data" / "stations_40_enriched.json"))
+# v15.0: bootstrap landed (run #62 succeeded with cold caches filled),
+# so the scheduled-run default now points at the full 9851-gauge list.
+# RW2_STATIONS_FILE still overrides for local dev / benchmarks (fall back
+# to data/stations_40_enriched.json if you need the legacy 1893 set).
+STATIONS_PATH = Path(os.environ.get("RW2_STATIONS_FILE") or (ROOT / "data" / "stations_v15.json"))
 SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
 SRC_STATIC = ROOT / "app" / "static"
 DIST = ROOT / "dist"
