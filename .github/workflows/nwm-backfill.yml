@@ -1,0 +1,127 @@
+name: NWM operational forecast backfill
+
+# v15.1-bf: walks the noaa-nwm-pds operational archive on S3 and produces
+# per-day medium_range_blend forecast panels in the v14.2 nwm-archive
+# schema, then pushes them to the orphan `nwm-archive` branch alongside
+# the rows already accumulating from pages.yml.
+#
+# Why this exists: the v14.2 push-time accumulator only writes one row
+# per (station × target_date × horizon) per build. With the new 6-hour
+# cron we'd still need ~30 days to train the residual learner. NOAA's
+# operational archive holds ~16 months of as-issued forecasts, so we
+# can backfill straight to a 30-day window in a single run.
+#
+# Cost: ~25min/day × N days at 16-thread parallel S3 reads. Default
+# 30 days ≈ 12.5 hours wall-clock — well under the 6-hour matrix shard
+# limit because this is one job, no shards (file IO is the bottleneck,
+# not CPU).
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "Start date (YYYY-MM-DD)"
+        required: true
+        default: "2026-04-05"
+      end:
+        description: "End date (YYYY-MM-DD, inclusive)"
+        required: true
+        default: "2026-05-04"
+      threads:
+        description: "Parallel S3 file reads per day (default 16)"
+        required: false
+        default: "16"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "nwm-backfill"
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440  # 24h ceiling — full backfill is ~12-14h
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal deps (s3fs + xarray + h5netcdf)
+        run: pip install s3fs xarray h5netcdf h5py numpy
+
+      - name: Restore from nwm-archive branch (skip days already there)
+        run: |
+          set -e
+          mkdir -p archive
+          if git ls-remote --exit-code --heads origin nwm-archive; then
+            git fetch origin nwm-archive --depth=1
+            git worktree add /tmp/nwm-archive nwm-archive
+            if [ -d /tmp/nwm-archive/archive ]; then
+              cp -r /tmp/nwm-archive/archive/* archive/ 2>/dev/null || true
+            fi
+            git worktree remove /tmp/nwm-archive --force
+            echo "restored $(find archive -name '*.csv.gz' | wc -l) existing per-day files"
+          else
+            echo "nwm-archive branch does not exist — starting cold"
+          fi
+
+      - name: Backfill from operational archive
+        run: |
+          python scripts/backfill_nwm_archive.py \
+            --start "${{ github.event.inputs.start }}" \
+            --end   "${{ github.event.inputs.end }}" \
+            --threads "${{ github.event.inputs.threads }}"
+
+      - name: Push to nwm-archive orphan branch
+        run: |
+          set -e
+          if [ ! -d archive ] || [ -z "$(find archive -name '*.csv.gz' -print -quit)" ]; then
+            echo "::error::No archive files; refusing to push empty"
+            exit 1
+          fi
+          # Stash before swapping branches
+          mv archive /tmp/nwm_payload
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          if git ls-remote --exit-code --heads origin nwm-archive; then
+            git fetch origin nwm-archive --depth=1
+            git checkout nwm-archive
+          else
+            git checkout --orphan nwm-archive
+            git rm -rf --cached . || true
+            git clean -fd
+          fi
+          # Strict-replace: backfill is a superset of whatever was on the
+          # branch (we restored before fetching deltas) so we can safely
+          # overwrite. If pages.yml landed a new accumulator file
+          # mid-backfill, it'll just be re-pushed on the next pages run.
+          rm -rf archive
+          mv /tmp/nwm_payload archive
+          # Pin a small README so the branch isn't suspicious-looking.
+          cat > README.md <<'EOF'
+          # nwm-archive
+
+          NWM medium_range_blend operational forecasts in the v14.2 schema:
+          `(issued_date, station_id, target_date, horizon_day, q_cfs_raw,
+          q_cfs_obs_today, bias_scale_used, schema_version)`.
+
+          Two writers feed this branch:
+          1. `pages.yml` snapshot job — one row per build, accumulates live
+          2. `nwm-backfill.yml` — historical fill from `s3://noaa-nwm-pds/`
+
+          Consumed by `scripts/train_nwm_residual.py` to fit the v15.1
+          residual learner.
+          EOF
+          git add archive README.md
+          if git diff --cached --quiet; then
+            echo "no new archive content"
+            exit 0
+          fi
+          ISSUED=$(date -u +%Y-%m-%d)
+          git commit -m "v15.1-bf nwm-archive: backfill ${{ github.event.inputs.start }} → ${{ github.event.inputs.end }} at ${ISSUED}"
+          git push origin nwm-archive
+          echo "::notice::Pushed nwm-archive at ${ISSUED}"
