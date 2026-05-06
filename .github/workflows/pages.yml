@@ -142,6 +142,10 @@ jobs:
           # 1893 stations split across 16 shards (~13min/shard, fits the
           # existing 350min timeout headroom).
           RW2_ENABLE_TIMESFM_XREG: "1"
+          # v15.1: learned per-horizon NWM residual member. Silently no-ops
+          # until nwm-train.yml has produced data/nwm_residual_models/h*.pkl,
+          # so safe to enable before first training run completes.
+          RW2_ENABLE_NWM_RESIDUAL: "1"
         run: |
           python scripts/build_static_site.py \
             --shard-id ${{ matrix.shard }} \

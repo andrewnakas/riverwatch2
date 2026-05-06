@@ -1,0 +1,122 @@
+name: NWM residual learner training
+
+# v15.1: pulls the nwm-archive branch into a worktree, joins it against
+# cached USGS records to attach observed flows, fits per-horizon LightGBM
+# residual models, and commits the resulting .pkl bundles to
+# data/nwm_residual_models/ on main.
+#
+# Why on main and not an orphan branch: the bundles are small (1-5MB
+# each × ~14 horizons), the build pipeline already checks out main, and
+# we want versioned model history (so a regression is `git revert`-able).
+#
+# Cadence: weekly is plenty. Backfill seeds 30 days; pages.yml adds ~4
+# rows per (station × horizon) per day, so the archive grows fast enough
+# that retraining more than weekly would mostly re-pickle the same fit.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 09:00 UTC — after the weekend's pages.yml runs have all
+    # landed in nwm-archive.
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "nwm-train"
+  cancel-in-progress: false
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install training deps
+        run: pip install numpy pandas lightgbm
+
+      - name: Restore USGS records cache from main
+        # The trainer needs data/cache/usgs_records/{sid}.json to attach
+        # ground-truth target flows. These are produced by pages.yml and
+        # live on main under data/cache/, but data/cache is .gitignored.
+        # Pull them from the most recent successful pages run via the
+        # github-pages artifact? No — easier to just rebuild from the
+        # USGS API for the date range we need (60 days at most).
+        run: |
+          mkdir -p data/cache/usgs_records
+
+      - name: Fetch recent USGS daily records for backfill window
+        # We only need the last ~75 days (30-day backfill + 14-horizon
+        # ceiling + safety margin). Train script tolerates missing rows.
+        run: |
+          python - <<'PY'
+          import json, sys, time, urllib.request
+          from datetime import date, timedelta
+          from pathlib import Path
+
+          END = date.today()
+          START = END - timedelta(days=75)
+          STA = Path("data/nwm_crosswalk.json")
+          if not STA.exists():
+              print("no crosswalk; aborting", file=sys.stderr); sys.exit(1)
+          sids = list(json.loads(STA.read_text()).keys())
+          out = Path("data/cache/usgs_records"); out.mkdir(parents=True, exist_ok=True)
+          # Chunk requests at 100 sites; USGS dv service tolerates that.
+          BASE = "https://waterservices.usgs.gov/nwis/dv/"
+          for i in range(0, len(sids), 100):
+              chunk = sids[i:i+100]
+              url = (BASE + "?format=json&parameterCd=00060&siteStatus=all"
+                     f"&startDT={START}&endDT={END}&sites=" + ",".join(chunk))
+              try:
+                  with urllib.request.urlopen(url, timeout=60) as r:
+                      payload = json.loads(r.read())
+              except Exception as e:
+                  print(f"  chunk {i}: {e}"); continue
+              for ts in payload.get("value", {}).get("timeSeries", []):
+                  sid = ts["sourceInfo"]["siteCode"][0]["value"]
+                  rows = {}
+                  for v in ts.get("values", [{}])[0].get("value", []):
+                      d = v["dateTime"][:10]
+                      try:
+                          q = float(v["value"])
+                      except (TypeError, ValueError):
+                          continue
+                      if q < 0:
+                          continue
+                      rows[d] = q
+                  if rows:
+                      (out / f"{sid}.json").write_text(json.dumps({"rows": rows}))
+              time.sleep(0.5)
+          n = len(list(out.glob("*.json")))
+          print(f"fetched USGS records for {n} stations")
+          PY
+
+      - name: Train per-horizon residual models
+        run: python scripts/train_nwm_residual.py
+
+      - name: Commit and push models
+        run: |
+          set -e
+          if [ ! -d data/nwm_residual_models ] || [ -z "$(ls -A data/nwm_residual_models 2>/dev/null)" ]; then
+            echo "::warning::no models produced — likely insufficient archive history"
+            exit 0
+          fi
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          # Force-add since data/nwm_residual_models/ is .gitignored
+          # until first models land.
+          git add -f data/nwm_residual_models/
+          if git diff --cached --quiet; then
+            echo "no model changes"
+            exit 0
+          fi
+          ISSUED=$(date -u +%Y-%m-%dT%H:%MZ)
+          git commit -m "v15.1: retrain NWM residual models @ ${ISSUED}"
+          git push origin main
+          echo "::notice::Committed retrained NWM residual models @ ${ISSUED}"
