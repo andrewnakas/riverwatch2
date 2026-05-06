@@ -12,6 +12,18 @@ on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+    inputs:
+      # v15.0 bootstrap: one-time run that swaps the build to the full
+      # 9851-gauge stations_v15.json AND drops RW2_NO_FETCH so the cold
+      # caches for the ~7958 new gauges actually get filled. Expected
+      # 6-12h wall-clock per shard on first run; subsequent scheduled
+      # runs are warm-cache deltas. After this succeeds and caches are
+      # in place, flip STATIONS_PATH default in build_static_site.py.
+      bootstrap_v15:
+        description: "v15.0 bootstrap: use stations_v15.json + allow USGS fetch (expensive, run once)"
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   # v14.2: snapshot job pushes to the nwm-archive orphan branch, so we need
@@ -65,6 +77,10 @@ jobs:
             echo "snodas-archive does not exist yet — starting with empty extracts dir"
           fi
       - name: Refresh SNODAS extracts (last 14 days)
+        env:
+          # v15.0 bootstrap: SNODAS extracts need lat/lon per station, so the
+          # extract job has to use the same station list as the build shards.
+          RW2_STATIONS_FILE: ${{ github.event.inputs.bootstrap_v15 == 'true' && 'data/stations_v15.json' || '' }}
         run: python scripts/build_snodas_extracts.py --days 14
       - name: Upload extracts artifact
         uses: actions/upload-artifact@v4
@@ -129,9 +145,14 @@ jobs:
       - name: Build shard ${{ matrix.shard }}/${{ env.TOTAL_SHARDS }}
         env:
           PYTHONUNBUFFERED: "1"
-          # Hard-disable all data fetches; this build re-renders the static
-          # site from whatever each shard's restored cache already has.
-          RW2_NO_FETCH: "1"
+          # v15.0 bootstrap: when triggered with bootstrap_v15=true,
+          # RW2_NO_FETCH is left unset so cold caches for the ~7958 new
+          # gauges actually fill. All other runs stay in cache-only mode.
+          RW2_NO_FETCH: ${{ github.event.inputs.bootstrap_v15 == 'true' && '0' || '1' }}
+          # v15.0 bootstrap: point the build at the full 9851-gauge list
+          # for the bootstrap run only. Default empty → build_static_site.py
+          # falls back to the legacy 1893-gauge stations_40_enriched.json.
+          RW2_STATIONS_FILE: ${{ github.event.inputs.bootstrap_v15 == 'true' && 'data/stations_v15.json' || '' }}
           # v13: NWM is forecast-only (no historical archive), so we let it
           # pull live from NWPS even when the rest of the system is in
           # cache-only mode. ~100ms/gauge × 118 gauges/shard = +12s/shard.
