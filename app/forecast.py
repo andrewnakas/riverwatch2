@@ -248,7 +248,7 @@ def _build_features(
         s = snotel_df.copy()
         s["date"] = pd.to_datetime(s["date"])
         s = s.set_index("date").asfreq("D")
-        snotel_cols = [c for c in ("swe_in", "snow_depth_in") if c in s.columns]
+        snotel_cols = [c for c in ("swe_in", "snow_depth_in", "melt_24h_mm") if c in s.columns]
         for c in snotel_cols:
             s[c] = pd.to_numeric(s[c], errors="coerce")
         df = df.join(s[snotel_cols], how="left")
@@ -332,13 +332,22 @@ def _build_features(
         df["snow_depth_change_7d"] = df["snow_depth_max"].diff(7)
         # SWE proxy: snow_depth (m) * mean density of seasonal snowpack ~0.30.
         df["swe_proxy"] = df["snow_depth_max"] * 0.30
-    # v11: real SNOTEL SWE (when within 50 km). The 7d/30d change captures
-    # active melt; the absolute value tracks how much spring runoff is loaded.
+    # v15.3: lagged SWE + melt features. Routing lag (melt at the gauge
+    # pixel reaches the gauge with a delay that scales with basin size)
+    # is learned empirically from these — no NHDPlus catchments yet.
     if "swe_in" in df.columns:
-        df["swe_lag1"] = df["swe_in"].shift(1)
-        df["swe_lag7"] = df["swe_in"].shift(7)
+        for lag in (1, 3, 7, 14):
+            df[f"swe_lag{lag}"] = df["swe_in"].shift(lag)
+        df["swe_change_3d"] = df["swe_in"].diff(3)
         df["swe_change_7d"] = df["swe_in"].diff(7)
         df["swe_change_30d"] = df["swe_in"].diff(30)
+        # Melt-rate proxy when melt_24h_mm isn't available (SNOTEL fallback).
+        df["swe_drop_7d"] = (-df["swe_in"].diff(7)).clip(lower=0)
+    if "melt_24h_mm" in df.columns:
+        for lag in (1, 2, 3, 7):
+            df[f"melt_lag{lag}"] = df["melt_24h_mm"].shift(lag)
+        for w in (3, 7, 14, 30):
+            df[f"melt_{w}d"] = df["melt_24h_mm"].rolling(w, min_periods=1).sum()
     if "snow_depth_in" in df.columns:
         df["sntl_depth_change_7d"] = df["snow_depth_in"].diff(7)
 
