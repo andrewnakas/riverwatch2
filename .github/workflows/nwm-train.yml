@@ -39,7 +39,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install training deps
-        run: pip install numpy pandas lightgbm
+        run: pip install numpy pandas lightgbm scikit-learn
 
       - name: Restore USGS records cache from main
         # The trainer needs data/cache/usgs_records/{sid}.json to attach
