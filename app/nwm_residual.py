@@ -34,6 +34,7 @@ MODELS_DIR = ROOT / "data" / "nwm_residual_models"
 # Lazy globals
 _models: dict[int, dict] | None = None
 _load_failed = False
+_n_invocations = 0  # observability: how many stations actually used residual
 
 
 def _is_enabled() -> bool:
@@ -60,6 +61,7 @@ def _try_load() -> bool:
         _load_failed = True
         return False
     _models = out
+    print(f"[nwm_residual] loaded {len(out)} per-horizon models: h={sorted(out.keys())}")
     return True
 
 
@@ -75,12 +77,14 @@ def apply_residual(
 
     nwm_raw and nwm_corrected must be the same length (= horizon).
     """
+    global _n_invocations
     if not _is_enabled():
         return None
     if not _try_load():
         return None
     if not nwm_raw or len(nwm_raw) != len(nwm_corrected):
         return None
+    _n_invocations += 1
     bs = float(bias_scale) if bias_scale is not None and np.isfinite(bias_scale) else 1.0
     q_t0 = float(q_obs_today) if q_obs_today is not None and np.isfinite(q_obs_today) else 0.0
     issued = pd.Timestamp(issued_date)
@@ -110,3 +114,13 @@ def apply_residual(
         q_pred = float(np.expm1(np.log1p(max(qc, 0.0)) + delta))
         out.append(max(q_pred, 0.0))
     return out
+
+
+def summary() -> dict:
+    """Observability: how many models loaded + how many stations used them."""
+    return {
+        "models_loaded": len(_models) if _models else 0,
+        "horizons": sorted(_models.keys()) if _models else [],
+        "n_invocations": _n_invocations,
+        "enabled": _is_enabled(),
+    }

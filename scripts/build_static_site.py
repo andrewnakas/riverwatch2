@@ -393,6 +393,17 @@ def main() -> int:
         # the frontend's "Built ..." note still works locally.
         summary["stations_total"] = len(stations)
         (DIST / "index_summary.json").write_text(json.dumps(summary, indent=2))
+    try:
+        from app import nwm_residual as _nr
+        nr_sum = _nr.summary()
+        print(
+            f"[nwm_residual] enabled={nr_sum['enabled']} "
+            f"models_loaded={nr_sum['models_loaded']} "
+            f"horizons={nr_sum['horizons']} "
+            f"invocations={nr_sum['n_invocations']}"
+        )
+    except Exception:
+        pass
     print(f"\nShard {args.shard_id}/{args.total_shards} built in {summary['build_seconds']}s — {successes}/{len(stations)} stations")
     return 0 if successes > 0 else 1
 
