@@ -1,0 +1,28 @@
+{
+  "version": "v15.1",
+  "label": "NWM residual learner (LightGBM per-horizon, ~7k pairs/horizon val split)",
+  "frozen_at": "2026-05-10",
+  "source_manifest_commit": "ffaad26",
+  "source_manifest_trained_at": "2026-05-10T05:46:26Z",
+  "metric": "MAE",
+  "split": "last 10% chronologically per horizon",
+  "n_archive_rows": 665472,
+  "n_labeled_rows": 70914,
+  "horizons": {
+    "1":  { "n_val": 771, "mae_v141_baseline_cfs":  1544.7, "mae_v151_learned_cfs":  925.6, "improvement_pct": -40 },
+    "2":  { "n_val": 768, "mae_v141_baseline_cfs":  1731.1, "mae_v151_learned_cfs":  905.0, "improvement_pct": -48 },
+    "3":  { "n_val": 767, "mae_v141_baseline_cfs":  2028.8, "mae_v151_learned_cfs": 1088.9, "improvement_pct": -46 },
+    "4":  { "n_val": 687, "mae_v141_baseline_cfs":  2691.9, "mae_v151_learned_cfs": 1648.0, "improvement_pct": -39 },
+    "5":  { "n_val": 685, "mae_v141_baseline_cfs":  2797.8, "mae_v151_learned_cfs": 1853.0, "improvement_pct": -34 },
+    "6":  { "n_val": 684, "mae_v141_baseline_cfs":  2618.1, "mae_v151_learned_cfs": 1835.8, "improvement_pct": -30 },
+    "7":  { "n_val": 684, "mae_v141_baseline_cfs":  2468.1, "mae_v151_learned_cfs": 1898.6, "improvement_pct": -23 },
+    "8":  { "n_val": 682, "mae_v141_baseline_cfs":  2613.7, "mae_v151_learned_cfs": 2085.5, "improvement_pct": -20 },
+    "9":  { "n_val": 678, "mae_v141_baseline_cfs":  2778.7, "mae_v151_learned_cfs": 2337.8, "improvement_pct": -16 },
+    "10": { "n_val": 678, "mae_v141_baseline_cfs":  2875.4, "mae_v151_learned_cfs": 2784.1, "improvement_pct":  -3 }
+  },
+  "notes": [
+    "Baseline (v14.1) = NWM medium_range_blend with multiplicative bias correction from analysis_assimilation overlap.",
+    "Learned (v15.1) = same baseline + LightGBM per-horizon residual on log1p(q_obs) - log1p(q_nwm_corrected).",
+    "h11-14 not yet trainable (only 8 labeled pairs each); awaiting accumulator history past the 10-day medium_range ceiling."
+  ]
+}
