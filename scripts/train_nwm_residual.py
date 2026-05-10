@@ -175,10 +175,21 @@ def _train_one(df: pd.DataFrame, horizon: int) -> Optional[dict]:
     model.fit(Xtr, ytr, eval_set=[(Xv, yv)], callbacks=[lgb.early_stopping(30, verbose=False)])
     pred_v = model.predict(Xv)
     mae_v = float(np.mean(np.abs(pred_v - yv)))
-    # Also compute the baseline: residual MAE if we predict 0 (i.e. trust
-    # NWM-corrected as-is). Improvement = baseline - learned.
     mae_base = float(np.mean(np.abs(yv)))
-    print(f"  h{horizon}: n={n:>7d}  log1p-residual MAE  base={mae_base:.4f}  learned={mae_v:.4f}  win={mae_base - mae_v:+.4f}")
+    # cfs-space MAE: invert log1p to get the real-world headline number.
+    # log1p_q_obs = log1p_q_nwm_corrected + residual; reconstruct both
+    # the v14.1 baseline (predict 0 residual) and v15.1 learned forecast.
+    log1p_q_corr_v = sub["log1p_q_nwm_corrected"].to_numpy(dtype=np.float64)[-n_val:]
+    log1p_q_obs_v = log1p_q_corr_v + yv.astype(np.float64)
+    q_obs_cfs = np.expm1(log1p_q_obs_v)
+    q_base_cfs = np.expm1(log1p_q_corr_v)
+    q_learn_cfs = np.expm1(log1p_q_corr_v + pred_v.astype(np.float64))
+    mae_base_cfs = float(np.mean(np.abs(q_base_cfs - q_obs_cfs)))
+    mae_learn_cfs = float(np.mean(np.abs(q_learn_cfs - q_obs_cfs)))
+    print(
+        f"  h{horizon}: n={n:>7d}  log1p MAE base={mae_base:.4f} learn={mae_v:.4f} ({100*(mae_v-mae_base)/mae_base:+.0f}%) | "
+        f"cfs MAE base={mae_base_cfs:,.0f} learn={mae_learn_cfs:,.0f} ({100*(mae_learn_cfs-mae_base_cfs)/max(mae_base_cfs,1e-6):+.0f}%)"
+    )
     return {
         "model": model,
         "feature_cols": feat_cols,
@@ -186,6 +197,8 @@ def _train_one(df: pd.DataFrame, horizon: int) -> Optional[dict]:
         "n_val": int(n_val),
         "val_mae_baseline": mae_base,
         "val_mae_learned": mae_v,
+        "val_mae_baseline_cfs": mae_base_cfs,
+        "val_mae_learned_cfs": mae_learn_cfs,
     }
 
 
@@ -237,6 +250,8 @@ def main() -> int:
                 "n_val": r["n_val"],
                 "val_mae_baseline_log1p": r["val_mae_baseline"],
                 "val_mae_learned_log1p": r["val_mae_learned"],
+                "val_mae_baseline_cfs": r["val_mae_baseline_cfs"],
+                "val_mae_learned_cfs": r["val_mae_learned_cfs"],
             }
         (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
         print(f"\nWrote {len(manifest['horizons'])} per-horizon models → {out_dir}")
