@@ -188,6 +188,11 @@ def forecast_univariate(q_hist: pd.DataFrame, horizon: int) -> Optional[List[flo
 
     Feeds raw CFS (no asinh) and lets 2.5 normalize internally. The asinh path
     we used with 2.0 produced ~4x-low forecasts in the first 2.5 deploy.
+
+    Then blends 50/50 with a seasonal-climatology anchor (last_q × DOY ratio)
+    the same way chronos_forecast does. Without this anchor, the deployed
+    rolling MAE for TimesFM was 1904 cfs vs Chronos's 469 — the seasonal
+    blend is what closes that gap, not any input-transform change.
     """
     pipe = _get_pipeline(require_xreg=False)
     if pipe is None or q_hist.empty:
@@ -197,10 +202,19 @@ def forecast_univariate(q_hist: pd.DataFrame, horizon: int) -> Optional[List[flo
         if len(raw_ctx) < 60:
             return None
         point, _quant = pipe.forecast(horizon=horizon, inputs=[np.asarray(raw_ctx, dtype=np.float32)])
-        pred = np.asarray(point[0])[:horizon]
+        pred = np.asarray(point[0])[:horizon].astype(float)
         if len(pred) < horizon:
             pad = np.full(horizon - len(pred), float(pred[-1]) if len(pred) else 0.0)
             pred = np.concatenate([pred, pad])
+        try:
+            from .forecast import _seasonal_scale
+            scale = _seasonal_scale(q_hist, horizon)
+            if scale is not None:
+                last_q = float(q_hist["q_cfs"].iloc[-1])
+                seasonal = last_q * scale
+                pred = 0.5 * pred + 0.5 * seasonal
+        except Exception:
+            pass
         return [max(0.0, float(x)) for x in pred]
     except Exception as exc:
         print(f"[timesfm_univariate] inference failed: {exc}")
