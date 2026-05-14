@@ -1363,6 +1363,26 @@ def forecast_station(
         if nwm_per_h:
             rolling_mae["nwm"] = float(np.mean(list(nwm_per_h.values())))
 
+    # v15.1: nwm_residual is a live-only member (like nwm — no historical
+    # holdout preds). Derive its per-h MAE estimate by scaling nwm_per_h
+    # by the frozen v15.1 baseline gain at that horizon (benchmarks/
+    # baseline_v15p1_nwm_residual.json). Without this the residual member
+    # gets no inverse-MAE² blend weight and is effectively invisible to
+    # the per-member MAE tracker.
+    nwm_residual_per_h: Dict[int, float] = {}
+    if "nwm_residual" in members and nwm_per_h:
+        # Frozen scale factors (learned/baseline) per horizon, val split.
+        # h>10 falls back to h=10's scale until h11-14 models train.
+        _RESID_SCALE = {
+            1: 0.60, 2: 0.52, 3: 0.54, 4: 0.61, 5: 0.66,
+            6: 0.70, 7: 0.77, 8: 0.80, 9: 0.84, 10: 0.97,
+        }
+        for h, v in nwm_per_h.items():
+            scale = _RESID_SCALE.get(h, _RESID_SCALE[10])
+            nwm_residual_per_h[h] = float(v * scale)
+        if nwm_residual_per_h:
+            rolling_mae["nwm_residual"] = float(np.mean(list(nwm_residual_per_h.values())))
+
     def _per_h_lookup(per_h: Dict[int, float], h: int) -> Optional[float]:
         if per_h.get(h) is not None:
             return per_h[h]
@@ -1385,6 +1405,7 @@ def forecast_station(
             ("ttm", ttm_per_h),
             ("timesfm", timesfm_per_h),
             ("nwm", nwm_per_h),
+            ("nwm_residual", nwm_residual_per_h),
             ("lgbm_pooled", lgbm_pooled_per_h),
             ("timesfm_xreg", timesfm_xreg_per_h),
         ):
@@ -1464,6 +1485,7 @@ def forecast_station(
         "ttm": ttm_per_h,
         "timesfm": timesfm_per_h,
         "nwm": nwm_per_h,
+        "nwm_residual": nwm_residual_per_h,
         "lgbm_pooled": lgbm_pooled_per_h,
         "timesfm_xreg": timesfm_xreg_per_h,
     }
@@ -1520,6 +1542,7 @@ def forecast_station(
         "ttm": ttm_preds,
         "timesfm": timesfm_preds,
         "nwm": [],  # NWM is forecast-only (no historical forecasts available)
+        "nwm_residual": [],  # v15.1: live-only, MAE derived from frozen baseline
         "lgbm_pooled": lgbm_pooled_preds,  # v13.2: pooled-LGBM holdout preds
         "timesfm_xreg": [],  # v13.3: live-only, MAE estimated from timesfm
     }
