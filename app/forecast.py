@@ -461,6 +461,14 @@ def runoff_ridge_forecast(
         yhat = float(_q_inverse(yhat_z, qs))
         if not math.isfinite(yhat) or yhat < 0:
             yhat = last_q
+        # v15.6: cap to 10x the historical max so a runaway ridge prediction
+        # can't poison the mean. A few stations were emitting 1e13 cfs, which
+        # blew up the per-shard rolling-MAE mean (e.g. shard 48 → 2e13).
+        # Headroom of 10x leaves room for record-breaking floods while still
+        # bounding the failure mode.
+        q_obs_max = float(q_hist["q_cfs"].max()) if len(q_hist) else 0.0
+        if q_obs_max > 0:
+            yhat = min(yhat, q_obs_max * 10.0)
         preds.append(yhat)
 
     out: Dict[str, float] = {}
@@ -2254,6 +2262,10 @@ def _ridge_predict_on_holdout(
             yh = last_q
         if not math.isfinite(yh) or yh < 0:
             yh = last_q
+        # v15.6: same upside clamp as the live path (see runoff_ridge_forecast).
+        q_obs_max = float(q_ctx["q_cfs"].max()) if len(q_ctx) else 0.0
+        if q_obs_max > 0:
+            yh = min(yh, q_obs_max * 10.0)
         yhat[h - 1] = yh
     return yhat, ytrue
 
