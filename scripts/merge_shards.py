@@ -143,6 +143,22 @@ def main() -> int:
             den += float(n)
         return (num / den) if den > 0 else None
 
+    # Aggregate per-shard medians (added in build_static_site.py) into a
+    # cross-shard pool so the deployed summary has a robust headline number
+    # alongside the long-standing mean (which is dragged by ridge outliers).
+    member_median_pool: dict[str, list[float]] = {}
+    for s in shard_summaries:
+        for m, v in (s.get("rolling_mae_median_by_member") or {}).items():
+            if v is not None:
+                member_median_pool.setdefault(m, []).append(float(v))
+
+    def _median(vs: list[float]) -> float | None:
+        if not vs:
+            return None
+        vs2 = sorted(vs)
+        n = len(vs2)
+        return vs2[n // 2] if n % 2 else (vs2[n // 2 - 1] + vs2[n // 2]) / 2
+
     summary = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "stations_total": total_in_shards,
@@ -151,9 +167,24 @@ def main() -> int:
         "rolling_mae_mean_by_member": {
             m: (sum(vs) / len(vs)) if vs else None for m, vs in member_pool.items()
         },
+        "rolling_mae_median_by_member": {
+            m: _median(vs) for m, vs in member_median_pool.items()
+        },
         "rolling_mae_blend_mean": _weighted_mean("rolling_mae_blend_mean"),
         "rolling_mae_blend_h7_mean": _weighted_mean("rolling_mae_blend_h7_mean"),
         "rolling_mae_blend_h14_mean": _weighted_mean("rolling_mae_blend_h14_mean"),
+        "rolling_mae_blend_median": _median(
+            [s.get("rolling_mae_blend_median") for s in shard_summaries
+             if s.get("rolling_mae_blend_median") is not None]
+        ),
+        "rolling_mae_blend_h7_median": _median(
+            [s.get("rolling_mae_blend_h7_median") for s in shard_summaries
+             if s.get("rolling_mae_blend_h7_median") is not None]
+        ),
+        "rolling_mae_blend_h14_median": _median(
+            [s.get("rolling_mae_blend_h14_median") for s in shard_summaries
+             if s.get("rolling_mae_blend_h14_median") is not None]
+        ),
         "stations_with_blend_mae": sum(s.get("stations_with_blend_mae") or 0 for s in shard_summaries),
         "build_seconds": longest_shard,
         # v14.4: roll up stacker observability across shards.

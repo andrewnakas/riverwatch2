@@ -27,7 +27,7 @@ import time
 from dataclasses import asdict
 from datetime import date, timedelta
 from pathlib import Path
-from statistics import mean
+from statistics import mean, median
 
 import numpy as np
 
@@ -358,9 +358,19 @@ def main() -> int:
         "rolling_mae_mean_by_member": {
             k: (mean(v) if v else None) for k, v in member_rolling.items()
         },
+        # Median variant: a few stations produce numerically exploded MAE
+        # (ridge on extreme regimes) that drag the mean into 1e10+ territory.
+        # Median reflects typical accuracy; kept alongside mean so neither
+        # consumer breaks.
+        "rolling_mae_median_by_member": {
+            k: (median(v) if v else None) for k, v in member_rolling.items()
+        },
         "rolling_mae_blend_mean": (mean(blend_rolling) if blend_rolling else None),
+        "rolling_mae_blend_median": (median(blend_rolling) if blend_rolling else None),
         "rolling_mae_blend_h7_mean": (mean(blend_h7) if blend_h7 else None),
+        "rolling_mae_blend_h7_median": (median(blend_h7) if blend_h7 else None),
         "rolling_mae_blend_h14_mean": (mean(blend_h14) if blend_h14 else None),
+        "rolling_mae_blend_h14_median": (median(blend_h14) if blend_h14 else None),
         "stations_with_blend_mae": len(blend_rolling),
         "build_seconds": round(time.time() - t0, 1),
         "failures": failures,
