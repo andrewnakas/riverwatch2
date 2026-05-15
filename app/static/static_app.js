@@ -126,23 +126,53 @@ function fmtTick(ts, step, prevYear) {
 // `showMembers=false` (default) renders only history + blend so the casual
 // reader sees one clean curve. The toggle above the chart flips it to true
 // to expose every ensemble member as a faint dashed line.
-let _fcst = { canvas: null, history: [], members: {}, blend: [], full: null, range: [0, 1], showMembers: false };
+let _fcst = { canvas: null, history: [], members: {}, blend: [], live: [], full: null, range: [0, 1], showMembers: false };
 
 function drawChart(canvas, history, members, blend) {
   _fcst.canvas = canvas;
   _fcst.history = history;
   _fcst.members = members;
   _fcst.blend = blend;
+  // _fcst.live is updated separately by loadStationLive(); don't reset here
+  // because re-draws (zoom, show-members toggle) shouldn't clear the live overlay.
   const allPts = [
     ...history,
     ...blend,
     ...Object.values(members).flat(),
+    ..._fcst.live,
   ];
   if (!allPts.length) return;
   const xs0 = allPts.map(p => Date.parse(p.date));
   _fcst.full = { xmin: Math.min(...xs0), xmax: Math.max(...xs0) };
   if (_fcst.range[0] >= _fcst.range[1]) _fcst.range = [0, 1];
   _renderForecast();
+}
+
+// v15.9: USGS instantaneous (iv) values for the last 3 days, fetched from the
+// browser at chart-render time. The build's daily-mean (dv) cache lags realtime
+// by 1-2 days (longer during fast freshets), so the chart was showing stale
+// numbers vs the USGS gauge page. iv refreshes every 15min and CORS allows
+// browser fetches. Cheap to add and stays out of the build pipeline entirely.
+const _liveCache = new Map(); // siteId -> {at: ms, points: [{date, q_cfs}]}
+const _LIVE_TTL_MS = 5 * 60 * 1000;
+async function loadStationLive(siteId) {
+  const c = _liveCache.get(siteId);
+  if (c && Date.now() - c.at < _LIVE_TTL_MS) return c.points;
+  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteId}&parameterCd=00060&period=P3D&siteStatus=all`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const j = await r.json();
+    const ts = (j?.value?.timeSeries || [])[0];
+    const vals = ts?.values?.[0]?.value || [];
+    const points = vals
+      .map(v => ({ date: v.dateTime, q_cfs: parseFloat(v.value) }))
+      .filter(p => Number.isFinite(p.q_cfs) && p.q_cfs >= 0);
+    _liveCache.set(siteId, { at: Date.now(), points });
+    return points;
+  } catch (_) {
+    return [];
+  }
 }
 
 function setShowMembers(show) {
@@ -161,6 +191,11 @@ function _renderForecast() {
 
   const series = [];
   series.push({ name: "history", color: "#e7ecf3", points: history });
+  // v15.9: thin orange live (USGS instantaneous) trace sits above the daily-mean
+  // history so users see the current freshet rather than a stale snapshot.
+  if (_fcst.live && _fcst.live.length) {
+    series.push({ name: "live", color: "#ff8a4c", points: _fcst.live, width: 1.5 });
+  }
   series.push({ name: "blend", color: "#ffd166", points: blend, dashed: true, width: 3 });
   if (_fcst.showMembers) {
     const memColors = {
@@ -428,7 +463,9 @@ async function loadStationHistory(siteId) {
   }
 }
 
+let _currentForecastPayload = null;
 function renderForecast(payload) {
+  _currentForecastPayload = payload;
   document.getElementById("panel-empty").style.display = "none";
   document.getElementById("panel-content").style.display = "block";
 
@@ -454,8 +491,21 @@ function renderForecast(payload) {
     </table>
   `;
 
+  // v15.9: clear any previous station's live trace before drawing the new one,
+  // then kick off the async fetch and re-render once it lands.
+  _fcst.live = [];
   drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
   setupForecastZoom();
+  const liveStationId = payload?.station?.id;
+  if (liveStationId) {
+    loadStationLive(liveStationId).then(points => {
+      // Guard against a station switch during the in-flight request.
+      if (_fcst.canvas && payload === _currentForecastPayload) {
+        _fcst.live = points || [];
+        _renderForecast();
+      }
+    });
+  }
 
   renderRecordStartAndStats(payload);
   renderSnotel(payload);
