@@ -12,11 +12,13 @@ Each forecast call runs the models on demand against fresh USGS + Open-Meteo dat
 """
 from __future__ import annotations
 
+import json
 import math
 import os
 import warnings
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -99,6 +101,56 @@ LAGS = [1, 2, 3, 5, 7, 14, 30, 60]
 PRECIP_WINDOWS = [1, 3, 7, 14, 30]
 TEMP_WINDOWS = [3, 7, 14]
 PRECIP_LAGS = [1, 2, 3, 5, 7]  # explicit precip-day lags so ridge can learn basin lag time
+
+
+# v15.7: per-horizon learned/baseline MAE ratio for nwm_residual, used to
+# turn nwm_per_h into nwm_residual_per_h for inverse-MAE² blend weighting.
+# Loaded once from the current residual-models manifest; falls back to the
+# frozen v15.1 baseline if the manifest is missing.
+_RESID_SCALE_FALLBACK = {
+    1: 0.60, 2: 0.52, 3: 0.54, 4: 0.61, 5: 0.66,
+    6: 0.70, 7: 0.77, 8: 0.80, 9: 0.84, 10: 0.97,
+}
+_RESID_SCALE_CACHED: dict[int, float] | None = None
+
+
+def _load_resid_scale() -> dict[int, float]:
+    global _RESID_SCALE_CACHED
+    if _RESID_SCALE_CACHED is not None:
+        return _RESID_SCALE_CACHED
+    manifest_path = Path(__file__).resolve().parents[1] / "data" / "nwm_residual_models" / "manifest.json"
+    try:
+        m = json.loads(manifest_path.read_text())
+        out: dict[int, float] = {}
+        for h_str, info in (m.get("horizons") or {}).items():
+            try:
+                h = int(h_str)
+            except (TypeError, ValueError):
+                continue
+            base = info.get("val_mae_baseline_cfs")
+            learn = info.get("val_mae_learned_cfs")
+            if base and learn and float(base) > 0:
+                # Clamp to [0.30, 1.05]: don't claim more than 70% gain (overfit
+                # risk on tiny val splits) and don't penalize residual if it's
+                # marginally worse than baseline on a given horizon.
+                out[h] = float(max(0.30, min(1.05, float(learn) / float(base))))
+        if out:
+            _RESID_SCALE_CACHED = out
+            return out
+    except Exception:
+        pass
+    _RESID_SCALE_CACHED = dict(_RESID_SCALE_FALLBACK)
+    return _RESID_SCALE_CACHED
+
+
+def _resid_scale_for_h(h: int) -> float:
+    table = _load_resid_scale()
+    if h in table:
+        return table[h]
+    keys = sorted(table.keys())
+    if not keys:
+        return 1.0
+    return table[max(keys)] if h > max(keys) else table[min(keys)]
 
 
 # v12: asinh transform replaces log1p. McInerney et al. 2023 (J. Hydrol.) and
@@ -1373,20 +1425,17 @@ def forecast_station(
 
     # v15.1: nwm_residual is a live-only member (like nwm — no historical
     # holdout preds). Derive its per-h MAE estimate by scaling nwm_per_h
-    # by the frozen v15.1 baseline gain at that horizon (benchmarks/
-    # baseline_v15p1_nwm_residual.json). Without this the residual member
-    # gets no inverse-MAE² blend weight and is effectively invisible to
-    # the per-member MAE tracker.
+    # by the latest learned/baseline ratio at that horizon (read from the
+    # residual-models manifest, which updates whenever the cron retrains).
+    # Without this the residual member gets no inverse-MAE² blend weight
+    # and is effectively invisible to the per-member MAE tracker.
+    # v15.7: scales now come from the live manifest rather than the frozen
+    # v15.1 baseline so the blend weight tracks model improvement as the
+    # nightly retrain accumulates more labeled pairs.
     nwm_residual_per_h: Dict[int, float] = {}
     if "nwm_residual" in members and nwm_per_h:
-        # Frozen scale factors (learned/baseline) per horizon, val split.
-        # h>10 falls back to h=10's scale until h11-14 models train.
-        _RESID_SCALE = {
-            1: 0.60, 2: 0.52, 3: 0.54, 4: 0.61, 5: 0.66,
-            6: 0.70, 7: 0.77, 8: 0.80, 9: 0.84, 10: 0.97,
-        }
         for h, v in nwm_per_h.items():
-            scale = _RESID_SCALE.get(h, _RESID_SCALE[10])
+            scale = _resid_scale_for_h(h)
             nwm_residual_per_h[h] = float(v * scale)
         if nwm_residual_per_h:
             rolling_mae["nwm_residual"] = float(np.mean(list(nwm_residual_per_h.values())))
