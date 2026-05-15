@@ -135,11 +135,13 @@ function drawChart(canvas, history, members, blend) {
   _fcst.blend = blend;
   // _fcst.live is updated separately by loadStationLive(); don't reset here
   // because re-draws (zoom, show-members toggle) shouldn't clear the live overlay.
+  // v15.10: derive full extent from the *stitched* curve so the x-axis
+  // reaches today even before the server-side dv catches up.
+  const stitched = _stitchLiveIntoHistory(history, blend, _fcst.live);
   const allPts = [
-    ...history,
-    ...blend,
+    ...stitched.history,
+    ...stitched.blend,
     ...Object.values(members).flat(),
-    ..._fcst.live,
   ];
   if (!allPts.length) return;
   const xs0 = allPts.map(p => Date.parse(p.date));
@@ -180,10 +182,106 @@ function setShowMembers(show) {
   _renderForecast();
 }
 
+// v15.10: stitch dv history + iv live + forecast into one continuous curve.
+//
+// The deployed payload only has dv (USGS daily means) for history, and the
+// forecast is anchored to the last dv value at build time. iv arrives in the
+// browser fresh; we use it to (a) extend the history with realtime daily-mean
+// resamples covering whatever dv hasn't published yet, and (b) shift the
+// forecast curve so it starts from today's actual realtime value rather than
+// the stale dv anchor. The model's *shape* (freshet ramp, recession, etc.)
+// is preserved — only the level is anchored to reality.
+//
+// Returns {history, blend} with new arrays, leaving raw inputs alone so the
+// member series (which the user is looking at as backtest diagnostics) still
+// reflects what the server actually predicted.
+function _stitchLiveIntoHistory(history, blend, livePoints) {
+  if (!livePoints || !livePoints.length) {
+    return { history: history.slice(), blend: blend.slice(), liveCurrentCfs: null };
+  }
+
+  // Resample iv to UTC daily means. The dv series we ship is UTC-day aligned,
+  // so we resample on UTC and the units match. Skip the current UTC day if it
+  // doesn't have enough samples yet (< 4) — partial-day means are misleading
+  // during fast-rising flows.
+  const dailySums = new Map(); // 'YYYY-MM-DD' -> {sum, count}
+  for (const p of livePoints) {
+    const t = new Date(p.date);
+    if (isNaN(t)) continue;
+    const day = t.toISOString().slice(0, 10);
+    const row = dailySums.get(day) || { sum: 0, count: 0 };
+    row.sum += p.q_cfs;
+    row.count += 1;
+    dailySums.set(day, row);
+  }
+  const ivDaily = [];
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  for (const [day, { sum, count }] of dailySums) {
+    if (day === todayUtc && count < 4) continue; // not enough samples yet
+    ivDaily.push({ date: day, q_cfs: sum / count });
+  }
+  ivDaily.sort((a, b) => a.date.localeCompare(b.date));
+
+  // Splice into history: keep dv where iv doesn't have it, prefer iv where it does.
+  const ivByDate = new Map(ivDaily.map(p => [p.date, p.q_cfs]));
+  const stitched = [];
+  for (const h of history) {
+    stitched.push({ date: h.date, q_cfs: ivByDate.has(h.date) ? ivByDate.get(h.date) : h.q_cfs });
+  }
+  const lastHistDate = history.length ? history[history.length - 1].date : null;
+  for (const p of ivDaily) {
+    if (lastHistDate && p.date <= lastHistDate) continue;
+    stitched.push(p);
+  }
+
+  // Most recent live value (in cfs) for the forecast anchor.
+  const latest = livePoints[livePoints.length - 1];
+  const liveCurrentCfs = latest ? latest.q_cfs : null;
+
+  // Shift the blend by the anchor delta so day +1 starts at today's flow.
+  // The server anchored blend to record_end (dv last_known). We want it
+  // anchored to "now" instead. Two-step: (1) figure out what value the
+  // server was anchoring to (it's the q_cfs at the row just before blend[0],
+  // i.e. history[history.length - 1]); (2) scale blend multiplicatively so
+  // blend[0] matches liveCurrentCfs.
+  const lastHistCfs = history.length ? history[history.length - 1].q_cfs : null;
+  let shiftedBlend = blend.slice();
+  if (
+    Number.isFinite(liveCurrentCfs) && liveCurrentCfs > 0
+    && Number.isFinite(lastHistCfs) && lastHistCfs > 0
+    && blend.length
+  ) {
+    const blendAnchor = blend[0].q_cfs;
+    // Use the additive anchor delta in log space (i.e. multiplicative scale)
+    // so the *shape* of the model (slope, recession, peak timing) is preserved.
+    // Avoid a tiny denominator by gating on blendAnchor > 0.
+    if (Number.isFinite(blendAnchor) && blendAnchor > 0) {
+      const scale = liveCurrentCfs / blendAnchor;
+      // Cap the rescale to a sane range so a bad iv reading can't push the
+      // forecast 100x off. 0.1x to 10x covers any plausible real-world delta.
+      const safeScale = Math.max(0.1, Math.min(10, scale));
+      shiftedBlend = blend.map(p => ({
+        ...p,
+        q_cfs: Number.isFinite(p.q_cfs) ? p.q_cfs * safeScale : p.q_cfs,
+        band_lo: Number.isFinite(p.band_lo) ? p.band_lo * safeScale : p.band_lo,
+        band_hi: Number.isFinite(p.band_hi) ? p.band_hi * safeScale : p.band_hi,
+      }));
+    }
+  }
+  return { history: stitched, blend: shiftedBlend, liveCurrentCfs };
+}
+
 function _renderForecast() {
   const canvas = _fcst.canvas;
   if (!canvas || !_fcst.full) return;
-  const history = _fcst.history, members = _fcst.members, blend = _fcst.blend;
+  // v15.10: history and forecast are the SAME continuous line.
+  // The stitch fn folds iv into the dv history and re-anchors the blend
+  // to today's realtime value so the forecast picks up where the history
+  // visibly leaves off — no broken curve, no drift between "history" and
+  // "live", no level mismatch at the now-line.
+  const stitched = _stitchLiveIntoHistory(_fcst.history, _fcst.blend, _fcst.live);
+  const history = stitched.history, blend = stitched.blend;
+  const members = _fcst.members;
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0, 0, w, h);
@@ -191,11 +289,6 @@ function _renderForecast() {
 
   const series = [];
   series.push({ name: "history", color: "#e7ecf3", points: history });
-  // v15.9: thin orange live (USGS instantaneous) trace sits above the daily-mean
-  // history so users see the current freshet rather than a stale snapshot.
-  if (_fcst.live && _fcst.live.length) {
-    series.push({ name: "live", color: "#ff8a4c", points: _fcst.live, width: 1.5 });
-  }
   series.push({ name: "blend", color: "#ffd166", points: blend, dashed: true, width: 3 });
   if (_fcst.showMembers) {
     const memColors = {
@@ -502,7 +595,10 @@ function renderForecast(payload) {
       // Guard against a station switch during the in-flight request.
       if (_fcst.canvas && payload === _currentForecastPayload) {
         _fcst.live = points || [];
-        _renderForecast();
+        // v15.10: re-run drawChart so the x-extent picks up any iv days
+        // that extend past the dv tail (otherwise the orange tail spills
+        // beyond xmax and the now-line is wrong).
+        drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
       }
     });
   }
