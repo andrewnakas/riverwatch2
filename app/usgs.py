@@ -21,6 +21,13 @@ from urllib.request import Request, urlopen
 import pandas as pd
 
 NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
+# v15.8: even when NO_FETCH is set (so we don't repeat the cold 100yr
+# backfill on every build), allow a small forward-only refresh of the
+# last N days of dv so the deployed chart's tail tracks reality. Without
+# this, the cached "last_known" frozen at bootstrap drifts further from
+# present every day and the historical chart appears stale (in some
+# cases 10+ days behind USGS's published dv).
+NO_FETCH_RECENT_DAYS = int(os.environ.get("RW2_NO_FETCH_RECENT_DAYS", "30"))
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "usgs"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -70,7 +77,42 @@ def fetch_daily_discharge(site_no: str, start: date, end: date, *, max_age_hours
     first_known = rec.get("first_known") or (min(have.keys()) if have else None)
 
     if NO_FETCH:
-        # Hard short-circuit: serve whatever the cache has, no network calls.
+        # v15.8: previously this was a hard short-circuit. That meant the
+        # cache's last_known froze at bootstrap, even though `end` always
+        # asks for today. Allow a small forward-only fetch over the
+        # recent window (default 30 days) so the chart's tail follows
+        # USGS dv updates. Deep history (>30 days back) still serves
+        # entirely from cache — we never repeat the cold backfill here.
+        today = date.today()
+        recent_cutoff = today - timedelta(days=NO_FETCH_RECENT_DAYS)
+        # Only fetch if (a) last_known is older than the requested end,
+        # (b) the requested window overlaps the recent cutoff, and (c)
+        # we haven't refreshed within the last `max_age_hours`.
+        fetched_at = rec.get("fetched_at", 0)
+        age = time.time() - float(fetched_at) if fetched_at else float("inf")
+        last_known_date = None
+        if last_known:
+            try:
+                last_known_date = date.fromisoformat(last_known)
+            except ValueError:
+                last_known_date = None
+        wants_forward = (
+            end >= recent_cutoff
+            and (last_known_date is None or last_known_date < end)
+            and age >= max_age_hours * 3600
+        )
+        if wants_forward:
+            fwd_from = max(recent_cutoff, last_known_date or recent_cutoff)
+            if fwd_from <= end:
+                if _fetch_and_merge(site_no, have, fwd_from, end) and have:
+                    rec = {
+                        "site_no": site_no,
+                        "rows": have,
+                        "first_known": min(have.keys()),
+                        "last_known": max(have.keys()),
+                        "fetched_at": time.time(),
+                    }
+                    _save_record(site_no, rec)
         return _slice_record(have, start, end)
 
     needs_backward = bool(first_known) and first_known > start.isoformat()
