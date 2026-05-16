@@ -252,9 +252,6 @@ function _stitchLiveIntoHistory(history, blend, livePoints) {
     && blend.length
   ) {
     const blendAnchor = blend[0].q_cfs;
-    // Use the additive anchor delta in log space (i.e. multiplicative scale)
-    // so the *shape* of the model (slope, recession, peak timing) is preserved.
-    // Avoid a tiny denominator by gating on blendAnchor > 0.
     if (Number.isFinite(blendAnchor) && blendAnchor > 0) {
       const scale = liveCurrentCfs / blendAnchor;
       // Cap the rescale to a sane range so a bad iv reading can't push the
@@ -268,6 +265,29 @@ function _stitchLiveIntoHistory(history, blend, livePoints) {
       }));
     }
   }
+
+  // v15.11 join fix: the stitched history now extends past record_end
+  // (because iv filled in days the build's dv cache didn't have), but the
+  // blend still starts at record_end + 1. That creates two problems:
+  //   1. Overlap region: blend covers dates that history also covers.
+  //      Two lines for the same dates look broken.
+  //   2. Gap at the visual "now": even after we drop the overlap, the
+  //      blend's first kept point is one day AFTER stitched-history's
+  //      last point, leaving a one-day gap that reads as a disconnect.
+  // Fix: drop blend points that overlap stitched history, then prepend a
+  // synthetic anchor point exactly at (stitched-last-date, stitched-last-cfs)
+  // so the dashed blend line starts on top of the solid history line. The
+  // synthetic point has no band (it's an observation, not a prediction),
+  // so the band shading still starts at the first true forecast day.
+  if (stitched.length) {
+    const lastStitch = stitched[stitched.length - 1];
+    const trimmed = shiftedBlend.filter(p => p.date > lastStitch.date);
+    shiftedBlend = [
+      { date: lastStitch.date, q_cfs: lastStitch.q_cfs },
+      ...trimmed,
+    ];
+  }
+
   return { history: stitched, blend: shiftedBlend, liveCurrentCfs };
 }
 
@@ -844,34 +864,25 @@ function setupClimatologyControls(canvas, rows, payload) {
     siteId: payload.station?.id || null,
     history: null, overlayYears: new Set(), payload, zoom: null,
   };
+  // v15.11: this chart is for year-over-year comparison; the season-preset
+  // buttons were redundant with the zoom slider below and made the row noisy.
+  // Keep only the Reset button so users can return to full-year/no-overlays.
   ctrl.innerHTML = `
     <div class="clim-controls">
-      ${Object.entries(SEASON_PRESETS).map(([k, v]) =>
-        `<button data-season="${k}" class="clim-btn${k === "full" ? " active" : ""}">${v.label}</button>`).join("")}
       <button id="clim-reset" class="clim-btn clim-reset">Reset</button>
       <span class="clim-hint">drag the slider below to zoom</span>
     </div>
   `;
   const applyRange = (range) => {
     _climState.range = range.slice();
-    // Sync slider position to match preset (express as fractions of the year)
     if (_climState.zoom) {
       const [a, b] = range;
       if (a <= b) _climState.zoom.set(a / 365, b / 365);
-      else _climState.zoom.set(0, 1); // wrap → show full; user can drag
+      else _climState.zoom.set(0, 1);
     }
     drawClimatology(canvas, _climState.rows);
   };
-  ctrl.querySelectorAll("button[data-season]").forEach(b => {
-    b.addEventListener("click", () => {
-      ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
-      b.classList.add("active");
-      applyRange(SEASON_PRESETS[b.dataset.season].range);
-    });
-  });
   document.getElementById("clim-reset")?.addEventListener("click", () => {
-    ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
-    ctrl.querySelector('[data-season="full"]')?.classList.add("active");
     applyRange([0, 365]);
     _climState.overlayYears.clear();
     renderYearOverlayUI();
@@ -891,7 +902,6 @@ function setupClimatologyControls(canvas, rows, payload) {
   zoomEl.innerHTML = "";
   _climState.zoom = makeZoomSlider(zoomEl, ([lo, hi]) => {
     _climState.range = [Math.round(lo * 365), Math.round(hi * 365)];
-    ctrl.querySelectorAll("button[data-season]").forEach(x => x.classList.remove("active"));
     drawClimatology(canvas, _climState.rows);
   }, { initial: [0, 1], minSpan: 0.02, fmt: (lo, hi) => fmt([lo, hi]) });
 
