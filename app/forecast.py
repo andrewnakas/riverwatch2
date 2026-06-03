@@ -268,6 +268,20 @@ class StationForecast:
     # derived from each member's holdout predictions vs truth. Empty dict
     # means RW2_PER_MEMBER_BIAS_OFF=1 was set or no member had enough preds.
     member_bias_scales: Dict[str, float] = field(default_factory=dict)
+    # AUDIT (Phase 1): data-freshness + degradation transparency. These let a
+    # consumer tell a fresh, full-ensemble forecast apart from one issued off a
+    # stale gauge or with members silently dropped — previously indistinguishable.
+    #   data_age_days   : days between the last USGS observation and issue time.
+    #   stale           : True when data_age_days exceeds RW2_STALE_AFTER_DAYS (default 2).
+    #   degraded        : True when the blend fell back to persistence (e.g. all
+    #                     members non-finite at h=1) rather than publishing NaN.
+    #   members_used    : member names that contributed a finite live forecast.
+    #   members_dropped : member names that were attempted but unavailable/failed.
+    data_age_days: Optional[int] = None
+    stale: bool = False
+    degraded: bool = False
+    members_used: List[str] = field(default_factory=list)
+    members_dropped: List[str] = field(default_factory=list)
     # v14.4: panel needed to fit the pooled blend stacker and to recompute
     # the live blend after stacker fit. Stripped from the JSON artifact by
     # the build script before serialization (see scripts/build_static_site.py).
@@ -1796,6 +1810,22 @@ def forecast_station(
 
         blend_vals.append(pred if pred is not None and math.isfinite(pred) else float("nan"))
 
+    # AUDIT (Phase 1): NaN forecast floor. If the blend is non-finite at h=1
+    # (every member dropped, or all-NaN), refuse to publish NaN — fall back to
+    # persistence (always finite: q_obs_last for all horizons) and flag the
+    # forecast as degraded so consumers can de-emphasize it. Previously an
+    # all-member failure produced a curve of NaNs that silently survived to the
+    # artifact. We only trip this when h=1 is unusable; isolated long-horizon
+    # NaNs are left for the per-point isfinite guard in the blend serializer.
+    degraded = False
+    if not blend_vals or not math.isfinite(blend_vals[0]):
+        degraded = True
+        notes.append("degraded: blend non-finite at h=1; fell back to persistence")
+        blend_vals = [float(v) for v in persist[:horizon]]
+        # Persistence drove every horizon, so reflect that in the per-h strategy.
+        for h in range(1, horizon + 1):
+            blend_strategy_per_h[h] = "persistence_floor"
+
     # Honest blend MAE: same per-bucket rule the live blend uses, scored on
     # the same holdouts the rule was selected on. Apples-to-apples vs the
     # member MAEs above (which were also computed on these offsets).
@@ -1951,6 +1981,55 @@ def forecast_station(
         "horizon": int(horizon),
     }
 
+    # AUDIT (Phase 1): data-freshness flag. Compare the last USGS observation
+    # date against issue time (today). A gauge offline for days still produces a
+    # full 14-day curve anchored to stale flow; this surfaces that so a consumer
+    # can flag/de-emphasize it instead of treating it as "now".
+    try:
+        stale_after = int(os.environ.get("RW2_STALE_AFTER_DAYS", "2"))
+    except (TypeError, ValueError):
+        stale_after = 2
+    # tz-naive to match `last_date` (derived from naive q_hist["date"]).
+    issue_date = pd.Timestamp(date.today())
+    data_age_days = int((issue_date - last_date.normalize()).days)
+    if data_age_days < 0:
+        data_age_days = 0
+    is_stale = data_age_days > stale_after
+    if is_stale:
+        notes.append(
+            f"stale: last observation is {data_age_days}d old (>{stale_after}d)"
+        )
+
+    # AUDIT (Phase 1): member-composition transparency. `members_used` are the
+    # members that contributed a finite live forecast at h=1; `members_dropped`
+    # are members that were attempted but failed/were unavailable (recorded in
+    # `notes` with the established "unavailable"/"failed" suffixes). Previously
+    # the blend silently changed composition with no machine-readable record.
+    members_used = sorted(
+        name
+        for name, mlist in members.items()
+        if mlist and mlist[0].get("q_cfs") is not None
+        and math.isfinite(float(mlist[0]["q_cfs"]))
+    )
+    # Derive dropped members from the canonical roster minus what produced a
+    # finite curve. Gated-off members (e.g. NWM when RW2_ENABLE_NWM!=1) never
+    # appear in `members`, so we only count a member as "dropped" if it left a
+    # failure/unavailable note — i.e. it was attempted and didn't make it.
+    _MEMBER_ROSTER = (
+        "persistence_lag1", "runoff_ridge", "chronos_bolt", "ttm", "timesfm",
+        "timesfm_xreg", "ealstm", "nwm", "nwm_residual", "lgbm_pooled",
+    )
+    _NOTE_TO_MEMBER = {"ridge": "runoff_ridge"}  # note uses short name
+    used_set = set(members_used)
+    attempted_failed = set()
+    for note in notes:
+        if note.endswith("unavailable") or " failed:" in note:
+            tok = note.split()[0]
+            attempted_failed.add(_NOTE_TO_MEMBER.get(tok, tok))
+    members_dropped = sorted(
+        m for m in _MEMBER_ROSTER if m in attempted_failed and m not in used_set
+    )
+
     return StationForecast(
         station_id=station_id,
         issued_at=pd.Timestamp.utcnow().isoformat(),
@@ -1983,6 +2062,11 @@ def forecast_station(
         chosen=chosen,
         weights_strategy=weights_strategy,
         notes=notes,
+        data_age_days=data_age_days,
+        stale=is_stale,
+        degraded=degraded,
+        members_used=members_used,
+        members_dropped=members_dropped,
         daily_stats=daily_stats,
         record_start=record_start,
         record_end=record_end,

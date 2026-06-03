@@ -28,3 +28,6 @@ timesfm[torch] @ git+https://github.com/google-research/timesfm.git@master
 # Wheel is ~80MB on Linux; CI cache hides it after first hit. force_on_cpu=True
 # is passed at the call site so even if jax sees a GPU it stays on CPU.
 jax>=0.4.30
+# AUDIT (Phase 2): unit test runner. CI runs `pytest` before the build/deploy
+# jobs so a change that breaks the forecast math/guardrails can't ship.
+pytest>=8.0

@@ -54,6 +54,27 @@ env:
   TOTAL_SHARDS: 64
 
 jobs:
+  # AUDIT (Phase 2): unit-test gate. Runs the pure forecast-math, USGS-parse,
+  # build-gate, and Phase-1 guardrail tests BEFORE any data fetch or deploy.
+  # Foundation models are monkeypatched off in the guardrail tests, so this
+  # job needs only the lightweight deps (no torch/jax/timesfm download) and
+  # finishes in well under a minute. snodas-extract / build / deploy all gate
+  # on it via `needs:`, so a change that breaks the forecast math or the
+  # guardrails can never reach Pages.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install test deps
+        run: pip install pytest numpy pandas scikit-learn lightgbm requests flask
+      - name: Run unit tests
+        run: python -m pytest tests/ -q
+
   # v14.5c: refresh SNODAS gridded SWE/melt extracts once per build, before
   # the matrix shards fan out. The build steps run with RW2_NO_FETCH=1 so they
   # rely entirely on the extracts dir being up-to-date. Fetching here keeps
@@ -64,6 +85,7 @@ jobs:
   # extracts dir first, then layer the daily delta on top. The build script
   # is incremental — it skips dates already present.
   snodas-extract:
+    needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

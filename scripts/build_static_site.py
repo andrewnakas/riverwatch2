@@ -52,6 +52,17 @@ HISTORY_DIR = DIST / "history"
 USGS_RECORDS_DIR = ROOT / "data" / "cache" / "usgs_records"
 
 
+def _failure_gate(n_failures: int, n_total: int, max_rate: float) -> bool:
+    """AUDIT (Phase 1): return True if the shard should FAIL the build.
+
+    Empty shards (n_total == 0) always fail. Otherwise the shard fails when the
+    station failure rate strictly exceeds `max_rate`. Pure + side-effect-free so
+    it can be unit-tested without driving the whole build."""
+    if n_total <= 0:
+        return True
+    return (n_failures / n_total) > max_rate
+
+
 def _clean_dist() -> None:
     if DIST.exists():
         shutil.rmtree(DIST)
@@ -415,6 +426,25 @@ def main() -> int:
     except Exception:
         pass
     print(f"\nShard {args.shard_id}/{args.total_shards} built in {summary['build_seconds']}s — {successes}/{len(stations)} stations")
+
+    # AUDIT (Phase 1): deploy failure-rate gate. Previously a shard succeeded as
+    # long as ONE station built — a shard that dropped hundreds of gauges still
+    # deployed silently. Fail the shard (non-zero exit blocks the merge/deploy
+    # job via `needs:`) when the failure rate exceeds RW2_MAX_FAILURE_RATE
+    # (default 0.05 = 5%). Empty shards (no stations) still fail as before.
+    n_total = len(stations)
+    try:
+        max_failure_rate = float(os.environ.get("RW2_MAX_FAILURE_RATE", "0.05"))
+    except (TypeError, ValueError):
+        max_failure_rate = 0.05
+    if _failure_gate(len(failures), n_total, max_failure_rate):
+        rate = (len(failures) / n_total) if n_total else 1.0
+        print(
+            f"GATE FAIL: {len(failures)}/{n_total} stations failed "
+            f"({rate:.1%} > {max_failure_rate:.1%} threshold). "
+            f"Set RW2_MAX_FAILURE_RATE to override."
+        )
+        return 1
     return 0 if successes > 0 else 1
 
 
