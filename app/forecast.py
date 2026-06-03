@@ -2352,7 +2352,18 @@ def _foundation_predict_on_holdout(
 # blend weights stop being warped by harness-mismatch. v12.1: 6 offsets (was
 # 3) so we can both train the stacker on more data AND honestly score the
 # blend via leave-one-out cross-validation.
-_FOUNDATION_HOLDOUT_OFFSETS = (0, 30, 60, 90, 150, 240)
+#
+# AUDIT (Phase 3): the original (0..240) offsets all fall within the last ~8
+# months, so blend weights, per-bucket rule selection, AND the conformal band
+# widths were ALL calibrated on the recent regime only — a station whose recent
+# months were low-flow got weights/bands tuned for low flow, then issued a
+# spring-melt forecast with weights never validated on a rising limb. We add
+# out-of-regime windows reaching ~2 years back so the validation spans multiple
+# seasons and flow regimes. Each access is guarded (offset skipped when
+# len(q_hist) < horizon+90+offset), so short-record gauges simply use the
+# offsets they can reach — no behaviour change for them. Every consumer
+# iterates this same tuple, so weights/rules/bands/stacker all benefit.
+_FOUNDATION_HOLDOUT_OFFSETS = (0, 30, 60, 90, 150, 240, 365, 545, 730)
 
 
 def _persistence_predict_on_holdout(
@@ -2465,7 +2476,11 @@ def _ridge_predict_on_holdout(
     return yhat, ytrue
 
 
-_RIDGE_HOLDOUT_OFFSETS = (0, 60, 150)  # subset of foundation offsets; LightGBM is ~10x slower per fit
+# Subset of the foundation offsets; LightGBM is ~10x slower per fit, so ridge
+# uses fewer windows. AUDIT (Phase 3): added one out-of-regime window (365) so
+# ridge's per-horizon MAE — which feeds its blend weight — is no longer
+# estimated purely on the recent ~5 months. Kept to 4 windows to bound CI cost.
+_RIDGE_HOLDOUT_OFFSETS = (0, 60, 150, 365)
 
 
 def _score_holdouts(
