@@ -188,6 +188,71 @@ def _q_inverse(z, scale: float):
 #   - foundation models (chronos, ttm, timesfm, timesfm_xreg): 4d (they
 #     revert to climatology fast on their own; over-correcting smears
 #     storm-response signal across more days than necessary)
+_BIAS_SCALE_MIN = 0.5
+_BIAS_SCALE_MAX = 2.0
+_BIAS_MIN_SAMPLES = 3
+
+
+def _clamp_bias(obs: float, pred: float) -> Optional[float]:
+    """Multiplicative bias scale mean(obs)/mean(pred), clamped [0.5, 2.0].
+    Returns None when either mean is ~0 (scale undefined / unstable)."""
+    if pred <= 1e-3 or obs <= 1e-3:
+        return None
+    return max(_BIAS_SCALE_MIN, min(_BIAS_SCALE_MAX, obs / pred))
+
+
+def _per_horizon_bias_scales(
+    preds: list, horizon: int
+) -> tuple[Optional[float], Dict[int, float]]:
+    """AUDIT (Phase 4): compute per-horizon multiplicative bias scales for one
+    member from its holdout prediction tuples.
+
+    `preds` is a list of (offset, yhat[h=1..H], ytrue[h=1..H]) tuples. Returns
+    `(pooled_scale, {h: scale})`:
+      - pooled_scale: mean(obs)/mean(pred) over ALL horizons pooled (the v14.3
+        behaviour), used both as the reported member scale and as the fallback
+        for horizons with too few finite samples. None if undefined.
+      - {h: scale}: per-horizon scale, each clamped [0.5, 2.0]. A horizon with
+        >= _BIAS_MIN_SAMPLES finite pairs uses its own ratio; otherwise it
+        inherits `pooled_scale` (omitted entirely if that is also None).
+    """
+    per_h_yhat: Dict[int, list] = {}
+    per_h_ytrue: Dict[int, list] = {}
+    yhat_all: list = []
+    ytrue_all: list = []
+    for tup in preds:
+        if len(tup) < 3:
+            continue
+        _, yhat, ytrue = tup
+        for h_idx in range(min(len(yhat), len(ytrue))):
+            yv, tv = yhat[h_idx], ytrue[h_idx]
+            if yv is None or tv is None:
+                continue
+            yv, tv = float(yv), float(tv)
+            if not (math.isfinite(yv) and math.isfinite(tv)):
+                continue
+            h = h_idx + 1
+            per_h_yhat.setdefault(h, []).append(yv)
+            per_h_ytrue.setdefault(h, []).append(tv)
+            yhat_all.append(yv)
+            ytrue_all.append(tv)
+    if not yhat_all or not ytrue_all:
+        return None, {}
+    pooled = _clamp_bias(float(np.mean(ytrue_all)), float(np.mean(yhat_all)))
+    scales_h: Dict[int, float] = {}
+    for h in range(1, horizon + 1):
+        yh = per_h_yhat.get(h, [])
+        th = per_h_ytrue.get(h, [])
+        bs_h = None
+        if len(yh) >= _BIAS_MIN_SAMPLES and len(th) >= _BIAS_MIN_SAMPLES:
+            bs_h = _clamp_bias(float(np.mean(th)), float(np.mean(yh)))
+        if bs_h is None:
+            bs_h = pooled
+        if bs_h is not None:
+            scales_h[h] = bs_h
+    return pooled, scales_h
+
+
 def _anchor_to_observed(
     pred: List[float],
     q_obs: float,
@@ -1327,8 +1392,6 @@ def forecast_station(
     # because it already has the dedicated v14.1 analysis_assimilation
     # bias path above; passing an empty preds list here is a no-op.
     # RW2_PER_MEMBER_BIAS_OFF=1 disables for emergency rollback.
-    _BIAS_SCALE_MIN = 0.5
-    _BIAS_SCALE_MAX = 2.0
     member_preds_for_bias: Dict[str, list] = {
         "runoff_ridge": ridge_preds,
         "chronos_bolt": chronos_preds,
@@ -1338,37 +1401,36 @@ def forecast_station(
         "nwm": [],            # already corrected via v14.1 path
         "lgbm_pooled": lgbm_pooled_preds,
     }
+    # AUDIT (Phase 4): per-HORIZON bias correction. v14.3 pooled all 14
+    # horizons into one mean(obs)/mean(pred) ratio, so a member biased high at
+    # short lead but low at long lead got a single averaged scale that helped
+    # neither end. The holdout tuples already carry per-horizon yhat/ytrue, so
+    # we now compute bias_scale[h] independently per horizon, each clamped
+    # [0.5, 2.0]. When a horizon has too few finite samples
+    # (< _BIAS_MIN_SAMPLES) we fall back to the member's pooled scale so sparse
+    # horizons don't get a noisy correction.
+    #   member_bias_scales       : pooled mean scale per member (reported in JSON,
+    #                              keeps the v14.3 dataclass contract).
+    #   member_bias_scales_per_h : {member: {h: scale}} actually applied below.
     member_bias_scales: Dict[str, float] = {}
+    member_bias_scales_per_h: Dict[str, Dict[int, float]] = {}
     if os.environ.get("RW2_PER_MEMBER_BIAS_OFF") != "1":
         for name, preds in member_preds_for_bias.items():
             if not preds:
                 continue
-            yhat_all: list = []
-            ytrue_all: list = []
-            for tup in preds:
-                # Each tup is (offset, yhat_list, ytrue_list).
-                if len(tup) < 3:
-                    continue
-                _, yhat, ytrue = tup
-                for v in yhat:
-                    if v is not None and math.isfinite(float(v)):
-                        yhat_all.append(float(v))
-                for v in ytrue:
-                    if v is not None and math.isfinite(float(v)):
-                        ytrue_all.append(float(v))
-            if not yhat_all or not ytrue_all:
-                continue
-            mean_pred = float(np.mean(yhat_all))
-            mean_obs = float(np.mean(ytrue_all))
-            if mean_pred > 1e-3 and mean_obs > 1e-3:
-                bs = max(_BIAS_SCALE_MIN, min(_BIAS_SCALE_MAX, mean_obs / mean_pred))
-                if abs(bs - 1.0) > 1e-6:
-                    member_bias_scales[name] = bs
+            pooled, scales_h = _per_horizon_bias_scales(preds, horizon)
+            if pooled is not None and abs(pooled - 1.0) > 1e-6:
+                member_bias_scales[name] = pooled
+            if scales_h:
+                member_bias_scales_per_h[name] = scales_h
 
-    # Apply bias_scale × anchor × write members[] in one pass.
+    # Apply per-horizon bias_scale × anchor × write members[] in one pass.
     for name, (raw_pred, decay_h) in raw_member_preds.items():
-        bs = member_bias_scales.get(name, 1.0)
-        corrected = [max(0.0, float(v) * bs) for v in raw_pred]
+        scales_h = member_bias_scales_per_h.get(name, {})
+        corrected = [
+            max(0.0, float(v) * scales_h.get(i + 1, 1.0))
+            for i, v in enumerate(raw_pred)
+        ]
         anchored = _anchor_to_observed(corrected, q_obs_last, decay_h=decay_h)
         members[name] = [
             {"date": d, "q_cfs": v} for d, v in zip(future_dates, anchored)
