@@ -201,3 +201,22 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
   border-top: 1px solid #1f2942;
   padding-top: 8px;
 }
+
+/* Per-station FAQ explainer: question headings + list styling. */
+.mae-explainer .faq-q {
+  color: #8ec5ff;
+  font-weight: 600;
+  margin: 12px 0 4px;
+}
+.mae-explainer .faq-q:first-of-type { margin-top: 4px; }
+.mae-explainer ul {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}
+.mae-explainer li { margin-bottom: 4px; }
+
+/* Stale / degraded warning cells in the summary table. */
+#forecast-summary td.warn-cell {
+  color: #ffcaa6;
+  font-weight: 600;
+}

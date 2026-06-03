@@ -595,8 +595,23 @@ function renderForecast(payload) {
   const stratLabel = strat.startsWith("snap_to:")
     ? `auto-snap to <b>${strat.split(":")[1]}</b>`
     : "soft blend (1/MAE²)";
+  // Data-freshness + degradation badges (audit Phase 1 fields). Surface them
+  // prominently so a stale or degraded forecast isn't mistaken for a fresh one.
+  const ageDays = payload.data_age_days;
+  let freshness = "";
+  if (payload.stale) {
+    const ageTxt = Number.isFinite(ageDays) ? `${ageDays} day${ageDays === 1 ? "" : "s"}` : "old";
+    freshness = `<tr><th>⚠ Data freshness</th><td class="warn-cell">STALE — last reading is ${ageTxt} old; this forecast projects from outdated data</td></tr>`;
+  } else if (Number.isFinite(ageDays)) {
+    freshness = `<tr><th>Data freshness</th><td>up to date (last reading ${ageDays === 0 ? "today" : `${ageDays} day${ageDays === 1 ? "" : "s"} ago`})</td></tr>`;
+  }
+  const degraded = payload.degraded
+    ? `<tr><th>⚠ Quality</th><td class="warn-cell">DEGRADED — most models were unavailable; showing a simple baseline forecast</td></tr>`
+    : "";
   sumEl.innerHTML = `
     <table>
+      ${freshness}
+      ${degraded}
       <tr><th>Chosen on rolling MAE</th><td>${payload.chosen}</td></tr>
       <tr><th>Blend strategy</th><td>${stratLabel}</td></tr>
       <tr><th>Day +1 blend</th><td>${fmtNumber(t1)} cfs</td></tr>
@@ -666,30 +681,81 @@ function renderForecast(payload) {
       <tbody>${rows}${ensembleRow}</tbody>
     </table>
     <details class="mae-explainer">
-      <summary>What is rolling MAE?</summary>
+      <summary>What am I looking at? (FAQ)</summary>
+
+      <p class="faq-q">What is this forecast?</p>
       <p>
-        <b>MAE = Mean Absolute Error</b>, in cubic-feet-per-second (cfs). It's the
-        average gap between what each forecaster predicted and what actually flowed,
-        across past days where we already know the answer.
+        A prediction of <b>river flow</b> — measured in <b>cfs</b> (cubic feet
+        per second, the volume of water passing the gauge each second) — for the
+        <b>next 14 days</b>. The solid line is our best estimate; the shaded band
+        around it is the uncertainty.
       </p>
+
+      <p class="faq-q">Where does it come from?</p>
       <p>
-        <b>Rolling</b> means we backtest each forecaster against the most recent
-        history at this gauge — not a fixed test set. Persistence and Chronos use
-        a single horizon-length holdout; the ridge model holds out the trailing
-        30 days for every horizon-day. Lower is better.
+        We don't trust a single model. We run several independent forecasters (an
+        <b>ensemble</b>) and blend them. Each one sees the same gauge but reasons
+        differently:
       </p>
+      <ul>
+        <li><b>Persistence</b> — assumes flow stays near today's level. Simple, and surprisingly hard to beat on steady rivers.</li>
+        <li><b>Runoff model</b> — learns how rain, snowmelt and soil moisture become streamflow at this specific basin.</li>
+        <li><b>AI pattern models</b> (Chronos, TTM, TimesFM) — large pretrained time-series models that recognize flow shapes without per-river training.</li>
+        <li><b>National Water Model</b> — NOAA's physics-based national river simulation.</li>
+      </ul>
       <p>
-        <b>How it drives the blend:</b> each member's weight is proportional to
-        <code>1 / rolling_mae²</code>, so the forecaster with the smallest recent
-        error gets a much bigger say than under linear weighting. If one model is
-        decisively best at a site (≥30% lower MAE than the runner-up), the system
-        <i>snaps</i> 90% of the weight onto it instead — the "Blend strategy" row
-        above tells you when this happens.
+        The <b>Members</b> table above shows which ones were used and how much
+        weight each got.
       </p>
-      <p style="opacity:0.7">
-        Watch the weights swing across stations — Chronos dominates on smooth
-        rivers it has seen pattern-likes of, ridge wins where weather forcing
-        matters, and persistence quietly wins on steady baseflow.
+
+      <p class="faq-q">What is "rolling MAE" in the table?</p>
+      <p>
+        <b>MAE = Mean Absolute Error</b> (in cfs): the average gap between a
+        forecaster's prediction and what actually flowed, measured on past days
+        where we already know the answer. <b>Lower is better.</b> "Rolling" means
+        we re-test against this gauge's own history across several past windows
+        that span <b>different seasons and flow levels</b> — not just the last few
+        weeks — so a model good only at low water can't look better than it is.
+        <b>MAPE</b> is the same idea as a percentage of the actual flow.
+      </p>
+
+      <p class="faq-q">How does MAE decide the blend?</p>
+      <p>
+        Each member's weight is proportional to <code>1 / MAE²</code>, so the
+        recently-most-accurate forecaster gets a much bigger say. If one model is
+        decisively best here (≥30% lower MAE than the runner-up), the system
+        <i>snaps</i> ~90% of the weight onto it — the <b>Blend strategy</b> row
+        tells you when that happens.
+      </p>
+
+      <p class="faq-q">Why doesn't the line start exactly at today's flow?</p>
+      <p>
+        It mostly does — we <b>anchor</b> each forecast to the last observed
+        reading so the curve begins where the river actually is, then let it
+        relax toward each model's own prediction over the next few days.
+      </p>
+
+      <p class="faq-q">What is the shaded band?</p>
+      <p>
+        A <b>90% range</b>: based on how wrong our forecasts have been here in the
+        past, we expect the real flow to land inside the band about 9 days out of
+        10. It widens further out because longer-range forecasts are less certain.
+      </p>
+
+      <p class="faq-q">What do "STALE" and "DEGRADED" mean?</p>
+      <p>
+        <b>Stale</b> = the gauge hasn't reported recently, so the forecast is
+        projecting from old data — treat it with caution. <b>Degraded</b> = most
+        models were unavailable and we fell back to the simple baseline. Both show
+        at the top of the summary and in the <i>notes</i> line below so you always
+        know how much to trust a given forecast.
+      </p>
+
+      <p class="faq-q">How fresh is all this?</p>
+      <p style="opacity:0.8">
+        Forecasts rebuild every few hours from USGS gauge data, NOAA weather and
+        snow data, and the NOAA National Water Model. Coverage is free-flowing
+        whitewater rivers (no dam-release runs).
       </p>
     </details>
     ${(payload.notes || []).length ? `<div class="notes">notes: ${payload.notes.join("; ")}</div>` : ""}
