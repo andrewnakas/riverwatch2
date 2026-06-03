@@ -239,6 +239,41 @@ def _slice_record(have: dict[str, float], start: date, end: date) -> pd.DataFram
     return df
 
 
+def flag_suspect_jumps(
+    df: pd.DataFrame,
+    *,
+    jump_factor: float = 50.0,
+    min_cfs: float = 10.0,
+) -> "pd.Series":
+    """AUDIT (Phase 5): flag physically-implausible single-day spikes that are
+    almost certainly gauge malfunction / data-entry errors rather than real
+    hydrology.
+
+    A day is suspect when it is BOTH >= `jump_factor`x the previous day AND
+    >= `jump_factor`x the next day (an isolated spike that immediately
+    collapses) — a real flood ramps and recedes over multiple days, so it
+    won't satisfy both. `min_cfs` floors the comparison so noise on
+    near-zero ephemeral streams (0.01 -> 1.0 cfs) doesn't trip the flag.
+
+    Returns a boolean Series aligned to `df.index` (True == suspect). This is a
+    FLAG, not a filter: we never silently drop a value, because deleting a real
+    flood peak is worse than keeping a rare bad point. Callers decide what to do
+    (e.g. record a count in forecast notes for observability).
+    """
+    n = len(df)
+    flags = pd.Series([False] * n, index=df.index)
+    if n < 3:
+        return flags
+    q = df["q_cfs"].astype(float).to_numpy()
+    for i in range(1, n - 1):
+        cur = q[i]
+        prev = max(q[i - 1], min_cfs)
+        nxt = max(q[i + 1], min_cfs)
+        if cur >= jump_factor * prev and cur >= jump_factor * nxt:
+            flags.iloc[i] = True
+    return flags
+
+
 def _parse_dv(payload: dict) -> pd.DataFrame:
     rows = []
     for ts in payload.get("value", {}).get("timeSeries", []):

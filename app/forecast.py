@@ -2062,6 +2062,20 @@ def forecast_station(
             f"stale: last observation is {data_age_days}d old (>{stale_after}d)"
         )
 
+    # AUDIT (Phase 5): observability for implausible single-day spikes in the
+    # discharge record (likely gauge malfunction / data-entry errors). We FLAG
+    # rather than filter — deleting a real flood peak is worse than keeping a
+    # rare bad point — and surface a count so operators can spot gauges whose
+    # training history is contaminated. The check is cache-independent (runs on
+    # the assembled series), unlike NWIS qualifier codes which aren't persisted
+    # in the value cache.
+    try:
+        n_suspect = int(usgs.flag_suspect_jumps(q_hist).sum())
+        if n_suspect > 0:
+            notes.append(f"data_quality: {n_suspect} suspect single-day spike(s) in record")
+    except Exception as exc:
+        notes.append(f"data_quality check failed: {exc}")
+
     # AUDIT (Phase 1): member-composition transparency. `members_used` are the
     # members that contributed a finite live forecast at h=1; `members_dropped`
     # are members that were attempted but failed/were unavailable (recorded in
