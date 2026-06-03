@@ -18,6 +18,42 @@
       <span class="dot dot-ak"></span> Alaska
       <span class="dot dot-other"></span> Other CONUS
     </div>
+    <details class="how-it-works">
+      <summary>How it works</summary>
+      <div class="hiw-body">
+        <p>
+          RiverWatch2 predicts how much water (in <b>cfs</b> — cubic feet per
+          second) will flow past each gauge for the <b>next 14 days</b>. It does
+          this by combining several independent forecasters into one
+          <b>ensemble</b>, then trusting each one in proportion to how accurate
+          it has recently been at <i>that</i> gauge.
+        </p>
+        <p><b>The forecasters (members):</b></p>
+        <ul>
+          <li><b>Persistence</b> — "tomorrow looks like today." A simple, hard-to-beat baseline.</li>
+          <li><b>Runoff model</b> — learns how rain, snowmelt, and soil moisture turn into streamflow at this basin.</li>
+          <li><b>AI time-series models</b> (Chronos, TTM, TimesFM) — large pretrained models that recognize flow patterns without per-river training.</li>
+          <li><b>National Water Model</b> — NOAA's physics-based national river simulation.</li>
+        </ul>
+        <p><b>How the blend is built:</b></p>
+        <ol>
+          <li>Each member is <b>backtested</b> against this gauge's own history, across several past windows spanning different <b>seasons and flow levels</b> (not just the last few months), so its accuracy is measured fairly.</li>
+          <li>Members get a <b>weight</b> proportional to <code>1 / error²</code> — the more accurate one recently was, the bigger its say. If one is clearly best, the blend leans almost entirely on it.</li>
+          <li>Each forecast is gently <b>anchored to the last observed flow</b> so the curve starts where the river actually is, then relaxes toward the model's own prediction over a few days.</li>
+          <li>The shaded band around the line is a <b>90% range</b>: we expect the real flow to land inside it about 9 days out of 10.</li>
+        </ol>
+        <p><b>When to be cautious:</b> if a gauge stops reporting, the forecast is
+          flagged <b>stale</b> (it's projecting from old data). A
+          <b>degraded</b> flag means most models were unavailable and the system
+          fell back to the simple baseline. These appear in the per-station
+          <i>notes</i> so you always know how much to trust a given forecast.</p>
+        <p class="hiw-foot">
+          Covers free-flowing whitewater rivers (no dam-release runs). Forecasts
+          refresh every few hours. Data: USGS gauges, NOAA weather &amp; snow,
+          NOAA National Water Model.
+        </p>
+      </div>
+    </details>
   </header>
   <div id="layout">
     <div id="map"></div>

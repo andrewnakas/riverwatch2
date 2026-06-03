@@ -160,3 +160,44 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
     color: #5c6685;
   }
 }
+
+/* "How it works" header explainer — matches the .mae-explainer pattern. */
+.how-it-works { margin-top: 8px; font-size: 12px; }
+.how-it-works summary {
+  cursor: pointer;
+  color: #8ec5ff;
+  font-weight: 600;
+  font-size: 12px;
+  display: inline-block;
+  padding: 2px 0;
+}
+.how-it-works summary:hover { color: #b9d8ff; }
+.how-it-works .hiw-body {
+  margin-top: 8px;
+  max-width: 720px;
+  padding: 10px 14px;
+  background: #131a2d;
+  border: 1px solid #26314f;
+  border-radius: 8px;
+  color: #aab7d4;
+  line-height: 1.5;
+}
+.how-it-works .hiw-body p { margin: 0 0 8px; }
+.how-it-works .hiw-body b { color: #e7ecf3; }
+.how-it-works .hiw-body ul,
+.how-it-works .hiw-body ol { margin: 0 0 8px; padding-left: 20px; }
+.how-it-works .hiw-body li { margin-bottom: 4px; }
+.how-it-works .hiw-body code {
+  background: #1f2942;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #e7ecf3;
+  font-size: 11px;
+}
+.how-it-works .hiw-foot {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #7c87a8;
+  border-top: 1px solid #1f2942;
+  padding-top: 8px;
+}
