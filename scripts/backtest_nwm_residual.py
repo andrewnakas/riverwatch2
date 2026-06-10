@@ -378,6 +378,24 @@ def train_clean(train: pd.DataFrame, horizons: list[int], feat_cols: list[str],
     return models
 
 
+def anchor_member(test: pd.DataFrame, pred: np.ndarray, *, decay_h: int = 7) -> np.ndarray:
+    """Replicate app.forecast._anchor_to_observed on a flat panel:
+    production serves every member shifted by (h1 prediction − last obs),
+    linearly decayed over decay_h horizons. Measuring members as-served
+    tells us whether that anchoring helps or hurts each one."""
+    df = pd.DataFrame({
+        "s": test["station_id"].to_numpy(), "D": test["issued_date"].to_numpy(),
+        "h": test["horizon_day"].to_numpy(), "p": pred,
+        "t0": test["q_obs_t0"].to_numpy(),
+    })
+    h1 = df[df["h"] == 1].set_index(["s", "D"])["p"]
+    p1 = h1.reindex(pd.MultiIndex.from_arrays([df["s"], df["D"]])).to_numpy()
+    delta = p1 - df["t0"].to_numpy()
+    delta = np.where(np.isfinite(delta), delta, 0.0)
+    w = np.clip(1.0 - (df["h"].to_numpy() - 1) / max(1, decay_h), 0.0, None)
+    return np.clip(df["p"].to_numpy() - delta * w, 0.0, None)
+
+
 def _per_station_median_mae(sub: pd.DataFrame, pred: np.ndarray) -> float:
     err = pd.Series(np.abs(pred - sub["q_obs"].to_numpy()), index=sub.index)
     return float(err.groupby(sub["station_id"]).mean().median())
@@ -491,6 +509,8 @@ def main() -> int:
     ap.add_argument("--label", default="v1")
     ap.add_argument("--refresh-obs", action="store_true")
     ap.add_argument("--skip-clean-retrain", action="store_true")
+    ap.add_argument("--no-cv", action="store_true",
+                    help="skip the forward-chaining CV selection (faster)")
     ap.add_argument("--save-clean-models", default="",
                     help="optional dir to dump the clean retrained pickles")
     args = ap.parse_args()
@@ -561,6 +581,7 @@ def main() -> int:
         if len(trained) > 1:
             stack = np.mean([np.log1p(members[f"nwm_residual_{n}"]) for n in trained], axis=0)
             members["nwm_residual_avg"] = np.expm1(stack)
+        if len(trained) > 1 and not args.no_cv:
             print("  forward-chaining CV selection inside train window…")
             picks = cv_select(train, horizons, variants)
             print(f"  cv picks: {picks}")
@@ -571,6 +592,18 @@ def main() -> int:
                 best[hcol == h] = src[hcol == h]
             members["nwm_residual_best"] = best
             payload_picks = picks
+
+    # Production parity: how do the key members score AS SERVED, i.e. after
+    # forecast.py's anchor-to-observed? decay_h=7 is production's setting;
+    # decay_h=2 is the candidate for the residual member, which already
+    # self-anchors through its d_anchor / obs_t0 features.
+    if "nwm_corrected" in members:
+        members["nwm_corr_anch7"] = anchor_member(test, members["nwm_corrected"])
+    for resid_name in ("nwm_residual_avg", "nwm_residual_clean"):
+        if resid_name in members:
+            members["resid_anch7"] = anchor_member(test, members[resid_name])
+            members["resid_anch2"] = anchor_member(test, members[resid_name], decay_h=2)
+            break
 
     scores = score(test, members)
     member_names = list(members.keys())

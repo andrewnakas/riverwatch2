@@ -1,5 +1,5 @@
 {
-  "trained_at": "2026-06-10T02:33:37Z",
+  "trained_at": "2026-06-10T03:02:45Z",
   "schema": "v15.9",
   "n_archive_rows": 1373942,
   "n_labeled_rows": 1123437,
@@ -16,7 +16,11 @@
       "val_mae_baseline_cfs": 1765.8895285398264,
       "val_mae_learned_cfs": 1106.8802826201263,
       "val_mae_baseline_cfs_median_station": 238.71663494581358,
-      "val_mae_learned_cfs_median_station": 127.01997878508132
+      "val_mae_learned_cfs_median_station": 127.01997878508132,
+      "val_mae_served_baseline_cfs": 960.9359467767433,
+      "val_mae_served_learned_cfs": 960.9359467767433,
+      "val_mae_served_baseline_cfs_median_station": 120.14285714285714,
+      "val_mae_served_learned_cfs_median_station": 120.14285714285714
     },
     "2": {
       "n_train": 69171,
@@ -29,7 +33,11 @@
       "val_mae_baseline_cfs": 2106.431025276823,
       "val_mae_learned_cfs": 1714.6018460613925,
       "val_mae_baseline_cfs_median_station": 297.6841502200592,
-      "val_mae_learned_cfs_median_station": 223.43625478607905
+      "val_mae_learned_cfs_median_station": 223.43625478607905,
+      "val_mae_served_baseline_cfs": 1496.816452071875,
+      "val_mae_served_learned_cfs": 1646.6358155922587,
+      "val_mae_served_baseline_cfs_median_station": 227.54012220677225,
+      "val_mae_served_learned_cfs_median_station": 221.95419061161527
     },
     "3": {
       "n_train": 67513,
@@ -42,7 +50,11 @@
       "val_mae_baseline_cfs": 2418.3193397812643,
       "val_mae_learned_cfs": 2181.4513643041664,
       "val_mae_baseline_cfs_median_station": 360.6654495965867,
-      "val_mae_learned_cfs_median_station": 281.4707769176777
+      "val_mae_learned_cfs_median_station": 281.4707769176777,
+      "val_mae_served_baseline_cfs": 1965.2330356379641,
+      "val_mae_served_learned_cfs": 2181.4513643041664,
+      "val_mae_served_baseline_cfs_median_station": 304.57582190072765,
+      "val_mae_served_learned_cfs_median_station": 281.4707769176777
     },
     "4": {
       "n_train": 65891,
@@ -55,7 +67,11 @@
       "val_mae_baseline_cfs": 2835.9269932187603,
       "val_mae_learned_cfs": 2582.492554835297,
       "val_mae_baseline_cfs_median_station": 410.7797418675752,
-      "val_mae_learned_cfs_median_station": 314.4531749378245
+      "val_mae_learned_cfs_median_station": 314.4531749378245,
+      "val_mae_served_baseline_cfs": 2442.030924411982,
+      "val_mae_served_learned_cfs": 2582.492554835297,
+      "val_mae_served_baseline_cfs_median_station": 380.04256102695854,
+      "val_mae_served_learned_cfs_median_station": 314.4531749378245
     },
     "5": {
       "n_train": 64334,
@@ -68,7 +84,11 @@
       "val_mae_baseline_cfs": 3253.3747941779184,
       "val_mae_learned_cfs": 2749.6880385316254,
       "val_mae_baseline_cfs_median_station": 461.2741730882283,
-      "val_mae_learned_cfs_median_station": 348.72119294938597
+      "val_mae_learned_cfs_median_station": 348.72119294938597,
+      "val_mae_served_baseline_cfs": 2932.0254003452615,
+      "val_mae_served_learned_cfs": 2749.6880385316254,
+      "val_mae_served_baseline_cfs_median_station": 432.2156025840104,
+      "val_mae_served_learned_cfs_median_station": 348.72119294938597
     },
     "6": {
       "n_train": 62623,
@@ -81,7 +101,11 @@
       "val_mae_baseline_cfs": 3467.6167967052547,
       "val_mae_learned_cfs": 2968.4738331209455,
       "val_mae_baseline_cfs_median_station": 477.6736703242889,
-      "val_mae_learned_cfs_median_station": 357.1775288433322
+      "val_mae_learned_cfs_median_station": 357.1775288433322,
+      "val_mae_served_baseline_cfs": 3237.576101081001,
+      "val_mae_served_learned_cfs": 2968.4738331209455,
+      "val_mae_served_baseline_cfs_median_station": 450.10299384458983,
+      "val_mae_served_learned_cfs_median_station": 357.1775288433322
     },
     "7": {
       "n_train": 62601,
@@ -94,7 +118,11 @@
       "val_mae_baseline_cfs": 3651.816508031578,
       "val_mae_learned_cfs": 3069.0640022971766,
       "val_mae_baseline_cfs_median_station": 484.97154785621734,
-      "val_mae_learned_cfs_median_station": 370.52646442157874
+      "val_mae_learned_cfs_median_station": 370.52646442157874,
+      "val_mae_served_baseline_cfs": 3527.807683023776,
+      "val_mae_served_learned_cfs": 3069.0640022971766,
+      "val_mae_served_baseline_cfs_median_station": 483.08017278158326,
+      "val_mae_served_learned_cfs_median_station": 370.52646442157874
     },
     "8": {
       "n_train": 62658,
@@ -107,7 +135,11 @@
       "val_mae_baseline_cfs": 3593.8991673549162,
       "val_mae_learned_cfs": 2899.076853004501,
       "val_mae_baseline_cfs_median_station": 491.1367808826479,
-      "val_mae_learned_cfs_median_station": 361.5726520644843
+      "val_mae_learned_cfs_median_station": 361.5726520644843,
+      "val_mae_served_baseline_cfs": 3593.8991673549162,
+      "val_mae_served_learned_cfs": 2899.076853004501,
+      "val_mae_served_baseline_cfs_median_station": 491.1367808826479,
+      "val_mae_served_learned_cfs_median_station": 361.5726520644843
     },
     "9": {
       "n_train": 62653,
@@ -120,7 +152,11 @@
       "val_mae_baseline_cfs": 3515.839422766623,
       "val_mae_learned_cfs": 2787.0149433348142,
       "val_mae_baseline_cfs_median_station": 461.83527889262314,
-      "val_mae_learned_cfs_median_station": 363.4316745373195
+      "val_mae_learned_cfs_median_station": 363.4316745373195,
+      "val_mae_served_baseline_cfs": 3515.839422766623,
+      "val_mae_served_learned_cfs": 2787.0149433348142,
+      "val_mae_served_baseline_cfs_median_station": 461.83527889262314,
+      "val_mae_served_learned_cfs_median_station": 363.4316745373195
     },
     "10": {
       "n_train": 62644,
@@ -133,7 +169,11 @@
       "val_mae_baseline_cfs": 3476.5146399625146,
       "val_mae_learned_cfs": 2800.5812486036457,
       "val_mae_baseline_cfs_median_station": 449.89758932111994,
-      "val_mae_learned_cfs_median_station": 327.1269783303486
+      "val_mae_learned_cfs_median_station": 327.1269783303486,
+      "val_mae_served_baseline_cfs": 3476.5146399625146,
+      "val_mae_served_learned_cfs": 2800.5812486036457,
+      "val_mae_served_baseline_cfs_median_station": 449.89758932111994,
+      "val_mae_served_learned_cfs_median_station": 327.1269783303486
     },
     "11": {
       "n_train": 19692,
@@ -146,7 +186,11 @@
       "val_mae_baseline_cfs": 3238.8847754552935,
       "val_mae_learned_cfs": 3173.542258649318,
       "val_mae_baseline_cfs_median_station": 552.7739711806025,
-      "val_mae_learned_cfs_median_station": 332.1811271675119
+      "val_mae_learned_cfs_median_station": 332.1811271675119,
+      "val_mae_served_baseline_cfs": 3238.8847754552935,
+      "val_mae_served_learned_cfs": 3173.542258649318,
+      "val_mae_served_baseline_cfs_median_station": 552.7739711806025,
+      "val_mae_served_learned_cfs_median_station": 332.1811271675119
     },
     "12": {
       "n_train": 19698,
@@ -159,7 +203,11 @@
       "val_mae_baseline_cfs": 3099.4281321366598,
       "val_mae_learned_cfs": 3098.9180816699372,
       "val_mae_baseline_cfs_median_station": 549.789497535907,
-      "val_mae_learned_cfs_median_station": 303.60651935554154
+      "val_mae_learned_cfs_median_station": 303.60651935554154,
+      "val_mae_served_baseline_cfs": 3099.4281321366598,
+      "val_mae_served_learned_cfs": 3098.9180816699372,
+      "val_mae_served_baseline_cfs_median_station": 549.789497535907,
+      "val_mae_served_learned_cfs_median_station": 303.60651935554154
     },
     "13": {
       "n_train": 19608,
@@ -172,7 +220,11 @@
       "val_mae_baseline_cfs": 3064.7405903337094,
       "val_mae_learned_cfs": 3173.2407304775875,
       "val_mae_baseline_cfs_median_station": 532.2169769139167,
-      "val_mae_learned_cfs_median_station": 266.4289990919081
+      "val_mae_learned_cfs_median_station": 266.4289990919081,
+      "val_mae_served_baseline_cfs": 3064.7405903337094,
+      "val_mae_served_learned_cfs": 3173.2407304775875,
+      "val_mae_served_baseline_cfs_median_station": 532.2169769139167,
+      "val_mae_served_learned_cfs_median_station": 266.4289990919081
     },
     "14": {
       "n_train": 19312,
@@ -185,7 +237,11 @@
       "val_mae_baseline_cfs": 2912.931138191031,
       "val_mae_learned_cfs": 2669.65607849565,
       "val_mae_baseline_cfs_median_station": 498.4755969401836,
-      "val_mae_learned_cfs_median_station": 284.35174750479393
+      "val_mae_learned_cfs_median_station": 284.35174750479393,
+      "val_mae_served_baseline_cfs": 2912.931138191031,
+      "val_mae_served_learned_cfs": 2669.65607849565,
+      "val_mae_served_baseline_cfs_median_station": 498.4755969401836,
+      "val_mae_served_learned_cfs_median_station": 284.35174750479393
     }
   }
 }

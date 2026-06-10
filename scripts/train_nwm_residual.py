@@ -271,6 +271,68 @@ def _ensemble(preds: list[np.ndarray]) -> np.ndarray:
     return np.expm1(np.mean([np.log1p(p) for p in preds], axis=0))
 
 
+def _anchor(panel: pd.DataFrame, pred: np.ndarray, *, decay_h: int) -> np.ndarray:
+    """forecast._anchor_to_observed on a flat panel: shift by the h1 gap to
+    the issuance observation, linearly decayed over decay_h horizons."""
+    df = pd.DataFrame({"s": panel["station_id"].to_numpy(),
+                       "D": panel["issued_date"].to_numpy(),
+                       "h": panel["horizon_day"].to_numpy(), "p": pred})
+    h1 = df[df["h"] == 1].set_index(["s", "D"])["p"]
+    key = pd.MultiIndex.from_arrays([df["s"], df["D"]])
+    delta = h1.reindex(key).to_numpy() - panel["q_obs_t0"].to_numpy()
+    delta = np.where(np.isfinite(delta), delta, 0.0)
+    w = np.clip(1.0 - (df["h"].to_numpy() - 1) / max(1, decay_h), 0.0, None)
+    return np.clip(pred - delta * w, 0.0, None)
+
+
+def _build_holdout_stats(panel: pd.DataFrame, *, window_days: int = 45,
+                         max_samples: int = 21, min_samples: int = 8) -> dict:
+    """Per-station per-horizon trailing MAE of the bias-corrected archived
+    forecasts (and persistence on the same rows) against observed truth.
+
+    This is the v15.9 replacement for the hindcast×decay formula in
+    app.forecast: a station's `nwm` blend weight can now come from how its
+    actual issued forecasts scored, not from analysis_assimilation overlap
+    inflated by a uniform factor. Long horizons naturally have fewer
+    labeled recent rows (truth lags issuance by h days); horizons with
+    < min_samples rows are omitted and forecast.py falls back.
+
+    mae_nwm_served is the headline: the bias-corrected forecast AFTER
+    forecast.py's anchor-to-observed (decay_h=7), i.e. the member as the
+    blend actually sees it. The 2026-06 backtest measured anchoring
+    cutting corrected-NWM median MAE roughly in half at h1 — weighting
+    by unanchored error would starve the member at short leads."""
+    last = panel["issued_date"].max()
+    recent = panel[panel["issued_date"] >= last - timedelta(days=window_days)].copy()
+
+    # Anchor per (station, issuance): shift by the h1 gap to the issuance
+    # observation, linearly decayed over 7 horizons (production parity).
+    h1 = recent[recent["horizon_day"] == 1].set_index(["station_id", "issued_date"])["q_corrected"]
+    key = pd.MultiIndex.from_arrays([recent["station_id"], recent["issued_date"]])
+    delta = h1.reindex(key).to_numpy() - recent["q_obs_t0"].to_numpy()
+    delta = np.where(np.isfinite(delta), delta, 0.0)
+    w = np.clip(1.0 - (recent["horizon_day"].to_numpy() - 1) / 7.0, 0.0, None)
+    recent["q_served"] = np.clip(recent["q_corrected"].to_numpy() - delta * w, 0.0, None)
+
+    stations: dict = {}
+    for (s, h), g in recent.groupby(["station_id", "horizon_day"]):
+        g = g.sort_values("issued_date").tail(max_samples)
+        if len(g) < min_samples:
+            continue
+        q_obs = g["q_obs"].to_numpy()
+        err_c = np.abs(g["q_corrected"].to_numpy() - q_obs)
+        err_a = np.abs(g["q_served"].to_numpy() - q_obs)
+        err_p = np.abs(g["q_obs_t0"].to_numpy() - q_obs)
+        stations.setdefault(s, {})[str(int(h))] = {
+            "mae_nwm_served": round(float(err_a.mean()), 2),
+            "mae_nwm_corrected": round(float(err_c.mean()), 2),
+            "mae_persistence": round(float(err_p.mean()), 2),
+            "n": int(len(g)),
+        }
+    return {"_as_of": last.isoformat(), "_window_days": window_days,
+            "stations": stations}
+
+
 def _build_sidecar(panel: pd.DataFrame) -> dict:
     """Per-station trailing stats as of the latest issuance, for serving."""
     last = panel["issued_date"].max()
@@ -358,35 +420,52 @@ def main() -> int:
                 r = _train_variant(train, h, cols)
                 if r is not None:
                     split_models[v][h] = r
-            got = [v for v in VARIANT_COLS if h in split_models[v]]
-            if not got:
+            if not any(h in split_models[v] for v in VARIANT_COLS):
                 print(f"  h{h}: insufficient rows — skipped")
+
+        # Score the val block AS SERVED: every variant predicts the whole
+        # panel (missing horizons pass the corrected value through), the
+        # ensemble is anchored with the residual member's production decay
+        # (2) and the baseline with the nwm member's (7). The manifest's
+        # served ratios are what forecast.py multiplies the measured served
+        # nwm MAE by — anchored/unanchored must not be mixed.
+        variant_preds = [_predict(val, split_models[v])
+                         for v in VARIANT_COLS if split_models[v]]
+        learned_all = _ensemble(variant_preds)
+        base_all = val["q_corrected"].to_numpy(dtype=np.float64)
+        served_learned = _anchor(val, learned_all, decay_h=2)
+        served_base = _anchor(val, base_all, decay_h=7)
+        q_obs_all = val["q_obs"].to_numpy(dtype=np.float64)
+        for h in HORIZONS:
+            got = [v for v in VARIANT_COLS if h in split_models[v]]
+            mask = (val["horizon_day"] == h).to_numpy()
+            if not got or not mask.any():
                 continue
-            vsub = val[val["horizon_day"] == h]
-            if not len(vsub):
-                continue
-            preds = [_predict(vsub, {h: split_models[v][h]}) for v in got]
-            learned = _ensemble(preds)
-            q_obs = vsub["q_obs"].to_numpy()
-            base = vsub["q_corrected"].to_numpy()
-            mae_base = float(np.mean(np.abs(base - q_obs)))
-            mae_learn = float(np.mean(np.abs(learned - q_obs)))
-            err_b = pd.Series(np.abs(base - q_obs), index=vsub.index)
-            err_l = pd.Series(np.abs(learned - q_obs), index=vsub.index)
-            med_base = float(err_b.groupby(vsub["station_id"]).mean().median())
-            med_learn = float(err_l.groupby(vsub["station_id"]).mean().median())
+            vsub = val[mask]
+            stats = {}
+            for tag, pred in (("", (base_all, learned_all)),
+                              ("served_", (served_base, served_learned))):
+                eb = np.abs(pred[0][mask] - q_obs_all[mask])
+                el = np.abs(pred[1][mask] - q_obs_all[mask])
+                stats[f"val_mae_{tag}baseline_cfs"] = float(eb.mean())
+                stats[f"val_mae_{tag}learned_cfs"] = float(el.mean())
+                grp = vsub["station_id"]
+                stats[f"val_mae_{tag}baseline_cfs_median_station"] = float(
+                    pd.Series(eb, index=vsub.index).groupby(grp).mean().median())
+                stats[f"val_mae_{tag}learned_cfs_median_station"] = float(
+                    pd.Series(el, index=vsub.index).groupby(grp).mean().median())
             print(f"  h{h}: n_train={len(train[train['horizon_day'] == h]):,} "
-                  f"val cfs MAE base={mae_base:,.0f} learn={mae_learn:,.0f} "
-                  f"({100*(mae_learn-mae_base)/max(mae_base,1e-6):+.0f}%) | "
-                  f"median-station base={med_base:,.0f} learn={med_learn:,.0f}")
+                  f"val MAE base={stats['val_mae_baseline_cfs']:,.0f} "
+                  f"learn={stats['val_mae_learned_cfs']:,.0f} | served "
+                  f"base={stats['val_mae_served_baseline_cfs']:,.0f} "
+                  f"learn={stats['val_mae_served_learned_cfs']:,.0f} | med-st served "
+                  f"base={stats['val_mae_served_baseline_cfs_median_station']:,.0f} "
+                  f"learn={stats['val_mae_served_learned_cfs_median_station']:,.0f}")
             manifest["horizons"][str(h)] = {
                 "n_train": int(len(train[train["horizon_day"] == h])),
-                "n_val": int(len(vsub)),
+                "n_val": int(mask.sum()),
                 "variants": got,
-                "val_mae_baseline_cfs": mae_base,
-                "val_mae_learned_cfs": mae_learn,
-                "val_mae_baseline_cfs_median_station": med_base,
-                "val_mae_learned_cfs_median_station": med_learn,
+                **stats,
             }
 
         # --- ship: retrain every variant on the full labeled panel ---
@@ -407,9 +486,12 @@ def main() -> int:
                     pickle.dump(r, f)
                 n_shipped += 1
         (out_dir / "sidecar.json").write_text(json.dumps(_build_sidecar(panel)))
+        stats = _build_holdout_stats(panel)
+        (out_dir / "holdout_stats.json").write_text(json.dumps(stats))
         (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
         print(f"\nWrote {n_shipped} models across {len(VARIANT_COLS)} variants "
-              f"+ sidecar + manifest → {out_dir}")
+              f"+ sidecar + holdout stats ({len(stats['stations'])} stations) "
+              f"+ manifest → {out_dir}")
     finally:
         if cleanup is not None:
             try:

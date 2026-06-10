@@ -130,8 +130,14 @@ def _load_resid_scale() -> dict[int, float]:
                 h = int(h_str)
             except (TypeError, ValueError):
                 continue
-            base = info.get("val_mae_baseline_cfs")
-            learn = info.get("val_mae_learned_cfs")
+            # v15.9: prefer the SERVED ratio (baseline anchored decay_h=7,
+            # residual anchored decay_h=2 — exactly how both members reach
+            # the blend). nwm_per_h is measured on served forecasts, so the
+            # multiplier must be served/served, not unanchored/unanchored.
+            base = info.get("val_mae_served_baseline_cfs",
+                            info.get("val_mae_baseline_cfs"))
+            learn = info.get("val_mae_served_learned_cfs",
+                             info.get("val_mae_learned_cfs"))
             if base and learn and float(base) > 0:
                 # Clamp to [0.50, 1.05]. The 2026-06 temporal-holdout backtest
                 # (benchmarks/nwm_backtest_v4.json) measured true ratios of
@@ -156,6 +162,65 @@ def _resid_scale_for_h(h: int) -> float:
     if not keys:
         return 1.0
     return table[max(keys)] if h > max(keys) else table[min(keys)]
+
+
+# v15.9: per-station per-horizon MEASURED MAE of the bias-corrected NWM
+# forecasts, written by scripts/train_nwm_residual.py from the nwm-archive
+# truth join (holdout_stats.json, refreshed by the weekly retrain). Where
+# available this replaces the hindcast×decay formula for nwm_per_h — the
+# blend weight then reflects how this station's actual issued forecasts
+# scored, not an analysis-overlap proxy.
+_NWM_HOLDOUT_STATS_CACHED: dict | None = None
+_NWM_STATS_MIN_N = 8
+
+
+def _load_nwm_holdout_stats() -> dict:
+    global _NWM_HOLDOUT_STATS_CACHED
+    if _NWM_HOLDOUT_STATS_CACHED is not None:
+        return _NWM_HOLDOUT_STATS_CACHED
+    path = (Path(__file__).resolve().parents[1]
+            / "data" / "nwm_residual_models" / "holdout_stats.json")
+    try:
+        payload = json.loads(path.read_text())
+        _NWM_HOLDOUT_STATS_CACHED = payload if isinstance(payload, dict) else {}
+    except Exception:
+        _NWM_HOLDOUT_STATS_CACHED = {}
+    return _NWM_HOLDOUT_STATS_CACHED
+
+
+def _nwm_per_h_estimates(
+    station_id: str,
+    horizon: int,
+    nwm_mae_estimate: Optional[float],
+    persist_per_h: Dict[int, float],
+) -> Dict[int, float]:
+    """Per-horizon MAE for the `nwm` member. Preference order:
+    1. measured trailing MAE of this station's archived issued forecasts,
+    2. v13 hindcast estimate × per-horizon decay,
+    3. v13.5 fallback: 0.9 × persistence (NWM is typically slightly better
+       than persistence at short leads; without an entry the member would
+       get no blend weight at all)."""
+    out: Dict[int, float] = {}
+    st = (_load_nwm_holdout_stats().get("stations") or {}).get(str(station_id)) or {}
+    for h in range(1, horizon + 1):
+        e = st.get(str(h))
+        if e and e.get("n", 0) >= _NWM_STATS_MIN_N:
+            # mae_nwm_served = bias-corrected + anchor-to-observed, i.e. the
+            # member as the blend sees it; mae_nwm_corrected kept for older
+            # stats files.
+            v = e.get("mae_nwm_served", e.get("mae_nwm_corrected"))
+            if v is not None and math.isfinite(float(v)) and float(v) >= 0:
+                out[h] = float(v)
+    for h in range(1, horizon + 1):
+        if h in out:
+            continue
+        if nwm_mae_estimate is not None and math.isfinite(nwm_mae_estimate):
+            out[h] = float(nwm_mae_estimate * (1.0 + 0.04 * h))
+        else:
+            pv = persist_per_h.get(h)
+            if pv is not None and math.isfinite(pv):
+                out[h] = float(pv) * 0.9
+    return out
 
 
 # v12: asinh transform replaces log1p. McInerney et al. 2023 (J. Hydrol.) and
@@ -1280,7 +1345,11 @@ def forecast_station(
                 q_hist=q_hist, station_id=station_id,
             )
             if resid_pred is not None:
-                raw_member_preds["nwm_residual"] = (list(resid_pred), 7)
+                # v15.9: decay_h=2, not 7. The residual models self-anchor
+                # (they see obs-at-issuance / d_anchor as features), so the
+                # backtest showed full anchoring helps at h1-2 but degrades
+                # h3-6 (benchmarks/nwm_backtest_v6.json: anch7 vs anch2).
+                raw_member_preds["nwm_residual"] = (list(resid_pred), 2)
         except Exception as exc:
             notes.append(f"nwm_residual failed: {exc}")
 
@@ -1493,15 +1562,14 @@ def forecast_station(
     # no rolling_mae entry → no inverse-MAE² blend weight → effectively
     # dropped from the ensemble for this station, which is worse than using
     # an approximate weight.
+    # v15.9: prefer the MEASURED per-station archived-forecast MAE
+    # (holdout_stats.json) over the hindcast×decay estimate; see
+    # _nwm_per_h_estimates for the full preference order.
     nwm_per_h: Dict[int, float] = {}
     if "nwm" in members:
-        if nwm_mae_estimate is not None and math.isfinite(nwm_mae_estimate):
-            for h in range(1, horizon + 1):
-                nwm_per_h[h] = float(nwm_mae_estimate * (1.0 + 0.04 * h))
-        elif persist_per_h:
-            for h, v in persist_per_h.items():
-                if v is not None and math.isfinite(v):
-                    nwm_per_h[h] = float(v) * 0.9
+        nwm_per_h = _nwm_per_h_estimates(
+            station_id, horizon, nwm_mae_estimate, persist_per_h or {}
+        )
         if nwm_per_h:
             rolling_mae["nwm"] = float(np.mean(list(nwm_per_h.values())))
 

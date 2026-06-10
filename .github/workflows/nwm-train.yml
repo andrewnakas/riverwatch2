@@ -52,8 +52,10 @@ jobs:
           mkdir -p data/cache/usgs_records
 
       - name: Fetch recent USGS daily records for backfill window
-        # We only need the last ~75 days (30-day backfill + 14-horizon
-        # ceiling + safety margin). Train script tolerates missing rows.
+        # v15.9: the archive reaches back to 2026-03-09 and the trainer
+        # reconstructs bias scales from a 30-day window before each
+        # issuance, so cover the full archive span + margin. Train script
+        # tolerates missing rows.
         run: |
           python - <<'PY'
           import json, sys, time, urllib.request
@@ -61,7 +63,7 @@ jobs:
           from pathlib import Path
 
           END = date.today()
-          START = END - timedelta(days=75)
+          START = END - timedelta(days=160)
           STA = Path("data/nwm_crosswalk.json")
           if not STA.exists():
               print("no crosswalk; aborting", file=sys.stderr); sys.exit(1)
@@ -117,6 +119,6 @@ jobs:
             exit 0
           fi
           ISSUED=$(date -u +%Y-%m-%dT%H:%MZ)
-          git commit -m "v15.1: retrain NWM residual models @ ${ISSUED}"
+          git commit -m "v15.9: retrain NWM residual ensemble + holdout stats @ ${ISSUED}"
           git push origin main
           echo "::notice::Committed retrained NWM residual models @ ${ISSUED}"
