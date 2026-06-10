@@ -106,10 +106,13 @@ PRECIP_LAGS = [1, 2, 3, 5, 7]  # explicit precip-day lags so ridge can learn bas
 # v15.7: per-horizon learned/baseline MAE ratio for nwm_residual, used to
 # turn nwm_per_h into nwm_residual_per_h for inverse-MAE² blend weighting.
 # Loaded once from the current residual-models manifest; falls back to the
-# frozen v15.1 baseline if the manifest is missing.
+# v15.9 measured baseline if the manifest is missing.
+# v15.9: fallback values are the MEASURED median-station MAE ratios
+# (nwm_residual_avg / nwm_corrected) from the 2026-06 temporal-holdout
+# backtest (benchmarks/nwm_backtest_v4.json) — not training-val ratios.
 _RESID_SCALE_FALLBACK = {
-    1: 0.60, 2: 0.52, 3: 0.54, 4: 0.61, 5: 0.66,
-    6: 0.70, 7: 0.77, 8: 0.80, 9: 0.84, 10: 0.97,
+    1: 0.60, 2: 0.78, 3: 0.80, 4: 0.77, 5: 0.83, 6: 0.83, 7: 0.80,
+    8: 0.76, 9: 0.77, 10: 0.77, 11: 0.68, 12: 0.68, 13: 0.66, 14: 0.62,
 }
 _RESID_SCALE_CACHED: dict[int, float] | None = None
 
@@ -130,10 +133,12 @@ def _load_resid_scale() -> dict[int, float]:
             base = info.get("val_mae_baseline_cfs")
             learn = info.get("val_mae_learned_cfs")
             if base and learn and float(base) > 0:
-                # Clamp to [0.30, 1.05]: don't claim more than 70% gain (overfit
-                # risk on tiny val splits) and don't penalize residual if it's
-                # marginally worse than baseline on a given horizon.
-                out[h] = float(max(0.30, min(1.05, float(learn) / float(base))))
+                # Clamp to [0.50, 1.05]. The 2026-06 temporal-holdout backtest
+                # (benchmarks/nwm_backtest_v4.json) measured true ratios of
+                # ~0.60-0.85 vs bias-corrected NWM; anything below 0.5 from a
+                # training manifest indicates leakage/strawman-baseline, so we
+                # refuse to grant more than a 50% claimed gain.
+                out[h] = float(max(0.50, min(1.05, float(learn) / float(base))))
         if out:
             _RESID_SCALE_CACHED = out
             return out
@@ -1272,6 +1277,7 @@ def forecast_station(
             issued = pd.to_datetime(q_hist["date"].iloc[-1]) if len(q_hist) else pd.Timestamp.utcnow()
             resid_pred = _nwm_resid.apply_residual(
                 nwm_pred_raw, list(nwm_pred), nwm_bs_used, q_obs_today, issued,
+                q_hist=q_hist, station_id=station_id,
             )
             if resid_pred is not None:
                 raw_member_preds["nwm_residual"] = (list(resid_pred), 7)
@@ -1508,6 +1514,13 @@ def forecast_station(
     # v15.7: scales now come from the live manifest rather than the frozen
     # v15.1 baseline so the blend weight tracks model improvement as the
     # nightly retrain accumulates more labeled pairs.
+    # v15.9: the manifest ratios are now real temporal-holdout numbers
+    # against the bias-corrected baseline (see scripts/train_nwm_residual.py
+    # and BACKTEST_REPORT.md) instead of the model's own training val, and
+    # _load_resid_scale refuses ratios below 0.50. This estimate is still a
+    # formula, not an on-station holdout — a true archived-forecast holdout
+    # per station remains the follow-up (needs the nwm-archive branch at
+    # build time).
     nwm_residual_per_h: Dict[int, float] = {}
     if "nwm_residual" in members and nwm_per_h:
         for h, v in nwm_per_h.items():
@@ -1675,7 +1688,7 @@ def forecast_station(
         "ttm": ttm_preds,
         "timesfm": timesfm_preds,
         "nwm": [],  # NWM is forecast-only (no historical forecasts available)
-        "nwm_residual": [],  # v15.1: live-only, MAE derived from frozen baseline
+        "nwm_residual": [],  # live-only, MAE estimated via manifest holdout ratio
         "lgbm_pooled": lgbm_pooled_preds,  # v13.2: pooled-LGBM holdout preds
         "timesfm_xreg": [],  # v13.3: live-only, MAE estimated from timesfm
     }

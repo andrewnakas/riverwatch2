@@ -435,7 +435,7 @@ def main() -> int:
         print(
             f"[nwm_residual] enabled={nr_sum['enabled']} "
             f"models_loaded={nr_sum['models_loaded']} "
-            f"horizons={nr_sum['horizons']} "
+            f"variants={nr_sum['variants']} "
             f"invocations={nr_sum['n_invocations']}"
         )
     except Exception:
