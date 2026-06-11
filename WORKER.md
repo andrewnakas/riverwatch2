@@ -43,18 +43,18 @@ python scripts/build_mblstm_data_daymet.py --sleep 0.3
 ```bash
 python scripts/train_mblstm.py --compat-vars --epochs 12 \
   --windows-per-station 300 --hidden 256 --batch 256 --val-stride 20 \
-  --lr 4e-4 --seed 103 --device cuda --out data/mblstm/model_h256_s103.pt \
+  --lr 2e-4 --seed 103 --device cuda --out data/mblstm/model_h256_s103.pt \
   2>&1 | tee logs_s103.txt
 
 python scripts/train_mblstm.py --compat-vars --epochs 12 \
   --windows-per-station 300 --hidden 256 --batch 256 --val-stride 20 \
-  --lr 4e-4 --seed 104 --device cuda --out data/mblstm/model_h256_s104.pt \
+  --lr 2e-4 --seed 104 --device cuda --out data/mblstm/model_h256_s104.pt \
   2>&1 | tee logs_s104.txt
 ```
 
 Expectations (from the Mac's runs — flag anything far off):
 - Each epoch prints `val_medNSE(norm-asinh)`: ~0.81 after epoch 1, climbing
-  to ~0.86–0.87 by epoch 12. **If you see `nan`, stop and lower --lr to 2e-4.**
+  to ~0.86–0.87 by epoch 12. **If you see `nan`, stop and lower --lr to 1e-4.** (The Mac hit NaN at 4e-4 with hidden 256 — 2e-4 is already the lowered default here.)
 - 8GB VRAM is plenty; if you somehow OOM, drop --batch to 128.
 - If an epoch is slower than ~25 min, check `nvidia-smi` — the run should
   show a python process using the GPU.
