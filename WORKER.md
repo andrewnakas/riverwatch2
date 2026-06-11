@@ -53,8 +53,12 @@ python scripts/train_mblstm.py --compat-vars --epochs 12 \
 ```
 
 Expectations (from the Mac's runs — flag anything far off):
-- Each epoch prints `val_medNSE(norm-asinh)`: ~0.81 after epoch 1, climbing
-  to ~0.86–0.87 by epoch 12. **If you see `nan`, stop and lower --lr to 1e-4.** (The Mac hit NaN at 4e-4 with hidden 256 — 2e-4 is already the lowered default here.)
+- Each epoch prints `val_medNSE(norm-asinh)`: ~0.78–0.82 after epoch 1 (lr 2e-4
+  ramps slower than the pilot's 4e-4 — that's expected), climbing to ~0.86–0.87
+  by epoch 12.
+- The trainer skips batches with non-finite loss or grad and prints `skipped=N`
+  per epoch. A few skips per epoch is fine; if skipped exceeds ~10% of steps or
+  `val_pinball=nan` appears, stop and lower --lr to 1e-4.
 - 8GB VRAM is plenty; if you somehow OOM, drop --batch to 128.
 - If an epoch is slower than ~25 min, check `nvidia-smi` — the run should
   show a python process using the GPU.
