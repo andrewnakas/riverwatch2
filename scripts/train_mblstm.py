@@ -43,6 +43,8 @@ from app.mblstm import (  # noqa: E402
 
 CORPUS_DIR = ROOT / "data" / "mblstm" / "corpus"
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
+GFS_DIR = ROOT / "data" / "mblstm" / "gfs_fcst"
+HRRR_DIR = ROOT / "data" / "mblstm" / "hrrr_fcst"
 HORIZON = 14
 
 # Variables shared by the Daymet training corpus and the Open-Meteo serve
@@ -91,28 +93,40 @@ class Corpus:
     """Per-station arrays pre-normalized once; windows index into them."""
 
     def __init__(self, stations: list[dict], attrs_by_id: dict, train_end: pd.Timestamp,
-                 enc_vars: list[str], dec_vars: list[str]):
+                 enc_vars: list[str], dec_vars: list[str], stats: dict | None = None):
         self.enc_vars, self.dec_vars = enc_vars, dec_vars
-        # Global weather stats from train-period rows only.
-        s = np.zeros(len(enc_vars)); ss = np.zeros(len(enc_vars)); n = np.zeros(len(enc_vars))
-        for st in stations:
-            m = st["dates"] <= train_end
-            w = st["wx"][m].astype(np.float64)
-            fin = np.isfinite(w)
-            s += np.where(fin, w, 0).sum(0)
-            ss += np.where(fin, w * w, 0).sum(0)
-            n += fin.sum(0)
-        n = np.maximum(n, 1)
-        self.wx_mean = s / n
-        self.wx_std = np.maximum(np.sqrt(np.maximum(ss / n - self.wx_mean ** 2, 0)), 1e-6)
+        self.gfs = None  # optional (si, t0) -> normalized decoder forcing override
+        if stats is not None:
+            # Fine-tune: inherit the base checkpoint's normalization verbatim so
+            # the weights see identically-scaled inputs.
+            self.wx_mean = np.asarray([stats["wx_mean"][c] for c in enc_vars], dtype=np.float64)
+            self.wx_std = np.asarray([max(stats["wx_std"][c], 1e-6) for c in enc_vars], dtype=np.float64)
+            self.static_median = np.asarray(stats["static_median"], dtype=np.float64)
+            self.static_mean = np.asarray(stats["static_mean"], dtype=np.float64)
+            self.static_std = np.maximum(np.asarray(stats["static_std"], dtype=np.float64), 1e-9)
+            sv = np.stack([raw_static(attrs_by_id.get(st["id"], {})) for st in stations])
+            filled = np.where(np.isfinite(sv), sv, self.static_median)
+        else:
+            # Global weather stats from train-period rows only.
+            s = np.zeros(len(enc_vars)); ss = np.zeros(len(enc_vars)); n = np.zeros(len(enc_vars))
+            for st in stations:
+                m = st["dates"] <= train_end
+                w = st["wx"][m].astype(np.float64)
+                fin = np.isfinite(w)
+                s += np.where(fin, w, 0).sum(0)
+                ss += np.where(fin, w * w, 0).sum(0)
+                n += fin.sum(0)
+            n = np.maximum(n, 1)
+            self.wx_mean = s / n
+            self.wx_std = np.maximum(np.sqrt(np.maximum(ss / n - self.wx_mean ** 2, 0)), 1e-6)
 
-        # Static stats across stations (raw, NaN-aware).
-        sv = np.stack([raw_static(attrs_by_id.get(st["id"], {})) for st in stations])
-        self.static_median = np.nanmedian(sv, axis=0)
-        self.static_median = np.where(np.isfinite(self.static_median), self.static_median, 0.0)
-        filled = np.where(np.isfinite(sv), sv, self.static_median)
-        self.static_mean = filled.mean(0)
-        self.static_std = np.maximum(filled.std(0), 1e-9)
+            # Static stats across stations (raw, NaN-aware).
+            sv = np.stack([raw_static(attrs_by_id.get(st["id"], {})) for st in stations])
+            self.static_median = np.nanmedian(sv, axis=0)
+            self.static_median = np.where(np.isfinite(self.static_median), self.static_median, 0.0)
+            filled = np.where(np.isfinite(sv), sv, self.static_median)
+            self.static_mean = filled.mean(0)
+            self.static_std = np.maximum(filled.std(0), 1e-9)
 
         self.stations = []
         for st, svec in zip(stations, filled):
@@ -178,8 +192,12 @@ class Corpus:
             np.repeat(sv[None, :], CONTEXT_DAYS, axis=0),
         ], axis=1)
         lead = (np.arange(1, HORIZON + 1, dtype=np.float32) / HORIZON)[:, None]
+        if self.gfs is not None:
+            dec_wx = self.gfs[(si, t0)]
+        else:
+            dec_wx = st["wx_n"][t0 + 1: t0 + 1 + HORIZON][:, self.dec_cols]
         x_dec = np.concatenate([
-            st["wx_n"][t0 + 1: t0 + 1 + HORIZON][:, self.dec_cols],
+            dec_wx,
             st["doy"][t0 + 1: t0 + 1 + HORIZON],
             lead,
             np.repeat(sv[None, :], HORIZON, axis=0),
@@ -189,6 +207,70 @@ class Corpus:
         return x_enc, x_dec, y, m
 
     ar_mask_p = 0.3
+
+
+def _parse_forcing_file(p: Path, dec_vars: list[str], n_leads: int):
+    """One extracted init csv -> (station ids, (n, n_leads, n_vars) raw array).
+    Stations with incomplete lead coverage are dropped."""
+    try:
+        df = pd.read_csv(p, dtype={"station_id": str})
+    except Exception:
+        return None, None  # truncated/corrupt extraction — refetch will replace it
+    df = df.sort_values(["station_id", "lead_day"])
+    counts = df.groupby("station_id", sort=False).size()
+    full = counts[counts == n_leads].index
+    df = df[df["station_id"].isin(full)]
+    if not len(full):
+        return None, None
+    return full, df[dec_vars].to_numpy(dtype=np.float32).reshape(len(full), n_leads, -1)
+
+
+def load_gfs_windows(corpus, use_hrrr: bool = False) -> dict[tuple[int, int], np.ndarray]:
+    """(station_idx, t0) -> normalized (HORIZON, n_dec_vars) GFS decoder
+    forcing. A 00z init on day D has lead_day 1 = calendar day D, so the
+    matching issue date is t0 = D-1 (observations through yesterday, today's
+    00z run — the serving setup). Only complete 14-lead extractions are kept.
+    With use_hrrr, lead days 1-2 are overlaid with the 3 km HRRR forecast
+    where extracted (hybrid forcing: HRRR d1-2 + GFS d3-14)."""
+    si_by_id = {st["id"]: si for si, st in enumerate(corpus.stations)}
+    mu = corpus.wx_mean[corpus.dec_cols]
+    sd = corpus.wx_std[corpus.dec_cols]
+
+    def norm(a):
+        return np.nan_to_num((a - mu) / sd, nan=0.0).astype(np.float32)
+
+    def t0_of(si, init):
+        st = corpus.stations[si]
+        t0 = int((init - pd.Timedelta(days=1) - st["dates"][0]).days)
+        return t0 if 0 <= t0 < len(st["dates"]) else None
+
+    lookup: dict[tuple[int, int], np.ndarray] = {}
+    files = sorted(GFS_DIR.glob("*.csv.gz"))
+    for p in files:
+        init = pd.Timestamp(p.name.split(".")[0])
+        sids, arr = _parse_forcing_file(p, corpus.dec_vars, HORIZON)
+        if sids is None:
+            continue
+        for sid, a in zip(sids, norm(arr)):
+            si = si_by_id.get(sid)
+            if si is not None and (t0 := t0_of(si, init)) is not None:
+                lookup[(si, t0)] = a
+    n_hrrr = 0
+    if use_hrrr:
+        for p in sorted(HRRR_DIR.glob("*.csv.gz")):
+            init = pd.Timestamp(p.name.split(".")[0])
+            sids, arr = _parse_forcing_file(p, corpus.dec_vars, 2)
+            if sids is None:
+                continue
+            for sid, a in zip(sids, norm(arr)):
+                si = si_by_id.get(sid)
+                if si is not None and (t0 := t0_of(si, init)) is not None \
+                        and (si, t0) in lookup:
+                    lookup[(si, t0)][:2] = a
+                    n_hrrr += 1
+    print(f"GFS decoder forcings: {len(files)} inits -> {len(lookup)} usable "
+          f"(station, t0) pairs" + (f"; HRRR d1-2 overlay on {n_hrrr}" if use_hrrr else ""))
+    return lookup
 
 
 def make_batches(corpus, windows, batch, rng, shuffle=True, augment=True):
@@ -228,6 +310,14 @@ def main() -> int:
     ap.add_argument("--limit-stations", type=int, default=0)
     ap.add_argument("--compat-vars", action="store_true",
                     help="train on the Daymet/Open-Meteo shared variable set")
+    ap.add_argument("--gfs-finetune", action="store_true",
+                    help="fine-tune --init-ckpt with decoder forcings from archived "
+                         "GFS forecasts (real forecast error) instead of observed weather")
+    ap.add_argument("--init-ckpt", default="",
+                    help="base checkpoint to fine-tune (required with --gfs-finetune)")
+    ap.add_argument("--hrrr", action="store_true",
+                    help="with --gfs-finetune: overlay 3km HRRR on decoder lead "
+                         "days 1-2 (hybrid forcing)")
     ap.add_argument("--seed", type=int, default=17)
     ap.add_argument("--device", default="auto")
     ap.add_argument("--out", default=str(ROOT / "data" / "mblstm" / "model.pt"))
@@ -241,8 +331,22 @@ def main() -> int:
     rng = np.random.default_rng(args.seed)
     torch.manual_seed(args.seed)
 
-    enc_vars = COMPAT_VARS if args.compat_vars else ENC_VARS
-    dec_vars = COMPAT_VARS if args.compat_vars else DEC_VARS
+    base_payload = None
+    if args.gfs_finetune:
+        if not args.init_ckpt:
+            print("--gfs-finetune requires --init-ckpt")
+            return 1
+        base_payload = torch.load(args.init_ckpt, map_location="cpu", weights_only=False)
+        base_cfg = base_payload["cfg"]
+        enc_vars, dec_vars = base_cfg["enc_vars"], base_cfg["dec_vars"]
+        if not set(dec_vars) <= set(COMPAT_VARS):
+            print(f"GFS archive only carries {COMPAT_VARS}; checkpoint decoder "
+                  f"wants {dec_vars} — fine-tune only supports compat-vars checkpoints")
+            return 1
+        args.hidden = int(base_cfg["hidden"])
+    else:
+        enc_vars = COMPAT_VARS if args.compat_vars else ENC_VARS
+        dec_vars = COMPAT_VARS if args.compat_vars else DEC_VARS
 
     files = sorted(CORPUS_DIR.glob("*.csv.gz"))
     if args.limit_stations:
@@ -257,11 +361,17 @@ def main() -> int:
     }
 
     train_end = pd.Timestamp(args.train_end)
-    corpus = Corpus(stations, attrs_by_id, train_end, enc_vars, dec_vars)
+    corpus = Corpus(stations, attrs_by_id, train_end, enc_vars, dec_vars,
+                    stats=base_payload["cfg"] if base_payload else None)
     print(f"usable stations: {len(corpus.stations)}")
 
     train_windows = corpus.window_index(None, train_end)
     val_all = corpus.window_index(pd.Timestamp(args.val_start), pd.Timestamp(args.val_end))
+    if args.gfs_finetune:
+        # Keep only windows whose issue date has an archived GFS init.
+        corpus.gfs = load_gfs_windows(corpus, use_hrrr=args.hrrr)
+        train_windows = [w for w in train_windows if w in corpus.gfs]
+        val_all = [w for w in val_all if w in corpus.gfs]
     val_windows = val_all[:: args.val_stride]
     print(f"windows: train={len(train_windows)} val={len(val_windows)} (of {len(val_all)})")
     if not train_windows or not val_windows:
@@ -273,21 +383,33 @@ def main() -> int:
     for si, t0 in train_windows:
         by_station.setdefault(si, []).append((si, t0))
 
-    cfg = {
-        "enc_vars": enc_vars, "dec_vars": dec_vars, "static_feats": STATIC_FEATS,
-        "quantiles": list(QUANTILES), "hidden": args.hidden,
-        "horizon": HORIZON, "context": CONTEXT_DAYS,
-        "wx_mean": {c: float(v) for c, v in zip(enc_vars, corpus.wx_mean)},
-        "wx_std": {c: float(v) for c, v in zip(enc_vars, corpus.wx_std)},
-        "static_median": [float(v) for v in corpus.static_median],
-        "static_mean": [float(v) for v in corpus.static_mean],
-        "static_std": [float(v) for v in corpus.static_std],
-        "train_end": args.train_end, "val_range": [args.val_start, args.val_end],
-        "n_stations": len(corpus.stations),
-        "decoder_forcing": "observed-archive (perfect-forcing caveat for h>3)",
-        "trained_at": pd.Timestamp.utcnow().isoformat(),
-    }
+    if base_payload is not None:
+        cfg = dict(base_payload["cfg"])
+        cfg.update({
+            "decoder_forcing": ("archived HRRR d1-2 + GFS d3-14 hybrid "
+                                "(dynamical.org, real forecast error)" if args.hrrr else
+                                "archived GFS forecasts (dynamical.org, real forecast error)"),
+            "finetuned_from": args.init_ckpt,
+            "trained_at": pd.Timestamp.utcnow().isoformat(),
+        })
+    else:
+        cfg = {
+            "enc_vars": enc_vars, "dec_vars": dec_vars, "static_feats": STATIC_FEATS,
+            "quantiles": list(QUANTILES), "hidden": args.hidden,
+            "horizon": HORIZON, "context": CONTEXT_DAYS,
+            "wx_mean": {c: float(v) for c, v in zip(enc_vars, corpus.wx_mean)},
+            "wx_std": {c: float(v) for c, v in zip(enc_vars, corpus.wx_std)},
+            "static_median": [float(v) for v in corpus.static_median],
+            "static_mean": [float(v) for v in corpus.static_mean],
+            "static_std": [float(v) for v in corpus.static_std],
+            "train_end": args.train_end, "val_range": [args.val_start, args.val_end],
+            "n_stations": len(corpus.stations),
+            "decoder_forcing": "observed-archive (perfect-forcing caveat for h>3)",
+            "trained_at": pd.Timestamp.utcnow().isoformat(),
+        }
     model = build_model(cfg).to(dev)
+    if base_payload is not None:
+        model.load_state_dict(base_payload["state_dict"])
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-5)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
     quantiles = list(QUANTILES)
@@ -329,7 +451,7 @@ def main() -> int:
             idx = rng.choice(len(wlist), size=k, replace=False)
             ep_windows.extend(wlist[j] for j in idx)
         t0 = time.time()
-        tot, num, steps = 0.0, 0.0, 0
+        tot, num, steps, skipped = 0.0, 0.0, 0, 0
         for xs, xd, ys, ms, _ in make_batches(corpus, ep_windows, args.batch, rng):
             xs_t = torch.from_numpy(xs).to(dev); xd_t = torch.from_numpy(xd).to(dev)
             ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
@@ -338,9 +460,17 @@ def main() -> int:
                 # One bad batch must not poison the run (h256 diverged to NaN
                 # at lr 1e-3) — drop it and keep going.
                 opt.zero_grad()
+                skipped += 1
                 continue
             opt.zero_grad(); loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            gn = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            if not torch.isfinite(gn):
+                # MPS LSTM backward sporadically emits NaN grads on a finite
+                # loss (torch 2.11) — stepping would poison the weights for
+                # the rest of the run. Skip the step, keep the loss stats.
+                opt.zero_grad()
+                skipped += 1
+                continue
             opt.step()
             tot += float(loss.detach()) * float(ms_t.sum()); num += float(ms_t.sum()); steps += 1
         sched.step()
@@ -353,7 +483,7 @@ def main() -> int:
             marker = "  *saved*"
         print(f"epoch {ep}/{args.epochs}  train_pinball={tot / max(num, 1):.4f}  "
               f"val_pinball={val_pin:.4f}  val_medNSE(norm-asinh)={val_nse:.3f}  "
-              f"steps={steps}  {time.time() - t0:.0f}s{marker}", flush=True)
+              f"steps={steps}  skipped={skipped}  {time.time() - t0:.0f}s{marker}", flush=True)
 
     print(f"\nbest val pinball {best:.4f} → {out_path}")
     return 0
