@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+data/mblstm/corpus/
+data/cache/
+logs/
+*.pyc
