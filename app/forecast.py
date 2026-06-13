@@ -1292,6 +1292,21 @@ def forecast_station(
     except Exception as exc:
         notes.append(f"ealstm failed: {exc}")
 
+    # v16: homegrown multi-basin LSTM (Google-Flood-Hub-style encoder-decoder
+    # with autoregressive discharge input and quantile head). Trained by
+    # scripts/train_mblstm.py; gated by RW2_ENABLE_MBLSTM=1 and silently
+    # absent until data/mblstm/model.pt exists. decay_h=2: like nwm_residual
+    # it self-anchors (the encoder sees observed discharge through issuance).
+    try:
+        from . import mblstm as _mblstm
+        mblstm_rows = _mblstm.forecast(
+            q_hist, wx_hist, wx_fcst, station_attrs or {}, horizon,
+        )
+        if mblstm_rows:
+            raw_member_preds["mblstm"] = ([r["q_cfs"] for r in mblstm_rows], 2)
+    except Exception as exc:
+        notes.append(f"mblstm failed: {exc}")
+
     # v13: NOAA National Water Model (NWM) medium_range_blend → 6th member.
     # Process-based distributed hydrology with channel routing, fundamentally
     # different signal from the ML/zero-shot members. Off by default; enabled
@@ -2174,7 +2189,7 @@ def forecast_station(
     # failure/unavailable note — i.e. it was attempted and didn't make it.
     _MEMBER_ROSTER = (
         "persistence_lag1", "runoff_ridge", "chronos_bolt", "ttm", "timesfm",
-        "timesfm_xreg", "ealstm", "nwm", "nwm_residual", "lgbm_pooled",
+        "timesfm_xreg", "ealstm", "mblstm", "nwm", "nwm_residual", "lgbm_pooled",
     )
     _NOTE_TO_MEMBER = {"ridge": "runoff_ridge"}  # note uses short name
     used_set = set(members_used)
