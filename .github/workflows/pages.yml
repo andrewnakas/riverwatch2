@@ -204,6 +204,14 @@ jobs:
           # until nwm-train.yml has produced data/nwm_residual_models/h*.pkl,
           # so safe to enable before first training run completes.
           RW2_ENABLE_NWM_RESIDUAL: "1"
+          # v16: homegrown multi-basin LSTM, served as a 4-seed GFS-fine-tuned
+          # ensemble (colon-separated checkpoint list, averaged in app/mblstm.py).
+          # Checkpoints (~2.4MB each) are committed under data/mblstm/; the
+          # member silently no-ops if absent. Beats persistence at every horizon
+          # (MAE ratio 0.66-0.76 under real GFS forcings) and decisively
+          # outperforms nwm_residual.
+          RW2_ENABLE_MBLSTM: "1"
+          RW2_MBLSTM_CKPT_PATH: "data/mblstm/model_h256_s101_gfsft.pt:data/mblstm/model_h256_s102_gfsft.pt:data/mblstm/model_h256_s103_gfsft.pt:data/mblstm/model_h256_s104_gfsft.pt"
         run: |
           python scripts/build_static_site.py \
             --shard-id ${{ matrix.shard }} \

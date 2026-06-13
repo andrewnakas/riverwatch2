@@ -149,7 +149,14 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
     if n_windows < 5:
         return None
     pooled_y = np.asarray(pooled_y); pooled_yhat = np.asarray(pooled_yhat)
-    nse = float(1.0 - np.mean((pooled_y - pooled_yhat) ** 2) / max(np.var(pooled_y), 1e-9))
+    # NSE is undefined for a near-constant observed series: its variance is the
+    # denominator, so dividing by ~0 turns any tiny error into NSE=−millions.
+    # Intermittent/ephemeral gauges that sit at flat-zero through the test year
+    # are simply not NSE-scorable — mark NaN and exclude from the aggregate
+    # (their MAE is still reported). A real flow series needs meaningful spread.
+    var_y = float(np.var(pooled_y))
+    nse = (float(1.0 - np.mean((pooled_y - pooled_yhat) ** 2) / var_y)
+           if var_y > 1e-3 else float("nan"))
     return {
         "windows": n_windows,
         "nse": nse,
@@ -231,9 +238,11 @@ def main() -> int:
         summary_h[h] = {"persistence": med_p, "mblstm": med_m,
                         "ratio": med_m / med_p if med_p > 0 else None}
         print(f"{h:>3} {med_p:>9.1f} {med_m:>9.1f} {med_m / med_p:>7.3f}")
-    nses = [r["nse"] for r in results.values()]
-    print(f"\npooled-horizon NSE (cfs): median={np.median(nses):.3f}  "
-          f"mean={np.mean(nses):.3f}  frac>0.5={np.mean(np.asarray(nses) > 0.5):.2f}")
+    nses = np.asarray([r["nse"] for r in results.values()], dtype=float)
+    scorable = nses[np.isfinite(nses)]  # drop the not-NSE-scorable flat-flow gauges
+    print(f"\npooled-horizon NSE (cfs): median={np.nanmedian(scorable):.3f}  "
+          f"mean={np.nanmean(scorable):.3f}  frac>0.5={np.mean(scorable > 0.5):.2f}  "
+          f"(scorable {len(scorable)}/{len(nses)})")
 
     OUT_DIR.mkdir(exist_ok=True)
     out = OUT_DIR / f"mblstm_backtest_{args.label}.json"
@@ -247,7 +256,8 @@ def main() -> int:
                    "decoder forcing = observed archive weather (perfect forcing); generous at h>3"),
         "stations": len(results),
         "median_mae_by_h": summary_h,
-        "nse_median": float(np.median(nses)), "nse_mean": float(np.mean(nses)),
+        "nse_median": float(np.nanmedian(scorable)), "nse_mean": float(np.nanmean(scorable)),
+        "nse_scorable_stations": int(len(scorable)),
         "per_station": {sid: {"nse": r["nse"], "windows": r["windows"]} for sid, r in results.items()},
     }, indent=2))
     print(f"wrote {out}")
