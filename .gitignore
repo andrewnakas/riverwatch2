@@ -16,6 +16,14 @@ benchmarks/results_*.json
 # the v14.2 archive has 30+ days of history, the dir is empty so we
 # ignore it.
 data/nwm_residual_models/
+# v16 MB-LSTM: the trained checkpoints (~2.4MB each) ARE committed so the
+# Pages build can serve the member; the training corpus and archived forcing
+# extracts (Daymet corpus, GFS/HRRR forecast pulls — ~550MB) are rebuildable
+# and must never go in git.
+data/mblstm/corpus/
+data/mblstm/gfs_fcst/
+data/mblstm/hrrr_fcst/
+data/mblstm/corpus_sources.json
 dist/
 .DS_Store
 *.egg-info/
