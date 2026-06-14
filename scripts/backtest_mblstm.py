@@ -39,10 +39,13 @@ os.environ.setdefault("RW2_ENABLE_MBLSTM", "1")
 
 from app import gages2  # noqa: E402
 from app import mblstm  # noqa: E402
+from app import metrics  # noqa: E402
 from app.weather import DAILY_VARS  # noqa: E402
 
 CORPUS_DIR = ROOT / "data" / "mblstm" / "corpus"
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
+CAMELS_PATH = ROOT / "data" / "camels_gauge_ids.json"
+SCHEMA_VERSION = 2  # v2: full SOTA metric suite + CAMELS subset + approx-CRPS
 GFS_DIR = ROOT / "data" / "mblstm" / "gfs_fcst"
 HRRR_DIR = ROOT / "data" / "mblstm" / "hrrr_fcst"
 OUT_DIR = ROOT / "benchmarks"
@@ -95,6 +98,32 @@ def gfs_wx_fcst(gfs: dict, sid: str, t0: pd.Timestamp,
     return out
 
 
+def load_camels_ids(which: str) -> set[str]:
+    """CAMELS-US gauge ids for the requested subset (671 = full, 531 = the
+    'well-behaved' subset that published median-NSE ~0.76 is usually quoted on).
+    Returns an empty set if the data file is absent — the harness still runs;
+    the CAMELS metric block is simply omitted."""
+    if which == "none" or not CAMELS_PATH.exists():
+        return set()
+    data = json.loads(CAMELS_PATH.read_text())
+    ids = set(data["671"]) if which == "671" else set(data.get("531", data["671"]))
+    # Normalize to the corpus's zero-padded 8-digit form.
+    return {str(s).strip().zfill(8) for s in ids}
+
+
+def _metric_block(results: dict, sids: list[str]) -> dict:
+    """Median/mean across the given stations for every per-station metric."""
+    sub = {sid: results[sid] for sid in sids if sid in results}
+    if not sub:
+        return {}
+    keys = ("nse", "kge", "log_nse", "pearson_r", "pct_bias", "fhv", "flv",
+            "approx_crps", "picp90", "mpiw_norm")
+    per_station = {sid: {k: r[k] for k in keys if k in r} for sid, r in sub.items()}
+    agg = metrics.aggregate(per_station)
+    agg["n_stations"] = len(sub)
+    return agg
+
+
 def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
                  gfs: dict | None = None, hrrr: dict | None = None) -> dict | None:
     df = pd.read_csv(path)
@@ -105,6 +134,7 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
 
     per_h: dict[int, dict[str, list]] = {h: {"persist": [], "mblstm": []} for h in range(1, HORIZON + 1)}
     pooled_y, pooled_yhat = [], []
+    pooled_lo, pooled_hi = [], []  # model's own 0.1/0.9 quantiles for approx-CRPS
     n_windows = 0
     for t0 in issue_dates:
         if t0 not in daily.index:
@@ -134,6 +164,8 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
         if not rows or len(rows) < HORIZON:
             continue
         yhat = np.asarray([r["q_cfs"] for r in rows], dtype=float)
+        ylo = np.asarray([r.get("q_lo", np.nan) for r in rows], dtype=float)
+        yhi = np.asarray([r.get("q_hi", np.nan) for r in rows], dtype=float)
         persist = float(q_hist["q_cfs"].iloc[-1])
 
         n_windows += 1
@@ -145,23 +177,44 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
             per_h[h]["mblstm"].append(abs(yt - yhat[h - 1]))
             pooled_y.append(yt)
             pooled_yhat.append(yhat[h - 1])
+            pooled_lo.append(ylo[h - 1])
+            pooled_hi.append(yhi[h - 1])
 
     if n_windows < 5:
         return None
     pooled_y = np.asarray(pooled_y); pooled_yhat = np.asarray(pooled_yhat)
-    # NSE is undefined for a near-constant observed series: its variance is the
-    # denominator, so dividing by ~0 turns any tiny error into NSE=−millions.
-    # Intermittent/ephemeral gauges that sit at flat-zero through the test year
-    # are simply not NSE-scorable — mark NaN and exclude from the aggregate
-    # (their MAE is still reported). A real flow series needs meaningful spread.
-    var_y = float(np.var(pooled_y))
-    nse = (float(1.0 - np.mean((pooled_y - pooled_yhat) ** 2) / var_y)
-           if var_y > 1e-3 else float("nan"))
-    return {
+    pooled_lo = np.asarray(pooled_lo); pooled_hi = np.asarray(pooled_hi)
+    # Full SOTA metric suite via the shared app.metrics module. metrics.nse
+    # reproduces the historical var<1e-3 → NaN guard, so the headline NSE is
+    # byte-stable with pre-metrics-module backtest JSONs.
+    m = metrics.all_point_metrics(pooled_y, pooled_yhat)
+    # approx-CRPS from the model's own quantiles (mean pinball over 0.1/0.5/0.9).
+    crps = metrics.crps_from_quantiles(
+        pooled_y, [0.1, 0.5, 0.9], np.vstack([pooled_lo, pooled_yhat, pooled_hi]))
+    # 90% interval coverage (PICP) and mean width (MPIW, normalized by mean obs).
+    cov = float(np.mean((pooled_y >= pooled_lo) & (pooled_y <= pooled_hi))) \
+        if np.isfinite(pooled_lo).any() else float("nan")
+    mpiw = float(np.mean(pooled_hi - pooled_lo) / max(np.mean(pooled_y), 1e-9)) \
+        if np.isfinite(pooled_lo).any() else float("nan")
+    # Tercile-stratified NSE/KGE/log-NSE to rule out big-river-only wins.
+    tm = metrics.tercile_masks(pooled_y)
+    by_tercile = {
+        band: {
+            "nse": metrics.nse(pooled_y[mask], pooled_yhat[mask]),
+            "kge": metrics.kge(pooled_y[mask], pooled_yhat[mask]),
+            "log_nse": metrics.log_nse(pooled_y[mask], pooled_yhat[mask]),
+        }
+        for band, mask in tm.items() if mask.any()
+    }
+    out = {
         "windows": n_windows,
-        "nse": nse,
+        "nse": m["nse"],  # primary headline metric, unchanged definition
+        "approx_crps": crps, "picp90": cov, "mpiw_norm": mpiw,
+        "by_tercile": by_tercile,
         "mae_by_h": {h: {k: float(np.mean(v)) for k, v in d.items() if v} for h, d in per_h.items()},
     }
+    out.update({k: v for k, v in m.items() if k != "nse"})  # kge, log_nse, r, pbias, fhv, flv
+    return out
 
 
 def main() -> int:
@@ -177,6 +230,9 @@ def main() -> int:
                          "observed future weather (issue dates snap to GFS inits)")
     ap.add_argument("--hrrr", action="store_true",
                     help="with --gfs: overlay 3km HRRR on decoder lead days 1-2")
+    ap.add_argument("--camels-subset", choices=["none", "671", "531"], default="none",
+                    help="also report metrics on the CAMELS-US basin subset for "
+                         "apples-to-apples comparison to published median-NSE")
     args = ap.parse_args()
 
     os.environ["RW2_MBLSTM_CKPT_PATH"] = args.ckpt
@@ -244,9 +300,35 @@ def main() -> int:
           f"mean={np.nanmean(scorable):.3f}  frac>0.5={np.mean(scorable > 0.5):.2f}  "
           f"(scorable {len(scorable)}/{len(nses)})")
 
+    # Full SOTA metric suite, full corpus and (optionally) CAMELS subset.
+    full_block = _metric_block(results, list(results.keys()))
+    metric_blocks = {"full": full_block}
+    print("\nSOTA metrics (median across stations):")
+    for k in ("nse", "kge", "log_nse", "pearson_r", "pct_bias", "fhv", "flv",
+              "approx_crps", "picp90", "mpiw_norm"):
+        if k in full_block:
+            print(f"  {k:>11}: {full_block[k]['median']:+.3f}  (n={full_block[k]['scorable']})")
+
+    camels_ids = load_camels_ids(args.camels_subset)
+    if args.camels_subset != "none":
+        if not camels_ids:
+            print(f"\nCAMELS-{args.camels_subset}: gauge-id file {CAMELS_PATH.name} "
+                  f"absent — skipping subset block (run still valid for full corpus)")
+        else:
+            inter = sorted(set(results) & camels_ids)
+            print(f"\nCAMELS-{args.camels_subset} subset: {len(inter)} of "
+                  f"{len(results)} evaluated stations are CAMELS basins")
+            blk = _metric_block(results, inter)
+            metric_blocks[f"camels_{args.camels_subset}"] = blk
+            if blk:
+                print(f"  CAMELS median NSE={blk.get('nse',{}).get('median',float('nan')):.3f}  "
+                      f"KGE={blk.get('kge',{}).get('median',float('nan')):.3f}  "
+                      f"(published ensembled-LSTM ref ~0.76 median NSE)")
+
     OUT_DIR.mkdir(exist_ok=True)
     out = OUT_DIR / f"mblstm_backtest_{args.label}.json"
     out.write_text(json.dumps({
+        "schema_version": SCHEMA_VERSION,
         "label": args.label, "ckpt": args.ckpt,
         "window": [args.start, args.end], "stride_days": args.stride,
         "caveat": ("decoder forcing = archived HRRR d1-2 + GFS d3-14 hybrid via "
@@ -254,14 +336,37 @@ def main() -> int:
                    "decoder forcing = archived GFS forecasts via dynamical.org "
                    "(real forecast error)" if args.gfs else
                    "decoder forcing = observed archive weather (perfect forcing); generous at h>3"),
+        "crps_caveat": "approx_crps = mean pinball over {0.1,0.5,0.9}, NOT integrated CRPS "
+                       "(valid for internal A/B only; resolved when a CMAL head ships).",
         "stations": len(results),
         "median_mae_by_h": summary_h,
         "nse_median": float(np.nanmedian(scorable)), "nse_mean": float(np.nanmean(scorable)),
         "nse_scorable_stations": int(len(scorable)),
-        "per_station": {sid: {"nse": r["nse"], "windows": r["windows"]} for sid, r in results.items()},
+        "metrics": metric_blocks,
+        "by_tercile_median": _tercile_summary(results),
+        "per_station": {
+            sid: {k: r.get(k) for k in
+                  ("nse", "kge", "log_nse", "pct_bias", "fhv", "flv",
+                   "approx_crps", "picp90", "windows")}
+            for sid, r in results.items()
+        },
     }, indent=2))
     print(f"wrote {out}")
     return 0
+
+
+def _tercile_summary(results: dict) -> dict:
+    """Median across stations of the per-station tercile NSE/KGE/log-NSE."""
+    bands = ("low", "mid", "high")
+    out: dict = {}
+    for band in bands:
+        for metric in ("nse", "kge", "log_nse"):
+            vals = [r["by_tercile"][band][metric]
+                    for r in results.values()
+                    if "by_tercile" in r and band in r["by_tercile"]
+                    and np.isfinite(r["by_tercile"][band].get(metric, np.nan))]
+            out.setdefault(band, {})[metric] = float(np.median(vals)) if vals else float("nan")
+    return out
 
 
 if __name__ == "__main__":
