@@ -255,12 +255,32 @@ def forecast(
             return None
 
         lo_i, med_i, hi_i = 0, len(cfg["quantiles"]) // 2, len(cfg["quantiles"]) - 1
+        # The pinball MEDIAN systematically under-predicts peaks (baseline FHV
+        # -51%: 99% of gauges under-call high flow). Flow is right-skewed, so a
+        # peak-aware point estimate should lean above the median. RW2_MBLSTM_POINT
+        # picks the served point forecast (default "median" = legacy behavior):
+        #   median         q50 (legacy)
+        #   mean3          mean(q10,q50,q90) — pulls up on right-skew
+        #   blend{w}       (1-w)*q50 + w*q90, w in [0,1], peak-weighted
+        # Lo/hi bands always remain q10/q90.
+        point = os.environ.get("RW2_MBLSTM_POINT", "median")
+        if point == "mean3":
+            q_pt = q_cfs.mean(axis=1)
+        elif point.startswith("blend"):
+            try:
+                w = float(point[5:]) if len(point) > 5 else 0.3
+            except ValueError:
+                w = 0.3
+            w = min(max(w, 0.0), 1.0)
+            q_pt = (1.0 - w) * q_cfs[:, med_i] + w * q_cfs[:, hi_i]
+        else:
+            q_pt = q_cfs[:, med_i]
         rows = []
         for i in range(horizon):
             d = (last_date + pd.Timedelta(days=i + 1)).date()
             rows.append({
                 "date": d.isoformat(),
-                "q_cfs": float(q_cfs[i, med_i]),
+                "q_cfs": float(q_pt[i]),
                 "q_lo": float(q_cfs[i, lo_i]),
                 "q_hi": float(q_cfs[i, hi_i]),
             })

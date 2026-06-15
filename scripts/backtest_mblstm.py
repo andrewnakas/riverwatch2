@@ -224,6 +224,8 @@ def main() -> int:
     ap.add_argument("--end", default="2025-12-31")
     ap.add_argument("--stride", type=int, default=7)
     ap.add_argument("--limit-stations", type=int, default=0)
+    ap.add_argument("--stride-stations", type=int, default=1,
+                    help="evaluate every Nth corpus station (fast A/B subsample)")
     ap.add_argument("--label", default="pilot")
     ap.add_argument("--gfs", action="store_true",
                     help="decoder forcing from archived GFS forecasts instead of "
@@ -256,6 +258,8 @@ def main() -> int:
 
     registry = {s["id"]: s for s in json.loads(STATIONS_PATH.read_text())["stations"]}
     files = sorted(CORPUS_DIR.glob("*.csv.gz"))
+    if args.stride_stations > 1:
+        files = files[:: args.stride_stations]  # deterministic subsample for fast A/B
     if args.limit_stations:
         files = files[: args.limit_stations]
 
