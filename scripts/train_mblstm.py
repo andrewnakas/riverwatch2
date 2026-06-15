@@ -446,14 +446,19 @@ def main() -> int:
     model = build_model(cfg).to(dev)
     if base_payload is not None:
         # Warm start. If the head changed (e.g. quantile -> cmal) the head
-        # Linear shapes differ, so load encoder+decoder with strict=False and
-        # leave the new head randomly initialized; report what transferred.
-        res = model.load_state_dict(base_payload["state_dict"], strict=False)
-        if res.missing_keys or res.unexpected_keys:
-            loaded = len(base_payload["state_dict"]) - len(res.unexpected_keys)
-            print(f"warm start: loaded {loaded}/{len(base_payload['state_dict'])} "
-                  f"tensors (head re-init); missing={list(res.missing_keys)} "
-                  f"unexpected={list(res.unexpected_keys)}", flush=True)
+        # Linear shapes differ. strict=False ignores missing/unexpected keys but
+        # NOT shape mismatches on shared keys (head.2.* exists in both), so first
+        # drop any incoming tensor whose shape doesn't match the current model,
+        # then load — encoder+decoder transfer, the new head stays random-init.
+        cur = model.state_dict()
+        src = base_payload["state_dict"]
+        compatible = {k: v for k, v in src.items()
+                      if k in cur and cur[k].shape == v.shape}
+        dropped = [k for k in src if k not in compatible]
+        res = model.load_state_dict(compatible, strict=False)
+        print(f"warm start: loaded {len(compatible)}/{len(src)} tensors "
+              f"(head re-init); dropped shape-mismatch={dropped}; "
+              f"still-random={list(res.missing_keys)}", flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-5)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
     quantiles = list(QUANTILES)
