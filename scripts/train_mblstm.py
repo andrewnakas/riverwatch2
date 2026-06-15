@@ -39,6 +39,7 @@ sys.path.insert(0, str(ROOT))
 from app import gages2  # noqa: E402
 from app.mblstm import (  # noqa: E402
     CONTEXT_DAYS, DEC_VARS, ENC_VARS, QUANTILES, STATIC_FEATS, build_model,
+    cmal_mean, cmal_nll,
 )
 
 CORPUS_DIR = ROOT / "data" / "mblstm" / "corpus"
@@ -326,6 +327,12 @@ def main() -> int:
     ap.add_argument("--hrrr", action="store_true",
                     help="with --gfs-finetune: overlay 3km HRRR on decoder lead "
                          "days 1-2 (hybrid forcing)")
+    ap.add_argument("--head", choices=["quantile", "cmal"], default="quantile",
+                    help="probabilistic head: 'quantile' (pinball, legacy) or "
+                         "'cmal' (mixture of asymmetric Laplacians, NLL — "
+                         "sharper right-skewed peaks, analytic quantiles)")
+    ap.add_argument("--cmal-k", type=int, default=3,
+                    help="number of mixture components for --head cmal")
     ap.add_argument("--seed", type=int, default=17)
     ap.add_argument("--device", default="auto")
     ap.add_argument("--out", default=str(ROOT / "data" / "mblstm" / "model.pt"))
@@ -398,6 +405,17 @@ def main() -> int:
 
     if base_payload is not None:
         cfg = dict(base_payload["cfg"])
+        base_head = cfg.get("head", "quantile")
+        # The CLI head wins so you can warm-start a quantile checkpoint into a
+        # cmal head (encoder+decoder transfer, head re-inits — handled by the
+        # strict=False load below). Changing head is only meaningful as a plain
+        # warm start, not a forcing-only fine-tune of identical weights.
+        cfg["head"] = args.head
+        if args.head == "cmal":
+            cfg["cmal_k"] = int(args.cmal_k)
+        else:
+            cfg.pop("cmal_k", None)
+        cfg["head_changed_from"] = base_head if base_head != args.head else None
         if args.gfs_finetune:
             cfg["decoder_forcing"] = (
                 "archived HRRR d1-2 + GFS d3-14 hybrid "
@@ -411,6 +429,7 @@ def main() -> int:
         cfg = {
             "enc_vars": enc_vars, "dec_vars": dec_vars, "static_feats": STATIC_FEATS,
             "quantiles": list(QUANTILES), "hidden": args.hidden,
+            "head": args.head,
             "horizon": HORIZON, "context": CONTEXT_DAYS,
             "wx_mean": {c: float(v) for c, v in zip(enc_vars, corpus.wx_mean)},
             "wx_std": {c: float(v) for c, v in zip(enc_vars, corpus.wx_std)},
@@ -422,13 +441,39 @@ def main() -> int:
             "decoder_forcing": "observed-archive (perfect-forcing caveat for h>3)",
             "trained_at": pd.Timestamp.utcnow().isoformat(),
         }
+        if args.head == "cmal":
+            cfg["cmal_k"] = int(args.cmal_k)
     model = build_model(cfg).to(dev)
     if base_payload is not None:
-        model.load_state_dict(base_payload["state_dict"])
+        # Warm start. If the head changed (e.g. quantile -> cmal) the head
+        # Linear shapes differ, so load encoder+decoder with strict=False and
+        # leave the new head randomly initialized; report what transferred.
+        res = model.load_state_dict(base_payload["state_dict"], strict=False)
+        if res.missing_keys or res.unexpected_keys:
+            loaded = len(base_payload["state_dict"]) - len(res.unexpected_keys)
+            print(f"warm start: loaded {loaded}/{len(base_payload['state_dict'])} "
+                  f"tensors (head re-init); missing={list(res.missing_keys)} "
+                  f"unexpected={list(res.unexpected_keys)}", flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-5)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
     quantiles = list(QUANTILES)
     med_i = len(quantiles) // 2
+    head = cfg.get("head", "quantile")
+    # Lower-is-better val objective and point estimate are head-specific:
+    #   quantile -> pinball loss, median as the point;
+    #   cmal     -> NLL,           mixture mean as the point.
+    loss_name = "nll" if head == "cmal" else "pinball"
+
+    def head_loss(out, y, m):
+        if head == "cmal":
+            return cmal_nll(out, y, m)
+        return pinball(out, y, m, quantiles, torch)
+
+    def head_point(out):
+        # (B,H) z-space point estimate as numpy, on whatever device `out` is.
+        if head == "cmal":
+            return cmal_mean(out, lib=torch).cpu().numpy()
+        return out[:, :, med_i].cpu().numpy()
 
     def run_val():
         model.eval()
@@ -440,9 +485,9 @@ def main() -> int:
                 xs_t = torch.from_numpy(xs).to(dev); xd_t = torch.from_numpy(xd).to(dev)
                 ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
                 yq = model(xs_t, xd_t)
-                tot += float(pinball(yq, ys_t, ms_t, quantiles, torch) * ms_t.sum())
+                tot += float(head_loss(yq, ys_t, ms_t) * ms_t.sum())
                 num += float(ms_t.sum())
-                yh = yq[:, :, med_i].cpu().numpy()
+                yh = head_point(yq)
                 for b in range(len(sis)):
                     si = int(sis[b]); m = ms[b] > 0
                     preds.setdefault(si, []).append(yh[b][m])
@@ -461,7 +506,7 @@ def main() -> int:
         # Don't let a weak first epoch overwrite the loaded checkpoint when
         # --out == --init-ckpt: the bar starts at the loaded model's own val.
         best, nse0 = run_val()
-        print(f"init-ckpt val_pinball={best:.4f}  val_medNSE={nse0:.3f}", flush=True)
+        print(f"init-ckpt val_{loss_name}={best:.4f}  val_medNSE={nse0:.3f}", flush=True)
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     for ep in range(1, args.epochs + 1):
@@ -474,7 +519,7 @@ def main() -> int:
         for xs, xd, ys, ms, _ in make_batches(corpus, ep_windows, args.batch, rng):
             xs_t = torch.from_numpy(xs).to(dev); xd_t = torch.from_numpy(xd).to(dev)
             ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
-            loss = pinball(model(xs_t, xd_t), ys_t, ms_t, quantiles, torch)
+            loss = head_loss(model(xs_t, xd_t), ys_t, ms_t)
             if not torch.isfinite(loss):
                 # One bad batch must not poison the run (h256 diverged to NaN
                 # at lr 1e-3) — drop it and keep going.
@@ -500,11 +545,11 @@ def main() -> int:
             torch.save({"state_dict": {k: v.cpu() for k, v in model.state_dict().items()},
                         "cfg": cfg}, out_path)
             marker = "  *saved*"
-        print(f"epoch {ep}/{args.epochs}  train_pinball={tot / max(num, 1):.4f}  "
-              f"val_pinball={val_pin:.4f}  val_medNSE(norm-asinh)={val_nse:.3f}  "
+        print(f"epoch {ep}/{args.epochs}  train_{loss_name}={tot / max(num, 1):.4f}  "
+              f"val_{loss_name}={val_pin:.4f}  val_medNSE(norm-asinh)={val_nse:.3f}  "
               f"steps={steps}  skipped={skipped}  {time.time() - t0:.0f}s{marker}", flush=True)
 
-    print(f"\nbest val pinball {best:.4f} → {out_path}")
+    print(f"\nbest val {loss_name} {best:.4f} → {out_path}")
     return 0
 
 
