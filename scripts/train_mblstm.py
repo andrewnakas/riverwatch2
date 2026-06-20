@@ -333,6 +333,9 @@ def main() -> int:
                          "sharper right-skewed peaks, analytic quantiles)")
     ap.add_argument("--cmal-k", type=int, default=3,
                     help="number of mixture components for --head cmal")
+    ap.add_argument("--corpus-dir", default="",
+                    help="override corpus dir (e.g. data/mblstm/corpus_openmeteo for "
+                         "the full-13-var Open-Meteo corpus). Default: data/mblstm/corpus")
     ap.add_argument("--seed", type=int, default=17)
     ap.add_argument("--device", default="auto")
     ap.add_argument("--out", default=str(ROOT / "data" / "mblstm" / "model.pt"))
@@ -363,10 +366,26 @@ def main() -> int:
         enc_vars = COMPAT_VARS if args.compat_vars else ENC_VARS
         dec_vars = COMPAT_VARS if args.compat_vars else DEC_VARS
 
-    files = sorted(CORPUS_DIR.glob("*.csv.gz"))
+    corpus_dir = Path(args.corpus_dir) if args.corpus_dir else CORPUS_DIR
+    if not corpus_dir.is_absolute():
+        corpus_dir = ROOT / corpus_dir
+    files = sorted(corpus_dir.glob("*.csv.gz"))
+    if not files:
+        print(f"no corpus files in {corpus_dir}")
+        return 1
+    # Guard: the corpus must actually carry every requested forcing variable,
+    # else a full-13-var train against a 5-var corpus would silently train on
+    # all-NaN→0 channels. Check the first file's columns up front.
+    have_cols = set(pd.read_csv(files[0], nrows=1).columns)
+    missing = [v for v in enc_vars if v not in have_cols]
+    if missing:
+        print(f"corpus {corpus_dir.name} is missing requested vars {missing}; "
+              f"available={sorted(have_cols - {'date','q_cfs'})}. Use --compat-vars "
+              f"or point --corpus-dir at a corpus with these columns.")
+        return 1
     if args.limit_stations:
         files = files[: args.limit_stations]
-    print(f"loading {len(files)} stations from {CORPUS_DIR} ...")
+    print(f"loading {len(files)} stations from {corpus_dir} (enc_vars={len(enc_vars)}) ...")
     stations = [s for s in (load_station(p, enc_vars) for p in files) if s is not None]
 
     registry = {st["id"]: st for st in json.loads(STATIONS_PATH.read_text())["stations"]}
