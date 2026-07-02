@@ -51,11 +51,21 @@ def _metric_pair(yt, yh):
     if mask.sum() == 0:
         return {"mae": None, "rmse": None, "n": 0}
     yt = yt[mask]; yh = yh[mask]
-    return {
+    out = {
         "mae": float(np.mean(np.abs(yt - yh))),
         "rmse": float(np.sqrt(np.mean((yt - yh) ** 2))),
         "n": int(len(yt)),
     }
+    # SOTA metrics for live-path regression-gate consistency. The ~14-day eval
+    # window makes NSE/KGE noisy here (this is a smoke gate, not the SOTA
+    # instrument) so they're best read as relative deltas across runs.
+    try:
+        from app import metrics
+        out.update({"kge": metrics.kge(yt, yh), "log_nse": metrics.log_nse(yt, yh),
+                    "pct_bias": metrics.pct_bias(yt, yh)})
+    except Exception:
+        pass
+    return out
 
 
 def evaluate_one(station: dict, train_days: int, eval_days: int, horizon: int) -> dict:
@@ -112,6 +122,21 @@ def evaluate_one(station: dict, train_days: int, eval_days: int, horizon: int) -
         out["members"]["chronos_bolt"] = {"mae": None, "rmse": None, "n": 0}
         out["chronos"] = "unavailable"
 
+    # 3b) v16 multi-basin LSTM — exercises the real serving path with live
+    # Open-Meteo inputs, which is exactly the Daymet-train/OM-serve gap check.
+    mblstm_pred = None
+    try:
+        from app import gages2, mblstm
+        attrs = gages2.enrich_station_attrs(dict(station))
+        rows = mblstm.forecast(q_train, wx_hist, wx_future, attrs, eval_horizon)
+        if rows:
+            mblstm_pred = [r["q_cfs"] for r in rows]
+            out["members"]["mblstm"] = _metric_pair(yt, mblstm_pred)
+    except Exception as exc:
+        out["mblstm_error"] = str(exc)
+    if "mblstm" not in out["members"]:
+        out["members"]["mblstm"] = {"mae": None, "rmse": None, "n": 0}
+
     # 4) blend (inverse-MAE based on rolling validation on training data)
     member_preds = {"persistence_lag1": persist_pred, "runoff_ridge": ridge_pred}
     if chronos_pred is not None:
@@ -151,7 +176,7 @@ def evaluate_one(station: dict, train_days: int, eval_days: int, horizon: int) -
 
 
 def aggregate(results: list[dict]) -> dict:
-    members = ["persistence_lag1", "runoff_ridge", "chronos_bolt", "ensemble_blend"]
+    members = ["persistence_lag1", "runoff_ridge", "chronos_bolt", "mblstm", "ensemble_blend"]
     agg = {}
     for name in members:
         maes = [r["members"][name]["mae"] for r in results if r.get("members", {}).get(name, {}).get("mae") is not None]
@@ -193,7 +218,7 @@ def main() -> int:
         if "error" in r:
             line += f"ERR  {r['error']}"
         else:
-            for name in ("persistence_lag1", "runoff_ridge", "chronos_bolt", "ensemble_blend"):
+            for name in ("persistence_lag1", "runoff_ridge", "chronos_bolt", "mblstm", "ensemble_blend"):
                 m = r["members"].get(name, {}).get("mae")
                 line += f"{name[:8]}={m if m is None else f'{m:6.1f}'}  "
         print(line)

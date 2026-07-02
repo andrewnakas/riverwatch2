@@ -484,6 +484,32 @@ def score(test: pd.DataFrame, members: dict[str, np.ndarray]) -> dict:
     return out
 
 
+def score_sota(test: pd.DataFrame, members: dict[str, np.ndarray]) -> dict:
+    """Per-member SOTA hydrology metrics (NSE/KGE/log-NSE/PBIAS), pooled across
+    all horizons per station then aggregated across stations — the same shapes
+    the MB-LSTM harness reports, so NWM members and MB-LSTM are directly
+    comparable. CRPS is omitted: NWM members are deterministic (no quantiles)."""
+    try:
+        from app import metrics
+    except Exception:
+        return {}
+    obs = test["q_obs"].to_numpy(dtype=float)
+    sid_arr = test["station_id"].to_numpy()
+    out: dict = {}
+    for name, pred in members.items():
+        pred = np.asarray(pred, dtype=float)
+        per_station: dict = {}
+        for sid in np.unique(sid_arr):
+            m = sid_arr == sid
+            if m.sum() < 20:
+                continue
+            per_station[str(sid)] = metrics.all_point_metrics(obs[m], pred[m])
+        agg = metrics.aggregate(per_station) if per_station else {}
+        out[name] = {k: agg[k]["median"] for k in agg if isinstance(agg[k], dict) and "median" in agg[k]}
+        out[name]["n_stations"] = len(per_station)
+    return out
+
+
 def print_table(scores: dict, members: list[str]) -> None:
     print(f"\n{'h':>3} {'n':>7}  " + "".join(f"{m:>22}" for m in members))
     print(" " * 12 + "".join(f"{'med-MAE (win%)':>22}" for _ in members))
@@ -609,6 +635,16 @@ def main() -> int:
     member_names = list(members.keys())
     print_table(scores, member_names)
 
+    sota = score_sota(test, members)
+    if sota:
+        print("\nSOTA metrics (median across stations, pooled over horizons):")
+        print(f"{'member':>20} {'NSE':>8} {'KGE':>8} {'logNSE':>8} {'PBIAS%':>8}")
+        for name in member_names:
+            s = sota.get(name, {})
+            print(f"{name:>20} {s.get('nse', float('nan')):>8.3f} "
+                  f"{s.get('kge', float('nan')):>8.3f} {s.get('log_nse', float('nan')):>8.3f} "
+                  f"{s.get('pct_bias', float('nan')):>8.1f}")
+
     OUT_DIR.mkdir(exist_ok=True)
     payload = {
         "label": args.label,
@@ -621,6 +657,7 @@ def main() -> int:
         "cv_picks": ({int(k): v for k, v in payload_picks.items()}
                      if payload_picks else None),
         "scores": scores,
+        "sota_metrics": sota,
     }
     out = OUT_DIR / f"nwm_backtest_{args.label}.json"
     out.write_text(json.dumps(payload, indent=2))

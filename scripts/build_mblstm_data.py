@@ -55,14 +55,19 @@ def build_one(st: dict, start: date, end: date) -> tuple[str, pd.DataFrame | Non
 
 
 def main() -> int:
+    global CORPUS_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="1990-01-01")
     ap.add_argument("--limit", type=int, default=0, help="first N stations (0 = all)")
     ap.add_argument("--offset", type=int, default=0)
     ap.add_argument("--sleep", type=float, default=0.6, help="seconds between stations (Open-Meteo throttle)")
     ap.add_argument("--refresh", action="store_true", help="rebuild even if corpus file exists")
+    ap.add_argument("--out-dir", default=str(CORPUS_DIR),
+                    help="corpus output directory (default data/mblstm/corpus; "
+                         "use data/mblstm/corpus_openmeteo for the 13-var corpus)")
     args = ap.parse_args()
 
+    CORPUS_DIR = Path(args.out_dir)
     CORPUS_DIR.mkdir(parents=True, exist_ok=True)
     start = date.fromisoformat(args.start)
     end = date.today() - timedelta(days=1)
@@ -113,7 +118,7 @@ def main() -> int:
 
     print(f"\ndone={done} skipped(existing)={skipped} failed={failed} "
           f"in {time.time() - t0:.0f}s; corpus now has "
-          f"{len(list(CORPUS_DIR.glob('*.csv.gz')))} stations")
+          f"{len([p for p in CORPUS_DIR.glob('*.csv.gz') if not p.name.startswith('._')])} stations")
     return 0
 
 

@@ -100,12 +100,16 @@ def extract_init(ds, yi, xi, sids, init: date) -> pd.DataFrame | None:
 
 
 def main() -> int:
+    global OUT_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="2021-05-03")
     ap.add_argument("--end", default="2025-12-29")
     ap.add_argument("--stride-days", type=int, default=7)
+    ap.add_argument("--out-dir", default=str(OUT_DIR),
+                    help="output directory (default data/mblstm/hrrr_fcst)")
     args = ap.parse_args()
 
+    OUT_DIR = Path(args.out_dir)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     sts = json.loads(STATIONS_PATH.read_text())["stations"]
     lats = np.asarray([s["lat"] for s in sts])
