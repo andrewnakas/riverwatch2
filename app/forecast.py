@@ -1305,8 +1305,25 @@ def forecast_station(
     # overridable for rollback.
     try:
         from . import mblstm as _mblstm
+        # v17.1: ECMWF IFS ENS ensemble-MEAN decoder forcing, gated by
+        # RW2_MBLSTM_FCST=ecmwf_ens. Measured basis (EXPERIMENTS.md row 4):
+        # eval-time ECMWF ens-mean forcing is worth +0.030 NSE full-scale vs
+        # GFS. The harness fed the decoder a 5-var frame (temps/precip/srad
+        # only; remaining dec_vars ride at the training mean), so serving
+        # passes the 5-var ens-mean frame as-is rather than patching it onto
+        # the shared wx_fcst. Any fetch failure falls back to wx_fcst.
+        mb_wx_fcst = wx_fcst
+        if os.environ.get("RW2_MBLSTM_FCST") == "ecmwf_ens":
+            try:
+                ens_fcst = weather.fetch_forecast_ecmwf_ens(lat, lon, days=horizon + 2)
+                if len(ens_fcst):
+                    mb_wx_fcst = ens_fcst
+                else:
+                    notes.append("mblstm ecmwf_ens forcing empty; fell back to shared wx_fcst")
+            except Exception as exc:
+                notes.append(f"mblstm ecmwf_ens forcing failed: {exc}; fell back to shared wx_fcst")
         mblstm_rows = _mblstm.forecast(
-            q_hist, wx_hist, wx_fcst, station_attrs or {}, horizon,
+            q_hist, wx_hist, mb_wx_fcst, station_attrs or {}, horizon,
         )
         if mblstm_rows:
             mb_decay = int(os.environ.get("RW2_MBLSTM_ANCHOR_DECAY", "0"))

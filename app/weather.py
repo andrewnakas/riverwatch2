@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from datetime import date, timedelta
 from pathlib import Path
@@ -23,6 +24,7 @@ RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+ENSEMBLE_URL = "https://ensemble-api.open-meteo.com/v1/ensemble"
 
 DAILY_VARS = [
     "temperature_2m_mean",
@@ -225,6 +227,84 @@ def fetch_forecast(lat: float, lon: float, days: int = 14, *, max_age_hours: int
         payload = _http_json(url)
         cache.write_text(json.dumps(payload))
     return _to_df(payload)
+
+
+# v17.1: decoder-forcing vars for the ECMWF ensemble-mean serving path. Must
+# stay identical to scripts/fetch_ens_forcings.py OUT_VARS — the eval-time
+# forcing that measured +0.030 NSE full-scale over GFS on the honest harness
+# (benchmarks/EXPERIMENTS.md row 4). Same units as the archive/corpus: temps
+# °C, precipitation_sum mm/day, shortwave_radiation_sum MJ/m²/day.
+ENS_DAILY_VARS = [
+    "temperature_2m_mean",
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "precipitation_sum",
+    "shortwave_radiation_sum",
+]
+
+_ENS_MEMBER_RE = re.compile(r"_member\d+$")
+
+
+def fetch_forecast_ecmwf_ens(lat: float, lon: float, days: int = 14, *, max_age_hours: int = 3) -> pd.DataFrame:
+    """ECMWF IFS ENS (0.25°) ensemble-MEAN daily forecast via Open-Meteo's
+    Ensemble API.
+
+    Returns a frame of ["date"] + ENS_DAILY_VARS where each var is the mean
+    across all ensemble members (control + member01..member50, 51 total). The
+    Ensemble API serves these five vars as native *daily* aggregates per
+    member — daily max/min are computed per member first, then averaged, which
+    reproduces exactly how the eval-time ens-mean forcing archive was built.
+    IMPORTANT: this is the IFS ENS member mean, NOT HRES deterministic — the
+    +0.030 NSE basis was measured on the ensemble mean.
+    """
+    today = date.today()
+    end = today + timedelta(days=days)
+    cache = _cache_path(lat, lon, today, end, "ensfcst")
+    if NO_FETCH:
+        # Mirror fetch_forecast: today's exact-match cache, else the most
+        # recent ensfcst file for this lat/lon, else an empty frame.
+        if cache.exists():
+            return _ens_mean_df(json.loads(cache.read_text()))
+        candidates = sorted(
+            CACHE_DIR.glob(f"ensfcst_{lat:.3f}_{lon:.3f}_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if candidates:
+            return _ens_mean_df(json.loads(candidates[0].read_text()))
+        return pd.DataFrame(columns=["date"] + ENS_DAILY_VARS)
+    if cache.exists() and (time.time() - cache.stat().st_mtime) < max_age_hours * 3600:
+        payload = json.loads(cache.read_text())
+    else:
+        params = {
+            "latitude": f"{lat:.4f}",
+            "longitude": f"{lon:.4f}",
+            "daily": ",".join(ENS_DAILY_VARS),
+            "models": "ecmwf_ifs025",
+            "forecast_days": min(days, 15),  # IFS ENS horizon cap on this API
+            "timezone": "UTC",
+        }
+        url = ENSEMBLE_URL + "?" + urlencode(params)
+        payload = _http_json(url)
+        cache.write_text(json.dumps(payload))
+    return _ens_mean_df(payload)
+
+
+def _ens_mean_df(payload: dict) -> pd.DataFrame:
+    """Collapse the Ensemble API's per-member daily columns (`<var>` for the
+    control run plus `<var>_memberNN`) into the per-day ensemble mean."""
+    daily = payload.get("daily") or {}
+    if not daily.get("time"):
+        return pd.DataFrame(columns=["date"] + ENS_DAILY_VARS)
+    raw = pd.DataFrame(daily)
+    out = pd.DataFrame({"date": pd.to_datetime(raw["time"]).dt.date})
+    for var in ENS_DAILY_VARS:
+        cols = [c for c in raw.columns if _ENS_MEMBER_RE.sub("", c) == var]
+        if cols:
+            out[var] = raw[cols].astype(float).mean(axis=1, skipna=True)
+        else:
+            out[var] = float("nan")
+    return out
 
 
 def _to_df(payload: dict) -> pd.DataFrame:
