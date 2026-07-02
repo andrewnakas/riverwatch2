@@ -1,0 +1,266 @@
+{
+  "schema_version": 2,
+  "label": "memsmoke_ecmwf",
+  "ckpt": "data/mblstm/model_h256_s101_gfsft.pt:data/mblstm/model_h256_s102_gfsft.pt:data/mblstm/model_h256_s103_gfsft.pt:data/mblstm/model_h256_s104_gfsft.pt",
+  "window": [
+    "2025-06-01",
+    "2025-06-01"
+  ],
+  "stride_days": 7,
+  "stride_stations": 1,
+  "anchor_decay": 0.0,
+  "min_windows": 1,
+  "point_policy": "default",
+  "forcing_plan": "members:ecmwf",
+  "members_source": "ecmwf",
+  "members_per_window_mean": 10.0,
+  "caveat": "decoder forcing = archived per-member ecmwf ensemble forecasts via dynamical.org; per-member quantile triplets pooled to 10/50/90 empirical percentiles (real forecast error + forcing spread)",
+  "crps_caveat": "approx_crps = mean pinball over {0.1,0.5,0.9}, NOT integrated CRPS (valid for internal A/B only; resolved when a CMAL head ships).",
+  "stations": 8,
+  "median_mae_by_h": {
+    "1": {
+      "persistence": 825.0,
+      "mblstm": 147.0753173828125,
+      "ratio": 0.17827311197916668
+    },
+    "2": {
+      "persistence": 465.0,
+      "mblstm": 241.8798828125,
+      "ratio": 0.5201717909946236
+    },
+    "3": {
+      "persistence": 578.0,
+      "mblstm": 312.7392578125,
+      "ratio": 0.5410713802984429
+    },
+    "4": {
+      "persistence": 838.5,
+      "mblstm": 180.2740478515625,
+      "ratio": 0.2149958829475999
+    },
+    "5": {
+      "persistence": 1490.0,
+      "mblstm": 202.4808349609375,
+      "ratio": 0.13589317782613256
+    },
+    "6": {
+      "persistence": 1725.0,
+      "mblstm": 266.764892578125,
+      "ratio": 0.15464631453804348
+    },
+    "7": {
+      "persistence": 1975.0,
+      "mblstm": 417.33001708984375,
+      "ratio": 0.2113063377670095
+    },
+    "8": {
+      "persistence": 2305.0,
+      "mblstm": 431.0874443054199,
+      "ratio": 0.18702275241016048
+    },
+    "9": {
+      "persistence": 2575.0,
+      "mblstm": 415.7063293457031,
+      "ratio": 0.1614393512022148
+    },
+    "10": {
+      "persistence": 2645.0,
+      "mblstm": 400.248046875,
+      "ratio": 0.1513225129962193
+    },
+    "11": {
+      "persistence": 2750.0,
+      "mblstm": 379.0594482421875,
+      "ratio": 0.13783979936079546
+    },
+    "12": {
+      "persistence": 2900.0,
+      "mblstm": 507.9842529296875,
+      "ratio": 0.17516698376885775
+    },
+    "13": {
+      "persistence": 3165.0,
+      "mblstm": 718.0883178710938,
+      "ratio": 0.22688414466701223
+    },
+    "14": {
+      "persistence": 3365.0,
+      "mblstm": 843.2034301757812,
+      "ratio": 0.2505805141681371
+    }
+  },
+  "nse_median": NaN,
+  "nse_mean": NaN,
+  "nse_scorable_stations": 0,
+  "metrics": {
+    "full": {
+      "fhv": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "approx_crps": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "picp90": {
+        "median": 0.9285714285714286,
+        "mean": 0.9285714285714286,
+        "scorable": 8
+      },
+      "pearson_r": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "nse": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0,
+        "frac_gt_0.5": NaN
+      },
+      "pct_bias": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "kge": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "mpiw_norm": {
+        "median": 1.7319735566902303,
+        "mean": 1.7167526155108626,
+        "scorable": 8
+      },
+      "flv": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "log_nse": {
+        "median": NaN,
+        "mean": NaN,
+        "scorable": 0
+      },
+      "n_stations": 8
+    }
+  },
+  "by_tercile_median": {
+    "low": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN
+    },
+    "mid": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN
+    },
+    "high": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN
+    }
+  },
+  "per_station": {
+    "01010000": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 0.8571428571428571,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01010070": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 0.9285714285714286,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01010500": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 0.9285714285714286,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01011000": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 1.0,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01013500": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 1.0,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01014000": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 1.0,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01015800": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 0.9285714285714286,
+      "windows": 1,
+      "members_mean": 10.0
+    },
+    "01017000": {
+      "nse": NaN,
+      "kge": NaN,
+      "log_nse": NaN,
+      "pct_bias": NaN,
+      "fhv": NaN,
+      "flv": NaN,
+      "approx_crps": NaN,
+      "picp90": 0.7857142857142857,
+      "windows": 1,
+      "members_mean": 10.0
+    }
+  }
+}

@@ -16,6 +16,14 @@ Reports per-horizon median-station MAE for persistence vs the MB-LSTM median
 quantile, the MAE ratio, and per-station pooled NSE — same shape as
 benchmarks/nwm_backtest_v4.json so the members can be compared side by side.
 
+Decoder-forcing modes (mutually exclusive):
+  default            observed future weather (perfect forcing)
+  --gfs [--hrrr]     archived deterministic forecasts (ForcingPlan sugar)
+  --forcing-plan     explicit per-lead composition, e.g. 'ecmwf:1-14,hrrr?:1-2'
+  --members-source   ensemble forcing: one forecast per NWP member from
+                     <init>.members.csv.gz, quantiles pooled across members
+                     (see pool_member_quantiles)
+
 Usage:
   RW2_ENABLE_MBLSTM=1 .venv/bin/python scripts/backtest_mblstm.py \
       --ckpt data/mblstm/model.pt --label pilot
@@ -50,6 +58,7 @@ GFS_DIR = ROOT / "data" / "mblstm" / "gfs_fcst"
 HRRR_DIR = ROOT / "data" / "mblstm" / "hrrr_fcst"
 OUT_DIR = ROOT / "benchmarks"
 HORIZON = 14
+MIN_MEMBERS = 6  # ensemble-forcing mode: skip a window with fewer usable members
 
 # Named forcing sources for --forcing-plan (all share the fetcher csv schema).
 SRC_DIRS = {
@@ -83,6 +92,102 @@ def load_gfs(start: str, end: str, src_dir: Path = GFS_DIR) -> dict[pd.Timestamp
         df = pd.read_csv(p, dtype={"station_id": str})
         out[init] = df.set_index("station_id")
     return out
+
+
+def load_members(src_dir: Path, start: str, end: str) -> dict[pd.Timestamp, dict[str, np.ndarray]]:
+    """init_date -> {station_id: float32 array (n_members, HORIZON, n_vars)}.
+
+    Reads the per-member companion archives (<init>.members.csv.gz — the files
+    load_gfs deliberately skips). Members missing any of the 14 lead days or
+    containing non-finite values are dropped per station at load time, so the
+    caller only ever sees complete member forcings. Values are stored as
+    compact float32 arrays (~5 MB per init for the full corpus) so a season of
+    inits stays resident on an 8 GB box alongside a live training run.
+    """
+    out: dict[pd.Timestamp, dict[str, np.ndarray]] = {}
+    for p in sorted(src_dir.glob("*.members.csv.gz")):
+        if p.name.startswith("._"):  # exFAT AppleDouble junk on the SD volume
+            continue
+        init = pd.Timestamp(p.name.split(".")[0])
+        # Same t0 = init-1d window rule as load_gfs.
+        if not (pd.Timestamp(start) <= init - pd.Timedelta(days=1) <= pd.Timestamp(end)):
+            continue
+        df = pd.read_csv(p, dtype={"station_id": str})
+        df = df[df["lead_day"].between(1, HORIZON)]
+        df = df.drop_duplicates(["station_id", "member", "lead_day"])
+        df = df.sort_values(["station_id", "member", "lead_day"])
+        # Keep only (station, member) groups with all 14 lead days present.
+        complete = df.groupby(["station_id", "member"])["lead_day"].transform("size") == HORIZON
+        df = df[complete]
+        stations: dict[str, np.ndarray] = {}
+        for sid, g in df.groupby("station_id", sort=False):
+            # Rows are sorted (member, lead_day) with exactly HORIZON rows per
+            # member, so the reshape yields one (HORIZON, n_vars) slab each.
+            a = g[GFS_VARS].to_numpy(dtype=np.float32).reshape(-1, HORIZON, len(GFS_VARS))
+            a = a[np.isfinite(a).all(axis=(1, 2))]
+            if len(a):
+                stations[sid] = a
+        if stations:
+            out[init] = stations
+    return out
+
+
+def pool_member_quantiles(member_lo, member_med, member_hi):
+    """Pool per-member quantile triplets into an ensemble band + point.
+
+    Approximation (pre-registered for the phase-4.1 gate): each member's
+    (q_lo, q_med, q_hi) is treated as three samples at the 0.1/0.5/0.9 levels
+    of that member's predictive distribution. Pooling the 3*M values per
+    horizon and taking the empirical 10th/50th/90th percentiles approximates
+    those quantiles of the equal-weight mixture across members. With only 3
+    samples per member the mixture tails are under-resolved, so the pooled
+    band tends to be conservative (narrow) relative to the true mixture —
+    i.e. a PICP gain measured this way is not an artifact of the pooling.
+    Degenerate case (M >= 2): if all members agree exactly, the pooled triplet
+    equals the common member triplet — no artificial widening.
+
+    Point forecast = median across members of q_med.
+
+    Args: three array-likes shaped (M, H) — members x horizons.
+    Returns (pooled_lo, pooled_med, pooled_hi, point), each shape (H,).
+    """
+    lo = np.asarray(member_lo, dtype=float)
+    med = np.asarray(member_med, dtype=float)
+    hi = np.asarray(member_hi, dtype=float)
+    pool = np.concatenate([lo, med, hi], axis=0)  # (3M, H)
+    p_lo, p_med, p_hi = np.nanpercentile(pool, [10.0, 50.0, 90.0], axis=0)
+    point = np.nanmedian(med, axis=0)
+    return p_lo, p_med, p_hi, point
+
+
+class MemberForcing:
+    """Ensemble-forcing mode: one decoder forcing per NWP ensemble member.
+
+    Loads the <init>.members.csv.gz companion archives for one source (ecmwf /
+    gefs) and serves, per (station, issue date), the list of complete member
+    wx_fcst frames. Returns None (window skipped) when fewer than MIN_MEMBERS
+    members are usable for that station/init."""
+
+    def __init__(self, source: str, start: str, end: str):
+        self.source = source
+        self.inits = load_members(SRC_DIRS[source], start, end)
+        if not self.inits:
+            raise SystemExit(f"no {source} member files in window — fetch first")
+
+    def issue_dates(self) -> pd.DatetimeIndex:
+        return pd.DatetimeIndex(sorted(i - pd.Timedelta(days=1) for i in self.inits))
+
+    def member_wx_fcsts(self, sid: str, t0: pd.Timestamp) -> list[pd.DataFrame] | None:
+        arr = self.inits.get(t0 + pd.Timedelta(days=1), {}).get(sid)
+        if arr is None or len(arr) < MIN_MEMBERS:
+            return None
+        dates = [t0 + pd.Timedelta(days=d) for d in range(1, HORIZON + 1)]
+        frames = []
+        for a in arr:
+            f = pd.DataFrame(a.astype(float), columns=GFS_VARS)
+            f.insert(0, "date", dates)
+            frames.append(f)
+        return frames
 
 
 class ForcingPlan:
@@ -191,7 +296,9 @@ def anchor(y: np.ndarray, y_h1: float, q_obs_t0: float, decay_h: float) -> np.nd
 
 def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
                  forcing: "ForcingPlan | None" = None,
+                 members: "MemberForcing | None" = None,
                  anchor_decay: float = 0.0,
+                 min_windows: int = 5,
                  dump: list | None = None) -> dict | None:
     df = pd.read_csv(path)
     df["date"] = pd.to_datetime(df["date"])
@@ -204,6 +311,7 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
     pooled_lo, pooled_hi = [], []  # model's own 0.1/0.9 quantiles for approx-CRPS
     pooled_med = []                # true q50 (CRPS 0.5 slot; == point unless CMAL/blend policy)
     n_windows = 0
+    member_counts: list[int] = []  # usable members per window (ensemble mode)
     sid = path.name.split(".")[0]
     for t0 in issue_dates:
         if t0 not in daily.index:
@@ -222,21 +330,41 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
         q_hist = hist["q_cfs"].dropna().rename("q_cfs").reset_index()
         q_hist.columns = ["date", "q_cfs"]
         wx_hist = hist.reset_index().rename(columns={"index": "date"})[["date"] + DAILY_VARS]
-        if forcing is not None:
-            wx_fcst = forcing.wx_fcst(sid, t0)
-            if wx_fcst is None:
+        if members is not None:
+            # Ensemble-forcing mode: one forecast per NWP member, quantile
+            # triplets pooled across members (see pool_member_quantiles).
+            fcsts = members.member_wx_fcsts(sid, t0)
+            if fcsts is None:
                 continue
+            m_lo, m_med, m_hi = [], [], []
+            for wx_m in fcsts:
+                rows = mblstm.forecast(q_hist, wx_hist, wx_m, attrs, HORIZON)
+                if not rows or len(rows) < HORIZON:
+                    continue
+                m_lo.append([r.get("q_lo", np.nan) for r in rows])
+                m_med.append([r.get("q_med", r["q_cfs"]) for r in rows])
+                m_hi.append([r.get("q_hi", np.nan) for r in rows])
+            if len(m_med) < MIN_MEMBERS:
+                continue
+            ylo, ymed, yhi, yhat = pool_member_quantiles(m_lo, m_med, m_hi)
+            ymean = np.full(HORIZON, np.nan)  # no pooled mean; nan like non-CMAL runs
+            member_counts.append(len(m_med))
         else:
-            wx_fcst = fut.reset_index().rename(columns={"index": "date"})[["date"] + DAILY_VARS]
+            if forcing is not None:
+                wx_fcst = forcing.wx_fcst(sid, t0)
+                if wx_fcst is None:
+                    continue
+            else:
+                wx_fcst = fut.reset_index().rename(columns={"index": "date"})[["date"] + DAILY_VARS]
 
-        rows = mblstm.forecast(q_hist, wx_hist, wx_fcst, attrs, HORIZON)
-        if not rows or len(rows) < HORIZON:
-            continue
-        yhat = np.asarray([r["q_cfs"] for r in rows], dtype=float)
-        ylo = np.asarray([r.get("q_lo", np.nan) for r in rows], dtype=float)
-        yhi = np.asarray([r.get("q_hi", np.nan) for r in rows], dtype=float)
-        ymed = np.asarray([r.get("q_med", r["q_cfs"]) for r in rows], dtype=float)
-        ymean = np.asarray([r.get("q_mean", np.nan) for r in rows], dtype=float)
+            rows = mblstm.forecast(q_hist, wx_hist, wx_fcst, attrs, HORIZON)
+            if not rows or len(rows) < HORIZON:
+                continue
+            yhat = np.asarray([r["q_cfs"] for r in rows], dtype=float)
+            ylo = np.asarray([r.get("q_lo", np.nan) for r in rows], dtype=float)
+            yhi = np.asarray([r.get("q_hi", np.nan) for r in rows], dtype=float)
+            ymed = np.asarray([r.get("q_med", r["q_cfs"]) for r in rows], dtype=float)
+            ymean = np.asarray([r.get("q_mean", np.nan) for r in rows], dtype=float)
         persist = float(q_hist["q_cfs"].iloc[-1])
 
         if dump is not None:
@@ -270,7 +398,7 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
             pooled_hi.append(yhi[h - 1])
             pooled_med.append(ymed[h - 1])
 
-    if n_windows < 5:
+    if n_windows < max(min_windows, 1):
         return None
     pooled_y = np.asarray(pooled_y); pooled_yhat = np.asarray(pooled_yhat)
     pooled_lo = np.asarray(pooled_lo); pooled_hi = np.asarray(pooled_hi)
@@ -307,6 +435,8 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
         "mae_by_h": {h: {k: float(np.mean(v)) for k, v in d.items() if v} for h, d in per_h.items()},
     }
     out.update({k: v for k, v in m.items() if k != "nse"})  # kge, log_nse, r, pbias, fhv, flv
+    if member_counts:
+        out["members_mean"] = float(np.mean(member_counts))
     return out
 
 
@@ -332,6 +462,16 @@ def main() -> int:
                     help="per-lead decoder forcing composition, e.g. "
                          "'ecmwf:1-14,hrrr?:1-2' (see ForcingPlan; overrides "
                          "--gfs/--hrrr sugar)")
+    ap.add_argument("--members-source", choices=["ecmwf", "gefs"], default="",
+                    help="ensemble-forcing mode: one forecast per NWP ensemble "
+                         "member from <init>.members.csv.gz, quantile triplets "
+                         "pooled across members (see pool_member_quantiles). "
+                         "Mutually exclusive with --forcing-plan/--gfs; issue "
+                         "dates snap to available member-file inits")
+    ap.add_argument("--min-windows", type=int, default=5,
+                    help="minimum evaluated windows for a station to score "
+                         "(default 5; lower for smoke tests on the still-sparse "
+                         "member archives)")
     ap.add_argument("--anchor-decay", type=float, default=0.0,
                     help="as-served anchoring: shift trajectory by the h1 gap to "
                          "the last observation, decaying to zero by h=1+N "
@@ -351,12 +491,21 @@ def main() -> int:
     if args.hrrr and not args.gfs:
         print("--hrrr requires --gfs")
         return 1
+    if args.members_source and (args.forcing_plan or args.gfs or args.hrrr):
+        print("--members-source is mutually exclusive with --forcing-plan/--gfs/--hrrr")
+        return 1
     # --gfs/--hrrr are sugar for the equivalent forcing plan.
     plan_spec = args.forcing_plan
     if not plan_spec and args.gfs:
         plan_spec = "gfs:1-14,hrrr?:1-2" if args.hrrr else "gfs:1-14"
     forcing = None
-    if plan_spec:
+    members = None
+    if args.members_source:
+        members = MemberForcing(args.members_source, args.start, args.end)
+        issue_dates = members.issue_dates()
+        print(f"members mode ({args.members_source}): {len(issue_dates)} issue dates "
+              f"{issue_dates[0].date()}..{issue_dates[-1].date()}")
+    elif plan_spec:
         forcing = ForcingPlan(plan_spec, args.start, args.end)
         issue_dates = forcing.issue_dates()
         print(f"forcing plan '{plan_spec}': {len(issue_dates)} issue dates "
@@ -380,7 +529,8 @@ def main() -> int:
         attrs = gages2.enrich_station_attrs(dict(registry.get(sid, {"id": sid})))
         try:
             r = eval_station(p, attrs, issue_dates, forcing=forcing,
-                             anchor_decay=args.anchor_decay, dump=dump)
+                             members=members, anchor_decay=args.anchor_decay,
+                             min_windows=args.min_windows, dump=dump)
         except Exception as exc:
             print(f"[{i}/{len(files)}] {sid} ERR {exc}", flush=True)
             continue
@@ -447,6 +597,7 @@ def main() -> int:
                       f"KGE={blk.get('kge',{}).get('median',float('nan')):.3f}  "
                       f"(published ensembled-LSTM ref ~0.76 median NSE)")
 
+    members_mean = [r["members_mean"] for r in results.values() if "members_mean" in r]
     OUT_DIR.mkdir(exist_ok=True)
     out = OUT_DIR / f"mblstm_backtest_{args.label}.json"
     out.write_text(json.dumps({
@@ -455,9 +606,17 @@ def main() -> int:
         "window": [args.start, args.end], "stride_days": args.stride,
         "stride_stations": args.stride_stations,
         "anchor_decay": args.anchor_decay,
+        "min_windows": args.min_windows,
         "point_policy": os.environ.get("RW2_MBLSTM_POINT", "default"),
-        "forcing_plan": plan_spec or "perfect",
-        "caveat": ("decoder forcing = archived HRRR d1-2 + GFS d3-14 hybrid via "
+        "forcing_plan": plan_spec or
+                        (f"members:{args.members_source}" if args.members_source else "perfect"),
+        "members_source": args.members_source or None,
+        "members_per_window_mean": (float(np.mean(members_mean)) if members_mean else None),
+        "caveat": (f"decoder forcing = archived per-member {args.members_source} "
+                   "ensemble forecasts via dynamical.org; per-member quantile "
+                   "triplets pooled to 10/50/90 empirical percentiles (real "
+                   "forecast error + forcing spread)" if args.members_source else
+                   "decoder forcing = archived HRRR d1-2 + GFS d3-14 hybrid via "
                    "dynamical.org (real forecast error)" if args.hrrr else
                    "decoder forcing = archived GFS forecasts via dynamical.org "
                    "(real forecast error)" if args.gfs else
@@ -475,7 +634,7 @@ def main() -> int:
         "per_station": {
             sid: {k: r.get(k) for k in
                   ("nse", "kge", "log_nse", "pct_bias", "fhv", "flv",
-                   "approx_crps", "picp90", "windows")}
+                   "approx_crps", "picp90", "windows", "members_mean")}
             for sid, r in results.items()
         },
     }, indent=2))

@@ -132,6 +132,56 @@ def test_point_policy_blend_leans_high(monkeypatch, tmp_path):
         assert abs(m["q_med"] - b["q_med"]) < 1e-9
 
 
+def _load_backtest_module():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "bt", Path(__file__).resolve().parents[1] / "scripts" / "backtest_mblstm.py")
+    bt = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bt)
+    return bt
+
+
+def test_member_quantile_pooling_values():
+    """Pooled band = empirical 10/50/90 of the 3xM member quantile values;
+    point = median of member medians; identical members pool to themselves."""
+    bt = _load_backtest_module()
+    # Horizon 1: three disagreeing members; horizon 2: all identical.
+    lo = np.array([[10.0, 100.0], [40.0, 100.0], [70.0, 100.0]])
+    med = np.array([[20.0, 200.0], [50.0, 200.0], [80.0, 200.0]])
+    hi = np.array([[30.0, 300.0], [60.0, 300.0], [90.0, 300.0]])
+    plo, pmed, phi, point = bt.pool_member_quantiles(lo, med, hi)
+    pooled_h1 = np.array([10, 20, 30, 40, 50, 60, 70, 80, 90], dtype=float)
+    assert plo[0] == pytest.approx(np.percentile(pooled_h1, 10))
+    assert pmed[0] == pytest.approx(np.percentile(pooled_h1, 50))
+    assert phi[0] == pytest.approx(np.percentile(pooled_h1, 90))
+    assert point[0] == pytest.approx(50.0)  # median of {20, 50, 80}
+    # Disagreeing members widen the band beyond any single member's (20 cfs).
+    assert phi[0] - plo[0] > 20.0
+    # Degenerate ensemble: pooled triplet == the common member triplet.
+    assert plo[1] == pytest.approx(100.0)
+    assert pmed[1] == pytest.approx(200.0)
+    assert phi[1] == pytest.approx(300.0)
+    assert point[1] == pytest.approx(200.0)
+
+
+def test_member_quantile_pooling_ordered():
+    """Pooled quantiles are ordered lo <= med <= hi at every horizon for
+    arbitrary (ordered) member triplets."""
+    bt = _load_backtest_module()
+    rng = np.random.default_rng(7)
+    lo = rng.random((8, 14)) * 100.0
+    med = lo + rng.random((8, 14)) * 100.0
+    hi = med + rng.random((8, 14)) * 100.0
+    plo, pmed, phi, point = bt.pool_member_quantiles(lo, med, hi)
+    assert plo.shape == pmed.shape == phi.shape == point.shape == (14,)
+    assert np.all(np.isfinite(plo)) and np.all(np.isfinite(point))
+    assert np.all(plo <= pmed) and np.all(pmed <= phi)
+    # Point stays inside the pooled band (median of medians vs mixture band).
+    assert np.all(point >= plo - 1e-9) and np.all(point <= phi + 1e-9)
+
+
 def test_backtest_anchor_formula():
     """Anchor correction: full offset at h=1, linear decay, zero past 1+decay."""
     import importlib.util
