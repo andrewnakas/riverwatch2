@@ -40,7 +40,7 @@ def join_discharge() -> int:
     import pandas as pd
     from app import usgs
 
-    files = sorted(OUT_DIR.glob("*.csv.gz"))
+    files = sorted(p for p in OUT_DIR.glob("*.csv.gz") if not p.name.startswith("._"))
     print(f"join-discharge: {len(files)} weather files in {OUT_DIR.name}", flush=True)
     done = skip = fail = 0
     t0 = time.time()
@@ -127,7 +127,7 @@ def main() -> int:
         if got % 50 == 0:
             print(f"[{i}/{len(daily)}] downloaded {got} ({time.time()-t0:.0f}s)", flush=True)
 
-    have = len(list(OUT_DIR.glob("*.csv.gz")))
+    have = len([p for p in OUT_DIR.glob("*.csv.gz") if not p.name.startswith("._")])
     print(f"\ndownloaded={got} skipped={skip} failed={fail} | "
           f"local corpus now {have} stations → {OUT_DIR}", flush=True)
     return 0

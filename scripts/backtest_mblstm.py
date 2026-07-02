@@ -51,6 +51,16 @@ HRRR_DIR = ROOT / "data" / "mblstm" / "hrrr_fcst"
 OUT_DIR = ROOT / "benchmarks"
 HORIZON = 14
 
+# Named forcing sources for --forcing-plan (all share the fetcher csv schema).
+SRC_DIRS = {
+    "gfs": GFS_DIR,
+    "hrrr": HRRR_DIR,
+    "gefs": ROOT / "data" / "mblstm" / "gefs_fcst",
+    "ecmwf": ROOT / "data" / "mblstm" / "ecmwf_fcst",
+    "gfs2026": ROOT / "data" / "mblstm" / "gfs_fcst_2026",
+    "hrrr2026": ROOT / "data" / "mblstm" / "hrrr_fcst_2026",
+}
+
 GFS_VARS = ["temperature_2m_mean", "temperature_2m_max", "temperature_2m_min",
             "precipitation_sum", "shortwave_radiation_sum"]
 
@@ -61,6 +71,11 @@ def load_gfs(start: str, end: str, src_dir: Path = GFS_DIR) -> dict[pd.Timestamp
     (observations through yesterday, today's 00z run — the serving setup)."""
     out: dict[pd.Timestamp, pd.DataFrame] = {}
     for p in sorted(src_dir.glob("*.csv.gz")):
+        # Skip exFAT AppleDouble junk (._*) and per-member companion files
+        # (<init>.members.csv.gz) — both match the glob but aren't ens-mean
+        # forcing files; the members file would silently corrupt the lookup.
+        if p.name.startswith("._") or ".members." in p.name:
+            continue
         init = pd.Timestamp(p.name.split(".")[0])
         # t0 = init-1d must fall inside the eval window.
         if not (pd.Timestamp(start) <= init - pd.Timedelta(days=1) <= pd.Timestamp(end)):
@@ -70,32 +85,69 @@ def load_gfs(start: str, end: str, src_dir: Path = GFS_DIR) -> dict[pd.Timestamp
     return out
 
 
-def gfs_wx_fcst(gfs: dict, sid: str, t0: pd.Timestamp,
-                hrrr: dict | None = None) -> pd.DataFrame | None:
-    """Decoder forcing for issue date t0 from the archived GFS init at t0+1.
-    Returns None unless all 14 lead days are present for this station. With
-    hrrr, lead days 1-2 are overlaid with the 3 km HRRR forecast where present."""
-    df = gfs.get(t0 + pd.Timedelta(days=1))
-    if df is None:
-        return None
-    try:
-        rows = df.loc[[sid]] if sid in df.index else None
-    except (KeyError, TypeError):
-        rows = None
-    if rows is None or len(rows) < HORIZON:
-        return None
-    rows = rows.sort_values("lead_day").iloc[:HORIZON]
-    out = rows[GFS_VARS].reset_index(drop=True)
-    if hrrr is not None:
-        hdf = hrrr.get(t0 + pd.Timedelta(days=1))
-        if hdf is not None and sid in hdf.index:
-            h = hdf.loc[[sid]].sort_values("lead_day")
-            for _, hr in h.iterrows():
-                ld = int(hr["lead_day"])
-                if 1 <= ld <= 2:
-                    out.loc[ld - 1, GFS_VARS] = hr[GFS_VARS].to_numpy()
-    out.insert(0, "date", [t0 + pd.Timedelta(days=int(d)) for d in rows["lead_day"]])
-    return out
+class ForcingPlan:
+    """Per-lead decoder-forcing composition from archived forecast sources.
+
+    Spec: comma-separated segments "<source>:<lo>-<hi>". Later segments
+    overwrite earlier ones inside their lead range. A trailing "?" on the
+    source name makes the segment an overlay (used where present, silently
+    skipped where absent — e.g. HRRR has no Alaska coverage); non-optional
+    segments must fully cover their range or the window is skipped.
+
+      gfs:1-14                the plain GFS baseline
+      gfs:1-14,hrrr?:1-2      the frozen-baseline hybrid (--gfs --hrrr)
+      ecmwf:1-14,hrrr?:1-2    ECMWF ens-mean base with HRRR sharpening
+    """
+
+    def __init__(self, spec: str, start: str, end: str):
+        self.spec = spec
+        self.segments: list[tuple[str, int, int, bool]] = []
+        for part in spec.split(","):
+            name, rng = part.split(":")
+            optional = name.endswith("?")
+            name = name.rstrip("?")
+            if name not in SRC_DIRS:
+                raise SystemExit(f"unknown forcing source {name!r} (have {sorted(SRC_DIRS)})")
+            lo, hi = (rng.split("-") if "-" in rng else (rng, rng))
+            self.segments.append((name, int(lo), int(hi), optional))
+        self.sources: dict[str, dict] = {}
+        for name, *_ in self.segments:
+            if name not in self.sources:
+                self.sources[name] = load_gfs(start, end, src_dir=SRC_DIRS[name])
+                if not self.sources[name] and not name.startswith("hrrr"):
+                    raise SystemExit(f"no {name} init files in window — fetch first")
+
+    def issue_dates(self) -> pd.DatetimeIndex:
+        """t0 grid from the base (first) source's inits, like GFS mode did."""
+        base = self.sources[self.segments[0][0]]
+        return pd.DatetimeIndex(sorted(i - pd.Timedelta(days=1) for i in base))
+
+    def wx_fcst(self, sid: str, t0: pd.Timestamp) -> pd.DataFrame | None:
+        init = t0 + pd.Timedelta(days=1)
+        arr = np.full((HORIZON, len(GFS_VARS)), np.nan)
+        for name, lo, hi, optional in self.segments:
+            df = self.sources[name].get(init)
+            rows = None
+            if df is not None:
+                try:
+                    rows = df.loc[[sid]] if sid in df.index else None
+                except (KeyError, TypeError):
+                    rows = None
+            if rows is None:
+                if optional:
+                    continue
+                return None
+            rr = rows[(rows["lead_day"] >= lo) & (rows["lead_day"] <= hi)]
+            present = set(rr["lead_day"].astype(int))
+            if not optional and any(d not in present for d in range(lo, hi + 1)):
+                return None
+            for _, r in rr.iterrows():
+                arr[int(r["lead_day"]) - 1] = r[GFS_VARS].to_numpy(dtype=float)
+        if not np.isfinite(arr).all():
+            return None
+        out = pd.DataFrame(arr, columns=GFS_VARS)
+        out.insert(0, "date", [t0 + pd.Timedelta(days=d) for d in range(1, HORIZON + 1)])
+        return out
 
 
 def load_camels_ids(which: str) -> set[str]:
@@ -124,8 +176,23 @@ def _metric_block(results: dict, sids: list[str]) -> dict:
     return agg
 
 
+def anchor(y: np.ndarray, y_h1: float, q_obs_t0: float, decay_h: float) -> np.ndarray:
+    """As-served anchor-to-observed correction (same formula the production
+    blend applies per member in app/forecast.py): shift the trajectory by the
+    h1 gap to the last observation, decaying linearly to zero by h=1+decay_h.
+    decay_h <= 0 disables. Applied as a translation, so bands shift with the
+    point."""
+    if decay_h <= 0 or not np.isfinite(y_h1) or not np.isfinite(q_obs_t0):
+        return y
+    hs = np.arange(1, len(y) + 1, dtype=float)
+    w = np.clip(1.0 - (hs - 1.0) / float(decay_h), 0.0, 1.0)
+    return y + (q_obs_t0 - y_h1) * w
+
+
 def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
-                 gfs: dict | None = None, hrrr: dict | None = None) -> dict | None:
+                 forcing: "ForcingPlan | None" = None,
+                 anchor_decay: float = 0.0,
+                 dump: list | None = None) -> dict | None:
     df = pd.read_csv(path)
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date").reset_index(drop=True)
@@ -135,7 +202,9 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
     per_h: dict[int, dict[str, list]] = {h: {"persist": [], "mblstm": []} for h in range(1, HORIZON + 1)}
     pooled_y, pooled_yhat = [], []
     pooled_lo, pooled_hi = [], []  # model's own 0.1/0.9 quantiles for approx-CRPS
+    pooled_med = []                # true q50 (CRPS 0.5 slot; == point unless CMAL/blend policy)
     n_windows = 0
+    sid = path.name.split(".")[0]
     for t0 in issue_dates:
         if t0 not in daily.index:
             continue
@@ -153,8 +222,8 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
         q_hist = hist["q_cfs"].dropna().rename("q_cfs").reset_index()
         q_hist.columns = ["date", "q_cfs"]
         wx_hist = hist.reset_index().rename(columns={"index": "date"})[["date"] + DAILY_VARS]
-        if gfs is not None:
-            wx_fcst = gfs_wx_fcst(gfs, path.name.split(".")[0], t0, hrrr=hrrr)
+        if forcing is not None:
+            wx_fcst = forcing.wx_fcst(sid, t0)
             if wx_fcst is None:
                 continue
         else:
@@ -166,7 +235,27 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
         yhat = np.asarray([r["q_cfs"] for r in rows], dtype=float)
         ylo = np.asarray([r.get("q_lo", np.nan) for r in rows], dtype=float)
         yhi = np.asarray([r.get("q_hi", np.nan) for r in rows], dtype=float)
+        ymed = np.asarray([r.get("q_med", r["q_cfs"]) for r in rows], dtype=float)
+        ymean = np.asarray([r.get("q_mean", np.nan) for r in rows], dtype=float)
         persist = float(q_hist["q_cfs"].iloc[-1])
+
+        if dump is not None:
+            dump.append(pd.DataFrame({
+                "station_id": sid, "t0": t0.date().isoformat(),
+                "h": np.arange(1, HORIZON + 1, dtype=np.int8),
+                "truth": truth.astype(np.float32),
+                "ylo": ylo.astype(np.float32), "ymed": ymed.astype(np.float32),
+                "yhi": yhi.astype(np.float32), "ymean": ymean.astype(np.float32),
+                "persist": np.float32(persist),
+            }))
+        if anchor_decay > 0:
+            off_ref = float(yhat[0])
+            yhat = anchor(yhat, off_ref, persist, anchor_decay)
+            ylo = anchor(ylo, off_ref, persist, anchor_decay)
+            yhi = anchor(yhi, off_ref, persist, anchor_decay)
+            ymed = anchor(ymed, off_ref, persist, anchor_decay)
+            yhat = np.clip(yhat, 0.0, None); ymed = np.clip(ymed, 0.0, None)
+            ylo = np.clip(ylo, 0.0, None); yhi = np.clip(yhi, 0.0, None)
 
         n_windows += 1
         for h in range(1, HORIZON + 1):
@@ -179,18 +268,22 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
             pooled_yhat.append(yhat[h - 1])
             pooled_lo.append(ylo[h - 1])
             pooled_hi.append(yhi[h - 1])
+            pooled_med.append(ymed[h - 1])
 
     if n_windows < 5:
         return None
     pooled_y = np.asarray(pooled_y); pooled_yhat = np.asarray(pooled_yhat)
     pooled_lo = np.asarray(pooled_lo); pooled_hi = np.asarray(pooled_hi)
+    pooled_med = np.asarray(pooled_med)
     # Full SOTA metric suite via the shared app.metrics module. metrics.nse
     # reproduces the historical var<1e-3 → NaN guard, so the headline NSE is
     # byte-stable with pre-metrics-module backtest JSONs.
     m = metrics.all_point_metrics(pooled_y, pooled_yhat)
     # approx-CRPS from the model's own quantiles (mean pinball over 0.1/0.5/0.9).
+    # The 0.5 slot takes the TRUE median (q_med), not the served point — with a
+    # CMAL mean or blended point the old code scored the wrong functional.
     crps = metrics.crps_from_quantiles(
-        pooled_y, [0.1, 0.5, 0.9], np.vstack([pooled_lo, pooled_yhat, pooled_hi]))
+        pooled_y, [0.1, 0.5, 0.9], np.vstack([pooled_lo, pooled_med, pooled_hi]))
     # 90% interval coverage (PICP) and mean width (MPIW, normalized by mean obs).
     cov = float(np.mean((pooled_y >= pooled_lo) & (pooled_y <= pooled_hi))) \
         if np.isfinite(pooled_lo).any() else float("nan")
@@ -235,41 +328,59 @@ def main() -> int:
     ap.add_argument("--camels-subset", choices=["none", "671", "531"], default="none",
                     help="also report metrics on the CAMELS-US basin subset for "
                          "apples-to-apples comparison to published median-NSE")
+    ap.add_argument("--forcing-plan", default="",
+                    help="per-lead decoder forcing composition, e.g. "
+                         "'ecmwf:1-14,hrrr?:1-2' (see ForcingPlan; overrides "
+                         "--gfs/--hrrr sugar)")
+    ap.add_argument("--anchor-decay", type=float, default=0.0,
+                    help="as-served anchoring: shift trajectory by the h1 gap to "
+                         "the last observation, decaying to zero by h=1+N "
+                         "(production uses decay_h=2; 0 = off/unanchored)")
+    ap.add_argument("--point", default="",
+                    help="sets RW2_MBLSTM_POINT for the run "
+                         "(median | mean3 | blend0.2 | ...)")
+    ap.add_argument("--dump-windows", default="",
+                    help="write per-window raw predictions (unanchored "
+                         "lo/med/hi/mean + truth + persistence) to this csv.gz "
+                         "path for offline anchor/point-policy sweeps")
     args = ap.parse_args()
 
     os.environ["RW2_MBLSTM_CKPT_PATH"] = args.ckpt
-    gfs = hrrr = None
+    if args.point:
+        os.environ["RW2_MBLSTM_POINT"] = args.point
     if args.hrrr and not args.gfs:
         print("--hrrr requires --gfs")
         return 1
-    if args.gfs:
-        gfs = load_gfs(args.start, args.end)
-        if not gfs:
-            print(f"no GFS init files in window — run scripts/fetch_gfs_forcings.py first")
-            return 1
-        issue_dates = pd.DatetimeIndex(sorted(i - pd.Timedelta(days=1) for i in gfs))
-        print(f"GFS mode: {len(issue_dates)} issue dates "
+    # --gfs/--hrrr are sugar for the equivalent forcing plan.
+    plan_spec = args.forcing_plan
+    if not plan_spec and args.gfs:
+        plan_spec = "gfs:1-14,hrrr?:1-2" if args.hrrr else "gfs:1-14"
+    forcing = None
+    if plan_spec:
+        forcing = ForcingPlan(plan_spec, args.start, args.end)
+        issue_dates = forcing.issue_dates()
+        print(f"forcing plan '{plan_spec}': {len(issue_dates)} issue dates "
               f"{issue_dates[0].date()}..{issue_dates[-1].date()}")
-        if args.hrrr:
-            hrrr = load_gfs(args.start, args.end, src_dir=HRRR_DIR)
-            print(f"HRRR overlay: {len(hrrr)} matching inits")
     else:
         issue_dates = pd.date_range(args.start, args.end, freq=f"{args.stride}D")
 
     registry = {s["id"]: s for s in json.loads(STATIONS_PATH.read_text())["stations"]}
-    files = sorted(CORPUS_DIR.glob("*.csv.gz"))
+    files = sorted(p for p in CORPUS_DIR.glob("*.csv.gz")
+                   if not p.name.startswith("._"))
     if args.stride_stations > 1:
         files = files[:: args.stride_stations]  # deterministic subsample for fast A/B
     if args.limit_stations:
         files = files[: args.limit_stations]
 
     results: dict[str, dict] = {}
+    dump: list | None = [] if args.dump_windows else None
     t0 = time.time()
     for i, p in enumerate(files, 1):
         sid = p.name.split(".")[0]
         attrs = gages2.enrich_station_attrs(dict(registry.get(sid, {"id": sid})))
         try:
-            r = eval_station(p, attrs, issue_dates, gfs=gfs, hrrr=hrrr)
+            r = eval_station(p, attrs, issue_dates, forcing=forcing,
+                             anchor_decay=args.anchor_decay, dump=dump)
         except Exception as exc:
             print(f"[{i}/{len(files)}] {sid} ERR {exc}", flush=True)
             continue
@@ -279,6 +390,13 @@ def main() -> int:
         if i % 50 == 0:
             print(f"[{i}/{len(files)}] {len(results)} stations evaluated "
                   f"({time.time() - t0:.0f}s)", flush=True)
+
+    if dump:
+        dump_path = Path(args.dump_windows)
+        dump_path.parent.mkdir(parents=True, exist_ok=True)
+        pd.concat(dump, ignore_index=True).to_csv(
+            dump_path, index=False, compression="gzip")
+        print(f"wrote {len(dump)} windows -> {dump_path}", flush=True)
 
     if not results:
         print("no stations evaluated — is the checkpoint present and corpus built?")
@@ -335,10 +453,16 @@ def main() -> int:
         "schema_version": SCHEMA_VERSION,
         "label": args.label, "ckpt": args.ckpt,
         "window": [args.start, args.end], "stride_days": args.stride,
+        "stride_stations": args.stride_stations,
+        "anchor_decay": args.anchor_decay,
+        "point_policy": os.environ.get("RW2_MBLSTM_POINT", "default"),
+        "forcing_plan": plan_spec or "perfect",
         "caveat": ("decoder forcing = archived HRRR d1-2 + GFS d3-14 hybrid via "
                    "dynamical.org (real forecast error)" if args.hrrr else
                    "decoder forcing = archived GFS forecasts via dynamical.org "
                    "(real forecast error)" if args.gfs else
+                   f"decoder forcing = archived plan '{plan_spec}' via dynamical.org "
+                   "(real forecast error)" if plan_spec else
                    "decoder forcing = observed archive weather (perfect forcing); generous at h>3"),
         "crps_caveat": "approx_crps = mean pinball over {0.1,0.5,0.9}, NOT integrated CRPS "
                        "(valid for internal A/B only; resolved when a CMAL head ships).",

@@ -102,3 +102,49 @@ def test_static_vector_imputes_missing(monkeypatch, tmp_path):
     sv = mod.static_vector({}, mod._cfg)
     assert sv.shape == (len(mod.STATIC_FEATS),)
     assert np.all(np.isfinite(sv))
+
+
+def test_forecast_emits_true_median(monkeypatch, tmp_path):
+    """q_med must be present, finite, and inside the [q_lo, q_hi] band —
+    it feeds the 0.5 slot of quantile-based CRPS regardless of point policy."""
+    mod = _fresh(monkeypatch, enabled=True, ckpt_path=_tiny_ckpt(tmp_path))
+    q_hist, wx_hist, wx_fcst, attrs = _synthetic_inputs()
+    rows = mod.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    assert rows is not None
+    for r in rows:
+        assert math.isfinite(r["q_med"]) and r["q_med"] >= 0.0
+        assert r["q_lo"] <= r["q_med"] <= r["q_hi"]
+
+
+def test_point_policy_blend_leans_high(monkeypatch, tmp_path):
+    """blend point policy must sit between the median and q_hi."""
+    ckpt = _tiny_ckpt(tmp_path)
+    mod = _fresh(monkeypatch, enabled=True, ckpt_path=ckpt)
+    q_hist, wx_hist, wx_fcst, attrs = _synthetic_inputs()
+    med_rows = mod.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    monkeypatch.setenv("RW2_MBLSTM_POINT", "blend0.3")
+    mod2 = _fresh(monkeypatch, enabled=True, ckpt_path=ckpt)
+    blend_rows = mod2.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    for m, b in zip(med_rows, blend_rows):
+        assert b["q_cfs"] >= m["q_med"] - 1e-9
+        assert b["q_cfs"] <= b["q_hi"] + 1e-9
+        # the raw quantiles themselves must not move with the policy
+        assert abs(m["q_med"] - b["q_med"]) < 1e-9
+
+
+def test_backtest_anchor_formula():
+    """Anchor correction: full offset at h=1, linear decay, zero past 1+decay."""
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "bt", Path(__file__).resolve().parents[1] / "scripts" / "backtest_mblstm.py")
+    bt = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bt)
+    y = np.array([100.0, 110.0, 120.0, 130.0, 140.0])
+    out = bt.anchor(y, y_h1=100.0, q_obs_t0=160.0, decay_h=2.0)
+    assert out[0] == pytest.approx(160.0)        # h1 pinned to obs
+    assert out[1] == pytest.approx(110.0 + 30.0)  # half offset
+    assert out[2] == pytest.approx(120.0)         # decayed to zero
+    assert np.allclose(out[3:], y[3:])
+    assert np.allclose(bt.anchor(y, 100.0, 160.0, 0.0), y)  # decay 0 = off

@@ -361,9 +361,12 @@ def norm_wx(df: pd.DataFrame, cols: list[str], cfg: dict) -> np.ndarray:
     return np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
 
 
-def q_norm_stats(q_cfs: np.ndarray) -> Optional[tuple[float, float]]:
-    """Per-station asinh-discharge normalization stats."""
-    v = np.asinh(np.clip(q_cfs[np.isfinite(q_cfs)], 0.0, None))
+def q_norm_stats(q_cfs: np.ndarray, transform: str = "asinh") -> Optional[tuple[float, float]]:
+    """Per-station discharge normalization stats (asinh- or linear-space,
+    per the checkpoint's q_transform)."""
+    v = np.clip(q_cfs[np.isfinite(q_cfs)], 0.0, None)
+    if transform == "asinh":
+        v = np.asinh(v)
     if len(v) < 180:
         return None
     sd = float(np.std(v))
@@ -416,7 +419,8 @@ def forecast(
             return None
         q = q_hist.copy()
         q["date"] = pd.to_datetime(q["date"])
-        stats = q_norm_stats(q["q_cfs"].to_numpy(dtype=np.float64))
+        q_tf = cfg.get("q_transform", "asinh")
+        stats = q_norm_stats(q["q_cfs"].to_numpy(dtype=np.float64), transform=q_tf)
         if stats is None:
             return None
         mu_q, sd_q = stats
@@ -429,7 +433,9 @@ def forecast(
         wx_win = wx.set_index("date").reindex(idx)
         q_win = q.set_index("date")["q_cfs"].reindex(idx).to_numpy(dtype=np.float64)
 
-        q_asinh = np.asinh(np.clip(q_win, 0.0, None))
+        q_asinh = np.clip(q_win, 0.0, None)
+        if q_tf == "asinh":
+            q_asinh = np.asinh(q_asinh)
         q_mask = np.isfinite(q_asinh).astype(np.float32)
         q_n = np.nan_to_num((q_asinh - mu_q) / sd_q, nan=0.0).astype(np.float32)
 
@@ -456,6 +462,11 @@ def forecast(
 
         import torch
         head = cfg.get("head", "quantile")
+
+        def _denorm(z):
+            v = z * sd_q + mu_q
+            return np.sinh(v) if q_tf == "asinh" else v
+
         with torch.no_grad():
             xe = torch.from_numpy(x_enc[None, :, :])
             xd = torch.from_numpy(x_dec[None, :, :])
@@ -470,16 +481,20 @@ def forecast(
             zq = cmal_quantiles(raw, levels)          # (H, 3)
             zq = np.sort(zq, axis=1)                   # guard tiny bisection slack
             z_mean = cmal_mean(raw)                    # (H,)
-            qcfs_bands = np.clip(np.sinh(zq * sd_q + mu_q), 0.0, None)   # (H,3)
-            qcfs_mean = np.clip(np.sinh(z_mean * sd_q + mu_q), 0.0, None)  # (H,)
+            qcfs_bands = np.clip(_denorm(zq), 0.0, None)   # (H,3)
+            qcfs_mean = np.clip(_denorm(z_mean), 0.0, None)  # (H,)
             # Lay out as [q_lo, q_pt, q_hi] so the shared clamp/denorm tail
             # below operates uniformly; col indices match the quantile path.
-            q_cfs = np.stack([qcfs_bands[:, 0], qcfs_mean, qcfs_bands[:, 2]], axis=1)
+            # The true distribution median rides along as a 4th column so it
+            # gets the same caps — served as q_med (proper-scoring slot for
+            # CRPS; the mean stays the peak-aware point).
+            q_cfs = np.stack([qcfs_bands[:, 0], qcfs_mean, qcfs_bands[:, 2],
+                              qcfs_bands[:, 1]], axis=1)
         else:
-            # Denormalize: normalized asinh → cfs. Enforce quantile ordering.
+            # Denormalize: normalized (asinh or linear) → cfs. Enforce
+            # quantile ordering.
             yq = np.sort(raw, axis=1)
-            q_cfs = np.sinh(yq * sd_q + mu_q)
-            q_cfs = np.clip(q_cfs, 0.0, None)
+            q_cfs = np.clip(_denorm(yq), 0.0, None)
         # Physical sanity cap: a forecast can't exceed a wide margin over the
         # gauge's own observed record. On intermittent/ephemeral streams (long
         # runs of zero flow, rare flash spikes) the asinh→sinh denormalization
@@ -492,13 +507,14 @@ def forecast(
         if not np.all(np.isfinite(q_cfs)):
             return None
 
-        # q_cfs columns are [lo, mid, hi]: for the quantile head mid=q50, for
-        # the cmal head mid=distribution mean (peak-aware). For cmal the three
-        # columns are exactly [q10, mean, q90], so med_i indexes the mean.
+        # q_cfs columns are [lo, mid, hi(, median)]: for the quantile head
+        # mid=q50, for the cmal head mid=distribution mean (peak-aware) and
+        # col 3 carries the true median. med_i indexes the mid column.
         if head == "cmal":
-            lo_i, med_i, hi_i = 0, 1, 2
+            lo_i, med_i, hi_i, true_med_i = 0, 1, 2, 3
         else:
             lo_i, med_i, hi_i = 0, len(cfg["quantiles"]) // 2, len(cfg["quantiles"]) - 1
+            true_med_i = med_i
         # The pinball MEDIAN systematically under-predicts peaks (baseline FHV
         # -51%: 99% of gauges under-call high flow). Flow is right-skewed, so a
         # peak-aware point estimate should lean above the median. RW2_MBLSTM_POINT
@@ -511,7 +527,7 @@ def forecast(
         # Lo/hi bands always remain q10/q90.
         point = os.environ.get("RW2_MBLSTM_POINT", "median" if head != "cmal" else "mean")
         if point == "mean3":
-            q_pt = q_cfs.mean(axis=1)
+            q_pt = q_cfs[:, [lo_i, med_i, hi_i]].mean(axis=1)
         elif point.startswith("blend"):
             try:
                 w = float(point[5:]) if len(point) > 5 else 0.3
@@ -526,12 +542,18 @@ def forecast(
         rows = []
         for i in range(horizon):
             d = (last_date + pd.Timedelta(days=i + 1)).date()
-            rows.append({
+            row = {
                 "date": d.isoformat(),
                 "q_cfs": float(q_pt[i]),
                 "q_lo": float(q_cfs[i, lo_i]),
                 "q_hi": float(q_cfs[i, hi_i]),
-            })
+                # True 0.5-quantile regardless of point policy: the proper
+                # value for the 0.5 slot of quantile-based CRPS.
+                "q_med": float(q_cfs[i, true_med_i]),
+            }
+            if head == "cmal":
+                row["q_mean"] = float(q_cfs[i, med_i])
+            rows.append(row)
         return rows
     except Exception:
         return None

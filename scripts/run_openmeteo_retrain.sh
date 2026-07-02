@@ -40,14 +40,18 @@ if [ "$READY" -lt "$MIN_STATIONS" ]; then
   exit 0
 fi
 
-# 3. Train 4 seeds, 13-var full forcing set, sequential. Skip any seed whose
-#    checkpoint already exists (crash/resume safe). lr 2e-4 (the stable h256
-#    setting from v16). hidden 256 to match the production ensemble.
+# 3. Train 4 seeds, enc-13/dec-5 split, sequential. The 13-var encoder keeps
+#    the soil/snow/wind signal; the 5-var (compat) decoder stays drivable by
+#    the GFS/GEFS/ECMWF forecast archives, so the om13 model can be
+#    forcing-fine-tuned and honestly backtested under real forecast error
+#    (an enc=dec=13 model could not). Skip any seed whose checkpoint already
+#    exists (crash/resume safe). lr 2e-4 (the stable h256 setting from v16).
 for SEED in 201 202 203 204; do
   OUT=data/mblstm/model_h256_om13_s${SEED}.pt
   if [ -f "$OUT" ]; then echo "seed $SEED exists, skip" >> $LOG; continue; fi
   echo "=== training seed $SEED ($(date)) ===" >> $LOG
   caffeinate -i $PY scripts/train_mblstm.py --corpus-dir $CORPUS \
+    --enc-vars full --dec-vars compat \
     --epochs 12 --windows-per-station 300 --hidden 256 --batch 256 \
     --val-stride 20 --lr 2e-4 --seed $SEED --device mps \
     --out $OUT >> logs/train_om13_s${SEED}.log 2>&1

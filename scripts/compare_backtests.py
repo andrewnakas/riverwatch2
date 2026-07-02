@@ -28,10 +28,36 @@ def main() -> int:
     ap.add_argument("baseline")
     ap.add_argument("candidate")
     ap.add_argument("--subset", default="full")
+    ap.add_argument("--force", action="store_true",
+                    help="compare despite mismatched station subset / window")
     args = ap.parse_args()
 
     base = json.loads(open(args.baseline).read())
     cand = json.loads(open(args.candidate).read())
+
+    # Comparison guard: a stride-3 candidate scored against the full-set
+    # baseline (or mismatched eval windows) produces a meaningless delta —
+    # refuse unless --force. Intentional A/B axes (ckpt, forcing plan,
+    # anchoring, point policy) are printed so every comparison self-documents.
+    hard, soft = [], []
+    for key, kind in (("stride_stations", "hard"), ("window", "hard"),
+                      ("ckpt", "soft"), ("forcing_plan", "soft"),
+                      ("caveat", "soft"), ("anchor_decay", "soft"),
+                      ("point_policy", "soft")):
+        b, c = base.get(key), cand.get(key)
+        if key == "stride_stations":
+            b, c = b or 1, c or 1  # legacy JSONs predate the field (= full set)
+        if b != c:
+            (hard if kind == "hard" else soft).append(f"  {key}: {b!r} -> {c!r}")
+    if soft:
+        print("A/B axes differing (intentional?):")
+        print("\n".join(soft))
+    if hard:
+        print("MISMATCHED COMPARISON BASIS (delta would be meaningless):")
+        print("\n".join(hard))
+        if not args.force:
+            print("refusing; rerun with --force to override")
+            return 1
 
     # (key, direction): +1 higher-better, -1 lower-better, 0 toward-zero
     spec = [("nse", +1), ("kge", +1), ("log_nse", +1), ("pearson_r", +1),
