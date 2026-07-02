@@ -8,7 +8,10 @@
 cd /Users/nakas/Documents/RiverWatch2/riverwatch2
 PY=.venv/bin/python
 LOG=logs/p3_queue.log
-MIX="perfect:0.25,gfs:0.4,gefs:0.35"
+# P2 verdict: ECMWF is the serve/eval-time winner (+0.040 NSE) — include its
+# error pattern in the fine-tune mix (archive only covers Apr-Dec 2024 in the
+# train period, so it takes a minority share; GFS/GEFS carry the bulk).
+MIX="perfect:0.25,gfs:0.3,gefs:0.25,ecmwf:0.2"
 
 gefs_train_count() {
   find data/mblstm/gefs_fcst/ -name '202[1-4]-*.csv.gz' ! -name '*members*' 2>/dev/null | wc -l | tr -d ' '
