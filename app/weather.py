@@ -214,6 +214,13 @@ def fetch_forecast(lat: float, lon: float, days: int = 14, *, max_age_hours: int
             "forecast_days": min(days, 16),
             "timezone": "UTC",
         }
+        # v17.1: forecast model selection. ECMWF forcing beat the prior
+        # default decisively on the honest harness (full-scale NSE 0.540 vs
+        # 0.510, CRPS -7%); serving defaults to Open-Meteo's "best match"
+        # unless RW2_FCST_MODEL pins a model (production: ecmwf_ifs025).
+        model = os.environ.get("RW2_FCST_MODEL", "").strip()
+        if model:
+            params["models"] = model
         url = FORECAST_URL + "?" + urlencode(params)
         payload = _http_json(url)
         cache.write_text(json.dumps(payload))
