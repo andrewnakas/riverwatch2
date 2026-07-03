@@ -18,9 +18,11 @@ import pandas as pd
 NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "openmeteo"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+if not CACHE_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
 RECORDS_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "openmeteo_records"
-RECORDS_DIR.mkdir(parents=True, exist_ok=True)
+if not RECORDS_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"

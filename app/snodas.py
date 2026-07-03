@@ -37,7 +37,8 @@ SNODAS_OFF = os.environ.get("RW2_SNODAS_OFF") == "1"
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTRACTS_DIR = ROOT / "data" / "snodas_extracts"
-EXTRACTS_DIR.mkdir(parents=True, exist_ok=True)
+if not EXTRACTS_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    EXTRACTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _extract_path(station_id: str) -> Path:

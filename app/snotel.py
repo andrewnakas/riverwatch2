@@ -34,9 +34,11 @@ def _no_fetch() -> bool:
 
 ROOT = Path(__file__).resolve().parents[1] / "data" / "cache"
 SITES_DIR = ROOT / "snotel_sites"
-SITES_DIR.mkdir(parents=True, exist_ok=True)
+if not SITES_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    SITES_DIR.mkdir(parents=True, exist_ok=True)
 RECORDS_DIR = ROOT / "snotel_records"
-RECORDS_DIR.mkdir(parents=True, exist_ok=True)
+if not RECORDS_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
 API = "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1"
 NEAREST_KM = 50.0  # only attach SNOTEL when there's a site this close

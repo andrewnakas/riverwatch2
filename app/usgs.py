@@ -30,9 +30,11 @@ NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 NO_FETCH_RECENT_DAYS = int(os.environ.get("RW2_NO_FETCH_RECENT_DAYS", "30"))
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "usgs"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+if not CACHE_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
 RECORDS_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "usgs_records"
-RECORDS_DIR.mkdir(parents=True, exist_ok=True)
+if not RECORDS_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
 DV_URL = "https://waterservices.usgs.gov/nwis/dv/"
 IV_URL = "https://waterservices.usgs.gov/nwis/iv/"

@@ -470,17 +470,21 @@ def forecast(
         with torch.no_grad():
             xe = torch.from_numpy(x_enc[None, :, :])
             xd = torch.from_numpy(x_dec[None, :, :])
-            # Ensemble = mean of member outputs in normalized space.
-            raw = np.mean([m(xe, xd).squeeze(0).numpy() for m in _models], axis=0)
+            raws = [m(xe, xd).squeeze(0).numpy() for m in _models]
 
         if head == "cmal":
-            # Analytic quantiles + distribution mean from the mixture, all in
-            # z-space, then the usual asinh denorm. The mean (above the median
-            # on a right-skew) is the peak-aware served point estimate.
+            # Per-seed analytic quantiles + mean, then Vincentized across the
+            # seed ensemble (average of per-model quantiles). v17.1 fix:
+            # averaging raw CMAL PARAMETERS across seeds (the old path) is not
+            # a distributional combination at all — scale/asymmetry params
+            # from independently-trained mixtures don't average meaningfully,
+            # and it measurably degraded the 4-seed ensemble vs its single
+            # seeds. Quantile averaging is the standard forecast-combination
+            # operator (same one the quantile head uses below).
             levels = [0.1, 0.5, 0.9]
-            zq = cmal_quantiles(raw, levels)          # (H, 3)
-            zq = np.sort(zq, axis=1)                   # guard tiny bisection slack
-            z_mean = cmal_mean(raw)                    # (H,)
+            zq = np.mean([np.sort(cmal_quantiles(r, levels), axis=1)
+                          for r in raws], axis=0)      # (H, 3)
+            z_mean = np.mean([cmal_mean(r) for r in raws], axis=0)  # (H,)
             qcfs_bands = np.clip(_denorm(zq), 0.0, None)   # (H,3)
             qcfs_mean = np.clip(_denorm(z_mean), 0.0, None)  # (H,)
             # Lay out as [q_lo, q_pt, q_hi] so the shared clamp/denorm tail
@@ -491,8 +495,10 @@ def forecast(
             q_cfs = np.stack([qcfs_bands[:, 0], qcfs_mean, qcfs_bands[:, 2],
                               qcfs_bands[:, 1]], axis=1)
         else:
-            # Denormalize: normalized (asinh or linear) → cfs. Enforce
+            # Quantile head: averaging member quantile outputs (Vincentization)
+            # is valid directly on the raw outputs. Denormalize and enforce
             # quantile ordering.
+            raw = np.mean(raws, axis=0)
             yq = np.sort(raw, axis=1)
             q_cfs = np.clip(_denorm(yq), 0.0, None)
         # Physical sanity cap: a forecast can't exceed a wide margin over the
