@@ -12,6 +12,11 @@ needs to fetch the 53 MB zip:
 
     python scripts/build_gages2_attrs.py
 
+v17: `--extra-ids <json>` unions additional USGS site ids into the target
+list (e.g. the CAMELS basins in data/camels_gauge_ids.json — a plain list,
+or a dict whose non-underscore keys map to id lists). The downloaded zip is
+cached on the SD card (see ZIP_CACHE) so reruns never refetch.
+
 Output schema per station:
     {
       "FORESTNLCD06": float,        # % forest (NLCD 2006)
@@ -36,6 +41,7 @@ Output schema per station:
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
@@ -48,6 +54,8 @@ GAGES2_URL = "https://water.usgs.gov/GIS/dsdl/basinchar_and_report_sept_2011.zip
 ROOT = Path(__file__).resolve().parents[1]
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
 OUT_PATH = ROOT / "data" / "gages2_attrs.json"
+# Big source zips live on the SD card, never the internal disk.
+ZIP_CACHE = Path("/Volumes/STORAGE_SD/riverwatch2_data/gages2/basinchar_and_report_sept_2011.zip")
 
 # (table, columns we want from it). Every column we don't list gets dropped
 # at write time so the JSON stays compact.
@@ -87,17 +95,61 @@ def _maybe_float(v: str) -> float | None:
         return None
 
 
-def main() -> int:
-    print(f"loading station list from {STATIONS_PATH}")
-    ours = {s["id"] for s in json.loads(STATIONS_PATH.read_text())["stations"]}
-    print(f"  {len(ours)} target stations")
+def _ids_from_json(path: Path) -> set[str]:
+    """USGS site ids from a JSON file: a plain list of id strings, or a dict
+    whose non-underscore-prefixed keys map to id lists (the shape of
+    data/camels_gauge_ids.json)."""
+    data = json.loads(path.read_text())
+    ids: set[str] = set()
 
-    # Pull the outer zip into memory; the inner zip
-    # `spreadsheets-in-csv-format.zip` is what we actually want.
+    def collect(v) -> None:
+        if isinstance(v, list):
+            ids.update(str(x).strip() for x in v if str(x).strip())
+        elif isinstance(v, dict):
+            for k, vv in v.items():
+                if not str(k).startswith("_"):
+                    collect(vv)
+
+    collect(data)
+    return ids
+
+
+def _fetch_outer_zip() -> bytes:
+    """The 53 MB GAGES-II zip, from the SD-card cache when present; a fresh
+    download is written to the cache (SD card, never internal disk) first."""
+    if ZIP_CACHE.exists():
+        print(f"using cached {ZIP_CACHE}")
+        return ZIP_CACHE.read_bytes()
     print(f"fetching {GAGES2_URL}…")
     with urllib.request.urlopen(GAGES2_URL, timeout=180) as r:
         outer_bytes = r.read()
     print(f"  {len(outer_bytes)/1e6:.1f} MB")
+    if ZIP_CACHE.parent.parent.exists():  # SD card mounted
+        ZIP_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        ZIP_CACHE.write_bytes(outer_bytes)
+        print(f"  cached to {ZIP_CACHE}")
+    return outer_bytes
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--extra-ids", action="append", default=[],
+                    help="JSON file of additional USGS site ids to include "
+                         "(repeatable); e.g. data/camels_gauge_ids.json")
+    args = ap.parse_args(argv)
+
+    print(f"loading station list from {STATIONS_PATH}")
+    ours = {s["id"] for s in json.loads(STATIONS_PATH.read_text())["stations"]}
+    print(f"  {len(ours)} target stations")
+    for extra in args.extra_ids:
+        ids = _ids_from_json(Path(extra))
+        new = ids - ours
+        ours |= ids
+        print(f"  +{len(new)} new ids from {extra} ({len(ours)} total)")
+
+    # Pull the outer zip into memory; the inner zip
+    # `spreadsheets-in-csv-format.zip` is what we actually want.
+    outer_bytes = _fetch_outer_zip()
 
     with zipfile.ZipFile(io.BytesIO(outer_bytes)) as outer_z:
         names = outer_z.namelist()

@@ -44,6 +44,9 @@ from app.mblstm import (  # noqa: E402
 
 CORPUS_DIR = ROOT / "data" / "mblstm" / "corpus"
 STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
+# Supplemental lat/lon/alt_ft/drain_area_sqmi for CAMELS benchmark basins
+# missing from the production registry (scripts/build_camels_station_meta.py).
+CAMELS_META_PATH = ROOT / "data" / "camels_station_meta.json"
 GFS_DIR = ROOT / "data" / "mblstm" / "gfs_fcst"
 HRRR_DIR = ROOT / "data" / "mblstm" / "hrrr_fcst"
 GEFS_DIR = ROOT / "data" / "mblstm" / "gefs_fcst"
@@ -481,6 +484,15 @@ def main() -> int:
     stations = [s for s in (load_station(p, enc_vars) for p in files) if s is not None]
 
     registry = {st["id"]: st for st in json.loads(STATIONS_PATH.read_text())["stations"]}
+    # Fallback-merge the supplemental CAMELS metadata so benchmark basins get
+    # real lat/lon/alt/area statics instead of median fill. Per-key setdefault:
+    # production registry values always win where present.
+    if CAMELS_META_PATH.exists():
+        for st in json.loads(CAMELS_META_PATH.read_text())["stations"]:
+            cur = registry.setdefault(st["id"], {"id": st["id"]})
+            for k, v in st.items():
+                if cur.get(k) is None and v is not None:
+                    cur[k] = v
     attrs_by_id = {
         s["id"]: gages2.enrich_station_attrs(dict(registry.get(s["id"], {"id": s["id"]})))
         for s in stations
