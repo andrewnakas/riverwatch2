@@ -329,7 +329,10 @@ def _anchor_to_observed(
     *,
     decay_h: int,
 ) -> List[float]:
-    if not pred:
+    # decay_h <= 0 disables anchoring entirely (v17.1: members whose encoder
+    # already assimilates observed discharge forecast BETTER unanchored —
+    # measured on the 2025 harness, benchmarks/sweep_anchor_point_hybrid_str3).
+    if not pred or decay_h <= 0:
         return pred
     delta = float(pred[0]) - float(q_obs)
     if not np.isfinite(delta) or delta == 0.0:
@@ -1295,15 +1298,36 @@ def forecast_station(
     # v16: homegrown multi-basin LSTM (Google-Flood-Hub-style encoder-decoder
     # with autoregressive discharge input and quantile head). Trained by
     # scripts/train_mblstm.py; gated by RW2_ENABLE_MBLSTM=1 and silently
-    # absent until data/mblstm/model.pt exists. decay_h=2: like nwm_residual
-    # it self-anchors (the encoder sees observed discharge through issuance).
+    # absent until data/mblstm/model.pt exists. decay_h=0 (v17.1): the encoder
+    # assimilates observed discharge through issuance and the unanchored h1
+    # already beats persistence (MAE ratio 0.80); mechanical anchoring
+    # measurably degraded every metric on the 2025 harness sweep. Env-
+    # overridable for rollback.
     try:
         from . import mblstm as _mblstm
+        # v17.1: ECMWF IFS ENS ensemble-MEAN decoder forcing, gated by
+        # RW2_MBLSTM_FCST=ecmwf_ens. Measured basis (EXPERIMENTS.md row 4):
+        # eval-time ECMWF ens-mean forcing is worth +0.030 NSE full-scale vs
+        # GFS. The harness fed the decoder a 5-var frame (temps/precip/srad
+        # only; remaining dec_vars ride at the training mean), so serving
+        # passes the 5-var ens-mean frame as-is rather than patching it onto
+        # the shared wx_fcst. Any fetch failure falls back to wx_fcst.
+        mb_wx_fcst = wx_fcst
+        if os.environ.get("RW2_MBLSTM_FCST") == "ecmwf_ens":
+            try:
+                ens_fcst = weather.fetch_forecast_ecmwf_ens(lat, lon, days=horizon + 2)
+                if len(ens_fcst):
+                    mb_wx_fcst = ens_fcst
+                else:
+                    notes.append("mblstm ecmwf_ens forcing empty; fell back to shared wx_fcst")
+            except Exception as exc:
+                notes.append(f"mblstm ecmwf_ens forcing failed: {exc}; fell back to shared wx_fcst")
         mblstm_rows = _mblstm.forecast(
-            q_hist, wx_hist, wx_fcst, station_attrs or {}, horizon,
+            q_hist, wx_hist, mb_wx_fcst, station_attrs or {}, horizon,
         )
         if mblstm_rows:
-            raw_member_preds["mblstm"] = ([r["q_cfs"] for r in mblstm_rows], 2)
+            mb_decay = int(os.environ.get("RW2_MBLSTM_ANCHOR_DECAY", "0"))
+            raw_member_preds["mblstm"] = ([r["q_cfs"] for r in mblstm_rows], mb_decay)
     except Exception as exc:
         notes.append(f"mblstm failed: {exc}")
 

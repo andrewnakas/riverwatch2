@@ -42,7 +42,8 @@ NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 NBM_OFF = os.environ.get("RW2_NBM_OFF") == "1"
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "nbm"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+if not CACHE_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 NBM_URL = "https://api.open-meteo.com/v1/forecast"
 NBM_MAX_DAYS = 11

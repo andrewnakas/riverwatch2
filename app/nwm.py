@@ -32,7 +32,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 CROSSWALK_PATH = ROOT / "data" / "nwm_crosswalk.json"
 CACHE_DIR = ROOT / "data" / "cache" / "nwm"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+if not CACHE_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 API = "https://api.water.noaa.gov/nwps/v1"
 USER_AGENT = "riverwatch2/0.1 (treesixtyweather@gmail.com)"

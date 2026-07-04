@@ -116,3 +116,11 @@ def test_blend_weights_floors_invalid_members():
     assert w["good"] > w["bad"]
     assert w["good"] > w["nan"]
     assert sum(w.values()) == pytest.approx(1.0)
+
+
+def test_anchor_decay_zero_disables_anchoring():
+    """decay_h=0 must be a strict no-op (v17.1: self-anchoring members like
+    mblstm forecast better unanchored — measured on the 2025 harness sweep)."""
+    pred = [140.0, 150.0, 160.0]
+    assert _anchor_to_observed(pred, q_obs=100.0, decay_h=0) == pred
+    assert _anchor_to_observed(pred, q_obs=100.0, decay_h=-1) == pred

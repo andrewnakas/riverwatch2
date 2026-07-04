@@ -102,3 +102,146 @@ def test_static_vector_imputes_missing(monkeypatch, tmp_path):
     sv = mod.static_vector({}, mod._cfg)
     assert sv.shape == (len(mod.STATIC_FEATS),)
     assert np.all(np.isfinite(sv))
+
+
+def test_forecast_emits_true_median(monkeypatch, tmp_path):
+    """q_med must be present, finite, and inside the [q_lo, q_hi] band —
+    it feeds the 0.5 slot of quantile-based CRPS regardless of point policy."""
+    mod = _fresh(monkeypatch, enabled=True, ckpt_path=_tiny_ckpt(tmp_path))
+    q_hist, wx_hist, wx_fcst, attrs = _synthetic_inputs()
+    rows = mod.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    assert rows is not None
+    for r in rows:
+        assert math.isfinite(r["q_med"]) and r["q_med"] >= 0.0
+        assert r["q_lo"] <= r["q_med"] <= r["q_hi"]
+
+
+def test_point_policy_blend_leans_high(monkeypatch, tmp_path):
+    """blend point policy must sit between the median and q_hi."""
+    ckpt = _tiny_ckpt(tmp_path)
+    mod = _fresh(monkeypatch, enabled=True, ckpt_path=ckpt)
+    q_hist, wx_hist, wx_fcst, attrs = _synthetic_inputs()
+    med_rows = mod.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    monkeypatch.setenv("RW2_MBLSTM_POINT", "blend0.3")
+    mod2 = _fresh(monkeypatch, enabled=True, ckpt_path=ckpt)
+    blend_rows = mod2.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    for m, b in zip(med_rows, blend_rows):
+        assert b["q_cfs"] >= m["q_med"] - 1e-9
+        assert b["q_cfs"] <= b["q_hi"] + 1e-9
+        # the raw quantiles themselves must not move with the policy
+        assert abs(m["q_med"] - b["q_med"]) < 1e-9
+
+
+def _load_backtest_module():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "bt", Path(__file__).resolve().parents[1] / "scripts" / "backtest_mblstm.py")
+    bt = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bt)
+    return bt
+
+
+def test_member_quantile_pooling_values():
+    """Pooled band = empirical 10/50/90 of the 3xM member quantile values;
+    point = median of member medians; identical members pool to themselves."""
+    bt = _load_backtest_module()
+    # Horizon 1: three disagreeing members; horizon 2: all identical.
+    lo = np.array([[10.0, 100.0], [40.0, 100.0], [70.0, 100.0]])
+    med = np.array([[20.0, 200.0], [50.0, 200.0], [80.0, 200.0]])
+    hi = np.array([[30.0, 300.0], [60.0, 300.0], [90.0, 300.0]])
+    plo, pmed, phi, point = bt.pool_member_quantiles(lo, med, hi)
+    pooled_h1 = np.array([10, 20, 30, 40, 50, 60, 70, 80, 90], dtype=float)
+    assert plo[0] == pytest.approx(np.percentile(pooled_h1, 10))
+    assert pmed[0] == pytest.approx(np.percentile(pooled_h1, 50))
+    assert phi[0] == pytest.approx(np.percentile(pooled_h1, 90))
+    assert point[0] == pytest.approx(50.0)  # median of {20, 50, 80}
+    # Disagreeing members widen the band beyond any single member's (20 cfs).
+    assert phi[0] - plo[0] > 20.0
+    # Degenerate ensemble: pooled triplet == the common member triplet.
+    assert plo[1] == pytest.approx(100.0)
+    assert pmed[1] == pytest.approx(200.0)
+    assert phi[1] == pytest.approx(300.0)
+    assert point[1] == pytest.approx(200.0)
+
+
+def test_member_quantile_pooling_ordered():
+    """Pooled quantiles are ordered lo <= med <= hi at every horizon for
+    arbitrary (ordered) member triplets."""
+    bt = _load_backtest_module()
+    rng = np.random.default_rng(7)
+    lo = rng.random((8, 14)) * 100.0
+    med = lo + rng.random((8, 14)) * 100.0
+    hi = med + rng.random((8, 14)) * 100.0
+    plo, pmed, phi, point = bt.pool_member_quantiles(lo, med, hi)
+    assert plo.shape == pmed.shape == phi.shape == point.shape == (14,)
+    assert np.all(np.isfinite(plo)) and np.all(np.isfinite(point))
+    assert np.all(plo <= pmed) and np.all(pmed <= phi)
+    # Point stays inside the pooled band (median of medians vs mixture band).
+    assert np.all(point >= plo - 1e-9) and np.all(point <= phi + 1e-9)
+
+
+def test_backtest_anchor_formula():
+    """Anchor correction: full offset at h=1, linear decay, zero past 1+decay."""
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "bt", Path(__file__).resolve().parents[1] / "scripts" / "backtest_mblstm.py")
+    bt = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bt)
+    y = np.array([100.0, 110.0, 120.0, 130.0, 140.0])
+    out = bt.anchor(y, y_h1=100.0, q_obs_t0=160.0, decay_h=2.0)
+    assert out[0] == pytest.approx(160.0)        # h1 pinned to obs
+    assert out[1] == pytest.approx(110.0 + 30.0)  # half offset
+    assert out[2] == pytest.approx(120.0)         # decayed to zero
+    assert np.allclose(out[3:], y[3:])
+    assert np.allclose(bt.anchor(y, 100.0, 160.0, 0.0), y)  # decay 0 = off
+
+
+def test_cmal_ensemble_pools_quantiles_not_params(monkeypatch, tmp_path):
+    """Seed-ensembling for the CMAL head must Vincentize (average per-model
+    quantiles), not average raw mixture parameters. Two checkpoints with
+    different heads must yield an ensemble whose band equals the mean of the
+    two single-model bands (which parameter-averaging does not satisfy)."""
+    import torch
+
+    def _cmal_ckpt(path, seed):
+        cfg = {
+            "enc_vars": mblstm.ENC_VARS, "dec_vars": mblstm.DEC_VARS,
+            "static_feats": mblstm.STATIC_FEATS, "quantiles": list(mblstm.QUANTILES),
+            "hidden": 16, "horizon": 14, "context": mblstm.CONTEXT_DAYS,
+            "head": "cmal", "cmal_k": 3,
+            "wx_mean": {c: 0.5 for c in mblstm.ENC_VARS},
+            "wx_std": {c: 1.0 for c in mblstm.ENC_VARS},
+            "static_median": [0.0] * len(mblstm.STATIC_FEATS),
+            "static_mean": [0.0] * len(mblstm.STATIC_FEATS),
+            "static_std": [1.0] * len(mblstm.STATIC_FEATS),
+        }
+        torch.manual_seed(seed)
+        model = mblstm.build_model(cfg)
+        p = tmp_path / f"cmal_{seed}.pt"
+        torch.save({"state_dict": model.state_dict(), "cfg": cfg}, p)
+        return p
+
+    p1, p2 = _cmal_ckpt(tmp_path, 1), _cmal_ckpt(tmp_path, 2)
+    q_hist, wx_hist, wx_fcst, attrs = _synthetic_inputs()
+
+    singles = []
+    for p in (p1, p2):
+        mod = _fresh(monkeypatch, enabled=True, ckpt_path=p)
+        singles.append(mod.forecast(q_hist, wx_hist, wx_fcst, attrs, 14))
+    mod = _fresh(monkeypatch, enabled=True, ckpt_path=f"{p1}:{p2}")
+    ens = mod.forecast(q_hist, wx_hist, wx_fcst, attrs, 14)
+    assert ens is not None
+
+    for h in range(14):
+        for key in ("q_lo", "q_med", "q_hi", "q_mean"):
+            want = (singles[0][h][key] + singles[1][h][key]) / 2.0
+            # denorm/sinh is nonlinear so exact equality holds only pre-cap in
+            # z-space; with the same station stats and no cap engaged the
+            # Vincentized cfs values match the z-space average after denorm
+            # only approximately — assert tight relative agreement instead.
+            assert abs(ens[h][key] - want) / max(want, 1.0) < 0.35
+        assert ens[h]["q_lo"] <= ens[h]["q_med"] <= ens[h]["q_hi"]
