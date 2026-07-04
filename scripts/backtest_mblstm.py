@@ -443,6 +443,10 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", default=str(ROOT / "data" / "mblstm" / "model.pt"))
+    ap.add_argument("--corpus-dir", default="",
+                    help="override the eval corpus (e.g. "
+                         "data/mblstm/camels_corpus for the CAMELS-531 "
+                         "protocol runs)")
     ap.add_argument("--start", default="2025-01-01")
     ap.add_argument("--end", default="2025-12-31")
     ap.add_argument("--stride", type=int, default=7)
@@ -514,7 +518,10 @@ def main() -> int:
         issue_dates = pd.date_range(args.start, args.end, freq=f"{args.stride}D")
 
     registry = {s["id"]: s for s in json.loads(STATIONS_PATH.read_text())["stations"]}
-    files = sorted(p for p in CORPUS_DIR.glob("*.csv.gz")
+    corpus_dir = Path(args.corpus_dir) if args.corpus_dir else CORPUS_DIR
+    if not corpus_dir.is_absolute():
+        corpus_dir = ROOT / corpus_dir
+    files = sorted(p for p in corpus_dir.glob("*.csv.gz")
                    if not p.name.startswith("._"))
     if args.stride_stations > 1:
         files = files[:: args.stride_stations]  # deterministic subsample for fast A/B
@@ -605,6 +612,7 @@ def main() -> int:
         "label": args.label, "ckpt": args.ckpt,
         "window": [args.start, args.end], "stride_days": args.stride,
         "stride_stations": args.stride_stations,
+        "corpus_dir": str(corpus_dir),
         "anchor_decay": args.anchor_decay,
         "min_windows": args.min_windows,
         "point_policy": os.environ.get("RW2_MBLSTM_POINT", "default"),

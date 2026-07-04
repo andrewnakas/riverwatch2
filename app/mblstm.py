@@ -438,6 +438,11 @@ def forecast(
             q_asinh = np.asinh(q_asinh)
         q_mask = np.isfinite(q_asinh).astype(np.float32)
         q_n = np.nan_to_num((q_asinh - mu_q) / sd_q, nan=0.0).astype(np.float32)
+        if cfg.get("no_q_input"):
+            # CAMELS-protocol checkpoint: trained with the discharge channels
+            # zeroed (pure rainfall-runoff) — serving must reproduce that.
+            q_n[:] = 0.0
+            q_mask[:] = 0.0
 
         sv = static_vector(static_attrs or {}, cfg)
         enc_wx = norm_wx(wx_win.reset_index(drop=True), cfg["enc_vars"], cfg)

@@ -201,7 +201,11 @@ class Corpus:
         a = t0 - CONTEXT_DAYS + 1
         q_n = st["q_n"][a: t0 + 1].copy()
         q_mask = st["q_mask"][a: t0 + 1].copy()
-        if rng is not None:
+        if self.no_q_input:
+            # CAMELS-protocol mode: the encoder never sees discharge.
+            q_n[:] = 0.0
+            q_mask[:] = 0.0
+        elif rng is not None:
             if rng.random() < self.ar_mask_p:
                 k = int(rng.integers(1, HORIZON + 1))
                 q_n[-k:] = 0.0
@@ -246,6 +250,7 @@ class Corpus:
     ar_mask_p = 0.3
     forcing_noise = 0.0
     mix_lookups: list | None = None
+    no_q_input = False
 
 
 def _parse_forcing_file(p: Path, dec_vars: list[str], n_leads: int):
@@ -345,7 +350,17 @@ def pinball(yq, y, m, quantiles, torch):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--train-start", default="",
+                    help="exclude windows whose first target predates this "
+                         "(CAMELS protocol: train 1999-10-01.. while the "
+                         "test decade 1989-99 sits EARLIER — without this "
+                         "flag those years leak into training)")
     ap.add_argument("--train-end", default="2024-12-31")
+    ap.add_argument("--no-q-input", action="store_true",
+                    help="zero the encoder discharge + mask channels for "
+                         "every timestep (pure rainfall-runoff, CAMELS-"
+                         "protocol-comparable). Persisted in cfg so serving "
+                         "and backtests reproduce it.")
     ap.add_argument("--val-start", default="2025-01-01")
     ap.add_argument("--val-end", default="2025-12-31")
     ap.add_argument("--hidden", type=int, default=128)
@@ -480,9 +495,12 @@ def main() -> int:
     corpus = Corpus(stations, attrs_by_id, train_end, enc_vars, dec_vars,
                     stats=base_payload["cfg"] if base_payload else None,
                     q_transform=q_transform, static_feats=static_feats)
-    print(f"usable stations: {len(corpus.stations)}")
+    corpus.no_q_input = bool(args.no_q_input)
+    print(f"usable stations: {len(corpus.stations)}"
+          + (" (no-q-input: encoder discharge zeroed)" if corpus.no_q_input else ""))
 
-    train_windows = corpus.window_index(None, train_end)
+    train_lo = pd.Timestamp(args.train_start) if args.train_start else None
+    train_windows = corpus.window_index(train_lo, train_end)
     val_all = corpus.window_index(pd.Timestamp(args.val_start), pd.Timestamp(args.val_end))
 
     def _filter_in(wins, lookup):
@@ -583,6 +601,7 @@ def main() -> int:
             "train_end": args.train_end, "val_range": [args.val_start, args.val_end],
             "n_stations": len(corpus.stations),
             "q_transform": q_transform,
+            "no_q_input": bool(args.no_q_input),
             "decoder_forcing": "observed-archive (perfect-forcing caveat for h>3)",
             "trained_at": pd.Timestamp.utcnow().isoformat(),
         }
