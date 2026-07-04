@@ -211,7 +211,13 @@ jobs:
           # (MAE ratio 0.66-0.76 under real GFS forcings) and decisively
           # outperforms nwm_residual.
           RW2_ENABLE_MBLSTM: "1"
-          RW2_MBLSTM_CKPT_PATH: "data/mblstm/model_h256_s101_gfsft.pt:data/mblstm/model_h256_s102_gfsft.pt:data/mblstm/model_h256_s103_gfsft.pt:data/mblstm/model_h256_s104_gfsft.pt"
+          # v17.1: CMAL-head 4-seed ensemble (Vincentized quantile pooling),
+          # served with the mixture-mean point. Honest harness, ECMWF ens-mean
+          # forcing, 1,758 stations: NSE 0.558 vs frozen 0.506, FHV -46.3 vs
+          # -50.9, CRPS 117.8 vs 125.2, narrower bands at PICP 0.79. Known
+          # trade: FLV (low-flow bias) worsens ~+9 — tercile-stratified blend
+          # weights are the planned follow-up. EXPERIMENTS.md rows 8-11.
+          RW2_MBLSTM_CKPT_PATH: "data/mblstm/model_h256_s101_cmalv2p.pt:data/mblstm/model_h256_s102_cmalv2p.pt:data/mblstm/model_h256_s103_cmalv2p.pt:data/mblstm/model_h256_s104_cmalv2p.pt"
           # v17.1: ECMWF IFS ENS ensemble-MEAN decoder forcing for the mblstm
           # member — the faithful reproduction of the measured +0.030
           # full-scale NSE win (benchmarks/EXPERIMENTS.md row 4; serving smoke
