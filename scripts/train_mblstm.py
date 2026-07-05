@@ -411,6 +411,12 @@ def main() -> int:
     ap.add_argument("--hrrr", action="store_true",
                     help="with --gfs-finetune: overlay 3km HRRR on decoder lead "
                          "days 1-2 (hybrid forcing)")
+    ap.add_argument("--point-loss", choices=["pinball", "mse"], default="pinball",
+                    help="quantile head only: mse trains the median slot with "
+                         "squared error on the standardized target (aligns "
+                         "with NSE evaluation, the CAMELS-leaderboard loss); "
+                         "lo/hi slots keep a down-weighted pinball so bands "
+                         "stay sane")
     ap.add_argument("--head", choices=["quantile", "cmal"], default="quantile",
                     help="probabilistic head: 'quantile' (pinball, legacy) or "
                          "'cmal' (mixture of asymmetric Laplacians, NLL — "
@@ -653,6 +659,14 @@ def main() -> int:
     def head_loss(out, y, m):
         if head == "cmal":
             return cmal_nll(out, y, m)
+        if args.point_loss == "mse":
+            # Squared error on the median slot: per-basin standardized
+            # targets make this the basin-normalized NSE loss of the CAMELS
+            # literature. Bands train on a down-weighted pinball so q10/q90
+            # stay usable without distorting the point.
+            e = y - out[:, :, med_i]
+            mse = ((e * e) * m).sum() / m.sum().clamp(min=1)
+            return mse + 0.1 * pinball(out, y, m, quantiles, torch)
         return pinball(out, y, m, quantiles, torch)
 
     def head_point(out):

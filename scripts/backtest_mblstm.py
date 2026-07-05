@@ -329,7 +329,8 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
 
         q_hist = hist["q_cfs"].dropna().rename("q_cfs").reset_index()
         q_hist.columns = ["date", "q_cfs"]
-        wx_hist = hist.reset_index().rename(columns={"index": "date"})[["date"] + DAILY_VARS]
+        wx_hist = (hist.reset_index().rename(columns={"index": "date"})
+                   .reindex(columns=["date"] + DAILY_VARS))
         if members is not None:
             # Ensemble-forcing mode: one forecast per NWP member, quantile
             # triplets pooled across members (see pool_member_quantiles).
@@ -355,7 +356,8 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
                 if wx_fcst is None:
                     continue
             else:
-                wx_fcst = fut.reset_index().rename(columns={"index": "date"})[["date"] + DAILY_VARS]
+                wx_fcst = (fut.reset_index().rename(columns={"index": "date"})
+                       .reindex(columns=["date"] + DAILY_VARS))
 
             rows = mblstm.forecast(q_hist, wx_hist, wx_fcst, attrs, HORIZON)
             if not rows or len(rows) < HORIZON:
