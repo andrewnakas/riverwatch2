@@ -47,6 +47,21 @@ STATIONS_PATH = ROOT / "data" / "stations_40_enriched.json"
 # Supplemental lat/lon/alt_ft/drain_area_sqmi for CAMELS benchmark basins
 # missing from the production registry (scripts/build_camels_station_meta.py).
 CAMELS_META_PATH = ROOT / "data" / "camels_station_meta.json"
+# 27 numeric Addor-2017 catchment attributes (--static-set camels), the Kratzert
+# 2019/2021 LSTM static set. Built by scripts/build_camels_attrs.py from CAMELS
+# v2.0 → data/camels_attrs.json (531/531 coverage). Benchmark-scoped: these keys
+# are joined into attrs_by_id only for CAMELS basins; production serving uses the
+# v16/full GAGES-II statics.
+CAMELS_ATTRS_PATH = ROOT / "data" / "camels_attrs.json"
+CAMELS_STATIC_FEATS = [
+    "p_mean", "pet_mean", "aridity", "p_seasonality", "frac_snow",
+    "high_prec_freq", "high_prec_dur", "low_prec_freq", "low_prec_dur",
+    "elev_mean", "slope_mean", "area_gages2",
+    "soil_depth_pelletier", "soil_depth_statsgo", "soil_porosity",
+    "soil_conductivity", "max_water_content", "sand_frac", "silt_frac",
+    "clay_frac", "frac_forest", "lai_max", "gvf_max", "gvf_diff",
+    "root_depth_50", "carbonate_rocks_frac", "geol_permeability",
+]
 GFS_DIR = ROOT / "data" / "mblstm" / "gfs_fcst"
 HRRR_DIR = ROOT / "data" / "mblstm" / "hrrr_fcst"
 GEFS_DIR = ROOT / "data" / "mblstm" / "gefs_fcst"
@@ -70,6 +85,19 @@ COMPAT_VARS = [
 CAMELS3F_VARS = [f"{v}_{p}" for p in ("daymet", "maurer", "nldas")
                  for v in COMPAT_VARS]
 CAMELS3F_DEC = [f"{v}_daymet" for v in COMPAT_VARS]
+
+# Recipe-v2 (2026-07-10): Kratzert-2021's exact CAMELS input is 5 vars per
+# product INCLUDING vapor pressure (which lever-2/camels3f dropped). build_
+# camels_corpus.py now emits vapor_pressure, so recipe-v2 corpora carry 6 vars
+# per product. Li/Shen 2025 (HESS 29:6829) further shows a per-forcing ENSEMBLE
+# of single-forcing models beats one fused model — hence a single-forcing set
+# (camels1f, trained on camels_corpus_<product>_v2) and a fused set (camels3fv2)
+# both live here. Kept separate from camels3f so the published 0.684 result
+# stays reproducible against the old 15-var corpus.
+CAMELS1F_VARS = COMPAT_VARS + ["vapor_pressure"]           # single product, 6
+CAMELS3FV2_VARS = [f"{v}_{p}" for p in ("daymet", "maurer", "nldas")
+                   for v in CAMELS1F_VARS]                 # fused, 18
+CAMELS3FV2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # _daymet decoder, 6
 
 
 # ---------------------------------------------------------------- corpus ----
@@ -383,10 +411,15 @@ def main() -> int:
     ap.add_argument("--limit-stations", type=int, default=0)
     ap.add_argument("--compat-vars", action="store_true",
                     help="train on the Daymet/Open-Meteo shared variable set")
-    ap.add_argument("--enc-vars", choices=["full", "compat", "camels3f"], default="",
+    ap.add_argument("--enc-vars",
+                    choices=["full", "compat", "camels3f", "camels1f", "camels3fv2"],
+                    default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
                          "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "
-                         "corpus). Overrides --compat-vars for the encoder.")
+                         "corpus, camels1f = 6-var single-forcing recipe-v2 "
+                         "(compat+vapor_pressure) on camels_corpus_<product>_v2, "
+                         "camels3fv2 = 18-var fused recipe-v2). Overrides "
+                         "--compat-vars for the encoder.")
     ap.add_argument("--dec-vars", choices=["full", "compat"], default="",
                     help="decoder weather set. Use compat with --enc-vars full "
                          "so the om13 model stays fine-tunable/servable against "
@@ -404,11 +437,13 @@ def main() -> int:
                     help="with --forcing-mix: z-space sigma at lead 14 for "
                          "lead-scaled Gaussian noise on perfect-forcing "
                          "samples (0 = off)")
-    ap.add_argument("--static-set", choices=["v16", "full"], default="v16",
+    ap.add_argument("--static-set", choices=["v16", "full", "camels"], default="v16",
                     help="static catchment features: v16 = the 14-feature set, "
                          "full = +8 GAGES-II extras (TOPWET, T_AVG_BASIN, soil "
-                         "hydro groups, wetlands). Fine-tunes inherit the base "
-                         "ckpt's set.")
+                         "hydro groups, wetlands), camels = the 27 Addor-2017 "
+                         "CAMELS attributes (data/camels_attrs.json, Kratzert "
+                         "static set; CAMELS-benchmark only). Fine-tunes inherit "
+                         "the base ckpt's set.")
     ap.add_argument("--q-transform", choices=["asinh", "linear"], default="asinh",
                     help="per-station discharge transform before z-scoring. "
                          "linear = no asinh compression (peak-gradient "
@@ -467,14 +502,18 @@ def main() -> int:
         # Per-side override: enc-13/dec-5 keeps the encoder's soil/snow/wind
         # signal while the decoder stays drivable by the 5-var forecast
         # archives (a full-vars decoder could never be forcing-fine-tuned).
-        if args.enc_vars == "camels3f":
-            # 15-var multi-forcing encoder; decoder is the single _daymet
-            # product (forecast archives are single-source). --dec-vars is
-            # ignored here — the decoder set is fixed by the suffix scheme.
-            enc_vars, dec_vars = CAMELS3F_VARS, CAMELS3F_DEC
+        # Fused multi-forcing sets fix the decoder by the _daymet suffix scheme
+        # (forecast archives are single-source), so --dec-vars is ignored there.
+        _fused = {"camels3f": (CAMELS3F_VARS, CAMELS3F_DEC),
+                  "camels3fv2": (CAMELS3FV2_VARS, CAMELS3FV2_DEC)}
+        if args.enc_vars in _fused:
+            enc_vars, dec_vars = _fused[args.enc_vars]
+        elif args.enc_vars == "camels1f":
+            # single-forcing recipe-v2: 6 unsuffixed vars, decoder == encoder.
+            enc_vars = dec_vars = CAMELS1F_VARS
         elif args.enc_vars:
             enc_vars = ENC_VARS if args.enc_vars == "full" else COMPAT_VARS
-        if args.enc_vars != "camels3f" and args.dec_vars:
+        if args.enc_vars not in _fused and args.enc_vars != "camels1f" and args.dec_vars:
             dec_vars = DEC_VARS if args.dec_vars == "full" else COMPAT_VARS
         if not set(dec_vars) <= set(enc_vars):
             print("--dec-vars must be a subset of --enc-vars (decoder columns "
@@ -517,13 +556,26 @@ def main() -> int:
         s["id"]: gages2.enrich_station_attrs(dict(registry.get(s["id"], {"id": s["id"]})))
         for s in stations
     }
+    # --static-set camels: overlay the 27 Addor CAMELS attributes onto each
+    # basin's attr dict so raw_static() finds them by name (they use plain keys
+    # like p_mean/area_gages2 — no log_drain_area special-casing needed).
+    want_camels_static = (args.static_set == "camels" or
+                          (base_payload and
+                           set(CAMELS_STATIC_FEATS) <= set(base_payload["cfg"]["static_feats"])))
+    if want_camels_static and CAMELS_ATTRS_PATH.exists():
+        cam = json.loads(CAMELS_ATTRS_PATH.read_text())
+        for gid, rec in attrs_by_id.items():
+            for k, v in cam.get(gid, {}).items():
+                if v is not None:
+                    rec[k] = v
 
     train_end = pd.Timestamp(args.train_end)
     q_transform = (base_payload["cfg"].get("q_transform", "asinh")
                    if base_payload else args.q_transform)
     static_feats = (list(base_payload["cfg"]["static_feats"]) if base_payload
-                    else (STATIC_FEATS + STATIC_EXTRAS if args.static_set == "full"
-                          else STATIC_FEATS))
+                    else CAMELS_STATIC_FEATS if args.static_set == "camels"
+                    else STATIC_FEATS + STATIC_EXTRAS if args.static_set == "full"
+                    else STATIC_FEATS)
     corpus = Corpus(stations, attrs_by_id, train_end, enc_vars, dec_vars,
                     stats=base_payload["cfg"] if base_payload else None,
                     q_transform=q_transform, static_feats=static_feats)

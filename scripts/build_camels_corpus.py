@@ -7,8 +7,9 @@ archive and writes one csv.gz per basin in the MB-LSTM corpus schema
 (compat-vars subset):
 
     date, q_cfs, temperature_2m_mean, temperature_2m_max, temperature_2m_min,
-    precipitation_sum, shortwave_radiation_sum
+    precipitation_sum, shortwave_radiation_sum, vapor_pressure
 
+(vapor_pressure added 2026-07-10 for the Kratzert-2021 recipe-v2 6-var input.)
 All three CAMELS forcing products share the same column layout
 (`Year Mnth Day Hr Dayl(s) PRCP SRAD SWE Tmax Tmin Vp`), so one parser and
 unit mapping cover them; only the subdirectory + filename suffix differ
@@ -50,6 +51,7 @@ WEATHER_COLS = [
     "temperature_2m_min",
     "precipitation_sum",
     "shortwave_radiation_sum",
+    "vapor_pressure",
 ]
 CORPUS_COLS = ["date", "q_cfs", *WEATHER_COLS]
 
@@ -91,6 +93,7 @@ def read_forcing(path: Path) -> pd.DataFrame:
             "temperature_2m_min": df["tmin"],
             "precipitation_sum": df["prcp"],
             "shortwave_radiation_sum": df["srad"] * df["dayl"] / 1e6,
+            "vapor_pressure": df["vp"],  # Pa; Kratzert-2021 6th CAMELS input
         }
     )
     return out
