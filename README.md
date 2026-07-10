@@ -61,6 +61,12 @@ Writes `benchmarks/results_<label>_<ts>.json` with per-station and aggregate MAE
 for every member and the ensemble blend. Re-run with a new `--label` after each
 modeling change to keep a clean diff trail.
 
+**NWM head-to-head:** [benchmarks/NWM_HEADTOHEAD.md](benchmarks/NWM_HEADTOHEAD.md)
+— the first public per-lead NSE/KGE/MAE table for operationally-issued NWM v3
+medium-range forecasts at USGS gauges, measured against this system on real
+2026 issuances (229 stations). RiverWatch2 beats bias-corrected NWM at all
+14 leads; NWM's median NSE goes negative beyond day 4.
+
 ## Project structure
 
 ```

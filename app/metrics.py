@@ -12,6 +12,12 @@ Metric references:
   KGE      Gupta et al. 2009 — the hydrology primary metric
   FHV/FLV  high/low-flow bias (Yilmaz et al. 2008)
   CRPS     here an APPROXIMATION from discrete quantiles (see crps_from_quantiles)
+  flood P/R/F1  event skill at return-period thresholds (Nearing et al. 2024)
+
+The flood-event family (annual_maxima / return_period_thresholds /
+flood_event_scores) has a different shape from POINT_METRICS — thresholds and
+event matching instead of a scalar over (obs, sim) — so it is exported but not
+registered in _FNS/aggregate.
 """
 from __future__ import annotations
 
@@ -209,4 +215,110 @@ def aggregate(per_station: dict) -> dict:
         nses = np.asarray([d.get("nse", np.nan) for d in per_station.values()], dtype=float)
         fin = nses[np.isfinite(nses)]
         out["nse"]["frac_gt_0.5"] = float(np.mean(fin > 0.5)) if len(fin) else float("nan")
+    return out
+
+
+# ------------------------------------------------- flood events (Nearing 2024)
+
+def annual_maxima(values, year, min_days: int = 300):
+    """Per-year maxima of a daily series, for return-period fitting.
+
+    values, year: aligned 1-D arrays (year = integer calendar/water year per
+    day). Years with < min_days finite days are dropped — a gappy year's
+    maximum is biased low and poisons the extreme-value fit.
+    Returns a float array (possibly empty), sorted by year."""
+    v = np.asarray(values, dtype=np.float64)
+    y = np.asarray(year)
+    out = []
+    for yr in np.unique(y):
+        vals = v[y == yr]
+        vals = vals[np.isfinite(vals)]
+        if len(vals) >= min_days:
+            out.append(float(vals.max()))
+    return np.asarray(out, dtype=np.float64)
+
+
+def return_period_thresholds(ann_max, years=(1.0, 2.0, 5.0, 10.0),
+                             min_years: int = 10) -> dict:
+    """{T: discharge threshold} from annual maxima, GEV fit with empirical
+    fallback.
+
+    The T-year threshold is the F = exp(-1/T) quantile of the annual-maximum
+    distribution (Langbein's annual-exceedance convention: defined at T = 1,
+    where 1 - 1/T degenerates, and → 1 - 1/T for large T). GEV is fitted with
+    scipy.stats.genextreme; if scipy is missing, the fit fails, or it returns
+    non-finite thresholds, the empirical exp(-1/T) quantile of the annual
+    maxima is used instead. Fewer than min_years maxima → all NaN (return
+    periods extrapolated from short records are noise, and the 10-yr level
+    needs ≥ 10 years to mean anything)."""
+    am = np.asarray(ann_max, dtype=np.float64)
+    am = am[np.isfinite(am)]
+    probs = {float(t): float(np.exp(-1.0 / float(t))) for t in years}
+    if len(am) < min_years:
+        return {t: float("nan") for t in probs}
+    thr = None
+    try:
+        from scipy.stats import genextreme
+        shape, loc, scale = genextreme.fit(am)
+        fitted = {t: float(genextreme.ppf(p, shape, loc=loc, scale=scale))
+                  for t, p in probs.items()}
+        if all(np.isfinite(list(fitted.values()))):
+            thr = fitted
+    except Exception:
+        pass
+    if thr is None:
+        thr = {t: float(np.quantile(am, p)) for t, p in probs.items()}
+    return thr
+
+
+def _event_starts(values, threshold) -> np.ndarray:
+    """Indices where a contiguous above-threshold run begins. NaNs count as
+    below threshold, so a NaN gap inside one hydrological event splits it in
+    two — callers should score on serially complete daily series."""
+    v = np.asarray(values, dtype=np.float64)
+    above = np.zeros(len(v), dtype=bool)
+    fin = np.isfinite(v)
+    above[fin] = v[fin] > threshold
+    if not above.any():
+        return np.asarray([], dtype=int)
+    d = np.diff(above.astype(np.int8))
+    starts = np.flatnonzero(d == 1) + 1
+    if above[0]:
+        starts = np.concatenate([[0], starts])
+    return starts
+
+
+def flood_event_scores(obs, sim, obs_thr: float, sim_thr: float,
+                       window_days: int = 2) -> dict:
+    """Event precision/recall/F1 at one return-period threshold pair
+    (Nearing et al. 2024 Nature protocol).
+
+    An event is the start of a contiguous above-threshold run. A simulated
+    event is a true positive when an observed event starts within
+    ±window_days (their headline uses 2; window_days=0 is the same-day
+    variant their critics report, ~half the F1 — publish both). Thresholds
+    come in separately for obs and sim because the protocol computes them
+    per series — the model is scored on ITS OWN flood frequency, so a
+    biased-but-sharp model isn't spuriously penalized (or credited).
+
+    obs, sim: aligned daily arrays, same calendar. Returns precision/recall/
+    f1 (NaN when that side has no events; f1 = 0.0 when both sides have
+    events but nothing matches) plus n_obs_events / n_sim_events."""
+    if not (np.isfinite(obs_thr) and np.isfinite(sim_thr)):
+        return {"precision": float("nan"), "recall": float("nan"),
+                "f1": float("nan"), "n_obs_events": 0, "n_sim_events": 0}
+    o_starts = _event_starts(obs, obs_thr)
+    s_starts = _event_starts(sim, sim_thr)
+    out = {"n_obs_events": int(len(o_starts)), "n_sim_events": int(len(s_starts))}
+    if len(o_starts) == 0 or len(s_starts) == 0:
+        out["recall"] = 0.0 if len(o_starts) and not len(s_starts) else float("nan")
+        out["precision"] = 0.0 if len(s_starts) and not len(o_starts) else float("nan")
+        out["f1"] = float("nan")
+        return out
+    dist = np.abs(o_starts[:, None] - s_starts[None, :])
+    recall = float(np.mean(dist.min(axis=1) <= window_days))
+    precision = float(np.mean(dist.min(axis=0) <= window_days))
+    f1 = (0.0 if precision + recall == 0
+          else 2.0 * precision * recall / (precision + recall))
+    out.update({"precision": precision, "recall": recall, "f1": f1})
     return out

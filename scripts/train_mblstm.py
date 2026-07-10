@@ -63,6 +63,14 @@ COMPAT_VARS = [
     "precipitation_sum", "shortwave_radiation_sum",
 ]
 
+# Kratzert-2021 multi-forcing input: the same 5 compat vars from each of the
+# three CAMELS products, suffixed per product (matches build_camels_corpus.py
+# --merge). Encoder sees all 15; the decoder can only be one product (forecast
+# archives are single-source), so camels3f trains with a _daymet decoder.
+CAMELS3F_VARS = [f"{v}_{p}" for p in ("daymet", "maurer", "nldas")
+                 for v in COMPAT_VARS]
+CAMELS3F_DEC = [f"{v}_daymet" for v in COMPAT_VARS]
+
 
 # ---------------------------------------------------------------- corpus ----
 
@@ -375,9 +383,10 @@ def main() -> int:
     ap.add_argument("--limit-stations", type=int, default=0)
     ap.add_argument("--compat-vars", action="store_true",
                     help="train on the Daymet/Open-Meteo shared variable set")
-    ap.add_argument("--enc-vars", choices=["full", "compat"], default="",
+    ap.add_argument("--enc-vars", choices=["full", "compat", "camels3f"], default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
-                         "= 5-var). Overrides --compat-vars for the encoder.")
+                         "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "
+                         "corpus). Overrides --compat-vars for the encoder.")
     ap.add_argument("--dec-vars", choices=["full", "compat"], default="",
                     help="decoder weather set. Use compat with --enc-vars full "
                          "so the om13 model stays fine-tunable/servable against "
@@ -458,9 +467,14 @@ def main() -> int:
         # Per-side override: enc-13/dec-5 keeps the encoder's soil/snow/wind
         # signal while the decoder stays drivable by the 5-var forecast
         # archives (a full-vars decoder could never be forcing-fine-tuned).
-        if args.enc_vars:
+        if args.enc_vars == "camels3f":
+            # 15-var multi-forcing encoder; decoder is the single _daymet
+            # product (forecast archives are single-source). --dec-vars is
+            # ignored here — the decoder set is fixed by the suffix scheme.
+            enc_vars, dec_vars = CAMELS3F_VARS, CAMELS3F_DEC
+        elif args.enc_vars:
             enc_vars = ENC_VARS if args.enc_vars == "full" else COMPAT_VARS
-        if args.dec_vars:
+        if args.enc_vars != "camels3f" and args.dec_vars:
             dec_vars = DEC_VARS if args.dec_vars == "full" else COMPAT_VARS
         if not set(dec_vars) <= set(enc_vars):
             print("--dec-vars must be a subset of --enc-vars (decoder columns "
