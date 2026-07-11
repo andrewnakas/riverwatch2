@@ -13,7 +13,7 @@ mkdir -p "$STAGE"/{app,scripts,data/gpu_corpora,data/mblstm/dumps,benchmarks,log
 # Code: app package (model, metrics, hbv, deps) + the scripts we need.
 cp app/*.py "$STAGE/app/" 2>/dev/null || true
 cp scripts/train_mblstm.py scripts/backtest_mblstm.py scripts/combine_dumps.py \
-   scripts/run_gpu_ensemble.sh "$STAGE/scripts/"
+   scripts/run_gpu_ensemble.sh scripts/run_gpu_dhbv.sh "$STAGE/scripts/"
 # Static attrs + gauge lists + registry the trainer/eval read.
 cp data/camels_attrs.json data/camels_gauge_ids.json \
    data/camels_station_meta.json data/gages2_attrs.json "$STAGE/data/"
