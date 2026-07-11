@@ -1,0 +1,90 @@
+{
+  "label": "camels531_grand_v2r",
+  "members": [
+    "data/mblstm/dumps/camels531_daymet_v2r_ens.csv.gz",
+    "data/mblstm/dumps/camels531_fused_v2r_ens.csv.gz",
+    "data/mblstm/dumps/camels531_maurer_v2r_ens.csv.gz",
+    "data/mblstm/dumps/camels531_nldas_v2r_ens.csv.gz"
+  ],
+  "point": "ymed",
+  "weights": "equal",
+  "n_windows": 46148,
+  "metrics": {
+    "full": {
+      "flv": {
+        "median": 7.455045070460227,
+        "mean": 233.21259533726504,
+        "scorable": 174
+      },
+      "pct_bias": {
+        "median": -7.270479100652092,
+        "mean": -8.149015805723373,
+        "scorable": 177
+      },
+      "pearson_r": {
+        "median": 0.9021017437021089,
+        "mean": 0.8821849322559387,
+        "scorable": 177
+      },
+      "kge": {
+        "median": 0.7498578902849522,
+        "mean": 0.6881649547979767,
+        "scorable": 177
+      },
+      "nse": {
+        "median": 0.7861859250658872,
+        "mean": 0.7432287714915381,
+        "scorable": 177,
+        "frac_gt_0.5": 0.9322033898305084
+      },
+      "log_nse": {
+        "median": 0.8264314708305563,
+        "mean": 0.7342973804238729,
+        "scorable": 177
+      },
+      "fhv": {
+        "median": -27.422399199302358,
+        "mean": -29.69884662187885,
+        "scorable": 177
+      }
+    },
+    "day1": {
+      "flv": {
+        "median": -4.377759002920762,
+        "mean": 181.28256058058562,
+        "scorable": 174
+      },
+      "pct_bias": {
+        "median": -6.0549036381005195,
+        "mean": -6.80124515429182,
+        "scorable": 177
+      },
+      "pearson_r": {
+        "median": 0.9256013694847054,
+        "mean": 0.9076965751159026,
+        "scorable": 177
+      },
+      "kge": {
+        "median": 0.7584912094130833,
+        "mean": 0.7070458967790861,
+        "scorable": 177
+      },
+      "nse": {
+        "median": 0.8156617933000849,
+        "mean": 0.7645703374589555,
+        "scorable": 177,
+        "frac_gt_0.5": 0.9096045197740112
+      },
+      "log_nse": {
+        "median": 0.8270678691228552,
+        "mean": 0.6994097755109097,
+        "scorable": 177
+      },
+      "fhv": {
+        "median": -25.669233599444635,
+        "mean": -25.428448026181997,
+        "scorable": 177
+      }
+    }
+  }
+}
