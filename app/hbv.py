@@ -45,9 +45,19 @@ PARAM_RANGES = {
     "LP": (0.2, 1.0), "PERC": (0.0, 10.0), "UZL": (0.0, 100.0),
     "TT": (-2.5, 2.5), "CFMAX": (0.5, 10.0), "CFR": (0.0, 0.1),
     "CWH": (0.0, 0.2),
+    # δHBV1.1p capillary-rise: water drawn from the upper groundwater zone back
+    # into the soil store when the soil is dry (Li/Shen 2025 addition).
+    "CAPRISE": (0.0, 3.0),
+    # Gamma unit-hydrograph routing: shape ROUTN, scale ROUTK (both learnable).
+    "ROUTN": (1.0, 5.0), "ROUTK": (0.5, 5.0),
 }
 PARAM_NAMES = list(PARAM_RANGES)
 N_HBV_PARAMS = len(PARAM_NAMES)
+
+# The parameters δHBV1.1p predicts DYNAMICALLY (per-timestep) rather than static.
+# Kept to BETA + K0 for stability (γ routing stays static — a time-varying unit
+# hydrograph is a much larger change for marginal gain).
+DYNAMIC_PARAMS = ("BETA", "K0")
 
 
 def map_params(raw, torch):
@@ -70,22 +80,53 @@ def hamon_pet(tmean, daylight_hours, torch):
     return 0.1651 * (daylight_hours / 12.0) * rho_sat / 10.0
 
 
-def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0):
+def extraterrestrial_radiation(lat_rad, doy, np):
+    """FAO-56 extraterrestrial radiation Ra (MJ/m^2/day) from latitude (radians)
+    and day-of-year. Pure numpy (computed once per station at corpus load, not
+    in the grad path). lat_rad, doy broadcast; returns same shape."""
+    dr = 1.0 + 0.033 * np.cos(2.0 * np.pi * doy / 365.0)          # inv earth-sun dist
+    decl = 0.409 * np.sin(2.0 * np.pi * doy / 365.0 - 1.39)       # solar declination
+    # sunset hour angle; clip the arccos argument to [-1,1] (polar day/night)
+    x = np.clip(-np.tan(lat_rad) * np.tan(decl), -1.0, 1.0)
+    ws = np.arccos(x)
+    ra = (24.0 * 60.0 / np.pi) * 0.0820 * dr * (
+        ws * np.sin(lat_rad) * np.sin(decl)
+        + np.cos(lat_rad) * np.cos(decl) * np.sin(ws))
+    return np.maximum(ra, 0.0)
+
+
+def hargreaves_pet(tmean, tmax, tmin, lat_rad, doy, np):
+    """Hargreaves (1985) PET (mm/day), the method Li/Shen 2025 use for δHBV.
+    PET = 0.0023 * Ra * (tmean + 17.8) * sqrt(max(tmax - tmin, 0)).
+    Pure numpy — computed per station at corpus load (not differentiable; the
+    LSTM learns HBV params, not PET). tmean/tmax/tmin °C, lat_rad radians."""
+    ra = extraterrestrial_radiation(lat_rad, doy, np)
+    trange = np.sqrt(np.maximum(tmax - tmin, 0.0))
+    pet = 0.0023 * ra * (tmean + 17.8) * trange
+    return np.maximum(pet, 0.0)
+
+
+def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0, dyn=None):
     """Vectorized differentiable HBV.
 
     precip, tmean, pet: (B, T) tensors (mm/day, °C, mm/day). B = batch basins
       (optionally already expanded over component instances — treat B as the
       flat batch dimension; the trainer averages component outputs outside).
-    params: dict{name: (B,)} from map_params (static per basin) — dynamic
-      params can be passed as (B, T) and indexed per step by the caller; this
-      core takes static (B,) for clarity and lets the trainer override the
-      few dynamic ones per step if needed.
+    params: dict{name: (B,)} from map_params (static per basin).
+    dyn: optional dict{name: (B, T)} of TIME-VARYING params (δHBV1.1p predicts
+      BETA, K0 per timestep). A name present in `dyn` overrides `params[name]`
+      per step; anything not in `dyn` uses the static `params` value.
     Returns Q_land (B, T): runoff generated per day (mm/day), pre-routing.
     """
     B, T = precip.shape
     dev, dt = precip.device, precip.dtype
     z = torch.zeros(B, dtype=dt, device=dev)
     p = params
+    dyn = dyn or {}
+
+    def par(name, t):  # per-step value: dynamic (B,) slice if given, else static
+        return dyn[name][:, t] if name in dyn else p[name]
+
     # states
     snow = z.clone()      # solid snowpack (mm)
     liq = z.clone()       # liquid water in snowpack (mm)
@@ -98,6 +139,8 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0):
         pr = precip[:, t]
         temp = tmean[:, t]
         ep = pet[:, t]
+        beta_t = par("BETA", t)
+        k0_t = par("K0", t)
         # --- snow: partition precip by TT, melt/refreeze by degree-day ---
         is_snow = torch.sigmoid((p["TT"] - temp) * 5.0)  # soft rain/snow split
         snowfall = pr * is_snow
@@ -119,9 +162,9 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0):
         to_soil = to_soil + extra
         liq = liq - extra
 
-        # --- soil: beta store ---
+        # --- soil: beta store (BETA may be per-step dynamic) ---
         soil_frac = torch.clamp(sm / p["FC"], 0.0, 1.0)
-        recharge = to_soil * soil_frac.pow(p["BETA"])
+        recharge = to_soil * soil_frac.pow(beta_t)
         sm = sm + to_soil - recharge
         # ET: linear ramp to PET up to LP*FC
         et = ep * torch.clamp(sm / (p["LP"] * p["FC"]), 0.0, 1.0)
@@ -134,10 +177,15 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0):
 
         # --- response: upper + lower reservoirs ---
         suz = suz + recharge
+        # δHBV1.1p capillary rise: upper zone → soil when soil is below capacity,
+        # scaled by the dryness deficit (drawn only from available suz water).
+        caprise = torch.minimum(p["CAPRISE"] * (1.0 - soil_frac), suz)
+        suz = suz - caprise
+        sm = sm + caprise
         perc = torch.minimum(p["PERC"], suz)
         suz = suz - perc
         slz = slz + perc
-        q0 = p["K0"] * torch.relu(suz - p["UZL"])
+        q0 = k0_t * torch.relu(suz - p["UZL"])
         q1 = p["K1"] * suz
         suz = suz - q0 - q1
         q2 = p["K2"] * slz

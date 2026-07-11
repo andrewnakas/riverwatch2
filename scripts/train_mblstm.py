@@ -36,7 +36,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app import gages2  # noqa: E402
+from app import gages2, hbv  # noqa: E402
+from app.dhbv import build_dhbv_model  # noqa: E402
 from app.mblstm import (  # noqa: E402
     CONTEXT_DAYS, DEC_VARS, ENC_VARS, QUANTILES, STATIC_FEATS, build_model,
     cmal_mean, cmal_nll,
@@ -148,10 +149,12 @@ class Corpus:
 
     def __init__(self, stations: list[dict], attrs_by_id: dict, train_end: pd.Timestamp,
                  enc_vars: list[str], dec_vars: list[str], stats: dict | None = None,
-                 q_transform: str = "asinh", static_feats: list[str] = STATIC_FEATS):
+                 q_transform: str = "asinh", static_feats: list[str] = STATIC_FEATS,
+                 head: str = "quantile"):
         self.enc_vars, self.dec_vars = enc_vars, dec_vars
         self.static_feats = static_feats
         self.q_transform = q_transform
+        self.head = head  # "dhbv" precomputes raw physical forcings + PET + area
         self.gfs = None  # optional (si, t0) -> normalized decoder forcing override
         if stats is not None:
             # Fine-tune: inherit the base checkpoint's normalization verbatim so
@@ -200,13 +203,48 @@ class Corpus:
             wx_n = np.nan_to_num(
                 (st["wx"].astype(np.float64) - self.wx_mean) / self.wx_std, nan=0.0
             ).astype(np.float32)
-            self.stations.append({
+            rec = {
                 "id": st["id"], "dates": st["dates"],
                 "q_n": q_n, "q_mask": q_mask, "wx_n": wx_n,
                 "doy": doy_sincos(st["dates"]),
                 "static": ((svec - self.static_mean) / self.static_std).astype(np.float32),
-            })
+                # per-station q-norm stats — the δHBV path z-transforms physical
+                # HBV output into this same space for the shared loss.
+                "mu_q": mu_q, "sd_q": sd_q,
+            }
+            if self.head == "dhbv":
+                rec.update(self._dhbv_forcings(st, attrs_by_id.get(st["id"], {})))
+            self.stations.append(rec)
         self.dec_cols = np.asarray([enc_vars.index(c) for c in dec_vars])
+
+    def _dhbv_forcings(self, st: dict, attrs: dict) -> dict:
+        """Raw physical precip(mm/day)/tmean(°C) + Hargreaves PET + area/lat for
+        the HBV core. st["wx"] is raw physical weather (pre-z-score). Column
+        names are the corpus enc_vars (camels1f: single-forcing, unsuffixed;
+        camels3fv2: use the _daymet product to drive HBV with one consistent
+        forcing)."""
+        cols = self.enc_vars
+        def col(name):  # find a var, tolerating the _daymet suffix (fused corpus)
+            for cand in (name, name + "_daymet"):
+                if cand in cols:
+                    return cols.index(cand)
+            raise KeyError(f"δHBV needs {name} in enc_vars; have {cols}")
+        wx = st["wx"].astype(np.float64)  # (T, n_enc) raw physical
+        precip = np.maximum(np.nan_to_num(wx[:, col("precipitation_sum")]), 0.0)
+        tmean = np.nan_to_num(wx[:, col("temperature_2m_mean")])
+        tmax = np.nan_to_num(wx[:, col("temperature_2m_max")])
+        tmin = np.nan_to_num(wx[:, col("temperature_2m_min")])
+        lat = float(attrs.get("gauge_lat", attrs.get("lat", 40.0)) or 40.0)
+        doy = st["dates"].dayofyear.to_numpy()
+        pet = hbv.hargreaves_pet(tmean, tmax, tmin,
+                                 np.deg2rad(lat), doy, np)  # (T,) mm/day
+        area = float(attrs.get("area_gages2", attrs.get("drain_area_sqmi", 0.0)) or 0.0)
+        return {
+            "precip_raw": precip.astype(np.float32),
+            "tmean_raw": tmean.astype(np.float32),
+            "pet_raw": pet.astype(np.float32),
+            "area_km2": area if area > 0 else np.nan,
+        }
 
     def window_index(self, lo: pd.Timestamp | None, hi: pd.Timestamp) -> np.ndarray:
         """(N, 2) int32 array of (station_idx, t0) where t0 is the last encoder
@@ -284,6 +322,17 @@ class Corpus:
         ], axis=1)
         y = st["q_n"][t0 + 1: t0 + 1 + HORIZON]
         m = st["q_mask"][t0 + 1: t0 + 1 + HORIZON]
+        if self.head == "dhbv":
+            # HBV drives on the raw physical forcing over the full context+
+            # horizon span (365+14). area/mu_q/sd_q ride along for the unit +
+            # z-space bridge in the loss.
+            sl = slice(a, t0 + 1 + HORIZON)
+            dh = {
+                "precip": st["precip_raw"][sl], "tmean": st["tmean_raw"][sl],
+                "pet": st["pet_raw"][sl], "area": st["area_km2"],
+                "mu_q": st["mu_q"], "sd_q": st["sd_q"],
+            }
+            return x_enc, x_dec, y, m, dh
         return x_enc, x_dec, y, m
 
     ar_mask_p = 0.3
@@ -364,15 +413,29 @@ def make_batches(corpus, windows, batch, rng, shuffle=True, augment=True):
     order = np.arange(len(windows))
     if shuffle:
         rng.shuffle(order)
+    dhbv = getattr(corpus, "head", "quantile") == "dhbv"
     for i in range(0, len(order), batch):
         chunk = windows[order[i: i + batch]]
         # Windows are (si, t0) or (si, t0, src) — src selects the decoder
         # forcing source under --forcing-mix (0 = perfect/observed).
         srcs = chunk[:, 2] if chunk.shape[1] > 2 else np.zeros(len(chunk), np.int32)
-        xs, xd, ys, ms = zip(*[
-            corpus.sample(int(r[0]), int(r[1]), rng if augment else None, src=int(s))
-            for r, s in zip(chunk, srcs)])
-        yield (np.stack(xs), np.stack(xd), np.stack(ys), np.stack(ms), chunk[:, 0])
+        out = [corpus.sample(int(r[0]), int(r[1]), rng if augment else None, src=int(s))
+               for r, s in zip(chunk, srcs)]
+        if dhbv:
+            xs, xd, ys, ms, dhs = zip(*out)
+            db = {
+                "precip": np.stack([d["precip"] for d in dhs]),   # (B, 379)
+                "tmean": np.stack([d["tmean"] for d in dhs]),
+                "pet": np.stack([d["pet"] for d in dhs]),
+                "area": np.asarray([d["area"] for d in dhs], np.float32),  # (B,)
+                "mu_q": np.asarray([d["mu_q"] for d in dhs], np.float32),
+                "sd_q": np.asarray([d["sd_q"] for d in dhs], np.float32),
+            }
+            yield (np.stack(xs), np.stack(xd), np.stack(ys), np.stack(ms),
+                   chunk[:, 0], db)
+        else:
+            xs, xd, ys, ms = zip(*out)
+            yield (np.stack(xs), np.stack(xd), np.stack(ys), np.stack(ms), chunk[:, 0])
 
 
 # -------------------------------------------------------------- training ----
@@ -461,7 +524,7 @@ def main() -> int:
                          "with NSE evaluation, the CAMELS-leaderboard loss); "
                          "lo/hi slots keep a down-weighted pinball so bands "
                          "stay sane")
-    ap.add_argument("--head", choices=["quantile", "cmal"], default="quantile",
+    ap.add_argument("--head", choices=["quantile", "cmal", "dhbv"], default="quantile",
                     help="probabilistic head: 'quantile' (pinball, legacy) or "
                          "'cmal' (mixture of asymmetric Laplacians, NLL — "
                          "sharper right-skewed peaks, analytic quantiles)")
@@ -559,7 +622,7 @@ def main() -> int:
     # --static-set camels: overlay the 27 Addor CAMELS attributes onto each
     # basin's attr dict so raw_static() finds them by name (they use plain keys
     # like p_mean/area_gages2 — no log_drain_area special-casing needed).
-    want_camels_static = (args.static_set == "camels" or
+    want_camels_static = (args.static_set == "camels" or args.head == "dhbv" or
                           (base_payload and
                            set(CAMELS_STATIC_FEATS) <= set(base_payload["cfg"]["static_feats"])))
     if want_camels_static and CAMELS_ATTRS_PATH.exists():
@@ -578,8 +641,15 @@ def main() -> int:
                     else STATIC_FEATS)
     corpus = Corpus(stations, attrs_by_id, train_end, enc_vars, dec_vars,
                     stats=base_payload["cfg"] if base_payload else None,
-                    q_transform=q_transform, static_feats=static_feats)
+                    q_transform=q_transform, static_feats=static_feats,
+                    head=args.head)
     corpus.no_q_input = bool(args.no_q_input)
+    if args.head == "dhbv":
+        # drop stations with no basin area — HBV can't do the cfs↔mm/day bridge
+        n0 = len(corpus.stations)
+        corpus.stations = [s for s in corpus.stations if np.isfinite(s.get("area_km2", np.nan))]
+        if len(corpus.stations) < n0:
+            print(f"δHBV: dropped {n0 - len(corpus.stations)} stations lacking area_gages2")
     print(f"usable stations: {len(corpus.stations)}"
           + (" (no-q-input: encoder discharge zeroed)" if corpus.no_q_input else ""))
 
@@ -696,7 +766,8 @@ def main() -> int:
                                       f"(dynamical.org archives + perfect"
                                       + (f", noise {args.forcing_noise}" if args.forcing_noise else "")
                                       + "; real forecast error)")
-    model = build_model(cfg).to(dev)
+    model = (build_dhbv_model(cfg) if cfg.get("head") == "dhbv"
+             else build_model(cfg)).to(dev)
     if base_payload is not None:
         # Warm start. If the head changed (e.g. quantile -> cmal) the head
         # Linear shapes differ. strict=False ignores missing/unexpected keys but
@@ -721,6 +792,26 @@ def main() -> int:
     #   quantile -> pinball loss, median as the point;
     #   cmal     -> NLL,           mixture mean as the point.
     loss_name = "nll" if head == "cmal" else "pinball"
+
+    q_tf = q_transform  # "asinh" | "linear" — the target space δHBV maps into
+
+    def dhbv_predict_z(xs_t, xd_t, db):
+        """Run the δHBV model → physical cfs (B,H) → z-space (B,H) matching the
+        per-station-standardized targets, so the SAME masked-MSE loss applies."""
+        precip = torch.from_numpy(db["precip"]).to(dev)
+        tmean = torch.from_numpy(db["tmean"]).to(dev)
+        pet = torch.from_numpy(db["pet"]).to(dev)
+        area = torch.from_numpy(db["area"]).to(dev)
+        mu_q = torch.from_numpy(db["mu_q"]).to(dev)
+        sd_q = torch.from_numpy(db["sd_q"]).to(dev)
+        q_cfs = model(xs_t, xd_t, precip, tmean, pet, area)   # (B,H) physical cfs
+        q_cfs = torch.clamp(q_cfs, min=0.0)
+        qt = torch.asinh(q_cfs) if q_tf == "asinh" else q_cfs
+        return (qt - mu_q[:, None]) / sd_q[:, None].clamp(min=1e-6)   # (B,H) z
+
+    def dhbv_loss(z_pred, y, m):
+        e = (y - z_pred) * m
+        return (e * e).sum() / m.sum().clamp(min=1)
 
     def head_loss(out, y, m):
         if head == "cmal":
@@ -747,13 +838,19 @@ def main() -> int:
         sse: dict[int, float] = {}; sst_y: dict[int, list] = {}
         preds: dict[int, list] = {}
         with torch.no_grad():
-            for xs, xd, ys, ms, sis in make_batches(corpus, val_windows, args.batch, rng, shuffle=False, augment=False):
+            for batch in make_batches(corpus, val_windows, args.batch, rng, shuffle=False, augment=False):
+                xs, xd, ys, ms, sis = batch[:5]
                 xs_t = torch.from_numpy(xs).to(dev); xd_t = torch.from_numpy(xd).to(dev)
                 ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
-                yq = model(xs_t, xd_t)
-                tot += float(head_loss(yq, ys_t, ms_t) * ms_t.sum())
+                if head == "dhbv":
+                    zp = dhbv_predict_z(xs_t, xd_t, batch[5])
+                    tot += float(dhbv_loss(zp, ys_t, ms_t) * ms_t.sum())
+                    yh = zp.cpu().numpy()
+                else:
+                    yq = model(xs_t, xd_t)
+                    tot += float(head_loss(yq, ys_t, ms_t) * ms_t.sum())
+                    yh = head_point(yq)
                 num += float(ms_t.sum())
-                yh = head_point(yq)
                 for b in range(len(sis)):
                     si = int(sis[b]); m = ms[b] > 0
                     preds.setdefault(si, []).append(yh[b][m])
@@ -809,10 +906,14 @@ def main() -> int:
                 for wlist in by_station.values()])
         t0 = time.time()
         tot, num, steps, skipped = 0.0, 0.0, 0, 0
-        for xs, xd, ys, ms, _ in make_batches(corpus, ep_windows, args.batch, rng):
+        for batch in make_batches(corpus, ep_windows, args.batch, rng):
+            xs, xd, ys, ms = batch[:4]
             xs_t = torch.from_numpy(xs).to(dev); xd_t = torch.from_numpy(xd).to(dev)
             ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
-            loss = head_loss(model(xs_t, xd_t), ys_t, ms_t)
+            if head == "dhbv":
+                loss = dhbv_loss(dhbv_predict_z(xs_t, xd_t, batch[5]), ys_t, ms_t)
+            else:
+                loss = head_loss(model(xs_t, xd_t), ys_t, ms_t)
             if not torch.isfinite(loss):
                 # One bad batch must not poison the run (h256 diverged to NaN
                 # at lr 1e-3) — drop it and keep going.

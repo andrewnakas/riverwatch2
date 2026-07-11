@@ -96,7 +96,13 @@ def build_model(cfg: dict):
                    the *raw* output is returned by forward(); the cmal_* helper
                    functions below turn those raw params into an NLL (train) or
                    analytic quantiles / mean (serve).
+      "dhbv"     : the differentiable-HBV hybrid (app/dhbv.py) — an LSTM param-
+                   net feeding the physical HBV core. forward() takes extra raw-
+                   forcing args and emits physical cfs.
     """
+    if cfg.get("head") == "dhbv":
+        from app.dhbv import build_dhbv_model
+        return build_dhbv_model(cfg)
     import torch.nn as nn
 
     enc_in = len(cfg["enc_vars"]) + 2 + 2 + len(cfg["static_feats"])  # +q,+qmask,+doy
@@ -472,12 +478,47 @@ def forecast(
             v = z * sd_q + mu_q
             return np.sinh(v) if q_tf == "asinh" else v
 
-        with torch.no_grad():
-            xe = torch.from_numpy(x_enc[None, :, :])
-            xd = torch.from_numpy(x_dec[None, :, :])
-            raws = [m(xe, xd).squeeze(0).numpy() for m in _models]
+        if head != "dhbv":
+            with torch.no_grad():
+                xe = torch.from_numpy(x_enc[None, :, :])
+                xd = torch.from_numpy(x_dec[None, :, :])
+                raws = [m(xe, xd).squeeze(0).numpy() for m in _models]
 
-        if head == "cmal":
+        if head == "dhbv":
+            # δHBV: physical HBV output — build raw forcings over the full
+            # 365+H span, run the model (already emits physical cfs), average
+            # seeds. No denorm (output is cfs), no q-norm needed.
+            from app import hbv
+            full_idx = idx.append(fut_idx)               # 365 + H days
+            wx_all = pd.concat([wx_win, wf]).reset_index(drop=True)
+
+            def _raw(name):  # physical column, tolerating the _daymet suffix
+                for c in (name, name + "_daymet"):
+                    if c in wx_all.columns:
+                        return np.nan_to_num(wx_all[c].to_numpy(dtype=np.float64))
+                raise KeyError(f"δHBV serve needs {name}; have {list(wx_all.columns)}")
+            precip = np.maximum(_raw("precipitation_sum"), 0.0)
+            tmean = _raw("temperature_2m_mean")
+            tmax = _raw("temperature_2m_max"); tmin = _raw("temperature_2m_min")
+            lat = float((static_attrs or {}).get("gauge_lat",
+                        (static_attrs or {}).get("lat", 40.0)) or 40.0)
+            pet = hbv.hargreaves_pet(tmean, tmax, tmin, np.deg2rad(lat),
+                                     full_idx.dayofyear.to_numpy(), np)
+            area = float((static_attrs or {}).get("area_gages2",
+                         (static_attrs or {}).get("drain_area_sqmi", 0.0)) or 0.0)
+            if area <= 0:
+                return None
+            with torch.no_grad():
+                xe = torch.from_numpy(x_enc[None, :, :])
+                xd = torch.from_numpy(x_dec[None, :, :])
+                pr = torch.from_numpy(precip[None, :].astype(np.float32))
+                tm = torch.from_numpy(tmean[None, :].astype(np.float32))
+                pt = torch.from_numpy(pet[None, :].astype(np.float32))
+                ar = torch.tensor([area], dtype=torch.float32)
+                q_seeds = [m(xe, xd, pr, tm, pt, ar).squeeze(0).numpy() for m in _models]
+            q_pt = np.clip(np.mean(q_seeds, axis=0), 0.0, None)   # (H,) cfs
+            q_cfs = np.stack([q_pt, q_pt, q_pt, q_pt], axis=1)     # lo=pt=hi (point)
+        elif head == "cmal":
             # Per-seed analytic quantiles + mean, then Vincentized across the
             # seed ensemble (average of per-model quantiles). v17.1 fix:
             # averaging raw CMAL PARAMETERS across seeds (the old path) is not
