@@ -27,6 +27,10 @@
 # beats the A-0 lever-2 subsample number (target the recipe-v2 lift toward ~0.74
 # single-forcing; a flat/regressed screen means split linear-loss from +vp).
 cd /Users/nakas/Documents/RiverWatch2/riverwatch2
+# PYTHONUNBUFFERED so the "loading"/epoch prints flush to the redirected log in
+# real time (Python block-buffers stdout when it's not a tty — otherwise the log
+# looks silent for a whole epoch and progress can't be monitored).
+export PYTHONUNBUFFERED=1
 PY=.venv/bin/python
 LOG=logs/a3_camels_static.log
 SD=/Volumes/STORAGE_SD/riverwatch2_data
