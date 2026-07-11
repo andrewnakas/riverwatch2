@@ -16,6 +16,7 @@
 # defaults: N_SEEDS=8, JOBS=3 (fits a 24GB 4090; raise if more VRAM).
 set -u
 cd "$(dirname "$0")/.."
+export PYTHONUNBUFFERED=1   # stream training progress to per-seed logs in real time
 PY=${PY:-python}
 N_SEEDS=${1:-8}
 JOBS=${2:-3}
