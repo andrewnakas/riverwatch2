@@ -550,12 +550,34 @@ def main() -> int:
     if args.limit_stations:
         files = files[: args.limit_stations]
 
+    # CAMELS-static checkpoints (--static-set camels) need the 27 Addor attrs
+    # (p_mean/aridity/...) at eval time — the GAGES-II registry doesn't carry
+    # them, so without this overlay static_vector() gets all-NaN and NSE craters
+    # (the A-3 "regression" 0.398 was exactly this bug). Load camels_attrs.json
+    # and overlay it when the loaded model's static set is the CAMELS one.
+    camels_attrs = {}
+    try:
+        mblstm._try_load()  # populate mblstm._cfg (else it loads lazily later)
+        _cfg = mblstm._cfg or {}
+        _sf = set(_cfg.get("static_feats", []))
+        _cam_path = ROOT / "data" / "camels_attrs.json"
+        if _cam_path.exists() and {"p_mean", "aridity", "elev_mean"} <= _sf:
+            camels_attrs = json.loads(_cam_path.read_text())
+            print(f"CAMELS static overlay: {len(camels_attrs)} basins "
+                  f"(checkpoint uses the 27-attr CAMELS static set)", flush=True)
+    except Exception as exc:
+        print(f"camels attrs overlay skipped: {exc}", flush=True)
+
     results: dict[str, dict] = {}
     dump: list | None = [] if args.dump_windows else None
     t0 = time.time()
     for i, p in enumerate(files, 1):
         sid = p.name.split(".")[0]
         attrs = gages2.enrich_station_attrs(dict(registry.get(sid, {"id": sid})))
+        if camels_attrs:
+            for k, v in camels_attrs.get(sid, {}).items():
+                if v is not None:
+                    attrs[k] = v
         try:
             r = eval_station(p, attrs, issue_dates, forcing=forcing,
                              members=members, anchor_decay=args.anchor_decay,
