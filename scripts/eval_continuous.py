@@ -102,7 +102,7 @@ def simulate_station(path: Path, attrs: dict, start: str, end: str,
     win_end = pd.Timestamp(end)
     # issue dates spaced H apart; the forecast covers t0+1 .. t0+H
     t0 = win_start - pd.Timedelta(days=1)
-    obs_list, sim_list = [], []
+    date_list, obs_list, sim_list = [], [], []
     while t0 + pd.Timedelta(days=horizon) <= win_end:
         if t0 not in daily.index:
             t0 += pd.Timedelta(days=horizon)
@@ -125,13 +125,15 @@ def simulate_station(path: Path, attrs: dict, start: str, end: str,
                 truth = daily.loc[t, "q_cfs"] if t in daily.index else np.nan
                 sim = rows[h].get("q_cfs")
                 if sim is not None and np.isfinite(truth) and np.isfinite(sim):
+                    date_list.append(t)
                     obs_list.append(float(truth))
                     sim_list.append(float(sim))
         t0 += pd.Timedelta(days=horizon)
 
     if len(obs_list) < min_days:
         return None
-    return np.asarray(obs_list, dtype=float), np.asarray(sim_list, dtype=float)
+    return (np.asarray(date_list), np.asarray(obs_list, dtype=float),
+            np.asarray(sim_list, dtype=float))
 
 
 def main() -> int:
@@ -154,6 +156,10 @@ def main() -> int:
     ap.add_argument("--min-days", type=int, default=180,
                     help="min scorable days for a basin to count")
     ap.add_argument("--label", default="continuous")
+    ap.add_argument("--dump-series", default="",
+                    help="write the per-day continuous (station_id,date,truth,sim) "
+                         "series to this csv.gz — for combining member series into "
+                         "a continuous grand-ensemble number")
     args = ap.parse_args()
 
     os.environ["RW2_MBLSTM_CKPT_PATH"] = args.ckpt
@@ -206,6 +212,7 @@ def main() -> int:
     camels_ids = load_camels_ids(args.camels_subset)
 
     per_station: dict[str, dict] = {}
+    series_rows: list = []   # for --dump-series (station_id, date, truth, sim)
     t_start = time.time()
     for i, p in enumerate(files, 1):
         sid = p.name.split(".")[0]
@@ -221,8 +228,12 @@ def main() -> int:
             continue
         if res is None:
             continue
-        obs, sim = res
+        dates, obs, sim = res
         per_station[sid] = metrics.all_point_metrics(obs, sim)
+        if args.dump_series:
+            for d, o, s in zip(dates, obs, sim):
+                series_rows.append((sid, pd.Timestamp(d).strftime("%Y-%m-%d"),
+                                    float(o), float(s)))
         if i % 25 == 0:
             nses = [m["nse"] for m in per_station.values() if np.isfinite(m.get("nse", np.nan))]
             med = float(np.median(nses)) if nses else float("nan")
@@ -254,11 +265,18 @@ def main() -> int:
         print(f"  CAMELS-{args.camels_subset}: NSE {med(cb,'nse')}  KGE {med(cb,'kge')}  "
               f"(record ref: Li/Shen 2025 median NSE 0.83)")
 
+    if args.dump_series and series_rows:
+        sp = Path(args.dump_series)
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(series_rows, columns=["station_id", "date", "truth", "sim"]
+                     ).to_csv(sp, index=False, compression="gzip")
+        print(f"  wrote series {sp} ({len(series_rows)} rows)")
+
     OUT_DIR.mkdir(exist_ok=True)
     out_path = OUT_DIR / f"continuous_{args.label}.json"
     out_path.write_text(json.dumps({
         "label": args.label,
-        "protocol": "continuous_daily_sim_day1_chain",
+        "protocol": "continuous_daily_sim_nonoverlapping_windows",
         "members": args.ckpt.split(":"),
         "corpus_dir": str(corpus_dir),
         "window": [args.start, args.end],
