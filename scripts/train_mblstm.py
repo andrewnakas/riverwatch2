@@ -536,6 +536,9 @@ def main() -> int:
     ap.add_argument("--forcing-correction", action="store_true",
                     help="δHBV: learn a bounded per-timestep multiplier on raw "
                          "precip to cancel systematic forcing bias (B5 lever)")
+    ap.add_argument("--dhbv-loss", choices=["mse", "huber", "lognse"], default="mse",
+                    help="δHBV training loss variant for ensemble loss-diversity "
+                         "(mse=basin-NSE default; huber=robust; lognse=low-flow)")
     ap.add_argument("--corpus-dir", default="",
                     help="override corpus dir (e.g. data/mblstm/corpus_openmeteo for "
                          "the full-13-var Open-Meteo corpus). Default: data/mblstm/corpus")
@@ -827,8 +830,27 @@ def main() -> int:
         qt = torch.asinh(q_cfs) if q_tf == "asinh" else q_cfs
         return (qt - mu_q[:, None]) / sd_q[:, None].clamp(min=1e-6)   # (B,H) z
 
+    dhbv_loss_kind = getattr(args, "dhbv_loss", "mse")
+
     def dhbv_loss(z_pred, y, m):
+        """Masked loss on the z-scored δHBV output. Variants give ENSEMBLE
+        loss-diversity (all default members use plain z-MSE = basin-NSE):
+          mse    — basin-normalized NSE (peak-weighted in z-space).
+          huber  — robust to outlier peaks; different basins drive the gradient.
+          lognse — MSE after a monotone soft-log squash of z, up-weighting the
+                   low/mid-flow regime (complements the peak-heavy mse member).
+        """
         e = (y - z_pred) * m
+        if dhbv_loss_kind == "huber":
+            a = e.abs(); d = 1.0
+            quad = torch.minimum(a, torch.full_like(a, d))
+            lin = a - quad
+            return ((0.5 * quad * quad + d * lin)).sum() / m.sum().clamp(min=1)
+        if dhbv_loss_kind == "lognse":
+            # squash both pred and target through asinh (monotone, low-flow-
+            # emphasizing), then masked MSE — a log-NSE-flavored objective.
+            el = (torch.asinh(y) - torch.asinh(z_pred)) * m
+            return (el * el).sum() / m.sum().clamp(min=1)
         return (e * e).sum() / m.sum().clamp(min=1)
 
     def head_loss(out, y, m):
