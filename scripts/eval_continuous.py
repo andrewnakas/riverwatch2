@@ -16,18 +16,17 @@ The continuous-sim approximation (documented so it is auditable)
 We build each basin's decade-long daily series through the SAME serving path
 (`app.mblstm.forecast`) the proxy uses, so LSTM and δHBV members are treated
 identically and the checkpoint recipe (q-transform, no-q-input, static overlay)
-is honored exactly. For every issue date t0 in the test decade we call
-forecast() and keep only the **h=1 (day-ahead) prediction** — chaining those
-day-1 values across all issue dates yields a continuous daily hydrograph. This
-is the honest continuous-simulation analogue for a day-ahead forecast model:
-  * For the LSTM, day-1 with perfect (observed) forcing is the closest thing to
-    a one-step simulation the model was trained to produce.
-  * For δHBV, HBV is a genuine continuous simulator; its day-1 output over a
-    rolling daily issue is a continuous sim by construction.
-Because we roll DAILY (stride 1) the resulting series has no gaps, and NSE is
-computed on the full pooled (obs, sim) decade series per basin — exactly the
-functional Li/Shen report. We reuse `app.metrics.all_point_metrics` +
-`aggregate`, so the median-NSE is byte-comparable to the proxy JSONs.
+is honored exactly. Continuous simulation for a windowed 365→H forecast model =
+chain NON-OVERLAPPING H-day forecast windows across the decade: issue at t0
+(365-day encoder context), take the FULL H-day forecast, advance t0 by H, repeat.
+This yields a gap-free daily hydrograph while running the model exactly as
+trained — the full H horizon is essential for δHBV, whose HBV core needs the
+whole 365+H sequence to warm up (an earlier h=1-only chain truncated the physics
+and scored NSE ~-0.3 vs 0.82 on the proxy — a bug, now fixed). The observed
+streamflow is only the encoder history channel and the no-q-input CAMELS
+checkpoints zero it, so this is a pure rainfall-runoff sim, not discharge
+assimilation. NSE is the full pooled (obs, sim) decade series per basin via
+`app.metrics.all_point_metrics` + `aggregate`, comparable to the proxy JSONs.
 
 Cost note: stride-1 over 531 basins × ~3650 days is heavy on CPU (the δHBV
 379-step HBV loop especially). Use --limit-basins / --stride-stations to
@@ -79,12 +78,19 @@ def load_camels_ids(which: str) -> set[str]:
 
 
 def simulate_station(path: Path, attrs: dict, start: str, end: str,
-                     min_days: int = 180) -> tuple[np.ndarray, np.ndarray] | None:
-    """Roll a continuous daily (obs, sim) series over [start, end] for one basin.
+                     min_days: int = 180, horizon: int = 14
+                     ) -> tuple[np.ndarray, np.ndarray] | None:
+    """Continuous daily (obs, sim) series over [start, end] for one basin.
 
-    For each day t0 in the window with >=365 days of prior history, call
-    forecast() and take the h=1 prediction as that day's simulated flow. Returns
-    aligned (obs, sim) 1-D arrays over the scorable days, or None if too few.
+    Continuous simulation for a windowed 365→H forecast model = chain
+    NON-OVERLAPPING H-day forecast windows across the decade: issue at t0 (using
+    the 365 prior days as encoder context), take the full H-day forecast, advance
+    t0 by H, repeat. This gives a gap-free daily hydrograph while serving the
+    model exactly as trained (full H horizon — critical for δHBV, whose HBV core
+    needs the whole 365+H sequence to warm up; the old h=1 chain truncated that
+    and produced garbage). The observed streamflow (q_hist) is only the encoder's
+    history channel — the no-q-input CAMELS checkpoints ZERO it in forecast(), so
+    this stays a pure-rainfall-runoff sim, not discharge assimilation.
     """
     df = pd.read_csv(path)
     df["date"] = pd.to_datetime(df["date"])
@@ -92,39 +98,36 @@ def simulate_station(path: Path, attrs: dict, start: str, end: str,
     daily = df.set_index("date").reindex(
         pd.date_range(df["date"].iloc[0], df["date"].iloc[-1], freq="D"))
 
-    win_days = pd.date_range(start, end, freq="D")
+    win_start = pd.Timestamp(start)
+    win_end = pd.Timestamp(end)
+    # issue dates spaced H apart; the forecast covers t0+1 .. t0+H
+    t0 = win_start - pd.Timedelta(days=1)
     obs_list, sim_list = [], []
-    for t0 in win_days:
-        # t0 is the issue date; we predict flow at t0+1 (h=1). Need the observed
-        # truth at t0+1 and >=365 days of history ending at t0.
-        t1 = t0 + pd.Timedelta(days=1)
-        if t0 not in daily.index or t1 not in daily.index:
-            continue
-        truth = daily.loc[t1, "q_cfs"]
-        if not np.isfinite(truth):
+    while t0 + pd.Timedelta(days=horizon) <= win_end:
+        if t0 not in daily.index:
+            t0 += pd.Timedelta(days=horizon)
             continue
         hist = daily.loc[:t0]
-        if len(hist) < CONTEXT_DAYS + 1:
+        if len(hist) < CONTEXT_DAYS or pd.isna(hist["q_cfs"].iloc[-1]):
+            t0 += pd.Timedelta(days=horizon)
             continue
         q_hist = hist["q_cfs"].dropna().rename("q_cfs").reset_index()
         q_hist.columns = ["date", "q_cfs"]
         if len(q_hist) < CONTEXT_DAYS:
+            t0 += pd.Timedelta(days=horizon)
             continue
-        if pd.isna(hist["q_cfs"].iloc[-1]):
-            # forecast() needs a defined last observation for the history window
-            continue
-        # keep ALL weather columns; norm_wx selects cfg enc/dec vars itself
         wx_hist = hist.reset_index().rename(columns={"index": "date"})
-        # decoder forcing = observed weather at t0+1 (perfect forcing, day-1 only)
-        wx_fcst = daily.loc[[t1]].reset_index().rename(columns={"index": "date"})
-        rows = mblstm.forecast(q_hist, wx_hist, wx_fcst, attrs, 1)
-        if not rows:
-            continue
-        sim = rows[0].get("q_cfs")
-        if sim is None or not np.isfinite(sim):
-            continue
-        obs_list.append(float(truth))
-        sim_list.append(float(sim))
+        fut_idx = pd.date_range(t0 + pd.Timedelta(days=1), periods=horizon, freq="D")
+        wx_fcst = daily.reindex(fut_idx).reset_index().rename(columns={"index": "date"})
+        rows = mblstm.forecast(q_hist, wx_hist, wx_fcst, attrs, horizon)
+        if rows and len(rows) == horizon:
+            for h, t in enumerate(fut_idx):
+                truth = daily.loc[t, "q_cfs"] if t in daily.index else np.nan
+                sim = rows[h].get("q_cfs")
+                if sim is not None and np.isfinite(truth) and np.isfinite(sim):
+                    obs_list.append(float(truth))
+                    sim_list.append(float(sim))
+        t0 += pd.Timedelta(days=horizon)
 
     if len(obs_list) < min_days:
         return None
