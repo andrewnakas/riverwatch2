@@ -200,11 +200,31 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0, dyn=None):
 
 def gamma_uh(q, n, k, torch, max_len: int = 15):
     """Route q (B, T) through a gamma-distributed unit hydrograph with shape n
-    (B,) and scale k (B,). Differentiable in n, k. Truncated/normalized to
-    max_len days (day-ahead routing rarely needs more)."""
+    and scale k. Differentiable in n, k. Truncated/normalized to max_len days
+    (day-ahead routing rarely needs more).
+
+    n, k may be either STATIC per-basin (B,) — the classic δHBV routing — or
+    TIME-VARYING (B, T), in which case each output day t is routed with its own
+    UH kernel (dynamic-γ routing; a per-window-mean of the dynamic values is the
+    cheaper approximation the trainer can pass instead of full per-step). Both
+    modes are differentiable in n, k.
+    """
     B, T = q.shape
     dev, dt = q.device, q.dtype
     lags = torch.arange(1, max_len + 1, dtype=dt, device=dev)  # (L,)
+
+    if n.dim() == 2:  # time-varying UH: (B, T) shape/scale → per-day kernels
+        n_ = n.clamp(min=1.0 + 1e-3)[:, :, None]                 # (B,T,1)
+        k_ = k.clamp(min=1e-3)[:, :, None]                       # (B,T,1)
+        logw = (n_ - 1.0) * torch.log(lags[None, None, :]) - lags[None, None, :] / k_
+        w = torch.softmax(logw, dim=2)                           # (B,T,L)
+        # out[t] = sum_l w[t,l] * q[t-l]  (causal, each day's own kernel)
+        qp = torch.nn.functional.pad(q, (max_len - 1, 0))        # (B, T+L-1)
+        # gather the L past values ending at each t: (B,T,L)
+        idx = torch.arange(T, device=dev)[:, None] + torch.arange(max_len, device=dev)[None, :]
+        past = qp[:, idx]                                        # (B,T,L), oldest→newest
+        return (past * w.flip(2)).sum(dim=2)                     # align w (lag1..L) to newest→oldest
+
     n_ = n[:, None].clamp(min=1.0 + 1e-3)
     k_ = k[:, None].clamp(min=1e-3)
     # gamma pdf ∝ x^(n-1) exp(-x/k); use log for stability, no lgamma-grad issues
@@ -213,9 +233,7 @@ def gamma_uh(q, n, k, torch, max_len: int = 15):
     # causal convolution: out[t] = sum_l w[l] * q[t-l]
     qp = torch.nn.functional.pad(q, (max_len - 1, 0))  # left-pad
     wf = w.flip(1)[:, None, :]  # (B,1,L) as conv kernel per basin
-    out = torch.nn.functional.conv1d(
-        qp[:, None, :], wf.reshape(B, 1, max_len), groups=1) if False else None
-    # grouped conv per-basin: reshape to (1, B, T+L-1), kernel (B,1,L), groups=B
+    # grouped conv per-basin: input (1, B, T+L-1), kernel (B,1,L), groups=B
     out = torch.nn.functional.conv1d(
         qp.unsqueeze(0), wf, groups=B).squeeze(0)  # (B, T)
     return out

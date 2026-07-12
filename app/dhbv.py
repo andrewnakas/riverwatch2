@@ -40,7 +40,17 @@ def build_dhbv_model(cfg: dict):
     hidden = int(cfg["hidden"])
     horizon = int(cfg.get("horizon", 14))
     n_static = hbv.N_HBV_PARAMS
-    n_dyn = len(hbv.DYNAMIC_PARAMS)
+    # Optional dynamic-γ routing: also predict ROUTN/ROUTK per-timestep so the
+    # unit hydrograph varies in time (off by default — existing ckpts unaffected).
+    dyn_route = bool(cfg.get("dynamic_routing", False))
+    dyn_names = tuple(hbv.DYNAMIC_PARAMS) + (("ROUTN", "ROUTK") if dyn_route else ())
+    n_dyn = len(dyn_names)
+    # Optional forcing-error correction (B5): a per-timestep learned multiplier
+    # on raw precip (the dominant forcing error), bounded and mass-aware, so the
+    # LSTM cancels systematic input bias before HBV. Off by default.
+    forcing_corr = bool(cfg.get("forcing_correction", False))
+    # max multiplicative factor: precip is scaled in [1/F, F] via F**tanh(.)
+    corr_max = float(cfg.get("forcing_corr_max", 2.0))
 
     class DHBVNet(nn.Module):
         def __init__(self) -> None:
@@ -54,6 +64,15 @@ def build_dhbv_model(cfg: dict):
             # dynamic (per-timestep) params from every LSTM output step
             self.dynamic_head = nn.Linear(hidden, n_dyn)
             self.horizon = horizon
+            self.dyn_route = dyn_route
+            self.dyn_names = dyn_names
+            self.forcing_corr = forcing_corr
+            self.corr_max = corr_max
+            if forcing_corr:
+                # per-step precip log-multiplier; zero-init so it starts as ×1
+                self.precip_corr_head = nn.Linear(hidden, 1)
+                nn.init.zeros_(self.precip_corr_head.weight)
+                nn.init.zeros_(self.precip_corr_head.bias)
 
         def forward(self, x_enc, x_dec, raw_precip, raw_tmean, raw_pet, area_km2):
             """x_enc (B,365,enc_in), x_dec (B,H,dec_in) z-scored — drive the LSTM.
@@ -68,14 +87,27 @@ def build_dhbv_model(cfg: dict):
             seq_hidden = torch.cat([enc_out, dec_out], dim=1)   # (B, 365+H, hid)
             dyn_sig = torch.sigmoid(self.dynamic_head(seq_hidden))  # (B, Tseq, n_dyn)
             dyn = {}
-            for i, name in enumerate(hbv.DYNAMIC_PARAMS):
+            for i, name in enumerate(self.dyn_names):
                 lo, hi = hbv.PARAM_RANGES[name]
                 dyn[name] = lo + (hi - lo) * dyn_sig[..., i]     # (B, Tseq)
+            # HBV consumes only the soil/response dynamic params (BETA, K0); the
+            # routing params (ROUTN/ROUTK) are consumed by gamma_uh below.
+            hbv_dyn = {k: v for k, v in dyn.items() if k in hbv.DYNAMIC_PARAMS}
+            # forcing-error correction: scale raw precip by a bounded per-step
+            # learned multiplier F**tanh(.) ∈ [1/F, F] (zero-init → starts ×1).
+            if self.forcing_corr:
+                logm = torch.tanh(self.precip_corr_head(seq_hidden)[..., 0])  # (B,Tseq)
+                raw_precip = raw_precip * self.corr_max ** logm
             # run HBV over the whole sequence; keep only the horizon days
             q_land = hbv.hbv_forward(raw_precip, raw_tmean, raw_pet, params,
-                                     torch, n_warmup=0, dyn=dyn)   # (B, Tseq) mm/day
-            # learnable gamma-UH routing (ROUTN shape, ROUTK scale, both static)
-            q_routed = hbv.gamma_uh(q_land, params["ROUTN"], params["ROUTK"], torch)
+                                     torch, n_warmup=0, dyn=hbv_dyn)   # (B, Tseq) mm/day
+            # gamma-UH routing: static (B,) by default, or time-varying (B,Tseq)
+            # per-day kernels when dynamic_routing is on.
+            if self.dyn_route:
+                routn, routk = dyn["ROUTN"], dyn["ROUTK"]        # (B, Tseq)
+            else:
+                routn, routk = params["ROUTN"], params["ROUTK"]  # (B,)
+            q_routed = hbv.gamma_uh(q_land, routn, routk, torch)
             q_mm = q_routed[:, -self.horizon:]                # (B, H) mm/day
             q_cfs = q_mm * area_km2[:, None] / CFS_PER_MM_DAY  # (B, H) cfs
             return q_cfs

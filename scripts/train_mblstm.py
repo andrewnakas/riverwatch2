@@ -530,6 +530,12 @@ def main() -> int:
                          "sharper right-skewed peaks, analytic quantiles)")
     ap.add_argument("--cmal-k", type=int, default=3,
                     help="number of mixture components for --head cmal")
+    ap.add_argument("--dynamic-routing", action="store_true",
+                    help="δHBV: predict ROUTN/ROUTK per-timestep (time-varying "
+                         "unit hydrograph) instead of static routing (B3 lever)")
+    ap.add_argument("--forcing-correction", action="store_true",
+                    help="δHBV: learn a bounded per-timestep multiplier on raw "
+                         "precip to cancel systematic forcing bias (B5 lever)")
     ap.add_argument("--corpus-dir", default="",
                     help="override corpus dir (e.g. data/mblstm/corpus_openmeteo for "
                          "the full-13-var Open-Meteo corpus). Default: data/mblstm/corpus")
@@ -725,6 +731,14 @@ def main() -> int:
             cfg["cmal_k"] = int(args.cmal_k)
         else:
             cfg.pop("cmal_k", None)
+        if args.head == "dhbv" and args.dynamic_routing:
+            cfg["dynamic_routing"] = True
+        elif args.head != "dhbv":
+            cfg.pop("dynamic_routing", None)
+        if args.head == "dhbv" and args.forcing_correction:
+            cfg["forcing_correction"] = True
+        elif args.head != "dhbv":
+            cfg.pop("forcing_correction", None)
         cfg["head_changed_from"] = base_head if base_head != args.head else None
         if args.forcing_mix:
             cfg["decoder_forcing"] = (f"forcing-mix {args.forcing_mix} "
@@ -761,6 +775,10 @@ def main() -> int:
         }
         if args.head == "cmal":
             cfg["cmal_k"] = int(args.cmal_k)
+        if args.head == "dhbv" and args.dynamic_routing:
+            cfg["dynamic_routing"] = True
+        if args.head == "dhbv" and args.forcing_correction:
+            cfg["forcing_correction"] = True
         if args.forcing_mix:
             cfg["decoder_forcing"] = (f"forcing-mix {args.forcing_mix} "
                                       f"(dynamical.org archives + perfect"
