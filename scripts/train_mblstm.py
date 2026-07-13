@@ -539,6 +539,9 @@ def main() -> int:
     ap.add_argument("--dhbv-loss", choices=["mse", "huber", "lognse"], default="mse",
                     help="δHBV training loss variant for ensemble loss-diversity "
                          "(mse=basin-NSE default; huber=robust; lognse=low-flow)")
+    ap.add_argument("--nmul", type=int, default=1,
+                    help="δHBV: number of parallel HBV component instances averaged "
+                         "per basin (Li/Shen record uses 16; default 1)")
     ap.add_argument("--corpus-dir", default="",
                     help="override corpus dir (e.g. data/mblstm/corpus_openmeteo for "
                          "the full-13-var Open-Meteo corpus). Default: data/mblstm/corpus")
@@ -742,6 +745,8 @@ def main() -> int:
             cfg["forcing_correction"] = True
         elif args.head != "dhbv":
             cfg.pop("forcing_correction", None)
+        if args.head == "dhbv" and args.nmul != 1:
+            cfg["nmul"] = int(args.nmul)
         cfg["head_changed_from"] = base_head if base_head != args.head else None
         if args.forcing_mix:
             cfg["decoder_forcing"] = (f"forcing-mix {args.forcing_mix} "
@@ -782,6 +787,8 @@ def main() -> int:
             cfg["dynamic_routing"] = True
         if args.head == "dhbv" and args.forcing_correction:
             cfg["forcing_correction"] = True
+        if args.head == "dhbv" and args.nmul != 1:
+            cfg["nmul"] = int(args.nmul)
         if args.forcing_mix:
             cfg["decoder_forcing"] = (f"forcing-mix {args.forcing_mix} "
                                       f"(dynamical.org archives + perfect"

@@ -48,16 +48,18 @@ PARAM_RANGES = {
     # δHBV1.1p capillary-rise: water drawn from the upper groundwater zone back
     # into the soil store when the soil is dry (Li/Shen 2025 addition).
     "CAPRISE": (0.0, 3.0),
+    # BETAET: ET-shape exponent (Li/Shen's "γ", the 3rd DYNAMIC param in the
+    # code-verified δHBV1.1p). ET = PET · (SM/FC)^BETAET (was a linear ramp).
+    "BETAET": (0.3, 5.0),
     # Gamma unit-hydrograph routing: shape ROUTN, scale ROUTK (both learnable).
     "ROUTN": (1.0, 5.0), "ROUTK": (0.5, 5.0),
 }
 PARAM_NAMES = list(PARAM_RANGES)
 N_HBV_PARAMS = len(PARAM_NAMES)
 
-# The parameters δHBV1.1p predicts DYNAMICALLY (per-timestep) rather than static.
-# Kept to BETA + K0 for stability (γ routing stays static — a time-varying unit
-# hydrograph is a much larger change for marginal gain).
-DYNAMIC_PARAMS = ("BETA", "K0")
+# The parameters δHBV1.1p predicts DYNAMICALLY (per-timestep). The code-verified
+# record recipe (mhpi/hydrodl2 hbv_1_1p) uses BETA + K0 + BETAET.
+DYNAMIC_PARAMS = ("BETA", "K0", "BETAET")
 
 
 def map_params(raw, torch):
@@ -141,6 +143,7 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0, dyn=None):
         ep = pet[:, t]
         beta_t = par("BETA", t)
         k0_t = par("K0", t)
+        betaet_t = par("BETAET", t)
         # --- snow: partition precip by TT, melt/refreeze by degree-day ---
         is_snow = torch.sigmoid((p["TT"] - temp) * 5.0)  # soft rain/snow split
         snowfall = pr * is_snow
@@ -166,8 +169,10 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0, dyn=None):
         soil_frac = torch.clamp(sm / p["FC"], 0.0, 1.0)
         recharge = to_soil * soil_frac.pow(beta_t)
         sm = sm + to_soil - recharge
-        # ET: linear ramp to PET up to LP*FC
-        et = ep * torch.clamp(sm / (p["LP"] * p["FC"]), 0.0, 1.0)
+        # ET: PET scaled by (SM/LP*FC)^BETAET (Li/Shen ET-shape exponent; was a
+        # linear ramp, i.e. BETAET=1). Clamp base to [0,1] before the power.
+        et_frac = torch.clamp(sm / (p["LP"] * p["FC"]), 0.0, 1.0).pow(betaet_t)
+        et = ep * et_frac
         et = torch.minimum(et, sm)
         sm = sm - et
         # soil can't exceed FC; spill to recharge

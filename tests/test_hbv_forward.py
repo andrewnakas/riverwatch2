@@ -123,8 +123,9 @@ def test_routing_finite_and_normalized():
 
 # Pinned from the reference Python loop (app/hbv.py). The B1 speedup must
 # reproduce these to < 1e-5. Regenerate ONLY on an intentional physics change.
-GOLDEN = [1.4393558502197266, 1.2708544731140137, 0.0, 5.063471794128418,
-          3.4155731201171875]
+# Regenerated after adding BETAET (dynamic ET-shape exponent, δHBV1.1p recipe).
+GOLDEN = [1.382322907447815, 1.0474077463150024, 0.0038756050635129213,
+          4.782498359680176, 3.3050968647003174]
 
 
 if __name__ == "__main__":

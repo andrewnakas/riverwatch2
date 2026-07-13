@@ -51,21 +51,26 @@ def build_dhbv_model(cfg: dict):
     forcing_corr = bool(cfg.get("forcing_correction", False))
     # max multiplicative factor: precip is scaled in [1/F, F] via F**tanh(.)
     corr_max = float(cfg.get("forcing_corr_max", 2.0))
+    # nmul: number of parallel HBV component instances per basin (Li/Shen use 16).
+    # Each component has its own param set; the 16 land discharges are AVERAGED,
+    # then routed once. Default 1 = single instance (backward-compatible).
+    nmul = int(cfg.get("nmul", 1))
 
     class DHBVNet(nn.Module):
         def __init__(self) -> None:
             super().__init__()
             self.encoder = nn.LSTM(enc_in, hidden, batch_first=True)
             self.decoder = nn.LSTM(dec_in, hidden, batch_first=True)
-            # static params from the encoder's final hidden state
+            # static params: nmul component sets from the encoder final state
             self.static_head = nn.Sequential(
                 nn.Linear(hidden, hidden // 2), nn.ReLU(),
-                nn.Linear(hidden // 2, n_static))
-            # dynamic (per-timestep) params from every LSTM output step
-            self.dynamic_head = nn.Linear(hidden, n_dyn)
+                nn.Linear(hidden // 2, n_static * nmul))
+            # dynamic (per-timestep) params, nmul component sets per step
+            self.dynamic_head = nn.Linear(hidden, n_dyn * nmul)
             self.horizon = horizon
             self.dyn_route = dyn_route
             self.dyn_names = dyn_names
+            self.nmul = nmul
             self.forcing_corr = forcing_corr
             self.corr_max = corr_max
             if forcing_corr:
@@ -78,35 +83,46 @@ def build_dhbv_model(cfg: dict):
             """x_enc (B,365,enc_in), x_dec (B,H,dec_in) z-scored — drive the LSTM.
             raw_precip/tmean/pet (B, 365+H) physical — drive HBV. area_km2 (B,).
             Returns q_cfs (B, H) physical streamflow for the H horizon days."""
+            B = x_enc.shape[0]
+            M = self.nmul
             enc_out, (h, c) = self.encoder(x_enc)          # enc_out (B,365,hid)
             dec_out, _ = self.decoder(x_dec, (h, c))       # (B,H,hid)
-            # static params from the final encoder state
-            static_logits = self.static_head(h[-1])        # (B, n_static)
-            params = hbv.map_params(static_logits, torch)  # dict{name:(B,)}
-            # dynamic params over the full 365+H sequence
             seq_hidden = torch.cat([enc_out, dec_out], dim=1)   # (B, 365+H, hid)
-            dyn_sig = torch.sigmoid(self.dynamic_head(seq_hidden))  # (B, Tseq, n_dyn)
+            Tseq = seq_hidden.shape[1]
+            # static params → nmul component sets: (B, n_static*M) → (B*M, n_static)
+            static_logits = self.static_head(h[-1]).view(B, M, n_static).reshape(B * M, n_static)
+            params = hbv.map_params(static_logits, torch)  # dict{name:(B*M,)}
+            # dynamic params over the sequence, nmul sets: (B,T,n_dyn*M)→(B*M,T,n_dyn)
+            dsig = torch.sigmoid(self.dynamic_head(seq_hidden)).view(B, Tseq, M, n_dyn)
+            dsig = dsig.permute(0, 2, 1, 3).reshape(B * M, Tseq, n_dyn)  # (B*M,T,n_dyn)
             dyn = {}
             for i, name in enumerate(self.dyn_names):
                 lo, hi = hbv.PARAM_RANGES[name]
-                dyn[name] = lo + (hi - lo) * dyn_sig[..., i]     # (B, Tseq)
-            # HBV consumes only the soil/response dynamic params (BETA, K0); the
-            # routing params (ROUTN/ROUTK) are consumed by gamma_uh below.
+                dyn[name] = lo + (hi - lo) * dsig[..., i]     # (B*M, Tseq)
             hbv_dyn = {k: v for k, v in dyn.items() if k in hbv.DYNAMIC_PARAMS}
-            # forcing-error correction: scale raw precip by a bounded per-step
-            # learned multiplier F**tanh(.) ∈ [1/F, F] (zero-init → starts ×1).
+            # expand raw forcings over the M components
+            rp, rt, rpet = raw_precip, raw_tmean, raw_pet
             if self.forcing_corr:
                 logm = torch.tanh(self.precip_corr_head(seq_hidden)[..., 0])  # (B,Tseq)
-                raw_precip = raw_precip * self.corr_max ** logm
-            # run HBV over the whole sequence; keep only the horizon days
-            q_land = hbv.hbv_forward(raw_precip, raw_tmean, raw_pet, params,
-                                     torch, n_warmup=0, dyn=hbv_dyn)   # (B, Tseq) mm/day
-            # gamma-UH routing: static (B,) by default, or time-varying (B,Tseq)
-            # per-day kernels when dynamic_routing is on.
+                rp = rp * self.corr_max ** logm
+            if M > 1:
+                rp = rp.repeat_interleave(M, dim=0)          # (B*M, Tseq)
+                rt = rt.repeat_interleave(M, dim=0)
+                rpet = rpet.repeat_interleave(M, dim=0)
+            # run HBV per component, then AVERAGE the M land discharges
+            q_land = hbv.hbv_forward(rp, rt, rpet, params, torch,
+                                     n_warmup=0, dyn=hbv_dyn)   # (B*M, Tseq) mm/day
+            if M > 1:
+                q_land = q_land.view(B, M, Tseq).mean(dim=1)   # (B, Tseq)
+            # routing params (component-0 set is fine; take mean over M): (B,)
+            def _rp(name):
+                v = params[name]
+                return v.view(B, M).mean(dim=1) if M > 1 else v
             if self.dyn_route:
-                routn, routk = dyn["ROUTN"], dyn["ROUTK"]        # (B, Tseq)
+                routn = dyn["ROUTN"].view(B, M, Tseq).mean(1) if M > 1 else dyn["ROUTN"]
+                routk = dyn["ROUTK"].view(B, M, Tseq).mean(1) if M > 1 else dyn["ROUTK"]
             else:
-                routn, routk = params["ROUTN"], params["ROUTK"]  # (B,)
+                routn, routk = _rp("ROUTN"), _rp("ROUTK")     # (B,)
             q_routed = hbv.gamma_uh(q_land, routn, routk, torch)
             q_mm = q_routed[:, -self.horizon:]                # (B, H) mm/day
             q_cfs = q_mm * area_km2[:, None] / CFS_PER_MM_DAY  # (B, H) cfs
