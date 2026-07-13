@@ -1,0 +1,93 @@
+{
+  "label": "withq_full531_2seed",
+  "members": [
+    "data/mblstm/gpu_dumps_s14/camels531_daymet_withq_full531.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_maurer_withq_full531.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_nldas_withq_full531.csv.gz"
+  ],
+  "point": "ymed",
+  "weights": [
+    0.4112136356795007,
+    0.2630586340867535,
+    0.3257277302337458
+  ],
+  "n_windows": 138488,
+  "metrics": {
+    "full": {
+      "flv": {
+        "median": 55.08041917926802,
+        "mean": 294.0132415475505,
+        "scorable": 519
+      },
+      "pct_bias": {
+        "median": -4.686769327106512,
+        "mean": -5.357489247116959,
+        "scorable": 531
+      },
+      "log_nse": {
+        "median": 0.8914080816323601,
+        "mean": 0.8047368565915657,
+        "scorable": 531
+      },
+      "kge": {
+        "median": 0.7804216129141092,
+        "mean": 0.7447886581069272,
+        "scorable": 531
+      },
+      "nse": {
+        "median": 0.8083335806288454,
+        "mean": 0.7751129768258185,
+        "scorable": 531,
+        "frac_gt_0.5": 0.9453860640301318
+      },
+      "pearson_r": {
+        "median": 0.9093351901317129,
+        "mean": 0.889717885258905,
+        "scorable": 531
+      },
+      "fhv": {
+        "median": -24.740516837542646,
+        "mean": -26.0540233627121,
+        "scorable": 531
+      }
+    },
+    "day1": {
+      "flv": {
+        "median": 32.30816544280861,
+        "mean": 218.76279716963109,
+        "scorable": 519
+      },
+      "pct_bias": {
+        "median": -1.6490338474612818,
+        "mean": -0.9750614362401467,
+        "scorable": 531
+      },
+      "log_nse": {
+        "median": 0.9331510030972452,
+        "mean": 0.8572325456866906,
+        "scorable": 531
+      },
+      "kge": {
+        "median": 0.8555901268083348,
+        "mean": 0.8038692552851293,
+        "scorable": 531
+      },
+      "nse": {
+        "median": 0.9016084231155272,
+        "mean": 0.833147633248052,
+        "scorable": 531,
+        "frac_gt_0.5": 0.9661016949152542
+      },
+      "pearson_r": {
+        "median": 0.9584558760293141,
+        "mean": 0.9398403504856834,
+        "scorable": 531
+      },
+      "fhv": {
+        "median": -13.49587617281854,
+        "mean": -14.051977285801334,
+        "scorable": 531
+      }
+    }
+  }
+}
