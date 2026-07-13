@@ -170,9 +170,11 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0, dyn=None):
         recharge = to_soil * soil_frac.pow(beta_t)
         sm = sm + to_soil - recharge
         # ET: PET scaled by (SM/LP*FC)^BETAET (Li/Shen ET-shape exponent; was a
-        # linear ramp, i.e. BETAET=1). Clamp base to [0,1] before the power.
-        et_frac = torch.clamp(sm / (p["LP"] * p["FC"]), 0.0, 1.0).pow(betaet_t)
-        et = ep * et_frac
+        # linear ramp, i.e. BETAET=1). Clamp base to [eps,1]: d/dx x^b → ∞ at x=0
+        # for b<1, which makes the backward pass emit inf grads (every batch then
+        # trips the skip-guard). The eps floor keeps the gradient finite.
+        et_base = torch.clamp(sm / (p["LP"] * p["FC"]), 1e-4, 1.0)
+        et = ep * et_base.pow(betaet_t)
         et = torch.minimum(et, sm)
         sm = sm - et
         # soil can't exceed FC; spill to recharge
