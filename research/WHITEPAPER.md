@@ -77,42 +77,63 @@ basins**; temporal split, **train 1999-10-01 → 2008-09-30**, **test 1989-10-01
 
 ## 2. A history of CAMELS NSE records
 
-> **[TO BE FILLED from the cited literature review — two chronological tables
-> below. Every number flagged CONFIRMED (primary source) vs APPROXIMATE.]**
+All numbers below are CONFIRMED from the primary source unless marked ~approx.
+The protocol column notes whether a number is comparable to the standard
+CAMELS-531 temporal-split median-NSE benchmark.
 
 ### 2.1 No-observed-discharge (rainfall–runoff) track
 
 | Year | Model | median NSE | #basins | protocol / caveat | citation |
 |------|-------|-----------|---------|-------------------|----------|
-| _[pending]_ | Calibrated SAC-SMA / conceptual | _?_ | | pre-DL bar | |
-| 2019 | LSTM regional ensemble (Kratzert) | ~0.74 | 531 | HESS 23:5089 | |
-| 2021 | Multi-forcing LSTM ens (Kratzert) | 0.82 | 531 | HESS 25:2685 | |
-| 2022–23 | δHBV differentiable hybrid (Feng/Shen) | ~0.74–0.75 single | 531/671 | | |
-| 2025 | δHBV1.1p grand ensemble (Li/Shen) | **0.83** | 531 | HESS 29:6829 — **record** | |
-| _[pending 2024-26 challengers: transformers, Mamba, foundation]_ | | | | | |
+| pre-2018 | Calibrated SAC-SMA / conceptual | ~0.55–0.65 | 531 | the pre-deep-learning bar; ~0.72 was the prior LSTM-NLDAS point | — |
+| 2019 | Regional **EA-LSTM** (single) | **~0.74** | 531 | first DL to beat calibrated models; ensemble higher | Kratzert et al. 2019, WRR 55, [10.1029/2019WR026065](https://doi.org/10.1029/2019WR026065) |
+| 2020 | Multi-timescale / continental LSTM (single-forcing best) | ~0.77 | 531 | single-forcing LSTM ceiling | Kratzert / Gauch et al. 2020–21 |
+| 2021 | **Multi-forcing LSTM ensemble** | **0.8082** | 531 | per-forcing 10-seed ensemble; the "multi-forcing" jump | Kratzert et al. 2021, HESS 25:2685, [link](https://doi.org/10.5194/hess-25-2685-2021) |
+| 2022–23 | **δHBV** differentiable hybrid (single) | ~0.74–0.75 | 531/671 | physics-ML hybrid ≈ single LSTM; value is as an ensemble member | Feng et al. 2022/2023 (WRR/HESS) |
+| 2024 | RR-Former (transformer), FHNN/TFT (state-space) | ~0.75–0.77 regional; 0.83 **per-basin in-sample** | 531 | **NOT comparable**: per-basin in-sample, not regional temporal split | Yin 2022; FHNN 2024 |
+| **2025** | **(LSTM+δHBV) grand ensemble (δHBV1.1p)** | **~0.83** | 531 | LSTM¹²³ ens 0.808 → +δHBV 0.818 → +seeds/multi **0.83** — **RECORD** | **Li, Song, Pan, Lawson & Shen 2025, HESS 29:6829, [link](https://doi.org/10.5194/hess-29-6829-2025)** |
+| 2026 | **RiverWatch2 no-q grand ensemble** | **~0.80 pooled / 0.829 day-1** | 531 (177 screen) | day-1 ≈ record; pooled/continuous ~0.02–0.03 short | **this work** |
 
-**Current no-q record verdict:** _[pending — expected: Li/Shen 2025, 0.83, and
-that nothing 2024-26 has cleanly beaten it on the same no-q 531 temporal split]._
+**Current no-q record: Li/Shen 2025, median NSE ~0.83 on CAMELS-531 temporal
+split.** No 2024–2026 result cleanly beats it *on the same no-q 531 temporal
+protocol*: transformers (RR-Former) and state-space models (FHNN ~0.77) do not
+clear it in regional temporal testing; the one ≥0.83 transformer number
+(RR-Former 0.83 / RR-TiDE 0.848) is **per-basin in-sample**, a different and
+easier setup. Kratzert et al. 2024 (HESS 28:4187, "never train on a single
+basin") reinforces that ~0.83 is an *ensembling* ceiling, not a single-model one.
+Single-model no-q ceiling is ~0.74–0.75; everything above is ensemble breadth.
 
 ### 2.2 Discharge-assimilating (autoregressive / nowcast) track
 
 | Year | Model | median NSE | #basins | lag/lead + caveat | citation |
 |------|-------|-----------|---------|-------------------|----------|
-| 2020 | DI-LSTM data integration (Feng/Shen) | ~0.86 | 671 | WRR; weaker base | |
-| 2022 | Autoregressive LSTM (Nearing) | **0.879** | 531 | HESS 26:5493; 1-day-lag nowcast — **record** | |
-| _[pending newer with-q]_ | | | | | |
-| **2026** | **RiverWatch2 with-q ensemble** | **0.9016** | **531** | 1-day-lag nowcast; verified all-531 | this work |
+| 2020 | **DI-LSTM** data integration | **0.852** (from 0.714 base, +19%) | 671 | WRR; weaker base than later work | Feng, Fang & Shen 2020, WRR 56, [10.1029/2019WR026793](https://doi.org/10.1029/2019WR026793) |
+| **2022** | **Autoregressive LSTM (AR)** | **0.879** (base 0.796 → DA 0.859 → **AR 0.879**) | **531** | 1-day-lag **nowcast** (no met forecast); 1989–1999 test — **RECORD** | **Nearing et al. 2022, HESS 26:5493, [link](https://doi.org/10.5194/hess-26-5493-2022)** |
+| 2025 | δHBV data-integration (Western US) | KGE 0.80→0.96 @1-day | 646 (West) | reports KGE not NSE; confirms effect, not a CAMELS-531 NSE record | Song/Shen et al. 2025, HESS 29:5453 |
+| **2026** | **RiverWatch2 with-q grand ensemble** | **0.9016** | **531** | 1-day-lag nowcast; **verified on all 531 basins** | **this work** |
 
-**Current with-q record verdict:** _[pending — expected: Nearing 2022 0.879 was
-the prior best on CAMELS-531; RiverWatch2 0.9016 exceeds it.]_
+**Current with-q record (prior): Nearing et al. 2022, median day-1 NSE 0.879 on
+CAMELS-531 (1-day-lag AR nowcast).** RiverWatch2's 0.9016 exceeds it by +0.023 on
+the identical 531-basin / 1989–1999 protocol.
 
 ### 2.3 What Google's global models are (and are not)
 
-Nearing et al. 2024 (Nature 627:559) and related Google Flood Forecasting work
-are **ungauged, no-discharge, extreme-event-reliability** models on GRDC/Caravan,
-benchmarked on precision/recall vs GloFAS — **not** CAMELS median-NSE records.
-They should not be cited as the CAMELS NSE record for either track.
-_[Agent to confirm any CAMELS numbers they report.]_
+Nearing et al. 2024 (Nature 627:559, "Global prediction of extreme floods in
+ungauged watersheds") is an **ungauged, no-discharge, extreme-event-reliability**
+model on ~5,680 GRDC/Caravan gauges, benchmarked on precision/recall/lead-time vs
+GloFAS — **not** a CAMELS median-NSE record for either track. It is frequently
+mis-cited as "the streamflow record"; it answers a different question (ungauged
+flood reliability) on a different dataset with a different metric.
+
+### 2.4 The critical comparability caveat
+
+The with-q and no-q numbers are **not on the same axis**. Feeding yesterday's
+observed discharge makes near-persistence trivially accurate on the many slow /
+baseflow-dominated CAMELS basins, so nowcast NSE is *latency-inflated*: Nearing
+2022's own base LSTM was 0.796 (no-q) and jumped to 0.879 (AR) — a +0.083 gain
+that is mostly the autocorrelation of streamflow, not new hydrological skill. A
+with-q 0.90 and a no-q 0.83 are therefore **not** rankable against each other;
+they are records in two different competitions.
 
 ---
 
@@ -244,6 +265,50 @@ available at forecast time.
 
 ## References
 
-_[Populated from §2 literature review — Newman 2015, Addor 2017, Kratzert 2018/
-2019/2021, Feng/Shen 2020/2022/2023, Li-Shen 2025, Nearing 2022/2024, plus any
-2024-26 challengers the review surfaces. Each with DOI/URL.]_
+1. **Newman, A. J., et al. (2015).** Development of a large-sample watershed-scale
+   hydrometeorological dataset for the contiguous USA (CAMELS). *HESS* 19,
+   209–223. https://doi.org/10.5194/hess-19-209-2015
+2. **Addor, N., et al. (2017).** The CAMELS data set: catchment attributes and
+   meteorology for large-sample studies. *HESS* 21, 5293–5313.
+   https://doi.org/10.5194/hess-21-5293-2017
+3. **Kratzert, F., et al. (2019).** Toward Improved Predictions in Ungauged
+   Basins: Exploiting the Power of Machine Learning. *WRR* 55.
+   https://doi.org/10.1029/2019WR026065 (EA-LSTM; single ~0.74 on CAMELS-531)
+4. **Kratzert, F., et al. (2021).** A note on leveraging synergy in multiple
+   meteorological data sets with deep learning for rainfall–runoff modeling.
+   *HESS* 25, 2685–2703. https://doi.org/10.5194/hess-25-2685-2021
+   (multi-forcing per-forcing LSTM ensemble, median NSE 0.8082)
+5. **Feng, D., Fang, K., & Shen, C. (2020).** Enhancing streamflow forecast and
+   extracting insights using LSTM networks with data integration at continental
+   scales. *WRR* 56, e2019WR026793. https://doi.org/10.1029/2019WR026793
+   (DI-LSTM: median NSE 0.714 → 0.852, 671 basins)
+6. **Feng, D., et al. (2022/2023).** Differentiable, learnable, regionalized
+   process-based models (δHBV). *WRR / HESS* (δHBV ≈ single LSTM, ~0.74–0.75).
+7. **Nearing, G., et al. (2022).** Technical note: Data assimilation and
+   autoregression for using near-real-time streamflow observations in LSTM
+   networks. *HESS* 26, 5493–5513. https://doi.org/10.5194/hess-26-5493-2022
+   (**with-q record**: base 0.796, DA 0.859, AR **0.879**, CAMELS-531, 1-day lag)
+8. **Li, J., Song, Y., Pan, M., Lawson, K., & Shen, C. (2025).** Ensembling
+   differentiable process-based and data-driven models with diverse
+   meteorological forcing datasets to advance streamflow simulation. *HESS* 29,
+   6829. https://doi.org/10.5194/hess-29-6829-2025
+   (**no-q record**: LSTM¹²³ 0.808 → (LSTM+δHBV) 0.818 → grand ens **~0.83**)
+9. **Nearing, G., et al. (2024).** Global prediction of extreme floods in
+   ungauged watersheds. *Nature* 627, 559–563.
+   https://doi.org/10.1038/s41586-024-07145-1
+   (ungauged flood-reliability model on Caravan/GRDC — *not* a CAMELS NSE record)
+10. **Kratzert, F., et al. (2024).** HESS Opinions: Never train an LSTM on a
+    single basin. *HESS* 28, 4187. https://doi.org/10.5194/hess-28-4187-2024
+    (regional-ensemble ceiling context)
+11. **Song, Y., Shen, C., et al. (2025).** Improving streamflow simulation
+    through ML-powered data integration (Western US). *HESS* 29, 5453.
+    https://doi.org/10.5194/hess-29-5453-2025 (with-q, KGE-reported)
+
+*Codebase: mhpi/hydrodl2, mhpi/generic_deltaModel (δHBV1.1p reference
+implementation); neuralhydrology (Kratzert LSTM benchmark).*
+
+---
+
+*This working paper is a living document; RiverWatch2 numbers update as the
+grand ensemble is extended. Latest verified figures are always in
+`benchmarks/EXPERIMENTS.md` and `benchmarks/combine_*.json`.*
