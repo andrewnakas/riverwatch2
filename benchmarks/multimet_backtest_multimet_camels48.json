@@ -1,0 +1,121 @@
+{
+  "label": "multimet_camels48",
+  "forcing": "Caravan MultiMet HRES (Zenodo 14161281)",
+  "ckpt": "data/mblstm/model_h256_s101_cmalv2p.pt:data/mblstm/model_h256_s102_cmalv2p.pt:data/mblstm/model_h256_s103_cmalv2p.pt:data/mblstm/model_h256_s104_cmalv2p.pt",
+  "point_policy": "mean",
+  "window": [
+    "2016-01-01",
+    "2020-12-31"
+  ],
+  "stride_days": 14,
+  "horizon": 10,
+  "cohort": {
+    "n_scored": 47,
+    "n_candidate": 48
+  },
+  "skips": {
+    "no_t0": 0,
+    "short_or_no_q": 131,
+    "no_multimet": 0,
+    "forecast_none": 0
+  },
+  "metrics": {
+    "pct_bias": {
+      "median": -19.685153007613476,
+      "mean": -19.86344798351929,
+      "scorable": 47
+    },
+    "log_nse": {
+      "median": 0.759595492622485,
+      "mean": 0.7544061026302417,
+      "scorable": 47
+    },
+    "pearson_r": {
+      "median": 0.6399170226309577,
+      "mean": 0.6513861465854036,
+      "scorable": 47
+    },
+    "fhv": {
+      "median": -61.0217120522722,
+      "mean": -59.154325542483384,
+      "scorable": 47
+    },
+    "windows": {
+      "median": 1310.0,
+      "mean": 1310.0,
+      "scorable": 47
+    },
+    "kge": {
+      "median": 0.43232100010128616,
+      "mean": 0.44669111616710605,
+      "scorable": 47
+    },
+    "nse": {
+      "median": 0.3694770353959512,
+      "mean": 0.3825847898543185,
+      "scorable": 47,
+      "frac_gt_0.5": 0.3191489361702128
+    },
+    "flv": {
+      "median": 16.23887395125437,
+      "mean": 11.964498970422405,
+      "scorable": 47
+    }
+  },
+  "by_horizon_median_nse": {
+    "1": {
+      "median_nse": 0.6229753885293543,
+      "n": 47
+    },
+    "2": {
+      "median_nse": 0.492882572319444,
+      "n": 47
+    },
+    "3": {
+      "median_nse": 0.545073450812148,
+      "n": 47
+    },
+    "4": {
+      "median_nse": 0.4558663083761706,
+      "n": 47
+    },
+    "5": {
+      "median_nse": 0.44050139103504526,
+      "n": 47
+    },
+    "6": {
+      "median_nse": 0.41285177302603904,
+      "n": 47
+    },
+    "7": {
+      "median_nse": 0.35799786130100175,
+      "n": 47
+    },
+    "8": {
+      "median_nse": 0.3028858491501968,
+      "n": 47
+    },
+    "9": {
+      "median_nse": 0.32402855193935776,
+      "n": 47
+    },
+    "10": {
+      "median_nse": 0.24454688408722058,
+      "n": 47
+    }
+  },
+  "reference": {
+    "AIFL": {
+      "nse": 0.518,
+      "kge": 0.636
+    },
+    "Google": {
+      "nse": 0.624,
+      "kge": 0.678
+    }
+  },
+  "caveats": [
+    "HRES leads cap at 10; decoder radiation channel is NaN (MultiMet has no shortwave analogue) and temp_2m is used for mean=max=min \u2014 a real handicap vs our own 5-var forcing, the price of THEIR archive.",
+    "encoder history is the Daymet CAMELS corpus; only the forecast side is MultiMet HRES."
+  ]
+}

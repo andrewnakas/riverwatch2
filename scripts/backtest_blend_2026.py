@@ -82,6 +82,7 @@ _spec.loader.exec_module(nwm_bt)
 
 from app import gages2  # noqa: E402
 from app import mblstm  # noqa: E402
+from app.metrics import aggregate, kge, nse  # noqa: E402
 from app.weather import DAILY_VARS  # noqa: E402
 
 CORPUS_DIR = ROOT / "data" / "mblstm" / "corpus_openmeteo"
@@ -229,7 +230,7 @@ def mblstm_station_preds(corpus_path: Path, attrs: dict, t0_list: list[date],
         if not rows or len(rows) < HORIZON:
             skips["forecast_none"] += 1
             continue
-        # r["q_cfs"] is the served point = q50 under the forced median policy.
+        # r["q_cfs"] is the served point under the RW2_MBLSTM_POINT policy.
         preds.extend((sid, t0, h, float(rows[h - 1]["q_cfs"]))
                      for h in range(1, HORIZON + 1))
     return preds
@@ -298,7 +299,10 @@ def blend_inv_mae2(df: pd.DataFrame) -> np.ndarray:
 def score_members(df: pd.DataFrame, members: list[str]) -> dict:
     """Per horizon, per member: pooled MAE, per-station median/mean MAE,
     win-rate vs nwm_corrected — the NWM backtest's shapes, minus terciles
-    (the cohort is too small to stratify meaningfully yet)."""
+    (the cohort is too small to stratify meaningfully yet). Per-station
+    NSE/KGE (app.metrics) ride along: the series in each (station, horizon)
+    cell is the issue dates, so cells under MIN_N=20 scored dates are NaN
+    and only the `scorable` count shrinks."""
     obs = df["q_obs"].to_numpy(dtype=np.float64)
     for m in members:
         df[f"err_{m}"] = np.abs(df[m].to_numpy(dtype=np.float64) - obs)
@@ -306,6 +310,7 @@ def score_members(df: pd.DataFrame, members: list[str]) -> dict:
     for h in sorted(df["horizon_day"].unique()):
         sub = df[df["horizon_day"] == h]
         per_station = sub.groupby("station_id")[[f"err_{m}" for m in members]].mean()
+        st_groups = list(sub.groupby("station_id"))
         hrow: dict = {"n_pairs": int(len(sub)),
                       "n_stations": int(len(per_station)), "members": {}}
         for m in members:
@@ -315,6 +320,11 @@ def score_members(df: pd.DataFrame, members: list[str]) -> dict:
                 "mae_station_median": float(per_station[col].median()),
                 "mae_station_mean": float(per_station[col].mean()),
             }
+            skill = aggregate({sid: {"nse": nse(g["q_obs"], g[m]),
+                                     "kge": kge(g["q_obs"], g[m])}
+                               for sid, g in st_groups})
+            entry["nse"] = skill["nse"]
+            entry["kge"] = skill["kge"]
             if m != "nwm_corrected":
                 wins = per_station[col] < per_station["err_nwm_corrected"]
                 entry["win_rate_vs_corrected"] = float(wins.mean())
@@ -335,6 +345,14 @@ def print_table(scores: dict, members: list[str]) -> None:
             tag += f" ({100 * win:3.0f}%)" if win is not None else "       "
             line += f"{tag:>16}"
         print(line)
+    print(f"\n{'h':>3}  " + "".join(f"{m:>16}" for m in members))
+    print(" " * 5 + "".join(f"{'med-NSE (n)':>16}" for _ in members))
+    for h, row in sorted(scores.items(), key=lambda kv: int(kv[0])):
+        line = f"{h:>3}  "
+        for m in members:
+            e = row["members"][m]["nse"]
+            line += f"{e['median']:>10.3f} ({e['scorable']:>3})"
+        print(line)
 
 
 # ------------------------------------------------------------------- main
@@ -350,11 +368,14 @@ def main() -> int:
                     help="colon-separated MB-LSTM checkpoint list "
                          "(default: the frozen 4-seed gfsft ensemble)")
     ap.add_argument("--label", default="panel")
+    ap.add_argument("--point", default="median",
+                    help="RW2_MBLSTM_POINT for the mblstm member (median = "
+                         "gfsft row-9 parity; mean = shipped cmalv2p policy)")
     ap.add_argument("--refresh-obs", action="store_true")
     args = ap.parse_args()
 
     os.environ["RW2_MBLSTM_CKPT_PATH"] = args.ckpt
-    os.environ["RW2_MBLSTM_POINT"] = "median"  # measured policy for this member
+    os.environ["RW2_MBLSTM_POINT"] = args.point
 
     t_start = time.time()
     arch = nwm_bt.load_archive(Path(args.archive_dir))
@@ -446,7 +467,7 @@ def main() -> int:
         "ran_at": pd.Timestamp.utcnow().isoformat(),
         "stride_days": args.stride_days,
         "ckpt": args.ckpt,
-        "point_policy": "median",
+        "point_policy": args.point,
         "anchoring": "none (measured: anchoring hurts the mblstm member)",
         "decoder_forcing": "gfs_fcst_2026 leads 1-14 + hrrr_fcst_2026 overlay leads 1-2",
         "blend_weighting": (
@@ -473,7 +494,8 @@ def main() -> int:
             "skipped (provisional-data lag).",
         ],
     }
-    out = OUT_DIR / "blend_2026_panel.json"
+    # Default label keeps the historical filename; other labels get their own.
+    out = OUT_DIR / f"blend_2026_{args.label}.json"
     out.write_text(json.dumps(payload, indent=2))
     print(f"\nwrote {out}  ({time.time() - t_start:.1f}s total)")
     return 0

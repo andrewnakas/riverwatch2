@@ -1,0 +1,100 @@
+{
+  "label": "daymet_fcorr_cont5",
+  "protocol": "continuous_daily_sim_day1_chain",
+  "members": [
+    "data/mblstm/gpu_ckpts/camels531_daymet_dhbv_fcorr_s951.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_dhbv_fcorr_s952.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_dhbv_fcorr_s953.pt"
+  ],
+  "corpus_dir": "/Volumes/STORAGE_SD/riverwatch2_data/camels_corpus_daymet_v2",
+  "window": [
+    "1989-10-01",
+    "1999-09-30"
+  ],
+  "n_basins": 5,
+  "metrics": {
+    "full": {
+      "pct_bias": {
+        "median": -16.2486049094631,
+        "mean": -11.425395650316991,
+        "scorable": 5
+      },
+      "flv": {
+        "median": 198.9855146469413,
+        "mean": 202.3354014477317,
+        "scorable": 5
+      },
+      "nse": {
+        "median": -0.2804935667164692,
+        "mean": -0.2764682502078048,
+        "scorable": 5,
+        "frac_gt_0.5": 0.0
+      },
+      "fhv": {
+        "median": -78.18716919856804,
+        "mean": -79.90684761328342,
+        "scorable": 5
+      },
+      "log_nse": {
+        "median": -0.24585625959902146,
+        "mean": -0.19135811277299808,
+        "scorable": 5
+      },
+      "kge": {
+        "median": 0.28703720718688275,
+        "mean": 0.262482775660892,
+        "scorable": 5
+      },
+      "pearson_r": {
+        "median": 0.2976099060983841,
+        "mean": 0.2932103609641596,
+        "scorable": 5
+      }
+    },
+    "camels_531": {
+      "pct_bias": {
+        "median": -16.2486049094631,
+        "mean": -11.425395650316991,
+        "scorable": 5
+      },
+      "flv": {
+        "median": 198.9855146469413,
+        "mean": 202.3354014477317,
+        "scorable": 5
+      },
+      "nse": {
+        "median": -0.2804935667164692,
+        "mean": -0.2764682502078048,
+        "scorable": 5,
+        "frac_gt_0.5": 0.0
+      },
+      "fhv": {
+        "median": -78.18716919856804,
+        "mean": -79.90684761328342,
+        "scorable": 5
+      },
+      "log_nse": {
+        "median": -0.24585625959902146,
+        "mean": -0.19135811277299808,
+        "scorable": 5
+      },
+      "kge": {
+        "median": 0.28703720718688275,
+        "mean": 0.262482775660892,
+        "scorable": 5
+      },
+      "pearson_r": {
+        "median": 0.2976099060983841,
+        "mean": 0.2932103609641596,
+        "scorable": 5
+      }
+    }
+  },
+  "per_station_nse": {
+    "01022500": -0.14777800887056758,
+    "01031500": -0.2804935667164692,
+    "01047000": -0.306282487762654,
+    "01052500": -0.4443940771346415,
+    "01054200": -0.20339311055469178
+  }
+}

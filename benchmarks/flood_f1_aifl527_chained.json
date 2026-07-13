@@ -1,0 +1,130 @@
+{
+  "label": "aifl527_chained",
+  "dump": "data/mblstm/dumps/aifl527_ecmwf.csv.gz",
+  "mode": "chained",
+  "point": "ymean",
+  "sim_thresholds": "matched-quantile",
+  "return_periods": [
+    1.0,
+    2.0,
+    5.0,
+    10.0
+  ],
+  "hit_windows_days": [
+    2,
+    0
+  ],
+  "n_stations_scored": {
+    "chained": 472
+  },
+  "skips": {
+    "no_corpus": 0,
+    "short_obs_record": 7,
+    "short_sim_record": 44
+  },
+  "aggregate": {
+    "chained": {
+      "rp1_w2": {
+        "f1_station_median": 0.452991452991453,
+        "f1_station_mean": 0.4525662012813892,
+        "precision_station_median": 0.5,
+        "recall_station_median": 0.4365079365079365,
+        "scorable_stations": 472,
+        "micro": {
+          "precision": 0.48130841121495327,
+          "recall": 0.4066634002939735,
+          "f1": 0.4408484876612444
+        }
+      },
+      "rp1_w0": {
+        "f1_station_median": 0.0,
+        "f1_station_mean": 0.1263548668490736,
+        "precision_station_median": 0.0,
+        "recall_station_median": 0.0,
+        "scorable_stations": 472,
+        "micro": {
+          "precision": 0.14427570093457945,
+          "recall": 0.12101910828025478,
+          "f1": 0.13162803090860645
+        }
+      },
+      "rp2_w2": {
+        "f1_station_median": 0.4444444444444444,
+        "f1_station_mean": 0.4445384770852829,
+        "precision_station_median": 0.5,
+        "recall_station_median": 0.42857142857142855,
+        "scorable_stations": 456,
+        "micro": {
+          "precision": 0.48042262274704783,
+          "recall": 0.39836984207845133,
+          "f1": 0.43556560169791647
+        }
+      },
+      "rp2_w0": {
+        "f1_station_median": 0.0,
+        "f1_station_mean": 0.11920397352099041,
+        "precision_station_median": 0.0,
+        "recall_station_median": 0.0,
+        "scorable_stations": 456,
+        "micro": {
+          "precision": 0.14045991298943444,
+          "recall": 0.11512990320937341,
+          "f1": 0.1265397536394177
+        }
+      },
+      "rp5_w2": {
+        "f1_station_median": 0.5,
+        "f1_station_mean": 0.5110622628665038,
+        "precision_station_median": 0.5,
+        "recall_station_median": 0.5,
+        "scorable_stations": 130,
+        "micro": {
+          "precision": 0.5067024128686327,
+          "recall": 0.43891402714932126,
+          "f1": 0.47037844772289933
+        }
+      },
+      "rp5_w0": {
+        "f1_station_median": 0.0,
+        "f1_station_mean": 0.15015753252595357,
+        "precision_station_median": 0.0,
+        "recall_station_median": 0.0,
+        "scorable_stations": 130,
+        "micro": {
+          "precision": 0.1447721179624665,
+          "recall": 0.12217194570135746,
+          "f1": 0.1325153374233129
+        }
+      },
+      "rp10_w2": {
+        "f1_station_median": 0.5,
+        "f1_station_mean": 0.4747221136567206,
+        "precision_station_median": 0.5,
+        "recall_station_median": 0.5,
+        "scorable_stations": 48,
+        "micro": {
+          "precision": 0.4970414201183432,
+          "recall": 0.39814814814814814,
+          "f1": 0.4421323214395006
+        }
+      },
+      "rp10_w0": {
+        "f1_station_median": 0.0,
+        "f1_station_mean": 0.14035085285085283,
+        "precision_station_median": 0.0,
+        "recall_station_median": 0.0,
+        "scorable_stations": 48,
+        "micro": {
+          "precision": 0.14792899408284024,
+          "recall": 0.11574074074074074,
+          "f1": 0.12987012987012989
+        }
+      }
+    }
+  },
+  "caveats": [
+    "obs thresholds: GEV on full-corpus water-year annual maxima (>=10 good years required); sim thresholds per --sim-thresholds.",
+    "matched-quantile mode equalizes event rates by construction \u2014 it measures timing, not frequency; use own-record when the simulated span allows.",
+    "chained mode mixes leads into one continuous series (simulation-style skill); per-lead needs a stride-1 dump."
+  ]
+}

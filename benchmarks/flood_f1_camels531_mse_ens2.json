@@ -1,0 +1,130 @@
+{
+  "label": "camels531_mse_ens2",
+  "dump": "data/mblstm/dumps/camels531_mse_ens2.csv.gz",
+  "mode": "chained",
+  "point": "ymed",
+  "sim_thresholds": "own-record",
+  "return_periods": [
+    1.0,
+    2.0,
+    5.0,
+    10.0
+  ],
+  "hit_windows_days": [
+    2,
+    0
+  ],
+  "n_stations_scored": {
+    "chained": 527
+  },
+  "skips": {
+    "no_corpus": 0,
+    "short_obs_record": 0,
+    "short_sim_record": 4
+  },
+  "aggregate": {
+    "chained": {
+      "rp1_w2": {
+        "f1_station_median": 0.446360153256705,
+        "f1_station_mean": 0.4318720917608898,
+        "precision_station_median": 0.6277691410804509,
+        "recall_station_median": 0.40967365967365965,
+        "scorable_stations": 524,
+        "micro": {
+          "precision": 0.5680130866993834,
+          "recall": 0.3694595367457821,
+          "f1": 0.44770982454139024
+        }
+      },
+      "rp1_w0": {
+        "f1_station_median": 0.2416940489229646,
+        "f1_station_mean": 0.2607400985153166,
+        "precision_station_median": 0.345141065830721,
+        "recall_station_median": 0.20987654320987653,
+        "scorable_stations": 524,
+        "micro": {
+          "precision": 0.34786711966779915,
+          "recall": 0.22586706973324075,
+          "f1": 0.2738959205409556
+        }
+      },
+      "rp2_w2": {
+        "f1_station_median": 0.4,
+        "f1_station_mean": 0.40216506975455685,
+        "precision_station_median": 0.6666666666666666,
+        "recall_station_median": 0.4,
+        "scorable_stations": 510,
+        "micro": {
+          "precision": 0.592863140218304,
+          "recall": 0.3482142857142857,
+          "f1": 0.43873842727204654
+        }
+      },
+      "rp2_w0": {
+        "f1_station_median": 0.23076923076923075,
+        "f1_station_mean": 0.24772662926559458,
+        "precision_station_median": 0.3371212121212121,
+        "recall_station_median": 0.22281323877068557,
+        "scorable_stations": 510,
+        "micro": {
+          "precision": 0.36633081444164567,
+          "recall": 0.21522296764009471,
+          "f1": 0.2711453607606737
+        }
+      },
+      "rp5_w2": {
+        "f1_station_median": 0.2857142857142857,
+        "f1_station_mean": 0.30197671388530295,
+        "precision_station_median": 0.3904761904761905,
+        "recall_station_median": 0.2971781305114638,
+        "scorable_stations": 152,
+        "micro": {
+          "precision": 0.34517374517374516,
+          "recall": 0.12852213916043703,
+          "f1": 0.18730358265241986
+        }
+      },
+      "rp5_w0": {
+        "f1_station_median": 0.04653679653679653,
+        "f1_station_mean": 0.1808739106315047,
+        "precision_station_median": 0.04499494438827098,
+        "recall_station_median": 0.03105737316263632,
+        "scorable_stations": 152,
+        "micro": {
+          "precision": 0.20463320463320464,
+          "recall": 0.07619321449108683,
+          "f1": 0.11104127383197152
+        }
+      },
+      "rp10_w2": {
+        "f1_station_median": 0.0689655172413793,
+        "f1_station_mean": 0.27619443307204933,
+        "precision_station_median": 0.2,
+        "recall_station_median": 0.3333333333333333,
+        "scorable_stations": 69,
+        "micro": {
+          "precision": 0.3418013856812933,
+          "recall": 0.08494868871151653,
+          "f1": 0.1360776775714343
+        }
+      },
+      "rp10_w0": {
+        "f1_station_median": 0.0,
+        "f1_station_mean": 0.18133121919153458,
+        "precision_station_median": 0.0,
+        "recall_station_median": 0.0,
+        "scorable_stations": 69,
+        "micro": {
+          "precision": 0.18706697459584296,
+          "recall": 0.046180159635119726,
+          "f1": 0.07407407407407407
+        }
+      }
+    }
+  },
+  "caveats": [
+    "obs thresholds: GEV on full-corpus water-year annual maxima (>=10 good years required); sim thresholds per --sim-thresholds.",
+    "matched-quantile mode equalizes event rates by construction \u2014 it measures timing, not frequency; use own-record when the simulated span allows.",
+    "chained mode mixes leads into one continuous series (simulation-style skill); per-lead needs a stride-1 dump."
+  ]
+}

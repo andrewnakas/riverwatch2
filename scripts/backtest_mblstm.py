@@ -329,8 +329,12 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
 
         q_hist = hist["q_cfs"].dropna().rename("q_cfs").reset_index()
         q_hist.columns = ["date", "q_cfs"]
-        wx_hist = (hist.reset_index().rename(columns={"index": "date"})
-                   .reindex(columns=["date"] + DAILY_VARS))
+        # Keep ALL corpus weather columns and let mblstm.forecast's norm_wx
+        # select cfg["enc_vars"] itself — a hardcoded DAILY_VARS reindex here
+        # strips the camels3f _daymet/_maurer/_nldas columns, feeding the model
+        # all-NaN weather (the lever-2 −0.02 NSE bug). Any missing standard var
+        # still NaN-fills inside norm_wx's own reindex.
+        wx_hist = hist.reset_index().rename(columns={"index": "date"})
         if members is not None:
             # Ensemble-forcing mode: one forecast per NWP member, quantile
             # triplets pooled across members (see pool_member_quantiles).
@@ -356,8 +360,9 @@ def eval_station(path: Path, attrs: dict, issue_dates: pd.DatetimeIndex,
                 if wx_fcst is None:
                     continue
             else:
-                wx_fcst = (fut.reset_index().rename(columns={"index": "date"})
-                       .reindex(columns=["date"] + DAILY_VARS))
+                # keep all corpus columns; norm_wx selects cfg["dec_vars"]
+                # (camels3f needs the _daymet-suffixed decoder cols).
+                wx_fcst = fut.reset_index().rename(columns={"index": "date"})
 
             rows = mblstm.forecast(q_hist, wx_hist, wx_fcst, attrs, HORIZON)
             if not rows or len(rows) < HORIZON:
@@ -455,6 +460,12 @@ def main() -> int:
     ap.add_argument("--limit-stations", type=int, default=0)
     ap.add_argument("--stride-stations", type=int, default=1,
                     help="evaluate every Nth corpus station (fast A/B subsample)")
+    ap.add_argument("--stations-file", default="",
+                    help="restrict to station ids listed in this file (JSON "
+                         "array, or a JSON object with a "
+                         "matched_in_corpus_usgs_ids key, or one id per line "
+                         "— e.g. data/grdc_usgs_crosswalk.json for the "
+                         "Google/AIFL shared cohort)")
     ap.add_argument("--label", default="pilot")
     ap.add_argument("--gfs", action="store_true",
                     help="decoder forcing from archived GFS forecasts instead of "
@@ -525,10 +536,37 @@ def main() -> int:
         corpus_dir = ROOT / corpus_dir
     files = sorted(p for p in corpus_dir.glob("*.csv.gz")
                    if not p.name.startswith("._"))
+    if args.stations_file:
+        raw = Path(args.stations_file).read_text()
+        try:
+            obj = json.loads(raw)
+            keep = set(obj["matched_in_corpus_usgs_ids"] if isinstance(obj, dict) else obj)
+        except json.JSONDecodeError:
+            keep = {ln.strip() for ln in raw.splitlines() if ln.strip()}
+        files = [p for p in files if p.name.split(".")[0] in keep]
+        print(f"--stations-file: {len(files)} of {len(keep)} requested ids in corpus")
     if args.stride_stations > 1:
         files = files[:: args.stride_stations]  # deterministic subsample for fast A/B
     if args.limit_stations:
         files = files[: args.limit_stations]
+
+    # CAMELS-static checkpoints (--static-set camels) need the 27 Addor attrs
+    # (p_mean/aridity/...) at eval time — the GAGES-II registry doesn't carry
+    # them, so without this overlay static_vector() gets all-NaN and NSE craters
+    # (the A-3 "regression" 0.398 was exactly this bug). Load camels_attrs.json
+    # and overlay it when the loaded model's static set is the CAMELS one.
+    camels_attrs = {}
+    try:
+        mblstm._try_load()  # populate mblstm._cfg (else it loads lazily later)
+        _cfg = mblstm._cfg or {}
+        _sf = set(_cfg.get("static_feats", []))
+        _cam_path = ROOT / "data" / "camels_attrs.json"
+        if _cam_path.exists() and {"p_mean", "aridity", "elev_mean"} <= _sf:
+            camels_attrs = json.loads(_cam_path.read_text())
+            print(f"CAMELS static overlay: {len(camels_attrs)} basins "
+                  f"(checkpoint uses the 27-attr CAMELS static set)", flush=True)
+    except Exception as exc:
+        print(f"camels attrs overlay skipped: {exc}", flush=True)
 
     results: dict[str, dict] = {}
     dump: list | None = [] if args.dump_windows else None
@@ -536,6 +574,10 @@ def main() -> int:
     for i, p in enumerate(files, 1):
         sid = p.name.split(".")[0]
         attrs = gages2.enrich_station_attrs(dict(registry.get(sid, {"id": sid})))
+        if camels_attrs:
+            for k, v in camels_attrs.get(sid, {}).items():
+                if v is not None:
+                    attrs[k] = v
         try:
             r = eval_station(p, attrs, issue_dates, forcing=forcing,
                              members=members, anchor_decay=args.anchor_decay,

@@ -1,0 +1,6653 @@
+{
+  "source_gauge_list": "/Volumes/STORAGE_SD/riverwatch2_data/external/google_flood_zenodo/gauge_groups_for_paper/dual_lstm/country_splits/united_states.txt",
+  "grdc_catalogue": "grdc_stations_20220320.csv",
+  "rules": {
+    "max_dist_deg": 0.05,
+    "area_tol": 0.25
+  },
+  "n_gauge_list": 952,
+  "n_in_catalogue": 952,
+  "n_matched": 859,
+  "n_unmatched": 93,
+  "n_matched_in_corpus": 528,
+  "matches": {
+    "GRDC_4101200": {
+      "usgs_id": "15747000",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 1825.9,
+      "usgs_area_km2": 1825.9,
+      "in_corpus": false
+    },
+    "GRDC_4101400": {
+      "usgs_id": "15896000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 8106.7,
+      "usgs_area_km2": 8650.6,
+      "in_corpus": true
+    },
+    "GRDC_4101451": {
+      "usgs_id": "15908000",
+      "dist_deg": 0.00589,
+      "grdc_area_km2": 4817.0,
+      "usgs_area_km2": 4791.5,
+      "in_corpus": true
+    },
+    "GRDC_4101501": {
+      "usgs_id": "15875000",
+      "dist_deg": 0.00107,
+      "grdc_area_km2": 35820.0,
+      "usgs_area_km2": 35897.3,
+      "in_corpus": true
+    },
+    "GRDC_4101900": {
+      "usgs_id": "15744500",
+      "dist_deg": 0.00124,
+      "grdc_area_km2": 24656.8,
+      "usgs_area_km2": 24553.1,
+      "in_corpus": true
+    },
+    "GRDC_4102100": {
+      "usgs_id": "15304000",
+      "dist_deg": 0.00398,
+      "grdc_area_km2": 80549.0,
+      "usgs_area_km2": 80548.7,
+      "in_corpus": true
+    },
+    "GRDC_4102200": {
+      "usgs_id": "15302000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3859.1,
+      "usgs_area_km2": 3910.9,
+      "in_corpus": true
+    },
+    "GRDC_4102400": {
+      "usgs_id": "15565700",
+      "dist_deg": 0.00444,
+      "grdc_area_km2": 2714.0,
+      "usgs_area_km2": 2719.5,
+      "in_corpus": true
+    },
+    "GRDC_4103200": {
+      "usgs_id": "15565447",
+      "dist_deg": 0.00133,
+      "grdc_area_km2": 831390.0,
+      "usgs_area_km2": 824393.8,
+      "in_corpus": true
+    },
+    "GRDC_4103500": {
+      "usgs_id": "15564900",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 47656.0,
+      "usgs_area_km2": 46593.9,
+      "in_corpus": false
+    },
+    "GRDC_4103550": {
+      "usgs_id": "15453500",
+      "dist_deg": 0.00113,
+      "grdc_area_km2": 508417.0,
+      "usgs_area_km2": 502458.1,
+      "in_corpus": true
+    },
+    "GRDC_4103600": {
+      "usgs_id": "15515500",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 66304.0,
+      "usgs_area_km2": 66200.1,
+      "in_corpus": true
+    },
+    "GRDC_4103615": {
+      "usgs_id": "15477740",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1753.4,
+      "usgs_area_km2": 1750.8,
+      "in_corpus": false
+    },
+    "GRDC_4103630": {
+      "usgs_id": "15514000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 5167.0,
+      "usgs_area_km2": 5154.1,
+      "in_corpus": true
+    },
+    "GRDC_4103631": {
+      "usgs_id": "15493700",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 3781.4,
+      "usgs_area_km2": 3781.4,
+      "in_corpus": true
+    },
+    "GRDC_4103633": {
+      "usgs_id": "15493000",
+      "dist_deg": 0.00092,
+      "grdc_area_km2": 2426.8,
+      "usgs_area_km2": 2419.1,
+      "in_corpus": true
+    },
+    "GRDC_4103635": {
+      "usgs_id": "15511000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 963.4,
+      "usgs_area_km2": 963.5,
+      "in_corpus": false
+    },
+    "GRDC_4103650": {
+      "usgs_id": "15484000",
+      "dist_deg": 0.00115,
+      "grdc_area_km2": 5620.3,
+      "usgs_area_km2": 5698.0,
+      "in_corpus": true
+    },
+    "GRDC_4103800": {
+      "usgs_id": "15356000",
+      "dist_deg": 0.00102,
+      "grdc_area_km2": 293965.0,
+      "usgs_area_km2": 289042.9,
+      "in_corpus": true
+    },
+    "GRDC_4103820": {
+      "usgs_id": "15348000",
+      "dist_deg": 9e-05,
+      "grdc_area_km2": 15229.2,
+      "usgs_area_km2": 15151.4,
+      "in_corpus": true
+    },
+    "GRDC_4105060": {
+      "usgs_id": "15129120",
+      "dist_deg": 0.0043,
+      "grdc_area_km2": 28490.0,
+      "usgs_area_km2": 29569.9,
+      "in_corpus": true
+    },
+    "GRDC_4105300": {
+      "usgs_id": "15281000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3056.2,
+      "usgs_area_km2": 3159.8,
+      "in_corpus": true
+    },
+    "GRDC_4105310": {
+      "usgs_id": "15284000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 5361.3,
+      "usgs_area_km2": 5335.4,
+      "in_corpus": true
+    },
+    "GRDC_4105450": {
+      "usgs_id": "15292700",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 5169.6,
+      "usgs_area_km2": 5205.9,
+      "in_corpus": true
+    },
+    "GRDC_4105710": {
+      "usgs_id": "15214000",
+      "dist_deg": 0.00112,
+      "grdc_area_km2": 62678.0,
+      "usgs_area_km2": 62237.5,
+      "in_corpus": true
+    },
+    "GRDC_4105720": {
+      "usgs_id": "15200280",
+      "dist_deg": 0.00109,
+      "grdc_area_km2": 4584.3,
+      "usgs_area_km2": 4558.4,
+      "in_corpus": true
+    },
+    "GRDC_4105820": {
+      "usgs_id": "15292000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 15954.0,
+      "usgs_area_km2": 15876.6,
+      "in_corpus": true
+    },
+    "GRDC_4105850": {
+      "usgs_id": "15266300",
+      "dist_deg": 0.00126,
+      "grdc_area_km2": 5053.0,
+      "usgs_area_km2": 5231.8,
+      "in_corpus": true
+    },
+    "GRDC_4105851": {
+      "usgs_id": "15266110",
+      "dist_deg": 0.029,
+      "grdc_area_km2": 3874.6,
+      "usgs_area_km2": 3237.5,
+      "in_corpus": true
+    },
+    "GRDC_4105852": {
+      "usgs_id": "15266110",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3123.5,
+      "usgs_area_km2": 3237.5,
+      "in_corpus": true
+    },
+    "GRDC_4106600": {
+      "usgs_id": "15041200",
+      "dist_deg": 0.00139,
+      "grdc_area_km2": 17094.0,
+      "usgs_area_km2": 16834.9,
+      "in_corpus": true
+    },
+    "GRDC_4113300": {
+      "usgs_id": "05082500",
+      "dist_deg": 0.00096,
+      "grdc_area_km2": 77959.0,
+      "usgs_area_km2": 77958.7,
+      "in_corpus": true
+    },
+    "GRDC_4113301": {
+      "usgs_id": "05092000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 90132.0,
+      "usgs_area_km2": 90131.7,
+      "in_corpus": true
+    },
+    "GRDC_4113303": {
+      "usgs_id": "05054000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 17612.0,
+      "usgs_area_km2": 17611.9,
+      "in_corpus": true
+    },
+    "GRDC_4113304": {
+      "usgs_id": "05051522",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 11137.0,
+      "usgs_area_km2": 11137.0,
+      "in_corpus": true
+    },
+    "GRDC_4113305": {
+      "usgs_id": "05051500",
+      "dist_deg": 0.00282,
+      "grdc_area_km2": 10385.9,
+      "usgs_area_km2": 10385.9,
+      "in_corpus": true
+    },
+    "GRDC_4113306": {
+      "usgs_id": "05062500",
+      "dist_deg": 0.00753,
+      "grdc_area_km2": 2419.0,
+      "usgs_area_km2": 2419.1,
+      "in_corpus": false
+    },
+    "GRDC_4113307": {
+      "usgs_id": "05066500",
+      "dist_deg": 0.00946,
+      "grdc_area_km2": 3115.7,
+      "usgs_area_km2": 3115.8,
+      "in_corpus": false
+    },
+    "GRDC_4113308": {
+      "usgs_id": "05085000",
+      "dist_deg": 0.0061,
+      "grdc_area_km2": 1916.6,
+      "usgs_area_km2": 1916.6,
+      "in_corpus": false
+    },
+    "GRDC_4113309": {
+      "usgs_id": "05090000",
+      "dist_deg": 0.0049,
+      "grdc_area_km2": 1800.0,
+      "usgs_area_km2": 1800.0,
+      "in_corpus": false
+    },
+    "GRDC_4113310": {
+      "usgs_id": "05053000",
+      "dist_deg": 0.00271,
+      "grdc_area_km2": 5387.2,
+      "usgs_area_km2": 5387.2,
+      "in_corpus": true
+    },
+    "GRDC_4113315": {
+      "usgs_id": "05078500",
+      "dist_deg": 0.00222,
+      "grdc_area_km2": 3574.2,
+      "usgs_area_km2": 3574.2,
+      "in_corpus": false
+    },
+    "GRDC_4113320": {
+      "usgs_id": "05080000",
+      "dist_deg": 0.00051,
+      "grdc_area_km2": 14711.2,
+      "usgs_area_km2": 14711.1,
+      "in_corpus": true
+    },
+    "GRDC_4113321": {
+      "usgs_id": "05079000",
+      "dist_deg": 0.0004,
+      "grdc_area_km2": 13649.3,
+      "usgs_area_km2": 13649.2,
+      "in_corpus": true
+    },
+    "GRDC_4113340": {
+      "usgs_id": "05060100",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 3833.2,
+      "usgs_area_km2": 3833.2,
+      "in_corpus": false
+    },
+    "GRDC_4113350": {
+      "usgs_id": "05099600",
+      "dist_deg": 0.00057,
+      "grdc_area_km2": 8676.5,
+      "usgs_area_km2": 8676.5,
+      "in_corpus": true
+    },
+    "GRDC_4113351": {
+      "usgs_id": "05100000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 8831.9,
+      "usgs_area_km2": 8831.9,
+      "in_corpus": true
+    },
+    "GRDC_4113360": {
+      "usgs_id": "05056000",
+      "dist_deg": 9e-05,
+      "grdc_area_km2": 5361.3,
+      "usgs_area_km2": 5361.3,
+      "in_corpus": false
+    },
+    "GRDC_4113400": {
+      "usgs_id": "05122000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 31857.0,
+      "usgs_area_km2": 31856.9,
+      "in_corpus": true
+    },
+    "GRDC_4113401": {
+      "usgs_id": "05120000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 29267.0,
+      "usgs_area_km2": 29266.9,
+      "in_corpus": true
+    },
+    "GRDC_4113402": {
+      "usgs_id": "05117500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 27454.0,
+      "usgs_area_km2": 27453.9,
+      "in_corpus": true
+    },
+    "GRDC_4113420": {
+      "usgs_id": "05116500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2432.0,
+      "usgs_area_km2": 2432.0,
+      "in_corpus": false
+    },
+    "GRDC_4113600": {
+      "usgs_id": "05131500",
+      "dist_deg": 0.00045,
+      "grdc_area_km2": 4351.2,
+      "usgs_area_km2": 4403.0,
+      "in_corpus": false
+    },
+    "GRDC_4115080": {
+      "usgs_id": "14243000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 5796.4,
+      "usgs_area_km2": 5796.4,
+      "in_corpus": true
+    },
+    "GRDC_4115081": {
+      "usgs_id": "14238000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 3626.0,
+      "usgs_area_km2": 3626.0,
+      "in_corpus": false
+    },
+    "GRDC_4115082": {
+      "usgs_id": "14226500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 743.3,
+      "usgs_area_km2": 743.3,
+      "in_corpus": false
+    },
+    "GRDC_4115100": {
+      "usgs_id": "14191000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 18855.2,
+      "usgs_area_km2": 18855.1,
+      "in_corpus": true
+    },
+    "GRDC_4115101": {
+      "usgs_id": "14211720",
+      "dist_deg": 0.00134,
+      "grdc_area_km2": 29008.0,
+      "usgs_area_km2": 29007.9,
+      "in_corpus": true
+    },
+    "GRDC_4115102": {
+      "usgs_id": "14166000",
+      "dist_deg": 0.0,
+      "grdc_area_km2": 8857.8,
+      "usgs_area_km2": 8857.8,
+      "in_corpus": true
+    },
+    "GRDC_4115105": {
+      "usgs_id": "14163900",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 2799.8,
+      "usgs_area_km2": 2799.8,
+      "in_corpus": false
+    },
+    "GRDC_4115106": {
+      "usgs_id": "14162500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 2408.7,
+      "usgs_area_km2": 2408.7,
+      "in_corpus": true
+    },
+    "GRDC_4115200": {
+      "usgs_id": "14105700",
+      "dist_deg": 0.0116,
+      "grdc_area_km2": 613830.0,
+      "usgs_area_km2": 613827.6,
+      "in_corpus": true
+    },
+    "GRDC_4115201": {
+      "usgs_id": "14246900",
+      "dist_deg": 0.00047,
+      "grdc_area_km2": 665371.0,
+      "usgs_area_km2": 665368.4,
+      "in_corpus": true
+    },
+    "GRDC_4115202": {
+      "usgs_id": "12472800",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 248640.0,
+      "usgs_area_km2": 248639.0,
+      "in_corpus": true
+    },
+    "GRDC_4115203": {
+      "usgs_id": "12462600",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 231546.0,
+      "usgs_area_km2": 231545.1,
+      "in_corpus": true
+    },
+    "GRDC_4115204": {
+      "usgs_id": "12453700",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 227402.0,
+      "usgs_area_km2": 227401.1,
+      "in_corpus": true
+    },
+    "GRDC_4115205": {
+      "usgs_id": "12450700",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 222999.0,
+      "usgs_area_km2": 222998.1,
+      "in_corpus": true
+    },
+    "GRDC_4115206": {
+      "usgs_id": "12436500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 193473.0,
+      "usgs_area_km2": 193472.3,
+      "in_corpus": true
+    },
+    "GRDC_4115210": {
+      "usgs_id": "14113000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 3359.2,
+      "usgs_area_km2": 3359.2,
+      "in_corpus": false
+    },
+    "GRDC_4115211": {
+      "usgs_id": "14107000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 391.1,
+      "usgs_area_km2": 391.1,
+      "in_corpus": false
+    },
+    "GRDC_4115220": {
+      "usgs_id": "14046500",
+      "dist_deg": 0.00039,
+      "grdc_area_km2": 13183.0,
+      "usgs_area_km2": 13183.0,
+      "in_corpus": true
+    },
+    "GRDC_4115221": {
+      "usgs_id": "14048000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 19632.2,
+      "usgs_area_km2": 19632.1,
+      "in_corpus": true
+    },
+    "GRDC_4115222": {
+      "usgs_id": "14038530",
+      "dist_deg": 0.00199,
+      "grdc_area_km2": 999.7,
+      "usgs_area_km2": 999.7,
+      "in_corpus": false
+    },
+    "GRDC_4115223": {
+      "usgs_id": "14046000",
+      "dist_deg": 0.00114,
+      "grdc_area_km2": 6526.8,
+      "usgs_area_km2": 6526.8,
+      "in_corpus": true
+    },
+    "GRDC_4115224": {
+      "usgs_id": "14044000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1333.9,
+      "usgs_area_km2": 1333.8,
+      "in_corpus": false
+    },
+    "GRDC_4115226": {
+      "usgs_id": "14087400",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 11137.0,
+      "usgs_area_km2": 11802.6,
+      "in_corpus": true
+    },
+    "GRDC_4115230": {
+      "usgs_id": "12459000",
+      "dist_deg": 0.00371,
+      "grdc_area_km2": 2590.0,
+      "usgs_area_km2": 2590.0,
+      "in_corpus": false
+    },
+    "GRDC_4115231": {
+      "usgs_id": "12462500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3369.6,
+      "usgs_area_km2": 3369.6,
+      "in_corpus": false
+    },
+    "GRDC_4115235": {
+      "usgs_id": "12449950",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 4589.5,
+      "usgs_area_km2": 4589.5,
+      "in_corpus": true
+    },
+    "GRDC_4115236": {
+      "usgs_id": "12448500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2608.1,
+      "usgs_area_km2": 2608.1,
+      "in_corpus": false
+    },
+    "GRDC_4115240": {
+      "usgs_id": "14033500",
+      "dist_deg": 0.00021,
+      "grdc_area_km2": 5931.1,
+      "usgs_area_km2": 5931.1,
+      "in_corpus": true
+    },
+    "GRDC_4115241": {
+      "usgs_id": "14020000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 339.3,
+      "usgs_area_km2": 339.3,
+      "in_corpus": false
+    },
+    "GRDC_4115250": {
+      "usgs_id": "14018500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 4291.6,
+      "usgs_area_km2": 4291.6,
+      "in_corpus": true
+    },
+    "GRDC_4115260": {
+      "usgs_id": "12510500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 14542.9,
+      "usgs_area_km2": 14542.8,
+      "in_corpus": true
+    },
+    "GRDC_4115261": {
+      "usgs_id": "12500450",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 9010.6,
+      "usgs_area_km2": 9010.6,
+      "in_corpus": true
+    },
+    "GRDC_4115262": {
+      "usgs_id": "12484500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 4128.5,
+      "usgs_area_km2": 4128.4,
+      "in_corpus": true
+    },
+    "GRDC_4115270": {
+      "usgs_id": "12472600",
+      "dist_deg": 9e-05,
+      "grdc_area_km2": 12535.6,
+      "usgs_area_km2": 12535.6,
+      "in_corpus": true
+    },
+    "GRDC_4115280": {
+      "usgs_id": "14103000",
+      "dist_deg": 0.00211,
+      "grdc_area_km2": 27195.0,
+      "usgs_area_km2": 27194.9,
+      "in_corpus": true
+    },
+    "GRDC_4115281": {
+      "usgs_id": "14092500",
+      "dist_deg": 0.001,
+      "grdc_area_km2": 20253.8,
+      "usgs_area_km2": 20253.7,
+      "in_corpus": true
+    },
+    "GRDC_4115282": {
+      "usgs_id": "14076500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 7006.0,
+      "usgs_area_km2": 7005.9,
+      "in_corpus": true
+    },
+    "GRDC_4115290": {
+      "usgs_id": "12452500",
+      "dist_deg": 0.00242,
+      "grdc_area_km2": 2393.2,
+      "usgs_area_km2": 2393.2,
+      "in_corpus": false
+    },
+    "GRDC_4115300": {
+      "usgs_id": "12445000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 18803.4,
+      "usgs_area_km2": 18803.3,
+      "in_corpus": true
+    },
+    "GRDC_4115301": {
+      "usgs_id": "12447200",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 20927.2,
+      "usgs_area_km2": 20927.1,
+      "in_corpus": true
+    },
+    "GRDC_4115305": {
+      "usgs_id": "12442500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 9194.5,
+      "usgs_area_km2": 9194.5,
+      "in_corpus": true
+    },
+    "GRDC_4115310": {
+      "usgs_id": "12401500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 5698.0,
+      "usgs_area_km2": 5698.0,
+      "in_corpus": true
+    },
+    "GRDC_4115311": {
+      "usgs_id": "12404500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 9842.0,
+      "usgs_area_km2": 9842.0,
+      "in_corpus": true
+    },
+    "GRDC_4115330": {
+      "usgs_id": "12358500",
+      "dist_deg": 0.00032,
+      "grdc_area_km2": 2921.5,
+      "usgs_area_km2": 2913.7,
+      "in_corpus": false
+    },
+    "GRDC_4115331": {
+      "usgs_id": "12388700",
+      "dist_deg": 0.00061,
+      "grdc_area_km2": 22779.1,
+      "usgs_area_km2": 23372.1,
+      "in_corpus": true
+    },
+    "GRDC_4115332": {
+      "usgs_id": "12372000",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 18378.6,
+      "usgs_area_km2": 18334.5,
+      "in_corpus": true
+    },
+    "GRDC_4115333": {
+      "usgs_id": "12359800",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 3004.4,
+      "usgs_area_km2": 3001.8,
+      "in_corpus": false
+    },
+    "GRDC_4115340": {
+      "usgs_id": "12340000",
+      "dist_deg": 0.00023,
+      "grdc_area_km2": 5931.1,
+      "usgs_area_km2": 5923.3,
+      "in_corpus": true
+    },
+    "GRDC_4115344": {
+      "usgs_id": "12324200",
+      "dist_deg": 0.00019,
+      "grdc_area_km2": 2577.1,
+      "usgs_area_km2": 2592.6,
+      "in_corpus": false
+    },
+    "GRDC_4115345": {
+      "usgs_id": "12354500",
+      "dist_deg": 0.00044,
+      "grdc_area_km2": 27736.3,
+      "usgs_area_km2": 27785.4,
+      "in_corpus": true
+    },
+    "GRDC_4115346": {
+      "usgs_id": "12391950",
+      "dist_deg": 0.03021,
+      "grdc_area_km2": 57169.1,
+      "usgs_area_km2": 57153.3,
+      "in_corpus": true
+    },
+    "GRDC_4115347": {
+      "usgs_id": "12389000",
+      "dist_deg": 0.00062,
+      "grdc_area_km2": 51691.2,
+      "usgs_area_km2": 51706.6,
+      "in_corpus": true
+    },
+    "GRDC_4115349": {
+      "usgs_id": "12340500",
+      "dist_deg": 0.00036,
+      "grdc_area_km2": 15537.4,
+      "usgs_area_km2": 15594.3,
+      "in_corpus": true
+    },
+    "GRDC_4115350": {
+      "usgs_id": "12413500",
+      "dist_deg": 0.00048,
+      "grdc_area_km2": 3167.6,
+      "usgs_area_km2": 3128.7,
+      "in_corpus": false
+    },
+    "GRDC_4115351": {
+      "usgs_id": "12413000",
+      "dist_deg": 0.0034,
+      "grdc_area_km2": 2318.0,
+      "usgs_area_km2": 2318.0,
+      "in_corpus": true
+    },
+    "GRDC_4115400": {
+      "usgs_id": "12433000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 15591.8,
+      "usgs_area_km2": 15591.7,
+      "in_corpus": true
+    },
+    "GRDC_4115401": {
+      "usgs_id": "12422500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 11111.1,
+      "usgs_area_km2": 11111.1,
+      "in_corpus": true
+    },
+    "GRDC_4115403": {
+      "usgs_id": "12419000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 9945.6,
+      "usgs_area_km2": 9945.6,
+      "in_corpus": false
+    },
+    "GRDC_4115410": {
+      "usgs_id": "12414500",
+      "dist_deg": 0.00053,
+      "grdc_area_km2": 2667.7,
+      "usgs_area_km2": 2654.7,
+      "in_corpus": false
+    },
+    "GRDC_4115450": {
+      "usgs_id": "12352500",
+      "dist_deg": 0.00061,
+      "grdc_area_km2": 7288.3,
+      "usgs_area_km2": 7314.1,
+      "in_corpus": true
+    },
+    "GRDC_4115451": {
+      "usgs_id": "12344000",
+      "dist_deg": 0.00019,
+      "grdc_area_km2": 2716.9,
+      "usgs_area_km2": 2719.5,
+      "in_corpus": false
+    },
+    "GRDC_4116150": {
+      "usgs_id": "13331500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 621.6,
+      "usgs_area_km2": 621.6,
+      "in_corpus": false
+    },
+    "GRDC_4116181": {
+      "usgs_id": "13334300",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 240766.4,
+      "usgs_area_km2": 240765.5,
+      "in_corpus": true
+    },
+    "GRDC_4116183": {
+      "usgs_id": "13290450",
+      "dist_deg": 0.00327,
+      "grdc_area_km2": 189847.0,
+      "usgs_area_km2": 189846.3,
+      "in_corpus": true
+    },
+    "GRDC_4116184": {
+      "usgs_id": "13269000",
+      "dist_deg": 0.0002,
+      "grdc_area_km2": 179228.0,
+      "usgs_area_km2": 179227.3,
+      "in_corpus": true
+    },
+    "GRDC_4116185": {
+      "usgs_id": "13213100",
+      "dist_deg": 0.0018,
+      "grdc_area_km2": 152033.0,
+      "usgs_area_km2": 152032.4,
+      "in_corpus": true
+    },
+    "GRDC_4116186": {
+      "usgs_id": "13172500",
+      "dist_deg": 0.04305,
+      "grdc_area_km2": 108521.0,
+      "usgs_area_km2": 108520.6,
+      "in_corpus": true
+    },
+    "GRDC_4116188": {
+      "usgs_id": "13081500",
+      "dist_deg": 0.00032,
+      "grdc_area_km2": 40663.0,
+      "usgs_area_km2": 40662.8,
+      "in_corpus": true
+    },
+    "GRDC_4116189": {
+      "usgs_id": "13077000",
+      "dist_deg": 0.00072,
+      "grdc_area_km2": 35224.0,
+      "usgs_area_km2": 35223.9,
+      "in_corpus": true
+    },
+    "GRDC_4116190": {
+      "usgs_id": "13060000",
+      "dist_deg": 0.00083,
+      "grdc_area_km2": 25356.0,
+      "usgs_area_km2": 25356.0,
+      "in_corpus": true
+    },
+    "GRDC_4116191": {
+      "usgs_id": "13032500",
+      "dist_deg": 0.00016,
+      "grdc_area_km2": 13532.8,
+      "usgs_area_km2": 13532.7,
+      "in_corpus": true
+    },
+    "GRDC_4116192": {
+      "usgs_id": "13013650",
+      "dist_deg": 0.00032,
+      "grdc_area_km2": 4343.4,
+      "usgs_area_km2": 4335.6,
+      "in_corpus": true
+    },
+    "GRDC_4116193": {
+      "usgs_id": "13010065",
+      "dist_deg": 0.02185,
+      "grdc_area_km2": 1258.7,
+      "usgs_area_km2": 1258.7,
+      "in_corpus": false
+    },
+    "GRDC_4116200": {
+      "usgs_id": "13351000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 6475.0,
+      "usgs_area_km2": 6475.0,
+      "in_corpus": true
+    },
+    "GRDC_4116201": {
+      "usgs_id": "13345000",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 821.0,
+      "usgs_area_km2": 821.0,
+      "in_corpus": false
+    },
+    "GRDC_4116300": {
+      "usgs_id": "13342500",
+      "dist_deg": 0.00018,
+      "grdc_area_km2": 24786.3,
+      "usgs_area_km2": 24042.9,
+      "in_corpus": true
+    },
+    "GRDC_4116301": {
+      "usgs_id": "13340000",
+      "dist_deg": 0.00018,
+      "grdc_area_km2": 14452.2,
+      "usgs_area_km2": 14263.1,
+      "in_corpus": true
+    },
+    "GRDC_4116311": {
+      "usgs_id": "13340600",
+      "dist_deg": 0.02024,
+      "grdc_area_km2": 3522.4,
+      "usgs_area_km2": 3356.6,
+      "in_corpus": false
+    },
+    "GRDC_4116320": {
+      "usgs_id": "13336500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 4946.9,
+      "usgs_area_km2": 4959.8,
+      "in_corpus": true
+    },
+    "GRDC_4116325": {
+      "usgs_id": "13337000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3056.2,
+      "usgs_area_km2": 3051.0,
+      "in_corpus": true
+    },
+    "GRDC_4116330": {
+      "usgs_id": "13317000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 35094.5,
+      "usgs_area_km2": 34760.3,
+      "in_corpus": true
+    },
+    "GRDC_4116331": {
+      "usgs_id": "13307000",
+      "dist_deg": 0.00083,
+      "grdc_area_km2": 16239.3,
+      "usgs_area_km2": 16158.9,
+      "in_corpus": true
+    },
+    "GRDC_4116332": {
+      "usgs_id": "13302500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 9738.4,
+      "usgs_area_km2": 9678.8,
+      "in_corpus": true
+    },
+    "GRDC_4116333": {
+      "usgs_id": "13296500",
+      "dist_deg": 0.00067,
+      "grdc_area_km2": 2077.2,
+      "usgs_area_km2": 2090.1,
+      "in_corpus": false
+    },
+    "GRDC_4116340": {
+      "usgs_id": "13305000",
+      "dist_deg": 0.00067,
+      "grdc_area_km2": 2318.1,
+      "usgs_area_km2": 2323.2,
+      "in_corpus": false
+    },
+    "GRDC_4116350": {
+      "usgs_id": "13168500",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 6811.7,
+      "usgs_area_km2": 6956.7,
+      "in_corpus": false
+    },
+    "GRDC_4116351": {
+      "usgs_id": "13161500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 989.4,
+      "usgs_area_km2": 989.4,
+      "in_corpus": false
+    },
+    "GRDC_4116360": {
+      "usgs_id": "13295000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 380.7,
+      "usgs_area_km2": 380.7,
+      "in_corpus": true
+    },
+    "GRDC_4116400": {
+      "usgs_id": "13251000",
+      "dist_deg": 0.00019,
+      "grdc_area_km2": 8391.6,
+      "usgs_area_km2": 8391.6,
+      "in_corpus": true
+    },
+    "GRDC_4116401": {
+      "usgs_id": "13249500",
+      "dist_deg": 0.0002,
+      "grdc_area_km2": 6941.2,
+      "usgs_area_km2": 7070.7,
+      "in_corpus": false
+    },
+    "GRDC_4116402": {
+      "usgs_id": "13247500",
+      "dist_deg": 0.00094,
+      "grdc_area_km2": 5775.7,
+      "usgs_area_km2": 5749.8,
+      "in_corpus": true
+    },
+    "GRDC_4116405": {
+      "usgs_id": "13246000",
+      "dist_deg": 0.00061,
+      "grdc_area_km2": 2416.5,
+      "usgs_area_km2": 2385.4,
+      "in_corpus": false
+    },
+    "GRDC_4116406": {
+      "usgs_id": "13245000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 1621.3,
+      "usgs_area_km2": 1595.4,
+      "in_corpus": false
+    },
+    "GRDC_4116407": {
+      "usgs_id": "13239000",
+      "dist_deg": 0.00038,
+      "grdc_area_km2": 372.9,
+      "usgs_area_km2": 373.0,
+      "in_corpus": false
+    },
+    "GRDC_4116450": {
+      "usgs_id": "13183000",
+      "dist_deg": 0.00035,
+      "grdc_area_km2": 28904.4,
+      "usgs_area_km2": 28904.3,
+      "in_corpus": true
+    },
+    "GRDC_4116451": {
+      "usgs_id": "13181000",
+      "dist_deg": 0.00076,
+      "grdc_area_km2": 20720.0,
+      "usgs_area_km2": 20719.9,
+      "in_corpus": true
+    },
+    "GRDC_4116452": {
+      "usgs_id": "13175100",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1012.7,
+      "usgs_area_km2": 1012.7,
+      "in_corpus": false
+    },
+    "GRDC_4116460": {
+      "usgs_id": "13206000",
+      "dist_deg": 0.00038,
+      "grdc_area_km2": 7252.0,
+      "usgs_area_km2": 7182.0,
+      "in_corpus": true
+    },
+    "GRDC_4116461": {
+      "usgs_id": "13185000",
+      "dist_deg": 0.00904,
+      "grdc_area_km2": 2149.7,
+      "usgs_area_km2": 2154.9,
+      "in_corpus": false
+    },
+    "GRDC_4116470": {
+      "usgs_id": "13056500",
+      "dist_deg": 0.00017,
+      "grdc_area_km2": 7562.8,
+      "usgs_area_km2": 7562.8,
+      "in_corpus": false
+    },
+    "GRDC_4116471": {
+      "usgs_id": "13050500",
+      "dist_deg": 0.0005,
+      "grdc_area_km2": 4584.3,
+      "usgs_area_km2": 4584.3,
+      "in_corpus": false
+    },
+    "GRDC_4116481": {
+      "usgs_id": "13063000",
+      "dist_deg": 0.00311,
+      "grdc_area_km2": 906.5,
+      "usgs_area_km2": 862.5,
+      "in_corpus": false
+    },
+    "GRDC_4118100": {
+      "usgs_id": "10310000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 169.3,
+      "usgs_area_km2": 169.4,
+      "in_corpus": false
+    },
+    "GRDC_4118105": {
+      "usgs_id": "10312000",
+      "dist_deg": 0.04615,
+      "grdc_area_km2": 3755.5,
+      "usgs_area_km2": 3372.2,
+      "in_corpus": true
+    },
+    "GRDC_4118110": {
+      "usgs_id": "10301500",
+      "dist_deg": 0.00059,
+      "grdc_area_km2": 6734.0,
+      "usgs_area_km2": 6734.0,
+      "in_corpus": true
+    },
+    "GRDC_4118220": {
+      "usgs_id": "10263500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 59.3,
+      "usgs_area_km2": 59.3,
+      "in_corpus": false
+    },
+    "GRDC_4118300": {
+      "usgs_id": "10258500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 241.1,
+      "usgs_area_km2": 241.1,
+      "in_corpus": false
+    },
+    "GRDC_4118310": {
+      "usgs_id": "10259200",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 79.2,
+      "usgs_area_km2": 79.3,
+      "in_corpus": false
+    },
+    "GRDC_4118317": {
+      "usgs_id": "09423350",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 2.1,
+      "usgs_area_km2": 2.2,
+      "in_corpus": false
+    },
+    "GRDC_4118320": {
+      "usgs_id": "10251300",
+      "dist_deg": 0.00108,
+      "grdc_area_km2": 8003.1,
+      "usgs_area_km2": 8003.1,
+      "in_corpus": true
+    },
+    "GRDC_4118410": {
+      "usgs_id": "10322500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 13087.8,
+      "usgs_area_km2": 13087.2,
+      "in_corpus": true
+    },
+    "GRDC_4118420": {
+      "usgs_id": "10396000",
+      "dist_deg": 0.00022,
+      "grdc_area_km2": 518.0,
+      "usgs_area_km2": 518.0,
+      "in_corpus": false
+    },
+    "GRDC_4118440": {
+      "usgs_id": "10333000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 40155.2,
+      "usgs_area_km2": 40155.0,
+      "in_corpus": true
+    },
+    "GRDC_4118450": {
+      "usgs_id": "103530001",
+      "dist_deg": 0.01251,
+      "grdc_area_km2": 362.6,
+      "usgs_area_km2": 358.7,
+      "in_corpus": false
+    },
+    "GRDC_4118800": {
+      "usgs_id": "10174500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 880.6,
+      "usgs_area_km2": 880.6,
+      "in_corpus": false
+    },
+    "GRDC_4118850": {
+      "usgs_id": "10219000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 13377.4,
+      "usgs_area_km2": 13377.3,
+      "in_corpus": true
+    },
+    "GRDC_4119050": {
+      "usgs_id": "05244000",
+      "dist_deg": 0.0009,
+      "grdc_area_km2": 2615.9,
+      "usgs_area_km2": 2667.7,
+      "in_corpus": false
+    },
+    "GRDC_4119070": {
+      "usgs_id": "05280000",
+      "dist_deg": 0.00076,
+      "grdc_area_km2": 6837.6,
+      "usgs_area_km2": 6837.6,
+      "in_corpus": true
+    },
+    "GRDC_4119080": {
+      "usgs_id": "05340500",
+      "dist_deg": 0.00018,
+      "grdc_area_km2": 16161.6,
+      "usgs_area_km2": 16161.5,
+      "in_corpus": true
+    },
+    "GRDC_4119090": {
+      "usgs_id": "05320500",
+      "dist_deg": 0.00916,
+      "grdc_area_km2": 2874.9,
+      "usgs_area_km2": 2874.9,
+      "in_corpus": false
+    },
+    "GRDC_4119100": {
+      "usgs_id": "05331000",
+      "dist_deg": 0.01657,
+      "grdc_area_km2": 95312.0,
+      "usgs_area_km2": 95311.6,
+      "in_corpus": true
+    },
+    "GRDC_4119101": {
+      "usgs_id": "05227500",
+      "dist_deg": 0.00021,
+      "grdc_area_km2": 15902.6,
+      "usgs_area_km2": 15902.5,
+      "in_corpus": true
+    },
+    "GRDC_4119150": {
+      "usgs_id": "05412500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 4001.6,
+      "usgs_area_km2": 4001.5,
+      "in_corpus": false
+    },
+    "GRDC_4119170": {
+      "usgs_id": "05422000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 6050.2,
+      "usgs_area_km2": 6050.2,
+      "in_corpus": false
+    },
+    "GRDC_4119200": {
+      "usgs_id": "05446500",
+      "dist_deg": 0.00439,
+      "grdc_area_km2": 24731.9,
+      "usgs_area_km2": 24731.8,
+      "in_corpus": true
+    },
+    "GRDC_4119201": {
+      "usgs_id": "05430500",
+      "dist_deg": 0.00447,
+      "grdc_area_km2": 8650.6,
+      "usgs_area_km2": 8650.6,
+      "in_corpus": true
+    },
+    "GRDC_4119210": {
+      "usgs_id": "05435500",
+      "dist_deg": 0.00407,
+      "grdc_area_km2": 3434.3,
+      "usgs_area_km2": 3436.6,
+      "in_corpus": false
+    },
+    "GRDC_4119220": {
+      "usgs_id": "05440000",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 2846.4,
+      "usgs_area_km2": 2846.4,
+      "in_corpus": false
+    },
+    "GRDC_4119230": {
+      "usgs_id": "05447500",
+      "dist_deg": 0.00031,
+      "grdc_area_km2": 2597.8,
+      "usgs_area_km2": 2597.8,
+      "in_corpus": false
+    },
+    "GRDC_4119250": {
+      "usgs_id": "05465500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 32375.0,
+      "usgs_area_km2": 32374.9,
+      "in_corpus": true
+    },
+    "GRDC_4119251": {
+      "usgs_id": "05454500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 8471.9,
+      "usgs_area_km2": 8471.9,
+      "in_corpus": true
+    },
+    "GRDC_4119252": {
+      "usgs_id": "05451500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 3967.9,
+      "usgs_area_km2": 3967.9,
+      "in_corpus": false
+    },
+    "GRDC_4119260": {
+      "usgs_id": "05464500",
+      "dist_deg": 0.00135,
+      "grdc_area_km2": 16860.9,
+      "usgs_area_km2": 16860.8,
+      "in_corpus": true
+    },
+    "GRDC_4119261": {
+      "usgs_id": "05464000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 13328.1,
+      "usgs_area_km2": 13328.1,
+      "in_corpus": true
+    },
+    "GRDC_4119262": {
+      "usgs_id": "05458500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4302.0,
+      "usgs_area_km2": 4302.0,
+      "in_corpus": false
+    },
+    "GRDC_4119263": {
+      "usgs_id": "05457700",
+      "dist_deg": 0.00059,
+      "grdc_area_km2": 2729.9,
+      "usgs_area_km2": 2729.8,
+      "in_corpus": false
+    },
+    "GRDC_4119264": {
+      "usgs_id": "05465000",
+      "dist_deg": 0.00401,
+      "grdc_area_km2": 20168.3,
+      "usgs_area_km2": 20168.3,
+      "in_corpus": true
+    },
+    "GRDC_4119265": {
+      "usgs_id": "05462000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 4522.1,
+      "usgs_area_km2": 4522.1,
+      "in_corpus": false
+    },
+    "GRDC_4119270": {
+      "usgs_id": "05474000",
+      "dist_deg": 0.00062,
+      "grdc_area_km2": 11168.1,
+      "usgs_area_km2": 11168.0,
+      "in_corpus": true
+    },
+    "GRDC_4119271": {
+      "usgs_id": "05471500",
+      "dist_deg": 0.00036,
+      "grdc_area_km2": 4234.7,
+      "usgs_area_km2": 4234.6,
+      "in_corpus": false
+    },
+    "GRDC_4119280": {
+      "usgs_id": "05490500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 36358.4,
+      "usgs_area_km2": 36358.3,
+      "in_corpus": true
+    },
+    "GRDC_4119281": {
+      "usgs_id": "05481300",
+      "dist_deg": 0.00122,
+      "grdc_area_km2": 14120.7,
+      "usgs_area_km2": 14120.6,
+      "in_corpus": true
+    },
+    "GRDC_4119282": {
+      "usgs_id": "05480500",
+      "dist_deg": 0.00265,
+      "grdc_area_km2": 10852.1,
+      "usgs_area_km2": 10852.1,
+      "in_corpus": true
+    },
+    "GRDC_4119283": {
+      "usgs_id": "05479000",
+      "dist_deg": 0.00103,
+      "grdc_area_km2": 3387.7,
+      "usgs_area_km2": 3387.7,
+      "in_corpus": false
+    },
+    "GRDC_4119285": {
+      "usgs_id": "05484500",
+      "dist_deg": 0.00021,
+      "grdc_area_km2": 8912.2,
+      "usgs_area_km2": 8912.2,
+      "in_corpus": true
+    },
+    "GRDC_4119286": {
+      "usgs_id": "05482500",
+      "dist_deg": 0.00019,
+      "grdc_area_km2": 4193.2,
+      "usgs_area_km2": 4193.2,
+      "in_corpus": false
+    },
+    "GRDC_4119288": {
+      "usgs_id": "05481000",
+      "dist_deg": 0.00238,
+      "grdc_area_km2": 2185.9,
+      "usgs_area_km2": 2186.0,
+      "in_corpus": false
+    },
+    "GRDC_4119290": {
+      "usgs_id": "05508000",
+      "dist_deg": 0.0009,
+      "grdc_area_km2": 6423.2,
+      "usgs_area_km2": 6423.2,
+      "in_corpus": true
+    },
+    "GRDC_4119295": {
+      "usgs_id": "05514500",
+      "dist_deg": 0.00678,
+      "grdc_area_km2": 2338.8,
+      "usgs_area_km2": 2338.8,
+      "in_corpus": false
+    },
+    "GRDC_4119300": {
+      "usgs_id": "05474500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 308210.0,
+      "usgs_area_km2": 308208.8,
+      "in_corpus": true
+    },
+    "GRDC_4119310": {
+      "usgs_id": "05527500",
+      "dist_deg": 0.00044,
+      "grdc_area_km2": 13338.5,
+      "usgs_area_km2": 13338.4,
+      "in_corpus": true
+    },
+    "GRDC_4119311": {
+      "usgs_id": "05520500",
+      "dist_deg": 0.00013,
+      "grdc_area_km2": 5941.5,
+      "usgs_area_km2": 5941.4,
+      "in_corpus": true
+    },
+    "GRDC_4119312": {
+      "usgs_id": "05518000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4607.6,
+      "usgs_area_km2": 4607.6,
+      "in_corpus": true
+    },
+    "GRDC_4119313": {
+      "usgs_id": "05517500",
+      "dist_deg": 0.00056,
+      "grdc_area_km2": 3501.7,
+      "usgs_area_km2": 3501.7,
+      "in_corpus": true
+    },
+    "GRDC_4119315": {
+      "usgs_id": "05526000",
+      "dist_deg": 0.00059,
+      "grdc_area_km2": 5415.7,
+      "usgs_area_km2": 5415.7,
+      "in_corpus": true
+    },
+    "GRDC_4119317": {
+      "usgs_id": "05552500",
+      "dist_deg": 0.0004,
+      "grdc_area_km2": 6843.4,
+      "usgs_area_km2": 6842.8,
+      "in_corpus": true
+    },
+    "GRDC_4119318": {
+      "usgs_id": "05555300",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 3240.0,
+      "usgs_area_km2": 3240.1,
+      "in_corpus": false
+    },
+    "GRDC_4119321": {
+      "usgs_id": "05569500",
+      "dist_deg": 0.00049,
+      "grdc_area_km2": 2776.5,
+      "usgs_area_km2": 2776.5,
+      "in_corpus": false
+    },
+    "GRDC_4119322": {
+      "usgs_id": "05570000",
+      "dist_deg": 0.00025,
+      "grdc_area_km2": 4236.7,
+      "usgs_area_km2": 4237.2,
+      "in_corpus": true
+    },
+    "GRDC_4119325": {
+      "usgs_id": "05582000",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 4672.4,
+      "usgs_area_km2": 4672.3,
+      "in_corpus": true
+    },
+    "GRDC_4119327": {
+      "usgs_id": "05585000",
+      "dist_deg": 0.00064,
+      "grdc_area_km2": 3348.9,
+      "usgs_area_km2": 3348.9,
+      "in_corpus": false
+    },
+    "GRDC_4119400": {
+      "usgs_id": "05586100",
+      "dist_deg": 0.00179,
+      "grdc_area_km2": 69267.0,
+      "usgs_area_km2": 69264.1,
+      "in_corpus": true
+    },
+    "GRDC_4119401": {
+      "usgs_id": "05558300",
+      "dist_deg": 0.00021,
+      "grdc_area_km2": 35076.4,
+      "usgs_area_km2": 35078.8,
+      "in_corpus": true
+    },
+    "GRDC_4119410": {
+      "usgs_id": "05583000",
+      "dist_deg": 0.00102,
+      "grdc_area_km2": 13190.9,
+      "usgs_area_km2": 13190.8,
+      "in_corpus": true
+    },
+    "GRDC_4119430": {
+      "usgs_id": "05382000",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 5387.2,
+      "usgs_area_km2": 5387.2,
+      "in_corpus": true
+    },
+    "GRDC_4119431": {
+      "usgs_id": "05381000",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 1939.9,
+      "usgs_area_km2": 1939.9,
+      "in_corpus": false
+    },
+    "GRDC_4119440": {
+      "usgs_id": "05369500",
+      "dist_deg": 0.00313,
+      "grdc_area_km2": 23335.9,
+      "usgs_area_km2": 23335.8,
+      "in_corpus": true
+    },
+    "GRDC_4119441": {
+      "usgs_id": "05365500",
+      "dist_deg": 0.00111,
+      "grdc_area_km2": 14633.5,
+      "usgs_area_km2": 14633.4,
+      "in_corpus": true
+    },
+    "GRDC_4119442": {
+      "usgs_id": "05356500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4273.5,
+      "usgs_area_km2": 4273.5,
+      "in_corpus": true
+    },
+    "GRDC_4119445": {
+      "usgs_id": "05369000",
+      "dist_deg": 0.00942,
+      "grdc_area_km2": 4584.3,
+      "usgs_area_km2": 4584.3,
+      "in_corpus": true
+    },
+    "GRDC_4119447": {
+      "usgs_id": "05360500",
+      "dist_deg": 0.03459,
+      "grdc_area_km2": 4817.4,
+      "usgs_area_km2": 4817.4,
+      "in_corpus": true
+    },
+    "GRDC_4119450": {
+      "usgs_id": "05407000",
+      "dist_deg": 0.00013,
+      "grdc_area_km2": 26936.0,
+      "usgs_area_km2": 26935.9,
+      "in_corpus": true
+    },
+    "GRDC_4119451": {
+      "usgs_id": "05404000",
+      "dist_deg": 0.00114,
+      "grdc_area_km2": 20953.1,
+      "usgs_area_km2": 20953.0,
+      "in_corpus": true
+    },
+    "GRDC_4119452": {
+      "usgs_id": "05400760",
+      "dist_deg": 0.00282,
+      "grdc_area_km2": 14037.8,
+      "usgs_area_km2": 14037.7,
+      "in_corpus": true
+    },
+    "GRDC_4119453": {
+      "usgs_id": "05398000",
+      "dist_deg": 0.00123,
+      "grdc_area_km2": 10411.8,
+      "usgs_area_km2": 10411.8,
+      "in_corpus": true
+    },
+    "GRDC_4119454": {
+      "usgs_id": "05391000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1960.6,
+      "usgs_area_km2": 1960.6,
+      "in_corpus": false
+    },
+    "GRDC_4119460": {
+      "usgs_id": "05330000",
+      "dist_deg": 0.00032,
+      "grdc_area_km2": 41958.0,
+      "usgs_area_km2": 41957.8,
+      "in_corpus": true
+    },
+    "GRDC_4119461": {
+      "usgs_id": "05311000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 16006.2,
+      "usgs_area_km2": 16006.1,
+      "in_corpus": true
+    },
+    "GRDC_4119510": {
+      "usgs_id": "05418500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 4022.3,
+      "usgs_area_km2": 4022.3,
+      "in_corpus": true
+    },
+    "GRDC_4119600": {
+      "usgs_id": "05528000",
+      "dist_deg": 0.00203,
+      "grdc_area_km2": 600.9,
+      "usgs_area_km2": 600.9,
+      "in_corpus": false
+    },
+    "GRDC_4119650": {
+      "usgs_id": "05420500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 221704.0,
+      "usgs_area_km2": 221703.1,
+      "in_corpus": true
+    },
+    "GRDC_4120110": {
+      "usgs_id": "06308500",
+      "dist_deg": 0.00019,
+      "grdc_area_km2": 13931.6,
+      "usgs_area_km2": 13998.9,
+      "in_corpus": false
+    },
+    "GRDC_4120111": {
+      "usgs_id": "06307500",
+      "dist_deg": 0.00013,
+      "grdc_area_km2": 4584.3,
+      "usgs_area_km2": 4620.5,
+      "in_corpus": false
+    },
+    "GRDC_4120120": {
+      "usgs_id": "06294500",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 58052.3,
+      "usgs_area_km2": 58059.8,
+      "in_corpus": true
+    },
+    "GRDC_4120121": {
+      "usgs_id": "06279500",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 40823.6,
+      "usgs_area_km2": 40792.3,
+      "in_corpus": true
+    },
+    "GRDC_4120125": {
+      "usgs_id": "06285100",
+      "dist_deg": 0.00088,
+      "grdc_area_km2": 6086.5,
+      "usgs_area_km2": 6190.1,
+      "in_corpus": true
+    },
+    "GRDC_4120200": {
+      "usgs_id": "06174500",
+      "dist_deg": 0.00037,
+      "grdc_area_km2": 57839.9,
+      "usgs_area_km2": 58150.5,
+      "in_corpus": true
+    },
+    "GRDC_4120201": {
+      "usgs_id": "06155030",
+      "dist_deg": 0.00042,
+      "grdc_area_km2": 28987.3,
+      "usgs_area_km2": 28836.9,
+      "in_corpus": true
+    },
+    "GRDC_4120202": {
+      "usgs_id": "06140500",
+      "dist_deg": 0.00024,
+      "grdc_area_km2": 14983.2,
+      "usgs_area_km2": 14646.4,
+      "in_corpus": false
+    },
+    "GRDC_4120210": {
+      "usgs_id": "06151500",
+      "dist_deg": 0.00207,
+      "grdc_area_km2": 4203.6,
+      "usgs_area_km2": 4224.3,
+      "in_corpus": false
+    },
+    "GRDC_4120220": {
+      "usgs_id": "06139500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4675.0,
+      "usgs_area_km2": 4628.3,
+      "in_corpus": false
+    },
+    "GRDC_4120300": {
+      "usgs_id": "06108800",
+      "dist_deg": 0.00022,
+      "grdc_area_km2": 5205.9,
+      "usgs_area_km2": 5249.9,
+      "in_corpus": false
+    },
+    "GRDC_4120310": {
+      "usgs_id": "06102050",
+      "dist_deg": 0.00055,
+      "grdc_area_km2": 18117.1,
+      "usgs_area_km2": 18199.9,
+      "in_corpus": true
+    },
+    "GRDC_4120311": {
+      "usgs_id": "06099500",
+      "dist_deg": 9e-05,
+      "grdc_area_km2": 8396.8,
+      "usgs_area_km2": 7034.4,
+      "in_corpus": false
+    },
+    "GRDC_4120320": {
+      "usgs_id": "06130500",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 20321.1,
+      "usgs_area_km2": 20160.5,
+      "in_corpus": true
+    },
+    "GRDC_4120321": {
+      "usgs_id": "06126500",
+      "dist_deg": 0.00174,
+      "grdc_area_km2": 10419.6,
+      "usgs_area_km2": 10354.8,
+      "in_corpus": false
+    },
+    "GRDC_4120322": {
+      "usgs_id": "06120500",
+      "dist_deg": 0.00125,
+      "grdc_area_km2": 2913.8,
+      "usgs_area_km2": 2869.7,
+      "in_corpus": false
+    },
+    "GRDC_4120330": {
+      "usgs_id": "06036650",
+      "dist_deg": 0.00086,
+      "grdc_area_km2": 24687.9,
+      "usgs_area_km2": 24755.1,
+      "in_corpus": true
+    },
+    "GRDC_4120331": {
+      "usgs_id": "06026500",
+      "dist_deg": 0.00067,
+      "grdc_area_km2": 19766.9,
+      "usgs_area_km2": 19725.4,
+      "in_corpus": true
+    },
+    "GRDC_4120900": {
+      "usgs_id": "06185500",
+      "dist_deg": 0.00155,
+      "grdc_area_km2": 237132.6,
+      "usgs_area_km2": 232731.3,
+      "in_corpus": true
+    },
+    "GRDC_4120902": {
+      "usgs_id": "06109500",
+      "dist_deg": 0.00143,
+      "grdc_area_km2": 89041.6,
+      "usgs_area_km2": 88059.7,
+      "in_corpus": true
+    },
+    "GRDC_4120903": {
+      "usgs_id": "06054500",
+      "dist_deg": 0.00059,
+      "grdc_area_km2": 37992.7,
+      "usgs_area_km2": 37920.0,
+      "in_corpus": true
+    },
+    "GRDC_4120950": {
+      "usgs_id": "06329500",
+      "dist_deg": 0.00127,
+      "grdc_area_km2": 178925.0,
+      "usgs_area_km2": 178965.7,
+      "in_corpus": true
+    },
+    "GRDC_4120951": {
+      "usgs_id": "06214500",
+      "dist_deg": 0.00046,
+      "grdc_area_km2": 30575.0,
+      "usgs_area_km2": 30580.0,
+      "in_corpus": true
+    },
+    "GRDC_4120952": {
+      "usgs_id": "06192500",
+      "dist_deg": 0.00035,
+      "grdc_area_km2": 9197.1,
+      "usgs_area_km2": 9197.1,
+      "in_corpus": true
+    },
+    "GRDC_4120953": {
+      "usgs_id": "06191500",
+      "dist_deg": 0.00056,
+      "grdc_area_km2": 6783.2,
+      "usgs_area_km2": 6772.8,
+      "in_corpus": true
+    },
+    "GRDC_4120960": {
+      "usgs_id": "06324970",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 3203.4,
+      "usgs_area_km2": 3203.8,
+      "in_corpus": true
+    },
+    "GRDC_4121100": {
+      "usgs_id": "06337000",
+      "dist_deg": 0.00768,
+      "grdc_area_km2": 21522.9,
+      "usgs_area_km2": 21522.8,
+      "in_corpus": true
+    },
+    "GRDC_4121101": {
+      "usgs_id": "06335500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 12017.6,
+      "usgs_area_km2": 12017.6,
+      "in_corpus": true
+    },
+    "GRDC_4121102": {
+      "usgs_id": "06334500",
+      "dist_deg": 0.00201,
+      "grdc_area_km2": 5102.3,
+      "usgs_area_km2": 5112.6,
+      "in_corpus": false
+    },
+    "GRDC_4121110": {
+      "usgs_id": "06340500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 5801.6,
+      "usgs_area_km2": 5801.6,
+      "in_corpus": true
+    },
+    "GRDC_4121111": {
+      "usgs_id": "06339500",
+      "dist_deg": 0.00012,
+      "grdc_area_km2": 3185.7,
+      "usgs_area_km2": 3185.7,
+      "in_corpus": false
+    },
+    "GRDC_4121120": {
+      "usgs_id": "06354000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 10619.0,
+      "usgs_area_km2": 10619.0,
+      "in_corpus": true
+    },
+    "GRDC_4121121": {
+      "usgs_id": "06350000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1502.2,
+      "usgs_area_km2": 1502.2,
+      "in_corpus": false
+    },
+    "GRDC_4121125": {
+      "usgs_id": "06353000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 4532.5,
+      "usgs_area_km2": 4532.5,
+      "in_corpus": false
+    },
+    "GRDC_4121126": {
+      "usgs_id": "06352000",
+      "dist_deg": 0.00161,
+      "grdc_area_km2": 1432.3,
+      "usgs_area_km2": 1432.3,
+      "in_corpus": false
+    },
+    "GRDC_4121130": {
+      "usgs_id": "06359500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 6889.4,
+      "usgs_area_km2": 6713.3,
+      "in_corpus": true
+    },
+    "GRDC_4121131": {
+      "usgs_id": "06360500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 12639.2,
+      "usgs_area_km2": 12662.5,
+      "in_corpus": true
+    },
+    "GRDC_4121140": {
+      "usgs_id": "06395000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 18500.4,
+      "usgs_area_km2": 18572.8,
+      "in_corpus": true
+    },
+    "GRDC_4121141": {
+      "usgs_id": "06438500",
+      "dist_deg": 0.00227,
+      "grdc_area_km2": 56047.6,
+      "usgs_area_km2": 55298.9,
+      "in_corpus": true
+    },
+    "GRDC_4121142": {
+      "usgs_id": "06423500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 33152.0,
+      "usgs_area_km2": 32838.5,
+      "in_corpus": true
+    },
+    "GRDC_4121145": {
+      "usgs_id": "06426500",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 4377.1,
+      "usgs_area_km2": 4377.1,
+      "in_corpus": true
+    },
+    "GRDC_4121146": {
+      "usgs_id": "06438000",
+      "dist_deg": 0.00047,
+      "grdc_area_km2": 18673.9,
+      "usgs_area_km2": 18140.3,
+      "in_corpus": true
+    },
+    "GRDC_4121147": {
+      "usgs_id": "06436000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 11758.6,
+      "usgs_area_km2": 11655.0,
+      "in_corpus": true
+    },
+    "GRDC_4121150": {
+      "usgs_id": "06441500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 8047.1,
+      "usgs_area_km2": 8150.7,
+      "in_corpus": true
+    },
+    "GRDC_4121160": {
+      "usgs_id": "06452000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 26418.0,
+      "usgs_area_km2": 25679.8,
+      "in_corpus": true
+    },
+    "GRDC_4121161": {
+      "usgs_id": "06447000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 12950.0,
+      "usgs_area_km2": 12846.4,
+      "in_corpus": true
+    },
+    "GRDC_4121162": {
+      "usgs_id": "06445685",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3729.6,
+      "usgs_area_km2": 3540.5,
+      "in_corpus": false
+    },
+    "GRDC_4121300": {
+      "usgs_id": "06478500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 53491.3,
+      "usgs_area_km2": 53540.3,
+      "in_corpus": true
+    },
+    "GRDC_4121301": {
+      "usgs_id": "06477000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 45558.1,
+      "usgs_area_km2": 45617.5,
+      "in_corpus": true
+    },
+    "GRDC_4121304": {
+      "usgs_id": "06470000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 7303.8,
+      "usgs_area_km2": 7303.8,
+      "in_corpus": true
+    },
+    "GRDC_4121311": {
+      "usgs_id": "06479010",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 5962.2,
+      "usgs_area_km2": 5837.8,
+      "in_corpus": false
+    },
+    "GRDC_4121320": {
+      "usgs_id": "06485500",
+      "dist_deg": 0.00035,
+      "grdc_area_km2": 21818.2,
+      "usgs_area_km2": 20406.5,
+      "in_corpus": true
+    },
+    "GRDC_4121330": {
+      "usgs_id": "06600500",
+      "dist_deg": 0.00057,
+      "grdc_area_km2": 2294.7,
+      "usgs_area_km2": 2294.7,
+      "in_corpus": false
+    },
+    "GRDC_4121340": {
+      "usgs_id": "06606600",
+      "dist_deg": 0.0106,
+      "grdc_area_km2": 6475.0,
+      "usgs_area_km2": 6475.0,
+      "in_corpus": false
+    },
+    "GRDC_4121350": {
+      "usgs_id": "06609500",
+      "dist_deg": 0.00088,
+      "grdc_area_km2": 2255.9,
+      "usgs_area_km2": 2255.9,
+      "in_corpus": false
+    },
+    "GRDC_4121400": {
+      "usgs_id": "06465500",
+      "dist_deg": 0.00099,
+      "grdc_area_km2": 29992.2,
+      "usgs_area_km2": 29992.1,
+      "in_corpus": true
+    },
+    "GRDC_4121401": {
+      "usgs_id": "06461500",
+      "dist_deg": 0.00104,
+      "grdc_area_km2": 18518.5,
+      "usgs_area_km2": 18518.4,
+      "in_corpus": true
+    },
+    "GRDC_4121420": {
+      "usgs_id": "06357800",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 13908.3,
+      "usgs_area_km2": 13768.4,
+      "in_corpus": true
+    },
+    "GRDC_4121430": {
+      "usgs_id": "06349000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 8572.9,
+      "usgs_area_km2": 8572.9,
+      "in_corpus": true
+    },
+    "GRDC_4121431": {
+      "usgs_id": "06345500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 3211.6,
+      "usgs_area_km2": 3211.6,
+      "in_corpus": false
+    },
+    "GRDC_4121800": {
+      "usgs_id": "06467500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 723905.0,
+      "usgs_area_km2": 723902.2,
+      "in_corpus": false
+    },
+    "GRDC_4121801": {
+      "usgs_id": "06610000",
+      "dist_deg": 0.00058,
+      "grdc_area_km2": 846305.8,
+      "usgs_area_km2": 836048.8,
+      "in_corpus": true
+    },
+    "GRDC_4121802": {
+      "usgs_id": "06342500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 482776.0,
+      "usgs_area_km2": 482774.1,
+      "in_corpus": true
+    },
+    "GRDC_4122100": {
+      "usgs_id": "06800500",
+      "dist_deg": 0.00034,
+      "grdc_area_km2": 17871.0,
+      "usgs_area_km2": 17870.9,
+      "in_corpus": true
+    },
+    "GRDC_4122105": {
+      "usgs_id": "06799500",
+      "dist_deg": 0.00035,
+      "grdc_area_km2": 2628.9,
+      "usgs_area_km2": 2628.8,
+      "in_corpus": false
+    },
+    "GRDC_4122130": {
+      "usgs_id": "06764880",
+      "dist_deg": 0.00033,
+      "grdc_area_km2": 61901.0,
+      "usgs_area_km2": 61900.8,
+      "in_corpus": true
+    },
+    "GRDC_4122151": {
+      "usgs_id": "06630000",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 10813.3,
+      "usgs_area_km2": 10836.5,
+      "in_corpus": true
+    },
+    "GRDC_4122152": {
+      "usgs_id": "06674500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 57544.6,
+      "usgs_area_km2": 57544.4,
+      "in_corpus": true
+    },
+    "GRDC_4122153": {
+      "usgs_id": "06652000",
+      "dist_deg": 0.0036,
+      "grdc_area_km2": 38914.8,
+      "usgs_area_km2": 38914.6,
+      "in_corpus": true
+    },
+    "GRDC_4122155": {
+      "usgs_id": "06635000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 6055.4,
+      "usgs_area_km2": 6055.4,
+      "in_corpus": true
+    },
+    "GRDC_4122160": {
+      "usgs_id": "06810000",
+      "dist_deg": 0.03437,
+      "grdc_area_km2": 7267.5,
+      "usgs_area_km2": 7267.5,
+      "in_corpus": false
+    },
+    "GRDC_4122165": {
+      "usgs_id": "06808500",
+      "dist_deg": 0.00088,
+      "grdc_area_km2": 3434.3,
+      "usgs_area_km2": 3434.3,
+      "in_corpus": false
+    },
+    "GRDC_4122170": {
+      "usgs_id": "06811500",
+      "dist_deg": 0.00076,
+      "grdc_area_km2": 2051.3,
+      "usgs_area_km2": 2051.3,
+      "in_corpus": false
+    },
+    "GRDC_4122180": {
+      "usgs_id": "06815000",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 3468.0,
+      "usgs_area_km2": 3468.0,
+      "in_corpus": false
+    },
+    "GRDC_4122190": {
+      "usgs_id": "06820500",
+      "dist_deg": 0.00163,
+      "grdc_area_km2": 4558.4,
+      "usgs_area_km2": 4558.4,
+      "in_corpus": true
+    },
+    "GRDC_4122201": {
+      "usgs_id": "06887000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 24967.6,
+      "usgs_area_km2": 24967.5,
+      "in_corpus": true
+    },
+    "GRDC_4122212": {
+      "usgs_id": "06883000",
+      "dist_deg": 0.0003,
+      "grdc_area_km2": 2548.6,
+      "usgs_area_km2": 2548.6,
+      "in_corpus": false
+    },
+    "GRDC_4122220": {
+      "usgs_id": "06864500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 19632.2,
+      "usgs_area_km2": 19632.1,
+      "in_corpus": true
+    },
+    "GRDC_4122221": {
+      "usgs_id": "06860000",
+      "dist_deg": 0.00311,
+      "grdc_area_km2": 9207.5,
+      "usgs_area_km2": 9207.4,
+      "in_corpus": false
+    },
+    "GRDC_4122222": {
+      "usgs_id": "06877600",
+      "dist_deg": 0.00197,
+      "grdc_area_km2": 49883.4,
+      "usgs_area_km2": 49883.2,
+      "in_corpus": true
+    },
+    "GRDC_4122230": {
+      "usgs_id": "06869500",
+      "dist_deg": 0.00075,
+      "grdc_area_km2": 7303.8,
+      "usgs_area_km2": 7303.8,
+      "in_corpus": false
+    },
+    "GRDC_4122240": {
+      "usgs_id": "06876900",
+      "dist_deg": 0.00051,
+      "grdc_area_km2": 17534.3,
+      "usgs_area_km2": 17534.2,
+      "in_corpus": false
+    },
+    "GRDC_4122250": {
+      "usgs_id": "06897500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 5827.5,
+      "usgs_area_km2": 5827.5,
+      "in_corpus": true
+    },
+    "GRDC_4122251": {
+      "usgs_id": "06902000",
+      "dist_deg": 0.00028,
+      "grdc_area_km2": 17819.2,
+      "usgs_area_km2": 17819.1,
+      "in_corpus": true
+    },
+    "GRDC_4122255": {
+      "usgs_id": "06899500",
+      "dist_deg": 0.0113,
+      "grdc_area_km2": 4325.3,
+      "usgs_area_km2": 4454.8,
+      "in_corpus": true
+    },
+    "GRDC_4122260": {
+      "usgs_id": "06908000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 2900.8,
+      "usgs_area_km2": 2900.8,
+      "in_corpus": false
+    },
+    "GRDC_4122270": {
+      "usgs_id": "06913500",
+      "dist_deg": 0.00058,
+      "grdc_area_km2": 3237.5,
+      "usgs_area_km2": 3237.5,
+      "in_corpus": false
+    },
+    "GRDC_4122271": {
+      "usgs_id": "06916600",
+      "dist_deg": 0.04337,
+      "grdc_area_km2": 8365.7,
+      "usgs_area_km2": 8417.5,
+      "in_corpus": false
+    },
+    "GRDC_4122280": {
+      "usgs_id": "06933500",
+      "dist_deg": 0.00013,
+      "grdc_area_km2": 7355.6,
+      "usgs_area_km2": 7355.6,
+      "in_corpus": true
+    },
+    "GRDC_4122281": {
+      "usgs_id": "06934000",
+      "dist_deg": 0.00088,
+      "grdc_area_km2": 8236.2,
+      "usgs_area_km2": 8236.2,
+      "in_corpus": true
+    },
+    "GRDC_4122300": {
+      "usgs_id": "06926000",
+      "dist_deg": 0.00071,
+      "grdc_area_km2": 36260.0,
+      "usgs_area_km2": 36259.9,
+      "in_corpus": true
+    },
+    "GRDC_4122301": {
+      "usgs_id": "06918070",
+      "dist_deg": 0.0004,
+      "grdc_area_km2": 14011.9,
+      "usgs_area_km2": 14011.8,
+      "in_corpus": false
+    },
+    "GRDC_4122350": {
+      "usgs_id": "06856600",
+      "dist_deg": 0.00087,
+      "grdc_area_km2": 63563.8,
+      "usgs_area_km2": 63563.5,
+      "in_corpus": true
+    },
+    "GRDC_4122351": {
+      "usgs_id": "06843500",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 37451.4,
+      "usgs_area_km2": 37451.3,
+      "in_corpus": true
+    },
+    "GRDC_4122352": {
+      "usgs_id": "06828500",
+      "dist_deg": 0.00113,
+      "grdc_area_km2": 21238.0,
+      "usgs_area_km2": 21237.9,
+      "in_corpus": true
+    },
+    "GRDC_4122360": {
+      "usgs_id": "06847500",
+      "dist_deg": 0.03146,
+      "grdc_area_km2": 9945.6,
+      "usgs_area_km2": 9945.6,
+      "in_corpus": true
+    },
+    "GRDC_4122370": {
+      "usgs_id": "06835500",
+      "dist_deg": 0.00042,
+      "grdc_area_km2": 7744.1,
+      "usgs_area_km2": 7744.1,
+      "in_corpus": true
+    },
+    "GRDC_4122600": {
+      "usgs_id": "06805500",
+      "dist_deg": 0.00056,
+      "grdc_area_km2": 221108.3,
+      "usgs_area_km2": 221107.4,
+      "in_corpus": true
+    },
+    "GRDC_4122601": {
+      "usgs_id": "06801000",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 218078.0,
+      "usgs_area_km2": 216523.2,
+      "in_corpus": true
+    },
+    "GRDC_4122602": {
+      "usgs_id": "06774000",
+      "dist_deg": 0.00034,
+      "grdc_area_km2": 153587.0,
+      "usgs_area_km2": 153586.4,
+      "in_corpus": true
+    },
+    "GRDC_4122603": {
+      "usgs_id": "06770500",
+      "dist_deg": 0.00041,
+      "grdc_area_km2": 149313.5,
+      "usgs_area_km2": 149312.9,
+      "in_corpus": true
+    },
+    "GRDC_4122620": {
+      "usgs_id": "06803555",
+      "dist_deg": 0.00359,
+      "grdc_area_km2": 2719.5,
+      "usgs_area_km2": 2719.5,
+      "in_corpus": false
+    },
+    "GRDC_4122630": {
+      "usgs_id": "06793000",
+      "dist_deg": 0.00094,
+      "grdc_area_km2": 37088.8,
+      "usgs_area_km2": 37088.7,
+      "in_corpus": true
+    },
+    "GRDC_4122635": {
+      "usgs_id": "06790500",
+      "dist_deg": 0.00024,
+      "grdc_area_km2": 11142.2,
+      "usgs_area_km2": 11142.1,
+      "in_corpus": true
+    },
+    "GRDC_4122636": {
+      "usgs_id": "06786000",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 6086.5,
+      "usgs_area_km2": 6086.5,
+      "in_corpus": true
+    },
+    "GRDC_4122637": {
+      "usgs_id": "06785000",
+      "dist_deg": 0.00036,
+      "grdc_area_km2": 20914.3,
+      "usgs_area_km2": 20914.2,
+      "in_corpus": true
+    },
+    "GRDC_4122638": {
+      "usgs_id": "06775500",
+      "dist_deg": 0.00386,
+      "grdc_area_km2": 4739.7,
+      "usgs_area_km2": 4739.7,
+      "in_corpus": false
+    },
+    "GRDC_4122639": {
+      "usgs_id": "06784000",
+      "dist_deg": 0.00093,
+      "grdc_area_km2": 6008.8,
+      "usgs_area_km2": 6008.8,
+      "in_corpus": true
+    },
+    "GRDC_4122650": {
+      "usgs_id": "06807000",
+      "dist_deg": 0.00017,
+      "grdc_area_km2": 1072153.8,
+      "usgs_area_km2": 1061895.9,
+      "in_corpus": true
+    },
+    "GRDC_4122700": {
+      "usgs_id": "06892350",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 154768.0,
+      "usgs_area_km2": 154767.4,
+      "in_corpus": true
+    },
+    "GRDC_4122701": {
+      "usgs_id": "06887500",
+      "dist_deg": 0.00085,
+      "grdc_area_km2": 143175.2,
+      "usgs_area_km2": 143174.6,
+      "in_corpus": true
+    },
+    "GRDC_4122900": {
+      "usgs_id": "06934500",
+      "dist_deg": 0.00065,
+      "grdc_area_km2": 1357678.0,
+      "usgs_area_km2": 1353269.8,
+      "in_corpus": true
+    },
+    "GRDC_4122901": {
+      "usgs_id": "06909000",
+      "dist_deg": 0.00675,
+      "grdc_area_km2": 1296813.0,
+      "usgs_area_km2": 1296808.0,
+      "in_corpus": true
+    },
+    "GRDC_4122902": {
+      "usgs_id": "06893000",
+      "dist_deg": 0.00021,
+      "grdc_area_km2": 1253819.0,
+      "usgs_area_km2": 1253814.2,
+      "in_corpus": true
+    },
+    "GRDC_4122903": {
+      "usgs_id": "06813500",
+      "dist_deg": 0.00158,
+      "grdc_area_km2": 1084844.8,
+      "usgs_area_km2": 1074586.9,
+      "in_corpus": true
+    },
+    "GRDC_4123061": {
+      "usgs_id": "03575500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 66329.9,
+      "usgs_area_km2": 66329.6,
+      "in_corpus": false
+    },
+    "GRDC_4123080": {
+      "usgs_id": "03438220",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 45578.8,
+      "usgs_area_km2": 45578.6,
+      "in_corpus": false
+    },
+    "GRDC_4123081": {
+      "usgs_id": "03426310",
+      "dist_deg": 0.00098,
+      "grdc_area_km2": 30233.0,
+      "usgs_area_km2": 30233.0,
+      "in_corpus": false
+    },
+    "GRDC_4123082": {
+      "usgs_id": "03404000",
+      "dist_deg": 0.0019,
+      "grdc_area_km2": 4162.1,
+      "usgs_area_km2": 4162.1,
+      "in_corpus": false
+    },
+    "GRDC_4123083": {
+      "usgs_id": "03401000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 968.7,
+      "usgs_area_km2": 968.7,
+      "in_corpus": false
+    },
+    "GRDC_4123085": {
+      "usgs_id": "03410500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2470.9,
+      "usgs_area_km2": 2470.9,
+      "in_corpus": false
+    },
+    "GRDC_4123090": {
+      "usgs_id": "03380500",
+      "dist_deg": 0.0072,
+      "grdc_area_km2": 1201.8,
+      "usgs_area_km2": 1201.8,
+      "in_corpus": false
+    },
+    "GRDC_4123095": {
+      "usgs_id": "03603000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 6622.6,
+      "usgs_area_km2": 6622.6,
+      "in_corpus": true
+    },
+    "GRDC_4123110": {
+      "usgs_id": "03379500",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 2929.3,
+      "usgs_area_km2": 2929.3,
+      "in_corpus": false
+    },
+    "GRDC_4123111": {
+      "usgs_id": "03381500",
+      "dist_deg": 0.00213,
+      "grdc_area_km2": 8034.2,
+      "usgs_area_km2": 8034.1,
+      "in_corpus": true
+    },
+    "GRDC_4123120": {
+      "usgs_id": "03378000",
+      "dist_deg": 0.00018,
+      "grdc_area_km2": 590.5,
+      "usgs_area_km2": 590.5,
+      "in_corpus": false
+    },
+    "GRDC_4123130": {
+      "usgs_id": "03377500",
+      "dist_deg": 0.00462,
+      "grdc_area_km2": 74164.7,
+      "usgs_area_km2": 74164.4,
+      "in_corpus": true
+    },
+    "GRDC_4123131": {
+      "usgs_id": "03335500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 18821.5,
+      "usgs_area_km2": 18821.5,
+      "in_corpus": true
+    },
+    "GRDC_4123135": {
+      "usgs_id": "03328500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2043.5,
+      "usgs_area_km2": 2043.5,
+      "in_corpus": false
+    },
+    "GRDC_4123136": {
+      "usgs_id": "03331500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 2217.0,
+      "usgs_area_km2": 2217.0,
+      "in_corpus": false
+    },
+    "GRDC_4123137": {
+      "usgs_id": "03345500",
+      "dist_deg": 0.00032,
+      "grdc_area_km2": 3926.4,
+      "usgs_area_km2": 3926.4,
+      "in_corpus": false
+    },
+    "GRDC_4123140": {
+      "usgs_id": "03378550",
+      "dist_deg": 0.00033,
+      "grdc_area_km2": 269.4,
+      "usgs_area_km2": 269.4,
+      "in_corpus": false
+    },
+    "GRDC_4123200": {
+      "usgs_id": "03349000",
+      "dist_deg": 0.00049,
+      "grdc_area_km2": 2222.2,
+      "usgs_area_km2": 2222.2,
+      "in_corpus": false
+    },
+    "GRDC_4123201": {
+      "usgs_id": "03360500",
+      "dist_deg": 0.00616,
+      "grdc_area_km2": 12141.9,
+      "usgs_area_km2": 12141.9,
+      "in_corpus": true
+    },
+    "GRDC_4123202": {
+      "usgs_id": "03374000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 28813.8,
+      "usgs_area_km2": 28813.6,
+      "in_corpus": true
+    },
+    "GRDC_4123205": {
+      "usgs_id": "03364000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 4421.1,
+      "usgs_area_km2": 4421.1,
+      "in_corpus": true
+    },
+    "GRDC_4123206": {
+      "usgs_id": "03365500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 6063.2,
+      "usgs_area_km2": 6063.2,
+      "in_corpus": true
+    },
+    "GRDC_4123207": {
+      "usgs_id": "03373500",
+      "dist_deg": 0.00037,
+      "grdc_area_km2": 12760.9,
+      "usgs_area_km2": 12760.9,
+      "in_corpus": true
+    },
+    "GRDC_4123209": {
+      "usgs_id": "03362500",
+      "dist_deg": 0.00045,
+      "grdc_area_km2": 1227.7,
+      "usgs_area_km2": 1227.7,
+      "in_corpus": false
+    },
+    "GRDC_4123210": {
+      "usgs_id": "03363000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2745.4,
+      "usgs_area_km2": 2745.4,
+      "in_corpus": false
+    },
+    "GRDC_4123220": {
+      "usgs_id": "03308500",
+      "dist_deg": 0.00206,
+      "grdc_area_km2": 4333.1,
+      "usgs_area_km2": 4333.1,
+      "in_corpus": true
+    },
+    "GRDC_4123225": {
+      "usgs_id": "03303000",
+      "dist_deg": 0.00326,
+      "grdc_area_km2": 1232.8,
+      "usgs_area_km2": 1231.0,
+      "in_corpus": false
+    },
+    "GRDC_4123230": {
+      "usgs_id": "03274000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 9401.7,
+      "usgs_area_km2": 9401.7,
+      "in_corpus": true
+    },
+    "GRDC_4123235": {
+      "usgs_id": "03266000",
+      "dist_deg": 0.00293,
+      "grdc_area_km2": 1683.5,
+      "usgs_area_km2": 1683.5,
+      "in_corpus": false
+    },
+    "GRDC_4123240": {
+      "usgs_id": "03289500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1225.1,
+      "usgs_area_km2": 1225.1,
+      "in_corpus": false
+    },
+    "GRDC_4123245": {
+      "usgs_id": "03301500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3364.4,
+      "usgs_area_km2": 3364.4,
+      "in_corpus": false
+    },
+    "GRDC_4123250": {
+      "usgs_id": "03253500",
+      "dist_deg": 0.00166,
+      "grdc_area_km2": 8547.0,
+      "usgs_area_km2": 8547.0,
+      "in_corpus": true
+    },
+    "GRDC_4123251": {
+      "usgs_id": "03251500",
+      "dist_deg": 0.00228,
+      "grdc_area_km2": 6024.3,
+      "usgs_area_km2": 6024.3,
+      "in_corpus": true
+    },
+    "GRDC_4123252": {
+      "usgs_id": "03252500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 1608.4,
+      "usgs_area_km2": 1608.4,
+      "in_corpus": false
+    },
+    "GRDC_4123255": {
+      "usgs_id": "03237500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 1002.3,
+      "usgs_area_km2": 1002.3,
+      "in_corpus": false
+    },
+    "GRDC_4123260": {
+      "usgs_id": "03234500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 13289.3,
+      "usgs_area_km2": 13289.2,
+      "in_corpus": true
+    },
+    "GRDC_4123265": {
+      "usgs_id": "03198500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 1012.7,
+      "usgs_area_km2": 1010.1,
+      "in_corpus": false
+    },
+    "GRDC_4123268": {
+      "usgs_id": "03193000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 21680.9,
+      "usgs_area_km2": 21717.1,
+      "in_corpus": true
+    },
+    "GRDC_4123270": {
+      "usgs_id": "03184000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4193.2,
+      "usgs_area_km2": 4203.6,
+      "in_corpus": true
+    },
+    "GRDC_4123271": {
+      "usgs_id": "03183500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3532.8,
+      "usgs_area_km2": 3439.5,
+      "in_corpus": true
+    },
+    "GRDC_4123272": {
+      "usgs_id": "03182500",
+      "dist_deg": 0.00052,
+      "grdc_area_km2": 1398.6,
+      "usgs_area_km2": 1396.0,
+      "in_corpus": false
+    },
+    "GRDC_4123275": {
+      "usgs_id": "03179000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1023.1,
+      "usgs_area_km2": 1023.0,
+      "in_corpus": false
+    },
+    "GRDC_4123277": {
+      "usgs_id": "03168000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 5703.2,
+      "usgs_area_km2": 5729.1,
+      "in_corpus": true
+    },
+    "GRDC_4123278": {
+      "usgs_id": "03164000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 2929.3,
+      "usgs_area_km2": 2955.2,
+      "in_corpus": true
+    },
+    "GRDC_4123280": {
+      "usgs_id": "03159500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 2442.4,
+      "usgs_area_km2": 2442.4,
+      "in_corpus": true
+    },
+    "GRDC_4123290": {
+      "usgs_id": "03114500",
+      "dist_deg": 0.00012,
+      "grdc_area_km2": 1186.2,
+      "usgs_area_km2": 1188.8,
+      "in_corpus": false
+    },
+    "GRDC_4123300": {
+      "usgs_id": "03294500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 236130.0,
+      "usgs_area_km2": 236129.4,
+      "in_corpus": true
+    },
+    "GRDC_4123310": {
+      "usgs_id": "03366500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 758.9,
+      "usgs_area_km2": 758.9,
+      "in_corpus": false
+    },
+    "GRDC_4123320": {
+      "usgs_id": "03109500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 1284.6,
+      "usgs_area_km2": 1284.6,
+      "in_corpus": false
+    },
+    "GRDC_4123330": {
+      "usgs_id": "03054500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2367.3,
+      "usgs_area_km2": 2380.2,
+      "in_corpus": true
+    },
+    "GRDC_4123331": {
+      "usgs_id": "03051000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1051.5,
+      "usgs_area_km2": 1074.8,
+      "in_corpus": false
+    },
+    "GRDC_4123335": {
+      "usgs_id": "03065000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 903.9,
+      "usgs_area_km2": 898.7,
+      "in_corpus": true
+    },
+    "GRDC_4123340": {
+      "usgs_id": "0307020015",
+      "dist_deg": 0.0041,
+      "grdc_area_km2": 2432.0,
+      "usgs_area_km2": 2514.9,
+      "in_corpus": false
+    },
+    "GRDC_4123341": {
+      "usgs_id": "03069500",
+      "dist_deg": 0.0046,
+      "grdc_area_km2": 1870.0,
+      "usgs_area_km2": 1859.6,
+      "in_corpus": true
+    },
+    "GRDC_4123345": {
+      "usgs_id": "03075500",
+      "dist_deg": 0.00097,
+      "grdc_area_km2": 347.1,
+      "usgs_area_km2": 347.1,
+      "in_corpus": true
+    },
+    "GRDC_4123347": {
+      "usgs_id": "03079000",
+      "dist_deg": 0.00103,
+      "grdc_area_km2": 989.4,
+      "usgs_area_km2": 989.4,
+      "in_corpus": false
+    },
+    "GRDC_4123350": {
+      "usgs_id": "03011020",
+      "dist_deg": 0.00038,
+      "grdc_area_km2": 4164.7,
+      "usgs_area_km2": 4164.7,
+      "in_corpus": true
+    },
+    "GRDC_4123351": {
+      "usgs_id": "03010500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 1424.5,
+      "usgs_area_km2": 1424.5,
+      "in_corpus": false
+    },
+    "GRDC_4123352": {
+      "usgs_id": "03049500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 29551.9,
+      "usgs_area_km2": 29551.8,
+      "in_corpus": true
+    },
+    "GRDC_4123355": {
+      "usgs_id": "03024000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 2662.5,
+      "usgs_area_km2": 2662.5,
+      "in_corpus": false
+    },
+    "GRDC_4123357": {
+      "usgs_id": "03032500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 1367.5,
+      "usgs_area_km2": 1367.5,
+      "in_corpus": false
+    },
+    "GRDC_4123360": {
+      "usgs_id": "03504000",
+      "dist_deg": 0.00064,
+      "grdc_area_km2": 134.4,
+      "usgs_area_km2": 134.4,
+      "in_corpus": false
+    },
+    "GRDC_4123365": {
+      "usgs_id": "03512000",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 476.6,
+      "usgs_area_km2": 476.6,
+      "in_corpus": false
+    },
+    "GRDC_4123370": {
+      "usgs_id": "03528000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3817.7,
+      "usgs_area_km2": 3817.6,
+      "in_corpus": true
+    },
+    "GRDC_4123375": {
+      "usgs_id": "03540500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1978.8,
+      "usgs_area_km2": 1978.8,
+      "in_corpus": true
+    },
+    "GRDC_4123380": {
+      "usgs_id": "03451500",
+      "dist_deg": 0.00055,
+      "grdc_area_km2": 2447.6,
+      "usgs_area_km2": 2447.5,
+      "in_corpus": true
+    },
+    "GRDC_4123382": {
+      "usgs_id": "03443000",
+      "dist_deg": 0.00023,
+      "grdc_area_km2": 766.6,
+      "usgs_area_km2": 766.6,
+      "in_corpus": false
+    },
+    "GRDC_4123385": {
+      "usgs_id": "03465500",
+      "dist_deg": 0.00251,
+      "grdc_area_km2": 2085.0,
+      "usgs_area_km2": 2084.9,
+      "in_corpus": true
+    },
+    "GRDC_4123400": {
+      "usgs_id": "03150000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 19223.0,
+      "usgs_area_km2": 19222.9,
+      "in_corpus": true
+    },
+    "GRDC_4123510": {
+      "usgs_id": "03275000",
+      "dist_deg": 0.00542,
+      "grdc_area_km2": 1351.9,
+      "usgs_area_km2": 1370.1,
+      "in_corpus": false
+    },
+    "GRDC_4123550": {
+      "usgs_id": "03242050",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 947.9,
+      "usgs_area_km2": 947.9,
+      "in_corpus": false
+    },
+    "GRDC_4123810": {
+      "usgs_id": "03213000",
+      "dist_deg": 0.00772,
+      "grdc_area_km2": 1305.4,
+      "usgs_area_km2": 1302.8,
+      "in_corpus": false
+    },
+    "GRDC_4123811": {
+      "usgs_id": "03214500",
+      "dist_deg": 0.02525,
+      "grdc_area_km2": 3076.9,
+      "usgs_area_km2": 3307.4,
+      "in_corpus": true
+    },
+    "GRDC_4123850": {
+      "usgs_id": "03199000",
+      "dist_deg": 0.00024,
+      "grdc_area_km2": 696.7,
+      "usgs_area_km2": 696.7,
+      "in_corpus": false
+    },
+    "GRDC_4125010": {
+      "usgs_id": "07196500",
+      "dist_deg": 0.00306,
+      "grdc_area_km2": 2483.8,
+      "usgs_area_km2": 2460.5,
+      "in_corpus": false
+    },
+    "GRDC_4125020": {
+      "usgs_id": "07186000",
+      "dist_deg": 0.00025,
+      "grdc_area_km2": 3014.8,
+      "usgs_area_km2": 3014.7,
+      "in_corpus": false
+    },
+    "GRDC_4125025": {
+      "usgs_id": "07183000",
+      "dist_deg": 0.03145,
+      "grdc_area_km2": 9888.6,
+      "usgs_area_km2": 9642.5,
+      "in_corpus": false
+    },
+    "GRDC_4125026": {
+      "usgs_id": "07183500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 12703.9,
+      "usgs_area_km2": 12703.9,
+      "in_corpus": false
+    },
+    "GRDC_4125027": {
+      "usgs_id": "07185000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 15218.8,
+      "usgs_area_km2": 15348.3,
+      "in_corpus": true
+    },
+    "GRDC_4125028": {
+      "usgs_id": "07191500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 29873.1,
+      "usgs_area_km2": 29992.1,
+      "in_corpus": true
+    },
+    "GRDC_4125050": {
+      "usgs_id": "07176000",
+      "dist_deg": 0.0014,
+      "grdc_area_km2": 16923.1,
+      "usgs_area_km2": 16708.0,
+      "in_corpus": true
+    },
+    "GRDC_4125055": {
+      "usgs_id": "07177500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2343.9,
+      "usgs_area_km2": 2349.1,
+      "in_corpus": false
+    },
+    "GRDC_4125061": {
+      "usgs_id": "07161450",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 46565.6,
+      "usgs_area_km2": 46922.8,
+      "in_corpus": true
+    },
+    "GRDC_4125062": {
+      "usgs_id": "07159100",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 40696.7,
+      "usgs_area_km2": 40945.2,
+      "in_corpus": true
+    },
+    "GRDC_4125063": {
+      "usgs_id": "07158000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 34535.1,
+      "usgs_area_km2": 34703.3,
+      "in_corpus": true
+    },
+    "GRDC_4125070": {
+      "usgs_id": "07147800",
+      "dist_deg": 0.00074,
+      "grdc_area_km2": 4869.2,
+      "usgs_area_km2": 4869.2,
+      "in_corpus": false
+    },
+    "GRDC_4125080": {
+      "usgs_id": "07152000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 4814.8,
+      "usgs_area_km2": 4858.8,
+      "in_corpus": false
+    },
+    "GRDC_4125100": {
+      "usgs_id": "07141200",
+      "dist_deg": 0.04634,
+      "grdc_area_km2": 5563.3,
+      "usgs_area_km2": 5563.3,
+      "in_corpus": false
+    },
+    "GRDC_4125110": {
+      "usgs_id": "07144780",
+      "dist_deg": 0.00162,
+      "grdc_area_km2": 2038.3,
+      "usgs_area_km2": 1846.7,
+      "in_corpus": false
+    },
+    "GRDC_4125200": {
+      "usgs_id": "07249413",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 4576.5,
+      "usgs_area_km2": 4623.1,
+      "in_corpus": false
+    },
+    "GRDC_4125205": {
+      "usgs_id": "07247500",
+      "dist_deg": 0.0,
+      "grdc_area_km2": 315.9,
+      "usgs_area_km2": 310.8,
+      "in_corpus": false
+    },
+    "GRDC_4125210": {
+      "usgs_id": "07249400",
+      "dist_deg": 0.00023,
+      "grdc_area_km2": 380.7,
+      "usgs_area_km2": 380.7,
+      "in_corpus": false
+    },
+    "GRDC_4125500": {
+      "usgs_id": "07164500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 193252.9,
+      "usgs_area_km2": 192850.7,
+      "in_corpus": true
+    },
+    "GRDC_4125550": {
+      "usgs_id": "07245000",
+      "dist_deg": 0.00247,
+      "grdc_area_km2": 123221.8,
+      "usgs_area_km2": 122462.5,
+      "in_corpus": true
+    },
+    "GRDC_4125551": {
+      "usgs_id": "07228000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 59222.9,
+      "usgs_area_km2": 59222.7,
+      "in_corpus": true
+    },
+    "GRDC_4125552": {
+      "usgs_id": "07211500",
+      "dist_deg": 0.00139,
+      "grdc_area_km2": 7381.5,
+      "usgs_area_km2": 7381.5,
+      "in_corpus": false
+    },
+    "GRDC_4125555": {
+      "usgs_id": "07242000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 37011.1,
+      "usgs_area_km2": 37681.8,
+      "in_corpus": true
+    },
+    "GRDC_4125560": {
+      "usgs_id": "07234000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 20603.5,
+      "usgs_area_km2": 20683.7,
+      "in_corpus": true
+    },
+    "GRDC_4125565": {
+      "usgs_id": "07243500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 5226.6,
+      "usgs_area_km2": 5190.3,
+      "in_corpus": false
+    },
+    "GRDC_4125801": {
+      "usgs_id": "07146500",
+      "dist_deg": 0.02472,
+      "grdc_area_km2": 113216.7,
+      "usgs_area_km2": 113216.2,
+      "in_corpus": true
+    },
+    "GRDC_4125802": {
+      "usgs_id": "07143330",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 100776.9,
+      "usgs_area_km2": 100776.5,
+      "in_corpus": true
+    },
+    "GRDC_4125803": {
+      "usgs_id": "07099400",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 12095.3,
+      "usgs_area_km2": 12095.3,
+      "in_corpus": false
+    },
+    "GRDC_4125804": {
+      "usgs_id": "07263451",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 409297.7,
+      "usgs_area_km2": 409296.1,
+      "in_corpus": true
+    },
+    "GRDC_4125810": {
+      "usgs_id": "07144200",
+      "dist_deg": 0.00037,
+      "grdc_area_km2": 3436.9,
+      "usgs_area_km2": 3436.9,
+      "in_corpus": false
+    },
+    "GRDC_4125900": {
+      "usgs_id": "07077000",
+      "dist_deg": 0.00418,
+      "grdc_area_km2": 60686.3,
+      "usgs_area_km2": 60605.8,
+      "in_corpus": true
+    },
+    "GRDC_4125901": {
+      "usgs_id": "07074500",
+      "dist_deg": 0.00023,
+      "grdc_area_km2": 51437.4,
+      "usgs_area_km2": 51540.8,
+      "in_corpus": true
+    },
+    "GRDC_4125902": {
+      "usgs_id": "07061000",
+      "dist_deg": 0.00048,
+      "grdc_area_km2": 28671.3,
+      "usgs_area_km2": 28671.2,
+      "in_corpus": true
+    },
+    "GRDC_4125904": {
+      "usgs_id": "07048600",
+      "dist_deg": 0.00016,
+      "grdc_area_km2": 1036.0,
+      "usgs_area_km2": 1036.0,
+      "in_corpus": false
+    },
+    "GRDC_4125910": {
+      "usgs_id": "07068000",
+      "dist_deg": 0.00109,
+      "grdc_area_km2": 5278.4,
+      "usgs_area_km2": 5278.4,
+      "in_corpus": true
+    },
+    "GRDC_4125911": {
+      "usgs_id": "07067000",
+      "dist_deg": 0.00104,
+      "grdc_area_km2": 4317.5,
+      "usgs_area_km2": 4317.5,
+      "in_corpus": true
+    },
+    "GRDC_4125915": {
+      "usgs_id": "07069500",
+      "dist_deg": 0.00043,
+      "grdc_area_km2": 3064.0,
+      "usgs_area_km2": 3056.2,
+      "in_corpus": true
+    },
+    "GRDC_4125917": {
+      "usgs_id": "07072000",
+      "dist_deg": 0.00062,
+      "grdc_area_km2": 2937.0,
+      "usgs_area_km2": 2926.7,
+      "in_corpus": true
+    },
+    "GRDC_4125918": {
+      "usgs_id": "07071500",
+      "dist_deg": 0.00013,
+      "grdc_area_km2": 2053.9,
+      "usgs_area_km2": 2053.9,
+      "in_corpus": false
+    },
+    "GRDC_4125920": {
+      "usgs_id": "07056000",
+      "dist_deg": 0.00155,
+      "grdc_area_km2": 2147.1,
+      "usgs_area_km2": 2147.1,
+      "in_corpus": true
+    },
+    "GRDC_4125925": {
+      "usgs_id": "07052500",
+      "dist_deg": 9e-05,
+      "grdc_area_km2": 2556.3,
+      "usgs_area_km2": 2556.3,
+      "in_corpus": false
+    },
+    "GRDC_4125930": {
+      "usgs_id": "07050500",
+      "dist_deg": 0.00054,
+      "grdc_area_km2": 1364.9,
+      "usgs_area_km2": 1364.9,
+      "in_corpus": false
+    },
+    "GRDC_4125940": {
+      "usgs_id": "07074420",
+      "dist_deg": 0.0048,
+      "grdc_area_km2": 21802.6,
+      "usgs_area_km2": 21807.7,
+      "in_corpus": true
+    },
+    "GRDC_4125941": {
+      "usgs_id": "07072500",
+      "dist_deg": 0.00174,
+      "grdc_area_km2": 19085.7,
+      "usgs_area_km2": 19088.2,
+      "in_corpus": true
+    },
+    "GRDC_4125942": {
+      "usgs_id": "07064000",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 4529.9,
+      "usgs_area_km2": 4532.5,
+      "in_corpus": true
+    },
+    "GRDC_4125943": {
+      "usgs_id": "07063000",
+      "dist_deg": 0.00039,
+      "grdc_area_km2": 3224.6,
+      "usgs_area_km2": 3224.5,
+      "in_corpus": false
+    },
+    "GRDC_4125944": {
+      "usgs_id": "07061500",
+      "dist_deg": 0.00194,
+      "grdc_area_km2": 1253.6,
+      "usgs_area_km2": 1253.6,
+      "in_corpus": false
+    },
+    "GRDC_4125950": {
+      "usgs_id": "07066000",
+      "dist_deg": 0.00101,
+      "grdc_area_km2": 1030.8,
+      "usgs_area_km2": 1030.8,
+      "in_corpus": false
+    },
+    "GRDC_4126100": {
+      "usgs_id": "07340000",
+      "dist_deg": 0.00087,
+      "grdc_area_km2": 6894.6,
+      "usgs_area_km2": 6889.4,
+      "in_corpus": true
+    },
+    "GRDC_4126150": {
+      "usgs_id": "07346000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2201.5,
+      "usgs_area_km2": 2201.5,
+      "in_corpus": false
+    },
+    "GRDC_4126300": {
+      "usgs_id": "07335300",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 5887.1,
+      "usgs_area_km2": 5858.6,
+      "in_corpus": false
+    },
+    "GRDC_4126301": {
+      "usgs_id": "07334000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2815.3,
+      "usgs_area_km2": 2820.5,
+      "in_corpus": false
+    },
+    "GRDC_4126350": {
+      "usgs_id": "07312700",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 8907.0,
+      "usgs_area_km2": 8907.0,
+      "in_corpus": false
+    },
+    "GRDC_4126351": {
+      "usgs_id": "07312100",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 5402.7,
+      "usgs_area_km2": 5402.7,
+      "in_corpus": false
+    },
+    "GRDC_4126352": {
+      "usgs_id": "07311900",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 4853.7,
+      "usgs_area_km2": 4853.6,
+      "in_corpus": false
+    },
+    "GRDC_4126701": {
+      "usgs_id": "07362000",
+      "dist_deg": 0.00016,
+      "grdc_area_km2": 13874.6,
+      "usgs_area_km2": 13882.3,
+      "in_corpus": true
+    },
+    "GRDC_4126702": {
+      "usgs_id": "07364078",
+      "dist_deg": 0.03719,
+      "grdc_area_km2": 27938.3,
+      "usgs_area_km2": null,
+      "in_corpus": false
+    },
+    "GRDC_4126750": {
+      "usgs_id": "07363500",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 5444.2,
+      "usgs_area_km2": 5439.0,
+      "in_corpus": true
+    },
+    "GRDC_4126800": {
+      "usgs_id": "07355500",
+      "dist_deg": 0.00441,
+      "grdc_area_km2": 174825.0,
+      "usgs_area_km2": 174824.3,
+      "in_corpus": false
+    },
+    "GRDC_4126801": {
+      "usgs_id": "07337000",
+      "dist_deg": 0.00022,
+      "grdc_area_km2": 124397.7,
+      "usgs_area_km2": 124319.5,
+      "in_corpus": true
+    },
+    "GRDC_4126802": {
+      "usgs_id": "07335500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 115335.3,
+      "usgs_area_km2": 115112.1,
+      "in_corpus": true
+    },
+    "GRDC_4126803": {
+      "usgs_id": "07308500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 53276.3,
+      "usgs_area_km2": 53276.1,
+      "in_corpus": true
+    },
+    "GRDC_4126804": {
+      "usgs_id": "07331600",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 102874.8,
+      "usgs_area_km2": 102874.4,
+      "in_corpus": true
+    },
+    "GRDC_4126805": {
+      "usgs_id": "07316000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 79725.4,
+      "usgs_area_km2": 79585.2,
+      "in_corpus": true
+    },
+    "GRDC_4126810": {
+      "usgs_id": "07305000",
+      "dist_deg": 0.0068,
+      "grdc_area_km2": 10992.0,
+      "usgs_area_km2": 11810.4,
+      "in_corpus": true
+    },
+    "GRDC_4126815": {
+      "usgs_id": "07303400",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 1077.4,
+      "usgs_area_km2": 1134.4,
+      "in_corpus": false
+    },
+    "GRDC_4126851": {
+      "usgs_id": "07308200",
+      "dist_deg": 0.03742,
+      "grdc_area_km2": 9033.9,
+      "usgs_area_km2": 9033.9,
+      "in_corpus": false
+    },
+    "GRDC_4127100": {
+      "usgs_id": "07019000",
+      "dist_deg": 0.00136,
+      "grdc_area_km2": 9810.9,
+      "usgs_area_km2": 9810.9,
+      "in_corpus": true
+    },
+    "GRDC_4127150": {
+      "usgs_id": "07029500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 3833.2,
+      "usgs_area_km2": 3833.2,
+      "in_corpus": true
+    },
+    "GRDC_4127200": {
+      "usgs_id": "05595000",
+      "dist_deg": 0.01183,
+      "grdc_area_km2": 13418.9,
+      "usgs_area_km2": 13439.5,
+      "in_corpus": true
+    },
+    "GRDC_4127201": {
+      "usgs_id": "05593000",
+      "dist_deg": 0.00175,
+      "grdc_area_km2": 7042.2,
+      "usgs_area_km2": 7042.2,
+      "in_corpus": true
+    },
+    "GRDC_4127202": {
+      "usgs_id": "05592500",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 5024.6,
+      "usgs_area_km2": 5024.6,
+      "in_corpus": true
+    },
+    "GRDC_4127310": {
+      "usgs_id": "07281600",
+      "dist_deg": 0.00026,
+      "grdc_area_km2": 13522.4,
+      "usgs_area_km2": 13522.3,
+      "in_corpus": true
+    },
+    "GRDC_4127400": {
+      "usgs_id": "07026040",
+      "dist_deg": 0.00106,
+      "grdc_area_km2": 4856.3,
+      "usgs_area_km2": 4856.2,
+      "in_corpus": true
+    },
+    "GRDC_4127501": {
+      "usgs_id": "07022000",
+      "dist_deg": 0.00361,
+      "grdc_area_km2": 1847188.0,
+      "usgs_area_km2": 1847180.9,
+      "in_corpus": true
+    },
+    "GRDC_4127502": {
+      "usgs_id": "07020500",
+      "dist_deg": 0.00514,
+      "grdc_area_km2": 1835274.0,
+      "usgs_area_km2": 1835266.9,
+      "in_corpus": true
+    },
+    "GRDC_4127503": {
+      "usgs_id": "07010000",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 1805230.0,
+      "usgs_area_km2": 1805223.0,
+      "in_corpus": true
+    },
+    "GRDC_4127600": {
+      "usgs_id": "07288500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 1986.5,
+      "usgs_area_km2": 1986.5,
+      "in_corpus": true
+    },
+    "GRDC_4127610": {
+      "usgs_id": "07275900",
+      "dist_deg": 0.00226,
+      "grdc_area_km2": 494.7,
+      "usgs_area_km2": 494.7,
+      "in_corpus": false
+    },
+    "GRDC_4127700": {
+      "usgs_id": "07290000",
+      "dist_deg": 0.00035,
+      "grdc_area_km2": 7283.1,
+      "usgs_area_km2": 7283.1,
+      "in_corpus": true
+    },
+    "GRDC_4127701": {
+      "usgs_id": "07289350",
+      "dist_deg": 0.00036,
+      "grdc_area_km2": 2659.9,
+      "usgs_area_km2": 2659.9,
+      "in_corpus": true
+    },
+    "GRDC_4127800": {
+      "usgs_id": "07289000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2964255.0,
+      "usgs_area_km2": 2964243.6,
+      "in_corpus": true
+    },
+    "GRDC_4127910": {
+      "usgs_id": "07292500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2038.3,
+      "usgs_area_km2": 2038.3,
+      "in_corpus": true
+    },
+    "GRDC_4127920": {
+      "usgs_id": "07295000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 466.2,
+      "usgs_area_km2": 466.2,
+      "in_corpus": false
+    },
+    "GRDC_4131031": {
+      "usgs_id": "01010500",
+      "dist_deg": 0.00141,
+      "grdc_area_km2": 6941.2,
+      "usgs_area_km2": 6980.0,
+      "in_corpus": true
+    },
+    "GRDC_4132100": {
+      "usgs_id": "04024430",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 1087.8,
+      "usgs_area_km2": 1087.8,
+      "in_corpus": false
+    },
+    "GRDC_4132200": {
+      "usgs_id": "04024000",
+      "dist_deg": 0.00036,
+      "grdc_area_km2": 8883.7,
+      "usgs_area_km2": 8883.7,
+      "in_corpus": true
+    },
+    "GRDC_4132300": {
+      "usgs_id": "04027000",
+      "dist_deg": 0.00031,
+      "grdc_area_km2": 1546.2,
+      "usgs_area_km2": 1546.2,
+      "in_corpus": false
+    },
+    "GRDC_4132800": {
+      "usgs_id": "04040000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3470.6,
+      "usgs_area_km2": 3470.6,
+      "in_corpus": true
+    },
+    "GRDC_4132900": {
+      "usgs_id": "04045500",
+      "dist_deg": 0.00042,
+      "grdc_area_km2": 2046.1,
+      "usgs_area_km2": 2046.1,
+      "in_corpus": false
+    },
+    "GRDC_4133100": {
+      "usgs_id": "04059500",
+      "dist_deg": 0.00067,
+      "grdc_area_km2": 1165.5,
+      "usgs_area_km2": 1165.5,
+      "in_corpus": true
+    },
+    "GRDC_4133200": {
+      "usgs_id": "04084500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 15565.9,
+      "usgs_area_km2": 15565.8,
+      "in_corpus": false
+    },
+    "GRDC_4133250": {
+      "usgs_id": "04073500",
+      "dist_deg": 0.01492,
+      "grdc_area_km2": 3470.6,
+      "usgs_area_km2": 3574.2,
+      "in_corpus": true
+    },
+    "GRDC_4133260": {
+      "usgs_id": "04079000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 5853.4,
+      "usgs_area_km2": 5853.4,
+      "in_corpus": true
+    },
+    "GRDC_4133300": {
+      "usgs_id": "04087000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 1802.6,
+      "usgs_area_km2": 1781.9,
+      "in_corpus": false
+    },
+    "GRDC_4133400": {
+      "usgs_id": "04067500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 10178.7,
+      "usgs_area_km2": 10178.7,
+      "in_corpus": true
+    },
+    "GRDC_4133401": {
+      "usgs_id": "04063522",
+      "dist_deg": 0.00609,
+      "grdc_area_km2": 4662.0,
+      "usgs_area_km2": 4662.0,
+      "in_corpus": true
+    },
+    "GRDC_4133450": {
+      "usgs_id": "04056500",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 2849.0,
+      "usgs_area_km2": 2849.0,
+      "in_corpus": true
+    },
+    "GRDC_4133500": {
+      "usgs_id": "04101500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 9494.9,
+      "usgs_area_km2": 9494.9,
+      "in_corpus": true
+    },
+    "GRDC_4133501": {
+      "usgs_id": "04099000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4832.9,
+      "usgs_area_km2": 4832.9,
+      "in_corpus": true
+    },
+    "GRDC_4133550": {
+      "usgs_id": "04100500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 1538.5,
+      "usgs_area_km2": 1538.5,
+      "in_corpus": false
+    },
+    "GRDC_4133650": {
+      "usgs_id": "04107850",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 3962.7,
+      "usgs_area_km2": 3962.7,
+      "in_corpus": true
+    },
+    "GRDC_4133651": {
+      "usgs_id": "04105500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2134.2,
+      "usgs_area_km2": 2134.2,
+      "in_corpus": false
+    },
+    "GRDC_4133700": {
+      "usgs_id": "04121970",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 5990.7,
+      "usgs_area_km2": 5990.6,
+      "in_corpus": true
+    },
+    "GRDC_4133701": {
+      "usgs_id": "04121500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 3711.5,
+      "usgs_area_km2": 3711.5,
+      "in_corpus": true
+    },
+    "GRDC_4133750": {
+      "usgs_id": "04119000",
+      "dist_deg": 0.00155,
+      "grdc_area_km2": 12691.0,
+      "usgs_area_km2": 12691.0,
+      "in_corpus": true
+    },
+    "GRDC_4133751": {
+      "usgs_id": "04113000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3185.7,
+      "usgs_area_km2": 3185.7,
+      "in_corpus": true
+    },
+    "GRDC_4133800": {
+      "usgs_id": "04124000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2219.6,
+      "usgs_area_km2": 2219.6,
+      "in_corpus": false
+    },
+    "GRDC_4133801": {
+      "usgs_id": "04125550",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 3758.1,
+      "usgs_area_km2": 3758.1,
+      "in_corpus": true
+    },
+    "GRDC_4134300": {
+      "usgs_id": "04156000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 6216.0,
+      "usgs_area_km2": 6216.0,
+      "in_corpus": true
+    },
+    "GRDC_4134350": {
+      "usgs_id": "04154000",
+      "dist_deg": 0.00054,
+      "grdc_area_km2": 1077.4,
+      "usgs_area_km2": 1077.4,
+      "in_corpus": false
+    },
+    "GRDC_4134400": {
+      "usgs_id": "04157005",
+      "dist_deg": 0.0122,
+      "grdc_area_km2": 15695.4,
+      "usgs_area_km2": 15695.3,
+      "in_corpus": true
+    },
+    "GRDC_4134500": {
+      "usgs_id": "04144500",
+      "dist_deg": 0.00083,
+      "grdc_area_km2": 1393.4,
+      "usgs_area_km2": 1393.4,
+      "in_corpus": false
+    },
+    "GRDC_4134501": {
+      "usgs_id": "04145000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1649.8,
+      "usgs_area_km2": 1649.8,
+      "in_corpus": false
+    },
+    "GRDC_4134600": {
+      "usgs_id": "04150500",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 929.8,
+      "usgs_area_km2": 929.8,
+      "in_corpus": false
+    },
+    "GRDC_4134700": {
+      "usgs_id": "04137500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 4504.0,
+      "usgs_area_km2": 4504.0,
+      "in_corpus": true
+    },
+    "GRDC_4134800": {
+      "usgs_id": "04133501",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1517.7,
+      "usgs_area_km2": 1517.7,
+      "in_corpus": false
+    },
+    "GRDC_4135100": {
+      "usgs_id": "04176500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2698.8,
+      "usgs_area_km2": 2698.8,
+      "in_corpus": true
+    },
+    "GRDC_4135200": {
+      "usgs_id": "04193500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 16394.7,
+      "usgs_area_km2": 16394.6,
+      "in_corpus": true
+    },
+    "GRDC_4135201": {
+      "usgs_id": "04183500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 5514.1,
+      "usgs_area_km2": 5514.1,
+      "in_corpus": true
+    },
+    "GRDC_4135205": {
+      "usgs_id": "04191500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 6003.6,
+      "usgs_area_km2": 6003.6,
+      "in_corpus": true
+    },
+    "GRDC_4135210": {
+      "usgs_id": "04198000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3240.1,
+      "usgs_area_km2": 3240.1,
+      "in_corpus": true
+    },
+    "GRDC_4135300": {
+      "usgs_id": "04165500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 1901.1,
+      "usgs_area_km2": 1901.1,
+      "in_corpus": false
+    },
+    "GRDC_4135400": {
+      "usgs_id": "04174500",
+      "dist_deg": 0.00092,
+      "grdc_area_km2": 1888.1,
+      "usgs_area_km2": 1888.1,
+      "in_corpus": false
+    },
+    "GRDC_4135500": {
+      "usgs_id": "04212100",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1774.2,
+      "usgs_area_km2": 1774.1,
+      "in_corpus": false
+    },
+    "GRDC_4135800": {
+      "usgs_id": "04213500",
+      "dist_deg": 0.00066,
+      "grdc_area_km2": 1129.2,
+      "usgs_area_km2": 1129.2,
+      "in_corpus": false
+    },
+    "GRDC_4136300": {
+      "usgs_id": "04231600",
+      "dist_deg": 0.03973,
+      "grdc_area_km2": 6389.5,
+      "usgs_area_km2": 6407.6,
+      "in_corpus": true
+    },
+    "GRDC_4136301": {
+      "usgs_id": "04223000",
+      "dist_deg": 0.0002,
+      "grdc_area_km2": 2548.6,
+      "usgs_area_km2": 2548.6,
+      "in_corpus": false
+    },
+    "GRDC_4136400": {
+      "usgs_id": "04249000",
+      "dist_deg": 0.00037,
+      "grdc_area_km2": 13209.0,
+      "usgs_area_km2": 13208.9,
+      "in_corpus": true
+    },
+    "GRDC_4136500": {
+      "usgs_id": "04260500",
+      "dist_deg": 0.00023,
+      "grdc_area_km2": 4827.8,
+      "usgs_area_km2": 4827.7,
+      "in_corpus": true
+    },
+    "GRDC_4143310": {
+      "usgs_id": "04263000",
+      "dist_deg": 0.00053,
+      "grdc_area_km2": 2553.7,
+      "usgs_area_km2": 2553.7,
+      "in_corpus": false
+    },
+    "GRDC_4143500": {
+      "usgs_id": "04269000",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 1585.0,
+      "usgs_area_km2": 1585.1,
+      "in_corpus": false
+    },
+    "GRDC_4143710": {
+      "usgs_id": "04273500",
+      "dist_deg": 0.00016,
+      "grdc_area_km2": 1574.7,
+      "usgs_area_km2": 1574.7,
+      "in_corpus": false
+    },
+    "GRDC_4143750": {
+      "usgs_id": "04282500",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 1626.5,
+      "usgs_area_km2": 1626.5,
+      "in_corpus": true
+    },
+    "GRDC_4143770": {
+      "usgs_id": "04292500",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 1776.7,
+      "usgs_area_km2": 1776.7,
+      "in_corpus": true
+    },
+    "GRDC_4143790": {
+      "usgs_id": "04293500",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 1240.6,
+      "usgs_area_km2": 1240.6,
+      "in_corpus": true
+    },
+    "GRDC_4146050": {
+      "usgs_id": "12213100",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 2035.7,
+      "usgs_area_km2": 2035.7,
+      "in_corpus": false
+    },
+    "GRDC_4146080": {
+      "usgs_id": "12200500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 8010.9,
+      "usgs_area_km2": 8010.8,
+      "in_corpus": true
+    },
+    "GRDC_4146081": {
+      "usgs_id": "12194000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 7088.8,
+      "usgs_area_km2": 7088.8,
+      "in_corpus": true
+    },
+    "GRDC_4146082": {
+      "usgs_id": "12181000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 3576.8,
+      "usgs_area_km2": 3576.8,
+      "in_corpus": false
+    },
+    "GRDC_4146083": {
+      "usgs_id": "12178000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 3043.3,
+      "usgs_area_km2": 3043.2,
+      "in_corpus": false
+    },
+    "GRDC_4146085": {
+      "usgs_id": "12189500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1849.3,
+      "usgs_area_km2": 1849.3,
+      "in_corpus": true
+    },
+    "GRDC_4146100": {
+      "usgs_id": "11532500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1590.3,
+      "usgs_area_km2": 1590.3,
+      "in_corpus": true
+    },
+    "GRDC_4146110": {
+      "usgs_id": "11530500",
+      "dist_deg": 0.01603,
+      "grdc_area_km2": 31339.0,
+      "usgs_area_km2": 31338.9,
+      "in_corpus": true
+    },
+    "GRDC_4146111": {
+      "usgs_id": "11520500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 17974.6,
+      "usgs_area_km2": 17974.5,
+      "in_corpus": true
+    },
+    "GRDC_4146112": {
+      "usgs_id": "11509500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 10152.8,
+      "usgs_area_km2": 10152.8,
+      "in_corpus": true
+    },
+    "GRDC_4146115": {
+      "usgs_id": "11530000",
+      "dist_deg": 0.00123,
+      "grdc_area_km2": 7389.3,
+      "usgs_area_km2": 7389.2,
+      "in_corpus": true
+    },
+    "GRDC_4146120": {
+      "usgs_id": "11482500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 717.4,
+      "usgs_area_km2": 717.4,
+      "in_corpus": false
+    },
+    "GRDC_4146130": {
+      "usgs_id": "11517500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2053.8,
+      "usgs_area_km2": 2053.9,
+      "in_corpus": false
+    },
+    "GRDC_4146140": {
+      "usgs_id": "11502500",
+      "dist_deg": 0.00055,
+      "grdc_area_km2": 7770.0,
+      "usgs_area_km2": 7847.7,
+      "in_corpus": true
+    },
+    "GRDC_4146141": {
+      "usgs_id": "11493500",
+      "dist_deg": 0.00018,
+      "grdc_area_km2": 3341.1,
+      "usgs_area_km2": 3341.1,
+      "in_corpus": false
+    },
+    "GRDC_4146145": {
+      "usgs_id": "11501000",
+      "dist_deg": 0.00105,
+      "grdc_area_km2": 4053.4,
+      "usgs_area_km2": 4053.3,
+      "in_corpus": true
+    },
+    "GRDC_4146150": {
+      "usgs_id": "12035000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 774.4,
+      "usgs_area_km2": 774.4,
+      "in_corpus": true
+    },
+    "GRDC_4146155": {
+      "usgs_id": "12041200",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 655.3,
+      "usgs_area_km2": 655.3,
+      "in_corpus": true
+    },
+    "GRDC_4146160": {
+      "usgs_id": "12031000",
+      "dist_deg": 0.00141,
+      "grdc_area_km2": 3351.5,
+      "usgs_area_km2": 3351.4,
+      "in_corpus": false
+    },
+    "GRDC_4146161": {
+      "usgs_id": "12027500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2318.1,
+      "usgs_area_km2": 2318.0,
+      "in_corpus": false
+    },
+    "GRDC_4146170": {
+      "usgs_id": "12089500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1339.0,
+      "usgs_area_km2": 1339.0,
+      "in_corpus": true
+    },
+    "GRDC_4146175": {
+      "usgs_id": "12039500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 683.8,
+      "usgs_area_km2": 683.8,
+      "in_corpus": true
+    },
+    "GRDC_4146180": {
+      "usgs_id": "11477000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 8062.7,
+      "usgs_area_km2": 8062.6,
+      "in_corpus": true
+    },
+    "GRDC_4146185": {
+      "usgs_id": "12040500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 1152.6,
+      "usgs_area_km2": 1152.5,
+      "in_corpus": false
+    },
+    "GRDC_4146190": {
+      "usgs_id": "12150800",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3980.8,
+      "usgs_area_km2": 3980.8,
+      "in_corpus": true
+    },
+    "GRDC_4146195": {
+      "usgs_id": "12101500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2455.3,
+      "usgs_area_km2": 2455.3,
+      "in_corpus": false
+    },
+    "GRDC_4146200": {
+      "usgs_id": "11473900",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 1929.5,
+      "usgs_area_km2": 1929.5,
+      "in_corpus": false
+    },
+    "GRDC_4146210": {
+      "usgs_id": "11467000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 3465.4,
+      "usgs_area_km2": 3465.4,
+      "in_corpus": false
+    },
+    "GRDC_4146220": {
+      "usgs_id": "12141300",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 398.9,
+      "usgs_area_km2": 398.9,
+      "in_corpus": true
+    },
+    "GRDC_4146230": {
+      "usgs_id": "11468000",
+      "dist_deg": 0.00199,
+      "grdc_area_km2": 784.8,
+      "usgs_area_km2": 784.8,
+      "in_corpus": false
+    },
+    "GRDC_4146250": {
+      "usgs_id": "11451100",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 155.9,
+      "usgs_area_km2": 155.9,
+      "in_corpus": false
+    },
+    "GRDC_4146270": {
+      "usgs_id": "11446500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 4889.9,
+      "usgs_area_km2": 4889.9,
+      "in_corpus": false
+    },
+    "GRDC_4146281": {
+      "usgs_id": "11425500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 55040.1,
+      "usgs_area_km2": 55039.9,
+      "in_corpus": true
+    },
+    "GRDC_4146310": {
+      "usgs_id": "11162570",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 131.8,
+      "usgs_area_km2": 131.8,
+      "in_corpus": false
+    },
+    "GRDC_4146320": {
+      "usgs_id": "11151300",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 603.5,
+      "usgs_area_km2": 603.5,
+      "in_corpus": false
+    },
+    "GRDC_4146330": {
+      "usgs_id": "11173200",
+      "dist_deg": 0.0,
+      "grdc_area_km2": 199.7,
+      "usgs_area_km2": 199.7,
+      "in_corpus": false
+    },
+    "GRDC_4146340": {
+      "usgs_id": "11169800",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 282.3,
+      "usgs_area_km2": 282.3,
+      "in_corpus": false
+    },
+    "GRDC_4146350": {
+      "usgs_id": "11176400",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 336.7,
+      "usgs_area_km2": 336.7,
+      "in_corpus": false
+    },
+    "GRDC_4146360": {
+      "usgs_id": "11303500",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 35058.2,
+      "usgs_area_km2": 35065.9,
+      "in_corpus": true
+    },
+    "GRDC_4146370": {
+      "usgs_id": "12175500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 271.9,
+      "usgs_area_km2": 271.9,
+      "in_corpus": false
+    },
+    "GRDC_4146400": {
+      "usgs_id": "11152500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 10764.0,
+      "usgs_area_km2": 10764.0,
+      "in_corpus": true
+    },
+    "GRDC_4146401": {
+      "usgs_id": "12045500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 696.7,
+      "usgs_area_km2": 696.7,
+      "in_corpus": false
+    },
+    "GRDC_4146410": {
+      "usgs_id": "11136800",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2294.7,
+      "usgs_area_km2": 2294.7,
+      "in_corpus": false
+    },
+    "GRDC_4146610": {
+      "usgs_id": "11138500",
+      "dist_deg": 0.00088,
+      "grdc_area_km2": 727.8,
+      "usgs_area_km2": 730.4,
+      "in_corpus": false
+    },
+    "GRDC_4146630": {
+      "usgs_id": "11124500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 191.7,
+      "usgs_area_km2": 191.7,
+      "in_corpus": false
+    },
+    "GRDC_4146650": {
+      "usgs_id": "14321000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 9539.0,
+      "usgs_area_km2": 9538.9,
+      "in_corpus": true
+    },
+    "GRDC_4146670": {
+      "usgs_id": "14372300",
+      "dist_deg": 0.01251,
+      "grdc_area_km2": 10202.0,
+      "usgs_area_km2": 10202.0,
+      "in_corpus": true
+    },
+    "GRDC_4146900": {
+      "usgs_id": "11042000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 1442.6,
+      "usgs_area_km2": 1442.6,
+      "in_corpus": false
+    },
+    "GRDC_4146901": {
+      "usgs_id": "14359000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 5317.3,
+      "usgs_area_km2": 5317.2,
+      "in_corpus": true
+    },
+    "GRDC_4146920": {
+      "usgs_id": "11042000",
+      "dist_deg": 0.02997,
+      "grdc_area_km2": 1872.6,
+      "usgs_area_km2": 1442.6,
+      "in_corpus": false
+    },
+    "GRDC_4146950": {
+      "usgs_id": "11028500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 149.2,
+      "usgs_area_km2": 149.2,
+      "in_corpus": false
+    },
+    "GRDC_4147010": {
+      "usgs_id": "01034500",
+      "dist_deg": 0.00205,
+      "grdc_area_km2": 16633.0,
+      "usgs_area_km2": 16632.9,
+      "in_corpus": true
+    },
+    "GRDC_4147011": {
+      "usgs_id": "01036390",
+      "dist_deg": 0.00149,
+      "grdc_area_km2": 19463.9,
+      "usgs_area_km2": 19463.8,
+      "in_corpus": false
+    },
+    "GRDC_4147050": {
+      "usgs_id": "01046500",
+      "dist_deg": 0.00052,
+      "grdc_area_km2": 7031.9,
+      "usgs_area_km2": 7055.1,
+      "in_corpus": true
+    },
+    "GRDC_4147051": {
+      "usgs_id": "01049265",
+      "dist_deg": 0.00108,
+      "grdc_area_km2": 13993.8,
+      "usgs_area_km2": 14019.6,
+      "in_corpus": true
+    },
+    "GRDC_4147061": {
+      "usgs_id": "01018500",
+      "dist_deg": 0.0009,
+      "grdc_area_km2": 1069.7,
+      "usgs_area_km2": 1061.9,
+      "in_corpus": true
+    },
+    "GRDC_4147110": {
+      "usgs_id": "01059000",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 8451.2,
+      "usgs_area_km2": 8458.9,
+      "in_corpus": true
+    },
+    "GRDC_4147111": {
+      "usgs_id": "01054000",
+      "dist_deg": 0.00038,
+      "grdc_area_km2": 3525.0,
+      "usgs_area_km2": 3525.0,
+      "in_corpus": true
+    },
+    "GRDC_4147210": {
+      "usgs_id": "01064500",
+      "dist_deg": 0.00026,
+      "grdc_area_km2": 997.2,
+      "usgs_area_km2": 997.1,
+      "in_corpus": true
+    },
+    "GRDC_4147320": {
+      "usgs_id": "02037500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 17503.2,
+      "usgs_area_km2": 17490.2,
+      "in_corpus": false
+    },
+    "GRDC_4147330": {
+      "usgs_id": "02035000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 16205.6,
+      "usgs_area_km2": 16192.6,
+      "in_corpus": true
+    },
+    "GRDC_4147340": {
+      "usgs_id": "02041650",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 3481.0,
+      "usgs_area_km2": 3475.8,
+      "in_corpus": false
+    },
+    "GRDC_4147380": {
+      "usgs_id": "01100000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 12004.7,
+      "usgs_area_km2": 12004.6,
+      "in_corpus": true
+    },
+    "GRDC_4147381": {
+      "usgs_id": "01092000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 8008.3,
+      "usgs_area_km2": 8008.2,
+      "in_corpus": true
+    },
+    "GRDC_4147382": {
+      "usgs_id": "01081500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 3903.1,
+      "usgs_area_km2": 3903.1,
+      "in_corpus": true
+    },
+    "GRDC_4147410": {
+      "usgs_id": "01111500",
+      "dist_deg": 0.00044,
+      "grdc_area_km2": 236.2,
+      "usgs_area_km2": 236.2,
+      "in_corpus": true
+    },
+    "GRDC_4147440": {
+      "usgs_id": "01118500",
+      "dist_deg": 0.00158,
+      "grdc_area_km2": 764.0,
+      "usgs_area_km2": 761.5,
+      "in_corpus": true
+    },
+    "GRDC_4147450": {
+      "usgs_id": "01122500",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 1046.4,
+      "usgs_area_km2": 1046.4,
+      "in_corpus": true
+    },
+    "GRDC_4147460": {
+      "usgs_id": "01184000",
+      "dist_deg": 0.0001,
+      "grdc_area_km2": 25019.4,
+      "usgs_area_km2": 25019.3,
+      "in_corpus": true
+    },
+    "GRDC_4147461": {
+      "usgs_id": "01170500",
+      "dist_deg": 0.00152,
+      "grdc_area_km2": 20357.4,
+      "usgs_area_km2": 20357.3,
+      "in_corpus": true
+    },
+    "GRDC_4147462": {
+      "usgs_id": "01144500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 10598.3,
+      "usgs_area_km2": 10598.2,
+      "in_corpus": true
+    },
+    "GRDC_4147463": {
+      "usgs_id": "01129500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2069.4,
+      "usgs_area_km2": 2069.4,
+      "in_corpus": true
+    },
+    "GRDC_4147465": {
+      "usgs_id": "01135500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1129.2,
+      "usgs_area_km2": 1129.2,
+      "in_corpus": true
+    },
+    "GRDC_4147470": {
+      "usgs_id": "01181000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 243.5,
+      "usgs_area_km2": 243.5,
+      "in_corpus": true
+    },
+    "GRDC_4147475": {
+      "usgs_id": "01177000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1784.5,
+      "usgs_area_km2": 1784.5,
+      "in_corpus": true
+    },
+    "GRDC_4147490": {
+      "usgs_id": "01205500",
+      "dist_deg": 0.00075,
+      "grdc_area_km2": 3999.0,
+      "usgs_area_km2": 3998.9,
+      "in_corpus": true
+    },
+    "GRDC_4147491": {
+      "usgs_id": "01200500",
+      "dist_deg": 0.00305,
+      "grdc_area_km2": 2580.0,
+      "usgs_area_km2": 2579.6,
+      "in_corpus": true
+    },
+    "GRDC_4147500": {
+      "usgs_id": "01358000",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 20953.0,
+      "usgs_area_km2": 20953.0,
+      "in_corpus": true
+    },
+    "GRDC_4147501": {
+      "usgs_id": "01327750",
+      "dist_deg": 0.00012,
+      "grdc_area_km2": 7277.9,
+      "usgs_area_km2": 7277.9,
+      "in_corpus": true
+    },
+    "GRDC_4147502": {
+      "usgs_id": "01315500",
+      "dist_deg": 0.00022,
+      "grdc_area_km2": 2051.3,
+      "usgs_area_km2": 2051.3,
+      "in_corpus": false
+    },
+    "GRDC_4147505": {
+      "usgs_id": "01325000",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 2732.5,
+      "usgs_area_km2": 2732.4,
+      "in_corpus": true
+    },
+    "GRDC_4147510": {
+      "usgs_id": "01371500",
+      "dist_deg": 0.00015,
+      "grdc_area_km2": 1800.0,
+      "usgs_area_km2": 1800.0,
+      "in_corpus": false
+    },
+    "GRDC_4147540": {
+      "usgs_id": "01391500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 141.4,
+      "usgs_area_km2": 141.4,
+      "in_corpus": false
+    },
+    "GRDC_4147600": {
+      "usgs_id": "01463500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 17560.2,
+      "usgs_area_km2": 17560.1,
+      "in_corpus": true
+    },
+    "GRDC_4147601": {
+      "usgs_id": "01438500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 9013.2,
+      "usgs_area_km2": 9013.2,
+      "in_corpus": true
+    },
+    "GRDC_4147605": {
+      "usgs_id": "01421000",
+      "dist_deg": 0.0005,
+      "grdc_area_km2": 2030.6,
+      "usgs_area_km2": 2030.6,
+      "in_corpus": true
+    },
+    "GRDC_4147606": {
+      "usgs_id": "01426500",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 1541.1,
+      "usgs_area_km2": 1541.0,
+      "in_corpus": false
+    },
+    "GRDC_4147650": {
+      "usgs_id": "01472000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2970.7,
+      "usgs_area_km2": 2970.7,
+      "in_corpus": false
+    },
+    "GRDC_4147651": {
+      "usgs_id": "01474500",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 4902.9,
+      "usgs_area_km2": 4902.9,
+      "in_corpus": true
+    },
+    "GRDC_4147700": {
+      "usgs_id": "01570500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 62419.0,
+      "usgs_area_km2": 62418.8,
+      "in_corpus": true
+    },
+    "GRDC_4147701": {
+      "usgs_id": "01503000",
+      "dist_deg": 0.00056,
+      "grdc_area_km2": 5780.9,
+      "usgs_area_km2": 5780.9,
+      "in_corpus": true
+    },
+    "GRDC_4147702": {
+      "usgs_id": "01500500",
+      "dist_deg": 0.00016,
+      "grdc_area_km2": 2543.4,
+      "usgs_area_km2": 2543.4,
+      "in_corpus": true
+    },
+    "GRDC_4147703": {
+      "usgs_id": "01578310",
+      "dist_deg": 0.00073,
+      "grdc_area_km2": 70189.0,
+      "usgs_area_km2": 70188.7,
+      "in_corpus": true
+    },
+    "GRDC_4147704": {
+      "usgs_id": "01536500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 25796.4,
+      "usgs_area_km2": 25796.3,
+      "in_corpus": true
+    },
+    "GRDC_4147710": {
+      "usgs_id": "01512500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 3841.0,
+      "usgs_area_km2": 3841.0,
+      "in_corpus": true
+    },
+    "GRDC_4147715": {
+      "usgs_id": "01531000",
+      "dist_deg": 0.0002,
+      "grdc_area_km2": 6490.5,
+      "usgs_area_km2": 6490.5,
+      "in_corpus": true
+    },
+    "GRDC_4147720": {
+      "usgs_id": "01567000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 8686.9,
+      "usgs_area_km2": 8686.8,
+      "in_corpus": true
+    },
+    "GRDC_4147721": {
+      "usgs_id": "01559000",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 2113.4,
+      "usgs_area_km2": 2113.4,
+      "in_corpus": false
+    },
+    "GRDC_4147725": {
+      "usgs_id": "01553500",
+      "dist_deg": 0.00011,
+      "grdc_area_km2": 17733.7,
+      "usgs_area_km2": 17733.7,
+      "in_corpus": true
+    },
+    "GRDC_4147726": {
+      "usgs_id": "01545500",
+      "dist_deg": 0.00091,
+      "grdc_area_km2": 7705.3,
+      "usgs_area_km2": 7705.2,
+      "in_corpus": true
+    },
+    "GRDC_4147810": {
+      "usgs_id": "01491000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 292.7,
+      "usgs_area_km2": 292.7,
+      "in_corpus": true
+    },
+    "GRDC_4147900": {
+      "usgs_id": "01646500",
+      "dist_deg": 0.00021,
+      "grdc_area_km2": 29940.4,
+      "usgs_area_km2": 29940.3,
+      "in_corpus": true
+    },
+    "GRDC_4147901": {
+      "usgs_id": "01613000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 10593.1,
+      "usgs_area_km2": 10525.7,
+      "in_corpus": true
+    },
+    "GRDC_4147902": {
+      "usgs_id": "01610000",
+      "dist_deg": 0.00061,
+      "grdc_area_km2": 8104.1,
+      "usgs_area_km2": 8104.1,
+      "in_corpus": true
+    },
+    "GRDC_4147903": {
+      "usgs_id": "01608500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3848.7,
+      "usgs_area_km2": 3784.0,
+      "in_corpus": true
+    },
+    "GRDC_4147905": {
+      "usgs_id": "01643000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2116.0,
+      "usgs_area_km2": 2116.0,
+      "in_corpus": true
+    },
+    "GRDC_4147907": {
+      "usgs_id": "01631000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 4252.8,
+      "usgs_area_km2": 4232.0,
+      "in_corpus": true
+    },
+    "GRDC_4147950": {
+      "usgs_id": "01668000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 4133.6,
+      "usgs_area_km2": 4131.0,
+      "in_corpus": true
+    },
+    "GRDC_4148070": {
+      "usgs_id": "02047000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3680.4,
+      "usgs_area_km2": 3732.2,
+      "in_corpus": false
+    },
+    "GRDC_4148090": {
+      "usgs_id": "02080500",
+      "dist_deg": 0.00087,
+      "grdc_area_km2": 21714.6,
+      "usgs_area_km2": 21714.5,
+      "in_corpus": false
+    },
+    "GRDC_4148091": {
+      "usgs_id": "02066000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 7710.4,
+      "usgs_area_km2": 7681.9,
+      "in_corpus": true
+    },
+    "GRDC_4148092": {
+      "usgs_id": "02060500",
+      "dist_deg": 0.00778,
+      "grdc_area_km2": 4633.5,
+      "usgs_area_km2": 4615.4,
+      "in_corpus": true
+    },
+    "GRDC_4148110": {
+      "usgs_id": "02083500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 5654.0,
+      "usgs_area_km2": 5653.9,
+      "in_corpus": true
+    },
+    "GRDC_4148120": {
+      "usgs_id": "02091814",
+      "dist_deg": 0.00231,
+      "grdc_area_km2": 10101.0,
+      "usgs_area_km2": 10101.0,
+      "in_corpus": true
+    },
+    "GRDC_4148121": {
+      "usgs_id": "02089500",
+      "dist_deg": 0.00042,
+      "grdc_area_km2": 6972.3,
+      "usgs_area_km2": 6972.3,
+      "in_corpus": true
+    },
+    "GRDC_4148122": {
+      "usgs_id": "02087500",
+      "dist_deg": 0.00046,
+      "grdc_area_km2": 2978.5,
+      "usgs_area_km2": 2978.5,
+      "in_corpus": true
+    },
+    "GRDC_4148125": {
+      "usgs_id": "02091500",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 1898.5,
+      "usgs_area_km2": 1898.5,
+      "in_corpus": true
+    },
+    "GRDC_4148210": {
+      "usgs_id": "02102000",
+      "dist_deg": 0.00052,
+      "grdc_area_km2": 3714.0,
+      "usgs_area_km2": 3714.0,
+      "in_corpus": true
+    },
+    "GRDC_4148230": {
+      "usgs_id": "02102500",
+      "dist_deg": 0.00027,
+      "grdc_area_km2": 8971.8,
+      "usgs_area_km2": 8971.7,
+      "in_corpus": true
+    },
+    "GRDC_4148231": {
+      "usgs_id": "02105500",
+      "dist_deg": 0.0007,
+      "grdc_area_km2": 12566.7,
+      "usgs_area_km2": 12566.6,
+      "in_corpus": true
+    },
+    "GRDC_4148232": {
+      "usgs_id": "02105769",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 13610.5,
+      "usgs_area_km2": 13610.4,
+      "in_corpus": true
+    },
+    "GRDC_4148300": {
+      "usgs_id": "02131000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 22869.7,
+      "usgs_area_km2": 22869.6,
+      "in_corpus": true
+    },
+    "GRDC_4148310": {
+      "usgs_id": "02135000",
+      "dist_deg": 0.00069,
+      "grdc_area_km2": 7226.1,
+      "usgs_area_km2": 7226.1,
+      "in_corpus": true
+    },
+    "GRDC_4148321": {
+      "usgs_id": "02116500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 5905.0,
+      "usgs_area_km2": 5905.2,
+      "in_corpus": true
+    },
+    "GRDC_4148325": {
+      "usgs_id": "02126000",
+      "dist_deg": 0.0117,
+      "grdc_area_km2": 3553.5,
+      "usgs_area_km2": 3574.2,
+      "in_corpus": true
+    },
+    "GRDC_4148410": {
+      "usgs_id": "02156500",
+      "dist_deg": 0.00124,
+      "grdc_area_km2": 7226.1,
+      "usgs_area_km2": 7200.2,
+      "in_corpus": true
+    },
+    "GRDC_4148530": {
+      "usgs_id": "02169500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 20331.5,
+      "usgs_area_km2": 20331.4,
+      "in_corpus": true
+    },
+    "GRDC_4148535": {
+      "usgs_id": "02169000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 6526.8,
+      "usgs_area_km2": 6526.8,
+      "in_corpus": true
+    },
+    "GRDC_4148541": {
+      "usgs_id": "02148000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 13131.3,
+      "usgs_area_km2": 13131.2,
+      "in_corpus": true
+    },
+    "GRDC_4148545": {
+      "usgs_id": "02147020",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 9168.6,
+      "usgs_area_km2": 9168.6,
+      "in_corpus": true
+    },
+    "GRDC_4148546": {
+      "usgs_id": "02146000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 7899.5,
+      "usgs_area_km2": 7899.5,
+      "in_corpus": true
+    },
+    "GRDC_4148570": {
+      "usgs_id": "02175000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 7070.7,
+      "usgs_area_km2": 7070.7,
+      "in_corpus": true
+    },
+    "GRDC_4148610": {
+      "usgs_id": "02202500",
+      "dist_deg": 0.00149,
+      "grdc_area_km2": 6863.5,
+      "usgs_area_km2": 6863.5,
+      "in_corpus": true
+    },
+    "GRDC_4148650": {
+      "usgs_id": "02198500",
+      "dist_deg": 0.00047,
+      "grdc_area_km2": 25511.5,
+      "usgs_area_km2": 25511.4,
+      "in_corpus": true
+    },
+    "GRDC_4148655": {
+      "usgs_id": "02192000",
+      "dist_deg": 0.00172,
+      "grdc_area_km2": 3703.7,
+      "usgs_area_km2": 3677.8,
+      "in_corpus": false
+    },
+    "GRDC_4148720": {
+      "usgs_id": "02226000",
+      "dist_deg": 0.00034,
+      "grdc_area_km2": 35224.0,
+      "usgs_area_km2": 35223.9,
+      "in_corpus": true
+    },
+    "GRDC_4148750": {
+      "usgs_id": "02228000",
+      "dist_deg": 0.00187,
+      "grdc_area_km2": 7226.1,
+      "usgs_area_km2": 7226.1,
+      "in_corpus": true
+    },
+    "GRDC_4148855": {
+      "usgs_id": "02243960",
+      "dist_deg": 0.0003,
+      "grdc_area_km2": 7114.7,
+      "usgs_area_km2": 7114.7,
+      "in_corpus": true
+    },
+    "GRDC_4149110": {
+      "usgs_id": "02492000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 3141.7,
+      "usgs_area_km2": 3141.7,
+      "in_corpus": true
+    },
+    "GRDC_4149120": {
+      "usgs_id": "02489500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 17024.1,
+      "usgs_area_km2": 17024.0,
+      "in_corpus": true
+    },
+    "GRDC_4149121": {
+      "usgs_id": "02488500",
+      "dist_deg": 0.00034,
+      "grdc_area_km2": 12931.9,
+      "usgs_area_km2": 12931.8,
+      "in_corpus": true
+    },
+    "GRDC_4149122": {
+      "usgs_id": "02486000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 8212.9,
+      "usgs_area_km2": 8212.9,
+      "in_corpus": true
+    },
+    "GRDC_4149123": {
+      "usgs_id": "02482000",
+      "dist_deg": 0.00072,
+      "grdc_area_km2": 2341.4,
+      "usgs_area_km2": 2341.4,
+      "in_corpus": true
+    },
+    "GRDC_4149300": {
+      "usgs_id": "02479000",
+      "dist_deg": 0.0022,
+      "grdc_area_km2": 17068.1,
+      "usgs_area_km2": 17068.0,
+      "in_corpus": true
+    },
+    "GRDC_4149301": {
+      "usgs_id": "02479310",
+      "dist_deg": 0.00025,
+      "grdc_area_km2": 21248.4,
+      "usgs_area_km2": 21248.3,
+      "in_corpus": true
+    },
+    "GRDC_4149310": {
+      "usgs_id": "02471001",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 323.8,
+      "usgs_area_km2": 323.7,
+      "in_corpus": false
+    },
+    "GRDC_4149350": {
+      "usgs_id": "02478500",
+      "dist_deg": 0.01399,
+      "grdc_area_km2": 6967.1,
+      "usgs_area_km2": 6967.1,
+      "in_corpus": true
+    },
+    "GRDC_4149355": {
+      "usgs_id": "02475500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 955.7,
+      "usgs_area_km2": 955.7,
+      "in_corpus": false
+    },
+    "GRDC_4149360": {
+      "usgs_id": "02475000",
+      "dist_deg": 0.00509,
+      "grdc_area_km2": 9052.0,
+      "usgs_area_km2": 9052.0,
+      "in_corpus": true
+    },
+    "GRDC_4149401": {
+      "usgs_id": "02428400",
+      "dist_deg": 0.00421,
+      "grdc_area_km2": 55615.1,
+      "usgs_area_km2": 55614.9,
+      "in_corpus": true
+    },
+    "GRDC_4149405": {
+      "usgs_id": "02414500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 4338.3,
+      "usgs_area_km2": 4338.2,
+      "in_corpus": true
+    },
+    "GRDC_4149410": {
+      "usgs_id": "02467000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 39847.2,
+      "usgs_area_km2": 39847.0,
+      "in_corpus": true
+    },
+    "GRDC_4149413": {
+      "usgs_id": "02469761",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 47700.0,
+      "usgs_area_km2": 47699.8,
+      "in_corpus": true
+    },
+    "GRDC_4149415": {
+      "usgs_id": "02456500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2292.2,
+      "usgs_area_km2": 2292.1,
+      "in_corpus": true
+    },
+    "GRDC_4149420": {
+      "usgs_id": "02375500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 9886.0,
+      "usgs_area_km2": 9886.0,
+      "in_corpus": true
+    },
+    "GRDC_4149421": {
+      "usgs_id": "02376033",
+      "dist_deg": 0.00201,
+      "grdc_area_km2": 10740.7,
+      "usgs_area_km2": 10740.7,
+      "in_corpus": true
+    },
+    "GRDC_4149430": {
+      "usgs_id": "02384500",
+      "dist_deg": 0.00033,
+      "grdc_area_km2": 652.6,
+      "usgs_area_km2": 652.7,
+      "in_corpus": false
+    },
+    "GRDC_4149441": {
+      "usgs_id": "02397000",
+      "dist_deg": 0.00018,
+      "grdc_area_km2": 10463.6,
+      "usgs_area_km2": null,
+      "in_corpus": false
+    },
+    "GRDC_4149510": {
+      "usgs_id": "02368000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 1616.2,
+      "usgs_area_km2": 1616.2,
+      "in_corpus": false
+    },
+    "GRDC_4149610": {
+      "usgs_id": "02359000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2022.8,
+      "usgs_area_km2": 2022.8,
+      "in_corpus": false
+    },
+    "GRDC_4149630": {
+      "usgs_id": "02358000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 44548.0,
+      "usgs_area_km2": 44547.8,
+      "in_corpus": true
+    },
+    "GRDC_4149631": {
+      "usgs_id": "02358700",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 45584.0,
+      "usgs_area_km2": 45583.8,
+      "in_corpus": true
+    },
+    "GRDC_4149632": {
+      "usgs_id": "02359170",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 49728.0,
+      "usgs_area_km2": 49727.8,
+      "in_corpus": true
+    },
+    "GRDC_4149670": {
+      "usgs_id": "02339500",
+      "dist_deg": 0.00068,
+      "grdc_area_km2": 9194.5,
+      "usgs_area_km2": 9194.5,
+      "in_corpus": true
+    },
+    "GRDC_4149680": {
+      "usgs_id": "02356000",
+      "dist_deg": 0.00139,
+      "grdc_area_km2": 19606.3,
+      "usgs_area_km2": 19606.2,
+      "in_corpus": true
+    },
+    "GRDC_4149681": {
+      "usgs_id": "02349605",
+      "dist_deg": 0.00515,
+      "grdc_area_km2": 7511.0,
+      "usgs_area_km2": 7562.8,
+      "in_corpus": true
+    },
+    "GRDC_4149682": {
+      "usgs_id": "02347500",
+      "dist_deg": 0.0008,
+      "grdc_area_km2": 4791.5,
+      "usgs_area_km2": 4791.5,
+      "in_corpus": false
+    },
+    "GRDC_4149690": {
+      "usgs_id": "02366500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 11354.6,
+      "usgs_area_km2": 11354.5,
+      "in_corpus": true
+    },
+    "GRDC_4149691": {
+      "usgs_id": "02365500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 9062.4,
+      "usgs_area_km2": 9062.4,
+      "in_corpus": true
+    },
+    "GRDC_4149710": {
+      "usgs_id": "02329000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2952.6,
+      "usgs_area_km2": 2952.6,
+      "in_corpus": false
+    },
+    "GRDC_4149711": {
+      "usgs_id": "02330150",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 5387.2,
+      "usgs_area_km2": 5387.2,
+      "in_corpus": true
+    },
+    "GRDC_4149780": {
+      "usgs_id": "02320500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 20409.2,
+      "usgs_area_km2": 20409.1,
+      "in_corpus": true
+    },
+    "GRDC_4149781": {
+      "usgs_id": "02323000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 24320.1,
+      "usgs_area_km2": 24320.0,
+      "in_corpus": true
+    },
+    "GRDC_4149850": {
+      "usgs_id": "02313000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 4713.8,
+      "usgs_area_km2": 4726.7,
+      "in_corpus": true
+    },
+    "GRDC_4149851": {
+      "usgs_id": "02313230",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 5231.8,
+      "usgs_area_km2": 5231.8,
+      "in_corpus": true
+    },
+    "GRDC_4149910": {
+      "usgs_id": "02301500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 867.7,
+      "usgs_area_km2": 867.6,
+      "in_corpus": false
+    },
+    "GRDC_4149940": {
+      "usgs_id": "07377000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1502.2,
+      "usgs_area_km2": 1502.2,
+      "in_corpus": true
+    },
+    "GRDC_4149941": {
+      "usgs_id": "07378500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 3315.2,
+      "usgs_area_km2": 3315.2,
+      "in_corpus": true
+    },
+    "GRDC_4149950": {
+      "usgs_id": "02296750",
+      "dist_deg": 0.00144,
+      "grdc_area_km2": 3540.5,
+      "usgs_area_km2": 3540.5,
+      "in_corpus": true
+    },
+    "GRDC_4149965": {
+      "usgs_id": "07376000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 639.7,
+      "usgs_area_km2": 639.7,
+      "in_corpus": false
+    },
+    "GRDC_4150250": {
+      "usgs_id": "08091500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1061.9,
+      "usgs_area_km2": 1061.9,
+      "in_corpus": false
+    },
+    "GRDC_4150280": {
+      "usgs_id": "08211000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 43149.4,
+      "usgs_area_km2": 42742.6,
+      "in_corpus": false
+    },
+    "GRDC_4150281": {
+      "usgs_id": "08210000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 39956.0,
+      "usgs_area_km2": 39955.8,
+      "in_corpus": false
+    },
+    "GRDC_4150282": {
+      "usgs_id": "08194500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 20960.9,
+      "usgs_area_km2": 20960.8,
+      "in_corpus": false
+    },
+    "GRDC_4150283": {
+      "usgs_id": "08211500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 43822.8,
+      "usgs_area_km2": 43211.4,
+      "in_corpus": false
+    },
+    "GRDC_4150300": {
+      "usgs_id": "08186500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 619.0,
+      "usgs_area_km2": 619.0,
+      "in_corpus": false
+    },
+    "GRDC_4150310": {
+      "usgs_id": "08176500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 13462.8,
+      "usgs_area_km2": 13462.8,
+      "in_corpus": true
+    },
+    "GRDC_4150311": {
+      "usgs_id": "08167500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 3405.9,
+      "usgs_area_km2": 3405.8,
+      "in_corpus": true
+    },
+    "GRDC_4150315": {
+      "usgs_id": "08172000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 2170.4,
+      "usgs_area_km2": 2170.4,
+      "in_corpus": false
+    },
+    "GRDC_4150320": {
+      "usgs_id": "08175000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 1421.9,
+      "usgs_area_km2": 1421.9,
+      "in_corpus": false
+    },
+    "GRDC_4150330": {
+      "usgs_id": "08188500",
+      "dist_deg": 0.00044,
+      "grdc_area_km2": 10155.4,
+      "usgs_area_km2": 10155.4,
+      "in_corpus": false
+    },
+    "GRDC_4150331": {
+      "usgs_id": "08183500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 5472.7,
+      "usgs_area_km2": 5472.6,
+      "in_corpus": false
+    },
+    "GRDC_4150400": {
+      "usgs_id": "08111700",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 973.8,
+      "usgs_area_km2": 973.8,
+      "in_corpus": false
+    },
+    "GRDC_4150410": {
+      "usgs_id": "08164000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 2116.0,
+      "usgs_area_km2": 2116.0,
+      "in_corpus": false
+    },
+    "GRDC_4150450": {
+      "usgs_id": "08162000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 108788.0,
+      "usgs_area_km2": 108787.3,
+      "in_corpus": true
+    },
+    "GRDC_4150451": {
+      "usgs_id": "08158000",
+      "dist_deg": 0.01248,
+      "grdc_area_km2": 101033.3,
+      "usgs_area_km2": 101032.9,
+      "in_corpus": true
+    },
+    "GRDC_4150460": {
+      "usgs_id": "08151500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 10870.2,
+      "usgs_area_km2": 10870.2,
+      "in_corpus": true
+    },
+    "GRDC_4150461": {
+      "usgs_id": "08150700",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 8409.7,
+      "usgs_area_km2": 8409.7,
+      "in_corpus": false
+    },
+    "GRDC_4150462": {
+      "usgs_id": "08150000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 4804.5,
+      "usgs_area_km2": 4801.8,
+      "in_corpus": false
+    },
+    "GRDC_4150465": {
+      "usgs_id": "08146000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 7889.1,
+      "usgs_area_km2": 7889.1,
+      "in_corpus": false
+    },
+    "GRDC_4150471": {
+      "usgs_id": "08128400",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 5397.6,
+      "usgs_area_km2": 5397.5,
+      "in_corpus": false
+    },
+    "GRDC_4150475": {
+      "usgs_id": "08136500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 17026.7,
+      "usgs_area_km2": 17026.6,
+      "in_corpus": false
+    },
+    "GRDC_4150500": {
+      "usgs_id": "08114000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 116827.1,
+      "usgs_area_km2": 116826.7,
+      "in_corpus": true
+    },
+    "GRDC_4150501": {
+      "usgs_id": "08093100",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 70562.0,
+      "usgs_area_km2": 70561.7,
+      "in_corpus": true
+    },
+    "GRDC_4150502": {
+      "usgs_id": "08088000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 58723.0,
+      "usgs_area_km2": 58722.8,
+      "in_corpus": true
+    },
+    "GRDC_4150505": {
+      "usgs_id": "08085500",
+      "dist_deg": 0.00782,
+      "grdc_area_km2": 10328.9,
+      "usgs_area_km2": 10427.3,
+      "in_corpus": false
+    },
+    "GRDC_4150507": {
+      "usgs_id": "08082000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 13286.7,
+      "usgs_area_km2": 13286.6,
+      "in_corpus": false
+    },
+    "GRDC_4150510": {
+      "usgs_id": "08095000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2507.1,
+      "usgs_area_km2": 2507.1,
+      "in_corpus": false
+    },
+    "GRDC_4150515": {
+      "usgs_id": "08103800",
+      "dist_deg": 0.00246,
+      "grdc_area_km2": 2118.6,
+      "usgs_area_km2": 2118.6,
+      "in_corpus": false
+    },
+    "GRDC_4150585": {
+      "usgs_id": "08205500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 8881.0,
+      "usgs_area_km2": 8881.1,
+      "in_corpus": false
+    },
+    "GRDC_4150600": {
+      "usgs_id": "08066500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 44511.7,
+      "usgs_area_km2": 44511.6,
+      "in_corpus": false
+    },
+    "GRDC_4150601": {
+      "usgs_id": "08067000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 45242.1,
+      "usgs_area_km2": 45241.9,
+      "in_corpus": true
+    },
+    "GRDC_4150605": {
+      "usgs_id": "08055500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 6368.8,
+      "usgs_area_km2": 6368.8,
+      "in_corpus": false
+    },
+    "GRDC_4150670": {
+      "usgs_id": "08072050",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 7456.6,
+      "usgs_area_km2": 7456.6,
+      "in_corpus": false
+    },
+    "GRDC_4150680": {
+      "usgs_id": "08041000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 20593.0,
+      "usgs_area_km2": 20593.0,
+      "in_corpus": false
+    },
+    "GRDC_4150681": {
+      "usgs_id": "08033500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 9417.2,
+      "usgs_area_km2": 9417.2,
+      "in_corpus": false
+    },
+    "GRDC_4150682": {
+      "usgs_id": "08032000",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 2965.6,
+      "usgs_area_km2": 2965.5,
+      "in_corpus": false
+    },
+    "GRDC_4150700": {
+      "usgs_id": "08030500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 24162.1,
+      "usgs_area_km2": 24162.0,
+      "in_corpus": false
+    },
+    "GRDC_4150800": {
+      "usgs_id": "08015500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 4403.0,
+      "usgs_area_km2": 4403.0,
+      "in_corpus": true
+    },
+    "GRDC_4150850": {
+      "usgs_id": "08012000",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1364.9,
+      "usgs_area_km2": 1364.9,
+      "in_corpus": false
+    },
+    "GRDC_4151300": {
+      "usgs_id": "08408500",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 1784.5,
+      "usgs_area_km2": 1784.5,
+      "in_corpus": false
+    },
+    "GRDC_4151400": {
+      "usgs_id": "08390800",
+      "dist_deg": 0.0019,
+      "grdc_area_km2": 2494.2,
+      "usgs_area_km2": 2494.2,
+      "in_corpus": false
+    },
+    "GRDC_4151410": {
+      "usgs_id": "08398500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 2745.4,
+      "usgs_area_km2": 2745.4,
+      "in_corpus": false
+    },
+    "GRDC_4151420": {
+      "usgs_id": "08382500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 1579.9,
+      "usgs_area_km2": 1579.9,
+      "in_corpus": false
+    },
+    "GRDC_4151421": {
+      "usgs_id": "08380500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 217.6,
+      "usgs_area_km2": 217.6,
+      "in_corpus": false
+    },
+    "GRDC_4151511": {
+      "usgs_id": "08395500",
+      "dist_deg": 0.00108,
+      "grdc_area_km2": 38228.4,
+      "usgs_area_km2": 38228.3,
+      "in_corpus": true
+    },
+    "GRDC_4151513": {
+      "usgs_id": "08384500",
+      "dist_deg": 0.00017,
+      "grdc_area_km2": 11370.1,
+      "usgs_area_km2": 11370.1,
+      "in_corpus": false
+    },
+    "GRDC_4151514": {
+      "usgs_id": "08383500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 10282.3,
+      "usgs_area_km2": 10282.3,
+      "in_corpus": false
+    },
+    "GRDC_4151600": {
+      "usgs_id": "08353000",
+      "dist_deg": 0.00155,
+      "grdc_area_km2": 19036.5,
+      "usgs_area_km2": 16671.8,
+      "in_corpus": true
+    },
+    "GRDC_4151620": {
+      "usgs_id": "08328950",
+      "dist_deg": 0.00987,
+      "grdc_area_km2": 2688.4,
+      "usgs_area_km2": 2678.0,
+      "in_corpus": false
+    },
+    "GRDC_4151650": {
+      "usgs_id": "08290000",
+      "dist_deg": 0.00034,
+      "grdc_area_km2": 8143.0,
+      "usgs_area_km2": 8142.9,
+      "in_corpus": false
+    },
+    "GRDC_4151651": {
+      "usgs_id": "08285500",
+      "dist_deg": 0.00079,
+      "grdc_area_km2": 2271.4,
+      "usgs_area_km2": 2271.4,
+      "in_corpus": false
+    },
+    "GRDC_4151802": {
+      "usgs_id": "08313000",
+      "dist_deg": 0.00028,
+      "grdc_area_km2": 37037.0,
+      "usgs_area_km2": 37036.9,
+      "in_corpus": true
+    },
+    "GRDC_4151803": {
+      "usgs_id": "08276500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 25200.7,
+      "usgs_area_km2": 25200.6,
+      "in_corpus": true
+    },
+    "GRDC_4152050": {
+      "usgs_id": "09521100",
+      "dist_deg": 0.0007,
+      "grdc_area_km2": 618715.0,
+      "usgs_area_km2": 638432.5,
+      "in_corpus": true
+    },
+    "GRDC_4152101": {
+      "usgs_id": "09383100",
+      "dist_deg": 0.01335,
+      "grdc_area_km2": 295964.5,
+      "usgs_area_km2": 295963.3,
+      "in_corpus": false
+    },
+    "GRDC_4152103": {
+      "usgs_id": "09421500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 444703.0,
+      "usgs_area_km2": 444701.3,
+      "in_corpus": true
+    },
+    "GRDC_4152110": {
+      "usgs_id": "09419000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 17560.2,
+      "usgs_area_km2": 18243.9,
+      "in_corpus": true
+    },
+    "GRDC_4152120": {
+      "usgs_id": "09426000",
+      "dist_deg": 0.00095,
+      "grdc_area_km2": 11999.5,
+      "usgs_area_km2": 11999.4,
+      "in_corpus": true
+    },
+    "GRDC_4152200": {
+      "usgs_id": "09431500",
+      "dist_deg": 7e-05,
+      "grdc_area_km2": 7327.1,
+      "usgs_area_km2": 7327.1,
+      "in_corpus": false
+    },
+    "GRDC_4152201": {
+      "usgs_id": "09430500",
+      "dist_deg": 0.00031,
+      "grdc_area_km2": 4827.8,
+      "usgs_area_km2": 4827.7,
+      "in_corpus": false
+    },
+    "GRDC_4152202": {
+      "usgs_id": "09520500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 149831.5,
+      "usgs_area_km2": 149830.9,
+      "in_corpus": true
+    },
+    "GRDC_4152300": {
+      "usgs_id": "09498500",
+      "dist_deg": 0.00059,
+      "grdc_area_km2": 11152.5,
+      "usgs_area_km2": 11152.5,
+      "in_corpus": true
+    },
+    "GRDC_4152400": {
+      "usgs_id": "09508500",
+      "dist_deg": 2e-05,
+      "grdc_area_km2": 15174.8,
+      "usgs_area_km2": 15172.2,
+      "in_corpus": true
+    },
+    "GRDC_4152450": {
+      "usgs_id": "09380000",
+      "dist_deg": 0.00045,
+      "grdc_area_km2": 289562.0,
+      "usgs_area_km2": 289560.9,
+      "in_corpus": true
+    },
+    "GRDC_4152460": {
+      "usgs_id": "09180500",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 62419.0,
+      "usgs_area_km2": 62418.8,
+      "in_corpus": true
+    },
+    "GRDC_4152465": {
+      "usgs_id": "09402000",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 68528.8,
+      "usgs_area_km2": 68528.5,
+      "in_corpus": true
+    },
+    "GRDC_4152466": {
+      "usgs_id": "09394500",
+      "dist_deg": 0.00041,
+      "grdc_area_km2": 20906.5,
+      "usgs_area_km2": 20906.4,
+      "in_corpus": true
+    },
+    "GRDC_4152467": {
+      "usgs_id": "09397300",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 32074.6,
+      "usgs_area_km2": 32074.4,
+      "in_corpus": false
+    },
+    "GRDC_4152470": {
+      "usgs_id": "09396100",
+      "dist_deg": 0.00774,
+      "grdc_area_km2": 5584.0,
+      "usgs_area_km2": 5584.0,
+      "in_corpus": false
+    },
+    "GRDC_4152500": {
+      "usgs_id": "09470500",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 1908.8,
+      "usgs_area_km2": 1908.8,
+      "in_corpus": false
+    },
+    "GRDC_4152550": {
+      "usgs_id": "09315000",
+      "dist_deg": 0.00285,
+      "grdc_area_km2": 116161.5,
+      "usgs_area_km2": 116161.1,
+      "in_corpus": true
+    },
+    "GRDC_4152551": {
+      "usgs_id": "09261000",
+      "dist_deg": 0.00069,
+      "grdc_area_km2": 76819.4,
+      "usgs_area_km2": 76819.1,
+      "in_corpus": true
+    },
+    "GRDC_4152553": {
+      "usgs_id": "09209400",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 10126.9,
+      "usgs_area_km2": 9906.7,
+      "in_corpus": true
+    },
+    "GRDC_4152560": {
+      "usgs_id": "09216050",
+      "dist_deg": 8e-05,
+      "grdc_area_km2": 4454.8,
+      "usgs_area_km2": 3846.1,
+      "in_corpus": true
+    },
+    "GRDC_4152570": {
+      "usgs_id": "09224700",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 8029.0,
+      "usgs_area_km2": 7720.8,
+      "in_corpus": true
+    },
+    "GRDC_4152580": {
+      "usgs_id": "09260000",
+      "dist_deg": 0.00182,
+      "grdc_area_km2": 9660.7,
+      "usgs_area_km2": 10448.0,
+      "in_corpus": true
+    },
+    "GRDC_4152590": {
+      "usgs_id": "09306500",
+      "dist_deg": 5e-05,
+      "grdc_area_km2": 10411.8,
+      "usgs_area_km2": 10411.8,
+      "in_corpus": true
+    },
+    "GRDC_4152600": {
+      "usgs_id": "09379500",
+      "dist_deg": 0.00407,
+      "grdc_area_km2": 59570.0,
+      "usgs_area_km2": 59569.8,
+      "in_corpus": true
+    },
+    "GRDC_4152601": {
+      "usgs_id": "09371010",
+      "dist_deg": 0.00569,
+      "grdc_area_km2": 37814.0,
+      "usgs_area_km2": 37813.9,
+      "in_corpus": true
+    },
+    "GRDC_4152602": {
+      "usgs_id": "09365000",
+      "dist_deg": 0.00022,
+      "grdc_area_km2": 18751.6,
+      "usgs_area_km2": 18751.5,
+      "in_corpus": true
+    },
+    "GRDC_4152610": {
+      "usgs_id": "09302000",
+      "dist_deg": 0.00547,
+      "grdc_area_km2": 10999.7,
+      "usgs_area_km2": 9816.1,
+      "in_corpus": true
+    },
+    "GRDC_4152620": {
+      "usgs_id": "09333500",
+      "dist_deg": 0.00292,
+      "grdc_area_km2": 10771.8,
+      "usgs_area_km2": 10771.8,
+      "in_corpus": true
+    },
+    "GRDC_4152650": {
+      "usgs_id": "09144250",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 14576.5,
+      "usgs_area_km2": 14597.2,
+      "in_corpus": true
+    },
+    "GRDC_4152651": {
+      "usgs_id": "09128000",
+      "dist_deg": 6e-05,
+      "grdc_area_km2": 10269.4,
+      "usgs_area_km2": 10284.9,
+      "in_corpus": true
+    },
+    "GRDC_4152652": {
+      "usgs_id": "09114500",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 2621.1,
+      "usgs_area_km2": 2618.5,
+      "in_corpus": false
+    },
+    "GRDC_4152660": {
+      "usgs_id": "09180000",
+      "dist_deg": 1e-05,
+      "grdc_area_km2": 11862.2,
+      "usgs_area_km2": 11862.2,
+      "in_corpus": true
+    },
+    "GRDC_4152700": {
+      "usgs_id": "09251000",
+      "dist_deg": 0.00277,
+      "grdc_area_km2": 8831.9,
+      "usgs_area_km2": 8761.9,
+      "in_corpus": true
+    },
+    "GRDC_4152701": {
+      "usgs_id": "09260050",
+      "dist_deg": 3e-05,
+      "grdc_area_km2": 19839.4,
+      "usgs_area_km2": 20541.2,
+      "in_corpus": true
+    },
+    "GRDC_4152800": {
+      "usgs_id": "09415000",
+      "dist_deg": 4e-05,
+      "grdc_area_km2": 13183.1,
+      "usgs_area_km2": 13183.0,
+      "in_corpus": true
+    },
+    "GRDC_4152900": {
+      "usgs_id": "09444500",
+      "dist_deg": 0.00705,
+      "grdc_area_km2": 7163.9,
+      "usgs_area_km2": 7163.9,
+      "in_corpus": false
+    },
+    "GRDC_4185050": {
+      "usgs_id": "50046000",
+      "dist_deg": 0.00225,
+      "grdc_area_km2": 538.7,
+      "usgs_area_km2": 538.7,
+      "in_corpus": false
+    },
+    "GRDC_4185052": {
+      "usgs_id": "50043800",
+      "dist_deg": 0.00106,
+      "grdc_area_km2": 281.0,
+      "usgs_area_km2": 303.0,
+      "in_corpus": false
+    },
+    "GRDC_4185100": {
+      "usgs_id": "50147800",
+      "dist_deg": 0.00208,
+      "grdc_area_km2": 184.4,
+      "usgs_area_km2": 184.4,
+      "in_corpus": false
+    },
+    "GRDC_4185151": {
+      "usgs_id": "50027600",
+      "dist_deg": 0.02312,
+      "grdc_area_km2": 450.7,
+      "usgs_area_km2": 449.9,
+      "in_corpus": false
+    },
+    "GRDC_4185152": {
+      "usgs_id": "50024950",
+      "dist_deg": 0.00211,
+      "grdc_area_km2": 170.0,
+      "usgs_area_km2": 185.7,
+      "in_corpus": false
+    },
+    "GRDC_4185250": {
+      "usgs_id": "50038100",
+      "dist_deg": 0.00017,
+      "grdc_area_km2": 510.2,
+      "usgs_area_km2": 525.8,
+      "in_corpus": false
+    },
+    "GRDC_4185251": {
+      "usgs_id": "50035000",
+      "dist_deg": 0.00054,
+      "grdc_area_km2": 331.5,
+      "usgs_area_km2": 347.1,
+      "in_corpus": false
+    },
+    "GRDC_4185252": {
+      "usgs_id": "50031000",
+      "dist_deg": 0.0062,
+      "grdc_area_km2": 143.0,
+      "usgs_area_km2": 138.8,
+      "in_corpus": false
+    },
+    "GRDC_4185300": {
+      "usgs_id": "50059050",
+      "dist_deg": 0.00192,
+      "grdc_area_km2": 541.3,
+      "usgs_area_km2": 541.3,
+      "in_corpus": false
+    },
+    "GRDC_4185301": {
+      "usgs_id": "50055000",
+      "dist_deg": 0.00224,
+      "grdc_area_km2": 232.6,
+      "usgs_area_km2": 232.6,
+      "in_corpus": false
+    },
+    "GRDC_4185350": {
+      "usgs_id": "50138000",
+      "dist_deg": 0.00138,
+      "grdc_area_km2": 310.8,
+      "usgs_area_km2": 310.8,
+      "in_corpus": false
+    },
+    "GRDC_4185400": {
+      "usgs_id": "50057000",
+      "dist_deg": 0.0002,
+      "grdc_area_km2": 155.9,
+      "usgs_area_km2": 155.9,
+      "in_corpus": false
+    },
+    "GRDC_4185450": {
+      "usgs_id": "50111500",
+      "dist_deg": 0.00182,
+      "grdc_area_km2": 129.0,
+      "usgs_area_km2": 133.4,
+      "in_corpus": false
+    },
+    "GRDC_4185550": {
+      "usgs_id": "50047850",
+      "dist_deg": 0.00281,
+      "grdc_area_km2": 108.3,
+      "usgs_area_km2": 108.3,
+      "in_corpus": false
+    },
+    "GRDC_4185650": {
+      "usgs_id": "50039500",
+      "dist_deg": 0.00123,
+      "grdc_area_km2": 256.7,
+      "usgs_area_km2": 220.7,
+      "in_corpus": false
+    },
+    "GRDC_4185700": {
+      "usgs_id": "50026025",
+      "dist_deg": 0.00204,
+      "grdc_area_km2": 98.3,
+      "usgs_area_km2": 98.4,
+      "in_corpus": false
+    },
+    "GRDC_4204900": {
+      "usgs_id": "15024800",
+      "dist_deg": 0.00022,
+      "grdc_area_km2": 51592.8,
+      "usgs_area_km2": 50841.5,
+      "in_corpus": true
+    },
+    "GRDC_4213210": {
+      "usgs_id": "05129515",
+      "dist_deg": 0.03479,
+      "grdc_area_km2": 38600.0,
+      "usgs_area_km2": 38331.9,
+      "in_corpus": true
+    },
+    "GRDC_4213211": {
+      "usgs_id": "05133500",
+      "dist_deg": 0.00014,
+      "grdc_area_km2": 50200.0,
+      "usgs_area_km2": 50245.8,
+      "in_corpus": true
+    },
+    "GRDC_4213593": {
+      "usgs_id": "05114000",
+      "dist_deg": 0.00035,
+      "grdc_area_km2": 23100.0,
+      "usgs_area_km2": 23154.5,
+      "in_corpus": true
+    },
+    "GRDC_4213795": {
+      "usgs_id": "05106000",
+      "dist_deg": 0.00296,
+      "grdc_area_km2": 455.0,
+      "usgs_area_km2": 455.8,
+      "in_corpus": false
+    },
+    "GRDC_4215100": {
+      "usgs_id": "12439500",
+      "dist_deg": 0.00078,
+      "grdc_area_km2": 8280.0,
+      "usgs_area_km2": 8275.0,
+      "in_corpus": true
+    },
+    "GRDC_4215210": {
+      "usgs_id": "12399500",
+      "dist_deg": 0.00108,
+      "grdc_area_km2": 155000.0,
+      "usgs_area_km2": 154622.4,
+      "in_corpus": true
+    },
+    "GRDC_4215340": {
+      "usgs_id": "12306500",
+      "dist_deg": 0.00078,
+      "grdc_area_km2": 1620.0,
+      "usgs_area_km2": 1476.3,
+      "in_corpus": false
+    },
+    "GRDC_4220100": {
+      "usgs_id": "06169500",
+      "dist_deg": 0.00062,
+      "grdc_area_km2": 839.0,
+      "usgs_area_km2": 834.0,
+      "in_corpus": false
+    },
+    "GRDC_4220500": {
+      "usgs_id": "06135000",
+      "dist_deg": 0.03263,
+      "grdc_area_km2": 6490.0,
+      "usgs_area_km2": 6350.7,
+      "in_corpus": false
+    },
+    "GRDC_4234010": {
+      "usgs_id": "04127885",
+      "dist_deg": 0.0338,
+      "grdc_area_km2": 210000.0,
+      "usgs_area_km2": 209530.2,
+      "in_corpus": true
+    },
+    "GRDC_4351900": {
+      "usgs_id": "08474107",
+      "dist_deg": 0.02912,
+      "grdc_area_km2": 450902.0,
+      "usgs_area_km2": null,
+      "in_corpus": false
+    },
+    "GRDC_4352100": {
+      "usgs_id": "09522000",
+      "dist_deg": 0.00166,
+      "grdc_area_km2": 631960.0,
+      "usgs_area_km2": 638950.5,
+      "in_corpus": true
+    }
+  },
+  "unmatched": [
+    "GRDC_4101250",
+    "GRDC_4101300",
+    "GRDC_4101455",
+    "GRDC_4102740",
+    "GRDC_4102750",
+    "GRDC_4103250",
+    "GRDC_4103400",
+    "GRDC_4103505",
+    "GRDC_4103530",
+    "GRDC_4103621",
+    "GRDC_4103710",
+    "GRDC_4103750",
+    "GRDC_4103810",
+    "GRDC_4105050",
+    "GRDC_4105700",
+    "GRDC_4105800",
+    "GRDC_4105805",
+    "GRDC_4105810",
+    "GRDC_4115225",
+    "GRDC_4115320",
+    "GRDC_4115321",
+    "GRDC_4115348",
+    "GRDC_4115402",
+    "GRDC_4116170",
+    "GRDC_4116182",
+    "GRDC_4116335",
+    "GRDC_4116370",
+    "GRDC_4118200",
+    "GRDC_4118315",
+    "GRDC_4118400",
+    "GRDC_4118900",
+    "GRDC_4119500",
+    "GRDC_4119800",
+    "GRDC_4120100",
+    "GRDC_4120112",
+    "GRDC_4120301",
+    "GRDC_4120800",
+    "GRDC_4120955",
+    "GRDC_4120956",
+    "GRDC_4122101",
+    "GRDC_4122120",
+    "GRDC_4122131",
+    "GRDC_4122132",
+    "GRDC_4122133",
+    "GRDC_4122134",
+    "GRDC_4122140",
+    "GRDC_4122141",
+    "GRDC_4122150",
+    "GRDC_4122154",
+    "GRDC_4122211",
+    "GRDC_4123050",
+    "GRDC_4123062",
+    "GRDC_4123063",
+    "GRDC_4123100",
+    "GRDC_4123150",
+    "GRDC_4123208",
+    "GRDC_4123301",
+    "GRDC_4123337",
+    "GRDC_4123381",
+    "GRDC_4125060",
+    "GRDC_4125065",
+    "GRDC_4125075",
+    "GRDC_4125561",
+    "GRDC_4125570",
+    "GRDC_4125580",
+    "GRDC_4125903",
+    "GRDC_4126850",
+    "GRDC_4127930",
+    "GRDC_4135215",
+    "GRDC_4136411",
+    "GRDC_4146165",
+    "GRDC_4146380",
+    "GRDC_4146390",
+    "GRDC_4146700",
+    "GRDC_4146710",
+    "GRDC_4146910",
+    "GRDC_4147480",
+    "GRDC_4148540",
+    "GRDC_4149411",
+    "GRDC_4149440",
+    "GRDC_4151515",
+    "GRDC_4151801",
+    "GRDC_4151805",
+    "GRDC_4152301",
+    "GRDC_4213620",
+    "GRDC_4215900",
+    "GRDC_4220200",
+    "GRDC_4220310",
+    "GRDC_4220400",
+    "GRDC_4220410",
+    "GRDC_4220420",
+    "GRDC_4236010",
+    "GRDC_4245010"
+  ],
+  "matched_in_corpus_usgs_ids": [
+    "01010500",
+    "01018500",
+    "01034500",
+    "01046500",
+    "01049265",
+    "01054000",
+    "01059000",
+    "01064500",
+    "01081500",
+    "01092000",
+    "01100000",
+    "01111500",
+    "01118500",
+    "01122500",
+    "01129500",
+    "01135500",
+    "01144500",
+    "01170500",
+    "01177000",
+    "01181000",
+    "01184000",
+    "01200500",
+    "01205500",
+    "01325000",
+    "01327750",
+    "01358000",
+    "01421000",
+    "01438500",
+    "01463500",
+    "01474500",
+    "01491000",
+    "01500500",
+    "01503000",
+    "01512500",
+    "01531000",
+    "01536500",
+    "01545500",
+    "01553500",
+    "01567000",
+    "01570500",
+    "01578310",
+    "01608500",
+    "01610000",
+    "01613000",
+    "01631000",
+    "01643000",
+    "01646500",
+    "01668000",
+    "02035000",
+    "02060500",
+    "02066000",
+    "02083500",
+    "02087500",
+    "02089500",
+    "02091500",
+    "02091814",
+    "02102000",
+    "02102500",
+    "02105500",
+    "02105769",
+    "02116500",
+    "02126000",
+    "02131000",
+    "02135000",
+    "02146000",
+    "02147020",
+    "02148000",
+    "02156500",
+    "02169000",
+    "02169500",
+    "02175000",
+    "02198500",
+    "02202500",
+    "02226000",
+    "02228000",
+    "02243960",
+    "02296750",
+    "02313000",
+    "02313230",
+    "02320500",
+    "02323000",
+    "02330150",
+    "02339500",
+    "02349605",
+    "02356000",
+    "02358000",
+    "02358700",
+    "02359170",
+    "02365500",
+    "02366500",
+    "02375500",
+    "02376033",
+    "02414500",
+    "02428400",
+    "02456500",
+    "02467000",
+    "02469761",
+    "02475000",
+    "02478500",
+    "02479000",
+    "02479310",
+    "02482000",
+    "02486000",
+    "02488500",
+    "02489500",
+    "02492000",
+    "03011020",
+    "03049500",
+    "03054500",
+    "03065000",
+    "03069500",
+    "03075500",
+    "03150000",
+    "03159500",
+    "03164000",
+    "03168000",
+    "03183500",
+    "03184000",
+    "03193000",
+    "03214500",
+    "03234500",
+    "03251500",
+    "03253500",
+    "03274000",
+    "03294500",
+    "03308500",
+    "03335500",
+    "03360500",
+    "03364000",
+    "03365500",
+    "03373500",
+    "03374000",
+    "03377500",
+    "03381500",
+    "03451500",
+    "03465500",
+    "03528000",
+    "03540500",
+    "03603000",
+    "04024000",
+    "04040000",
+    "04056500",
+    "04059500",
+    "04063522",
+    "04067500",
+    "04073500",
+    "04079000",
+    "04099000",
+    "04101500",
+    "04107850",
+    "04113000",
+    "04119000",
+    "04121500",
+    "04121970",
+    "04125550",
+    "04127885",
+    "04137500",
+    "04156000",
+    "04157005",
+    "04176500",
+    "04183500",
+    "04191500",
+    "04193500",
+    "04198000",
+    "04231600",
+    "04249000",
+    "04260500",
+    "04282500",
+    "04292500",
+    "04293500",
+    "05051500",
+    "05051522",
+    "05053000",
+    "05054000",
+    "05079000",
+    "05080000",
+    "05082500",
+    "05092000",
+    "05099600",
+    "05100000",
+    "05114000",
+    "05117500",
+    "05120000",
+    "05122000",
+    "05129515",
+    "05133500",
+    "05227500",
+    "05280000",
+    "05311000",
+    "05330000",
+    "05331000",
+    "05340500",
+    "05356500",
+    "05360500",
+    "05365500",
+    "05369000",
+    "05369500",
+    "05382000",
+    "05398000",
+    "05400760",
+    "05404000",
+    "05407000",
+    "05418500",
+    "05420500",
+    "05430500",
+    "05446500",
+    "05454500",
+    "05464000",
+    "05464500",
+    "05465000",
+    "05465500",
+    "05474000",
+    "05474500",
+    "05480500",
+    "05481300",
+    "05484500",
+    "05490500",
+    "05508000",
+    "05517500",
+    "05518000",
+    "05520500",
+    "05526000",
+    "05527500",
+    "05552500",
+    "05558300",
+    "05570000",
+    "05582000",
+    "05583000",
+    "05586100",
+    "05592500",
+    "05593000",
+    "05595000",
+    "06026500",
+    "06036650",
+    "06054500",
+    "06102050",
+    "06109500",
+    "06130500",
+    "06155030",
+    "06174500",
+    "06185500",
+    "06191500",
+    "06192500",
+    "06214500",
+    "06279500",
+    "06285100",
+    "06294500",
+    "06324970",
+    "06329500",
+    "06335500",
+    "06337000",
+    "06340500",
+    "06342500",
+    "06349000",
+    "06354000",
+    "06357800",
+    "06359500",
+    "06360500",
+    "06395000",
+    "06423500",
+    "06426500",
+    "06436000",
+    "06438000",
+    "06438500",
+    "06441500",
+    "06447000",
+    "06452000",
+    "06461500",
+    "06465500",
+    "06470000",
+    "06477000",
+    "06478500",
+    "06485500",
+    "06610000",
+    "06630000",
+    "06635000",
+    "06652000",
+    "06674500",
+    "06764880",
+    "06770500",
+    "06774000",
+    "06784000",
+    "06785000",
+    "06786000",
+    "06790500",
+    "06793000",
+    "06800500",
+    "06801000",
+    "06805500",
+    "06807000",
+    "06813500",
+    "06820500",
+    "06828500",
+    "06835500",
+    "06843500",
+    "06847500",
+    "06856600",
+    "06864500",
+    "06877600",
+    "06887000",
+    "06887500",
+    "06892350",
+    "06893000",
+    "06897500",
+    "06899500",
+    "06902000",
+    "06909000",
+    "06926000",
+    "06933500",
+    "06934000",
+    "06934500",
+    "07010000",
+    "07019000",
+    "07020500",
+    "07022000",
+    "07026040",
+    "07029500",
+    "07056000",
+    "07061000",
+    "07064000",
+    "07067000",
+    "07068000",
+    "07069500",
+    "07072000",
+    "07072500",
+    "07074420",
+    "07074500",
+    "07077000",
+    "07143330",
+    "07146500",
+    "07158000",
+    "07159100",
+    "07161450",
+    "07164500",
+    "07176000",
+    "07185000",
+    "07191500",
+    "07228000",
+    "07234000",
+    "07242000",
+    "07245000",
+    "07263451",
+    "07281600",
+    "07288500",
+    "07289000",
+    "07289350",
+    "07290000",
+    "07292500",
+    "07305000",
+    "07308500",
+    "07316000",
+    "07331600",
+    "07335500",
+    "07337000",
+    "07340000",
+    "07362000",
+    "07363500",
+    "07377000",
+    "07378500",
+    "08015500",
+    "08067000",
+    "08088000",
+    "08093100",
+    "08114000",
+    "08151500",
+    "08158000",
+    "08162000",
+    "08167500",
+    "08176500",
+    "08276500",
+    "08313000",
+    "08353000",
+    "08395500",
+    "09128000",
+    "09144250",
+    "09180000",
+    "09180500",
+    "09209400",
+    "09216050",
+    "09224700",
+    "09251000",
+    "09260000",
+    "09260050",
+    "09261000",
+    "09302000",
+    "09306500",
+    "09315000",
+    "09333500",
+    "09365000",
+    "09371010",
+    "09379500",
+    "09380000",
+    "09394500",
+    "09402000",
+    "09415000",
+    "09419000",
+    "09421500",
+    "09426000",
+    "09498500",
+    "09508500",
+    "09520500",
+    "09521100",
+    "09522000",
+    "10219000",
+    "10251300",
+    "10301500",
+    "10312000",
+    "10322500",
+    "10333000",
+    "11152500",
+    "11303500",
+    "11425500",
+    "11477000",
+    "11501000",
+    "11502500",
+    "11509500",
+    "11520500",
+    "11530000",
+    "11530500",
+    "11532500",
+    "12035000",
+    "12039500",
+    "12041200",
+    "12089500",
+    "12141300",
+    "12150800",
+    "12189500",
+    "12194000",
+    "12200500",
+    "12340000",
+    "12340500",
+    "12352500",
+    "12354500",
+    "12372000",
+    "12388700",
+    "12389000",
+    "12391950",
+    "12399500",
+    "12401500",
+    "12404500",
+    "12413000",
+    "12422500",
+    "12433000",
+    "12436500",
+    "12439500",
+    "12442500",
+    "12445000",
+    "12447200",
+    "12449950",
+    "12450700",
+    "12453700",
+    "12462600",
+    "12472600",
+    "12472800",
+    "12484500",
+    "12500450",
+    "12510500",
+    "13013650",
+    "13032500",
+    "13060000",
+    "13077000",
+    "13081500",
+    "13172500",
+    "13181000",
+    "13183000",
+    "13206000",
+    "13213100",
+    "13247500",
+    "13251000",
+    "13269000",
+    "13290450",
+    "13295000",
+    "13302500",
+    "13307000",
+    "13317000",
+    "13334300",
+    "13336500",
+    "13337000",
+    "13340000",
+    "13342500",
+    "13351000",
+    "14018500",
+    "14033500",
+    "14046000",
+    "14046500",
+    "14048000",
+    "14076500",
+    "14087400",
+    "14092500",
+    "14103000",
+    "14105700",
+    "14162500",
+    "14166000",
+    "14191000",
+    "14211720",
+    "14243000",
+    "14246900",
+    "14321000",
+    "14359000",
+    "14372300",
+    "15024800",
+    "15041200",
+    "15129120",
+    "15200280",
+    "15214000",
+    "15266110",
+    "15266110",
+    "15266300",
+    "15281000",
+    "15284000",
+    "15292000",
+    "15292700",
+    "15302000",
+    "15304000",
+    "15348000",
+    "15356000",
+    "15453500",
+    "15484000",
+    "15493000",
+    "15493700",
+    "15514000",
+    "15515500",
+    "15565447",
+    "15565700",
+    "15744500",
+    "15875000",
+    "15896000",
+    "15908000"
+  ]
+}

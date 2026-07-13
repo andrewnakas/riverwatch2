@@ -89,3 +89,64 @@ def test_aggregate_ignores_nan():
     assert agg["nse"]["median"] == pytest.approx(0.7)
     assert agg["kge"]["scorable"] == 2
     assert "frac_gt_0.5" in agg["nse"]
+
+
+# ---------------------------- flood-event family (Nearing 2024 protocol)
+
+def test_annual_maxima_drops_gappy_years(rng):
+    # 3 full years (365 d) + 1 year with only 100 finite days.
+    year = np.concatenate([np.full(365, y) for y in (2001, 2002, 2003)]
+                          + [np.full(365, 2004)])
+    vals = rng.uniform(1, 100, len(year))
+    vals[year == 2002] = np.arange(365)          # known max = 364
+    vals[year == 2004] = np.nan
+    vals[np.flatnonzero(year == 2004)[:100]] = 5.0
+    am = M.annual_maxima(vals, year)
+    assert len(am) == 3                          # 2004 dropped
+    assert am[1] == pytest.approx(364.0)
+
+
+def test_return_period_thresholds_recover_gumbel(rng):
+    # Gumbel(loc=100, scale=10) via inverse CDF; under F = exp(-1/T) the
+    # T-year threshold is exactly loc + scale*ln(T).
+    am = 100.0 - 10.0 * np.log(-np.log(rng.uniform(size=200)))
+    thr = M.return_period_thresholds(am, years=(1.0, 2.0, 5.0, 10.0))
+    for t in (1.0, 2.0, 5.0, 10.0):
+        assert thr[t] == pytest.approx(100.0 + 10.0 * np.log(t), abs=5.0)
+    assert thr[1.0] < thr[2.0] < thr[5.0] < thr[10.0]
+
+
+def test_return_period_short_record_nan():
+    thr = M.return_period_thresholds(np.arange(5.0), years=(2.0, 10.0))
+    assert all(np.isnan(v) for v in thr.values())
+
+
+def test_flood_event_scores_window_matching():
+    n = 100
+    obs = np.ones(n)
+    obs[10:13] = 10.0   # one event starting day 10 (contiguous run = 1 event)
+    obs[50] = 10.0      # second event, day 50
+    sim = np.ones(n)
+    sim[11] = 10.0      # 1 day off the first obs event
+    sim[80] = 10.0      # false positive
+    s = M.flood_event_scores(obs, sim, obs_thr=5.0, sim_thr=5.0, window_days=2)
+    assert s["n_obs_events"] == 2 and s["n_sim_events"] == 2
+    assert s["recall"] == pytest.approx(0.5)     # day-50 event missed
+    assert s["precision"] == pytest.approx(0.5)  # day-80 event spurious
+    assert s["f1"] == pytest.approx(0.5)
+    # Same-day variant: the ±1-day hit no longer counts.
+    s0 = M.flood_event_scores(obs, sim, obs_thr=5.0, sim_thr=5.0, window_days=0)
+    assert s0["precision"] == 0.0 and s0["recall"] == 0.0 and s0["f1"] == 0.0
+
+
+def test_flood_event_scores_degenerate_sides():
+    n = 60
+    obs = np.ones(n)
+    obs[30] = 10.0
+    flat = np.ones(n)
+    s = M.flood_event_scores(obs, flat, obs_thr=5.0, sim_thr=5.0)
+    assert s["recall"] == 0.0 and np.isnan(s["precision"]) and np.isnan(s["f1"])
+    s = M.flood_event_scores(flat, obs, obs_thr=5.0, sim_thr=5.0)
+    assert s["precision"] == 0.0 and np.isnan(s["recall"]) and np.isnan(s["f1"])
+    s = M.flood_event_scores(obs, obs, obs_thr=5.0, sim_thr=float("nan"))
+    assert np.isnan(s["f1"]) and s["n_sim_events"] == 0
