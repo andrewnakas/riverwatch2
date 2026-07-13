@@ -536,9 +536,11 @@ def main() -> int:
     ap.add_argument("--forcing-correction", action="store_true",
                     help="δHBV: learn a bounded per-timestep multiplier on raw "
                          "precip to cancel systematic forcing bias (B5 lever)")
-    ap.add_argument("--dhbv-loss", choices=["mse", "huber", "lognse"], default="mse",
-                    help="δHBV training loss variant for ensemble loss-diversity "
-                         "(mse=basin-NSE default; huber=robust; lognse=low-flow)")
+    ap.add_argument("--dhbv-loss", choices=["mse", "huber", "lognse", "combined"],
+                    default="mse",
+                    help="δHBV training loss: mse=basin-NSE (default); huber=robust; "
+                         "lognse=low-flow; combined=Shen δHBV 0.5·MSE+0.5·log10-MSE "
+                         "(the decorrelation-restoring recipe loss)")
     ap.add_argument("--nmul", type=int, default=1,
                     help="δHBV: number of parallel HBV component instances averaged "
                          "per basin (Li/Shen record uses 16; default 1)")
@@ -839,13 +841,21 @@ def main() -> int:
 
     dhbv_loss_kind = getattr(args, "dhbv_loss", "mse")
 
-    def dhbv_loss(z_pred, y, m):
-        """Masked loss on the z-scored δHBV output. Variants give ENSEMBLE
-        loss-diversity (all default members use plain z-MSE = basin-NSE):
-          mse    — basin-normalized NSE (peak-weighted in z-space).
-          huber  — robust to outlier peaks; different basins drive the gradient.
-          lognse — MSE after a monotone soft-log squash of z, up-weighting the
-                   low/mid-flow regime (complements the peak-heavy mse member).
+    def _z_to_phys(z, mu_q, sd_q):
+        """Invert the z-scored δHBV target back to physical cfs."""
+        qt = z * sd_q[:, None].clamp(min=1e-6) + mu_q[:, None]
+        return torch.sinh(qt) if q_tf == "asinh" else qt
+
+    def dhbv_loss(z_pred, y, m, stats=None):
+        """Masked loss on the z-scored δHBV output. Variants:
+          mse      — basin-normalized NSE (peak-weighted in z-space).
+          huber    — robust to outlier peaks (loss-diversity member).
+          lognse   — asinh-squashed MSE, low-flow-emphasizing (loss-diversity).
+          combined — Shen δHBV recipe: 0.5·z-MSE + 0.5·MSE(log10(Q_phys+0.1)).
+                     The explicit low-flow log term is what makes δHBV DECORRELATE
+                     from the LSTM (complementary error structure) — the missing
+                     piece that made our plain-MSE δHBV members correlated. Needs
+                     stats=(mu_q,sd_q) to reconstruct physical flow.
         """
         e = (y - z_pred) * m
         if dhbv_loss_kind == "huber":
@@ -854,10 +864,16 @@ def main() -> int:
             lin = a - quad
             return ((0.5 * quad * quad + d * lin)).sum() / m.sum().clamp(min=1)
         if dhbv_loss_kind == "lognse":
-            # squash both pred and target through asinh (monotone, low-flow-
-            # emphasizing), then masked MSE — a log-NSE-flavored objective.
             el = (torch.asinh(y) - torch.asinh(z_pred)) * m
             return (el * el).sum() / m.sum().clamp(min=1)
+        if dhbv_loss_kind == "combined" and stats is not None:
+            mu_q, sd_q = stats
+            mse_z = (e * e).sum() / m.sum().clamp(min=1)
+            qp = torch.clamp(_z_to_phys(z_pred, mu_q, sd_q), min=0.0)
+            qt = torch.clamp(_z_to_phys(y, mu_q, sd_q), min=0.0)
+            el = (torch.log10(qp + 0.1) - torch.log10(qt + 0.1)) * m
+            mse_log = (el * el).sum() / m.sum().clamp(min=1)
+            return 0.5 * mse_z + 0.5 * mse_log
         return (e * e).sum() / m.sum().clamp(min=1)
 
     def head_loss(out, y, m):
@@ -891,7 +907,9 @@ def main() -> int:
                 ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
                 if head == "dhbv":
                     zp = dhbv_predict_z(xs_t, xd_t, batch[5])
-                    tot += float(dhbv_loss(zp, ys_t, ms_t) * ms_t.sum())
+                    vst = (torch.from_numpy(batch[5]["mu_q"]).to(dev),
+                           torch.from_numpy(batch[5]["sd_q"]).to(dev))
+                    tot += float(dhbv_loss(zp, ys_t, ms_t, stats=vst) * ms_t.sum())
                     yh = zp.cpu().numpy()
                 else:
                     yq = model(xs_t, xd_t)
@@ -958,7 +976,10 @@ def main() -> int:
             xs_t = torch.from_numpy(xs).to(dev); xd_t = torch.from_numpy(xd).to(dev)
             ys_t = torch.from_numpy(ys).to(dev); ms_t = torch.from_numpy(ms).to(dev)
             if head == "dhbv":
-                loss = dhbv_loss(dhbv_predict_z(xs_t, xd_t, batch[5]), ys_t, ms_t)
+                db = batch[5]
+                st = (torch.from_numpy(db["mu_q"]).to(dev),
+                      torch.from_numpy(db["sd_q"]).to(dev))
+                loss = dhbv_loss(dhbv_predict_z(xs_t, xd_t, db), ys_t, ms_t, stats=st)
             else:
                 loss = head_loss(model(xs_t, xd_t), ys_t, ms_t)
             if not torch.isfinite(loss):
