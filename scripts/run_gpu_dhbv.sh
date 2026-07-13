@@ -8,7 +8,9 @@
 set -u
 cd "$(dirname "$0")/.."
 export PYTHONUNBUFFERED=1
-PY=${PY:-python}
+# Vast pytorch images put python in a venv, not on PATH — default to it.
+PY=${PY:-/venv/main/bin/python}
+command -v "$PY" >/dev/null || PY=python
 N_SEEDS=${1:-3}
 JOBS=${2:-3}
 ONLY=${3:-}                       # optional: restrict to one forcing (pilot)
