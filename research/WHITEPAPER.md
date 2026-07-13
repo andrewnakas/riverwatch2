@@ -51,10 +51,16 @@ rainfall-runoff modeling progress.
 Two evaluation regimes coexist in the literature, and comparability hinges on
 which one a number belongs to:
 
-1. **No observed discharge (rainfall–runoff / PUB-style).** The model predicts
-   streamflow from weather + static attributes only. This tests whether the model
-   has *learned hydrology*. It is the harder, more scientifically interesting
-   task, and the one the "records" (0.74 → 0.82 → 0.83) refer to.
+1. **No observed discharge (rainfall–runoff).** The model predicts streamflow
+   from weather + static attributes only — no observed discharge as input. This
+   tests whether the model has *learned hydrology*, and is the harder, more
+   scientifically interesting task; the "records" (0.74 → 0.82 → 0.83) refer to
+   it. **Note:** this is distinct from *PUB* (Prediction in Ungauged Basins),
+   where the test basins are entirely held out from training. All numbers in this
+   paper — ours and the records' — are the **temporal split** (train on all 531
+   basins 1999–2008, test the same 531 basins 1989–1999), which is the standard
+   CAMELS benchmark and easier than PUB. PUB ensembles peak lower (~0.70–0.79,
+   Kratzert 2019); we do not report a PUB number.
 
 2. **Discharge assimilation (autoregression / data integration / nowcast).** The
    model additionally ingests recent *observed* discharge. Because streamflow is
