@@ -22,6 +22,60 @@ discharge and Open-Meteo weather:
 Each member is rolling-validated on the training window and combined into an
 inverse-MAE-weighted ensemble blend.
 
+## 🏆 CAMELS-531 streamflow benchmark (research track)
+
+Beyond the live app, this repo hosts a rainfall–runoff / streamflow-forecasting
+research effort evaluated on the standard **CAMELS-US 531-basin** benchmark
+(temporal split: train 1999–2008, test **1989-10-01 → 1999-09-30**, median NSE
+across all 531 basins — the exact protocol used by the record papers). The core
+model is an encoder–decoder **MB-LSTM** plus a **differentiable HBV** (δHBV)
+hybrid, ensembled per meteorological forcing (Daymet / Maurer / NLDAS).
+
+Two categories, kept strictly separate (they answer different questions):
+
+### 1. Discharge-assimilating (operational) — **day-1 NSE 0.9016, beats the record**
+
+The model RiverWatch actually deploys: it ingests recent **observed discharge**
+(real gauges report live flow), i.e. a 1-day-lag nowcast.
+
+| Model | median NSE (day-1, all 531) | notes |
+|---|---|---|
+| Nearing et al. 2022 (HESS 26:5493), AR | 0.879 | prior published record, same split |
+| **RiverWatch2 with-q grand ensemble** | **0.9016** | **+0.023 over record, verified on all 531** |
+
+Pooled 0.808, KGE 0.856, mean 0.833, 96.6% of basins > 0.5 NSE. Achieved with a
+3-forcing × 2-seed LSTM ensemble (discharge-assimilated); a wider grand ensemble
+(δHBV + more seeds) is in progress. *(This is a day-1 nowcast — not comparable to
+the no-discharge number below; the two are distinct benchmarks.)*
+
+### 2. No-observed-discharge (academic rainfall-runoff) — **~0.80 pooled / 0.83 day-1**
+
+The strict CAMELS protocol: predict streamflow from weather + static basin
+attributes only (`--no-q-input`). This is the harder, ungauged-style task.
+
+| Config | pooled NSE (177-basin screen) | day-1 NSE |
+|---|---|---|
+| Per-forcing LSTM ensemble | 0.786 | 0.816 |
+| + δHBV members (full record recipe) | 0.796 | 0.819 |
+| + forcing-error correction | 0.800 | 0.824 |
+| + record-recipe δHBV (nmul=16 + dyn. BETAET) | **0.801** | **0.829** |
+| Published record (Li/Shen 2025, HESS 29:6829) | 0.83 | — |
+
+We faithfully emulated the code-verified record recipe (16 parallel HBV
+components, dynamic BETAET, per-forcing ensembling). Continuous-daily-simulation
+eval (the record's exact protocol) confirms **continuous ≈ pooled ≈ 0.80** — the
+day-1 (0.829) essentially matches the record, but the pooled/continuous number is
+a genuine ~0.02–0.03 short. Every independent literature review found that a
+clean pooled 0.83 *without* observed discharge sits at the field's demonstrated
+ceiling; numbers above it use observed-q (out of protocol), different basin sets,
+or in-sample eval.
+
+**Full experiment log:** [`benchmarks/EXPERIMENTS.md`](benchmarks/EXPERIMENTS.md)
+(38 pre-registered experiments with gates + verdicts). Key infra: `app/hbv.py`
+(differentiable HBV core), `app/dhbv.py` (δHBV net), `scripts/train_mblstm.py`,
+`scripts/backtest_mblstm.py`, `scripts/combine_dumps.py` (grand-ensemble
+combiner), `scripts/eval_continuous.py` (publication-exact continuous sim).
+
 ## Live demo
 
 GitHub Pages: **https://andrewnakas.github.io/riverwatch2**
