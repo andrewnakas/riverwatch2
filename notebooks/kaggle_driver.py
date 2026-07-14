@@ -43,11 +43,17 @@ CORPUS_DS = {f: f"{USER}/rw2-camels-corpus-{f}" for f in ("daymet", "maurer", "n
 STATIC_DS = f"{USER}/rw2-camels-static"
 CKPTS_DS = f"{USER}/rw2-noq-ckpts"
 
-# The recipe-v2 δHBV launch + the two fidelity fixes (--dhbv-loss combined, epochs).
+# The recipe-v2 δHBV launch + the fidelity fix (--dhbv-loss combined = the
+# decorrelation loss never trained into the shipped members). MEASURED on the
+# Kaggle P100 (torch 2.4.1, sm_60): ~2s/step at batch 256 → windows-per-station
+# 1000 would be ~70min/epoch (untenable). Cut to 150 (531×150/256≈311 steps ≈
+# ~10min/epoch) so 50 epochs ≈ 8-9hr fits a 12hr session incl. the ~4min torch+
+# gzip setup. epochs default is 50 (the shipped-member count; 100 was aspirational
+# and won't fit the P100 budget).
 TRAIN_FLAGS = (
     "--no-q-input --head dhbv --nmul 16 --dhbv-loss combined --forcing-correction "
     "--enc-vars camels1f --static-set camels --q-transform linear "
-    "--hidden 256 --windows-per-station 1000 --batch 256 --val-stride 10 "
+    "--hidden 256 --windows-per-station 150 --batch 256 --val-stride 10 "
     "--train-start 1999-10-01 --train-end 2008-09-30 "
     "--val-start 1998-10-01 --val-end 1999-09-30 --device cuda"
 )
@@ -332,8 +338,8 @@ def main():
     for c in ("smoke", "train", "dump", "eval-day1"):
         s = sub.add_parser(c)
         s.add_argument("--forcing", default="daymet")
-        s.add_argument("--seeds", default="971,972,973")
-        s.add_argument("--epochs", type=int, default=100)
+        s.add_argument("--seeds", default="971")   # 1 seed/session (~8-9hr on P100)
+        s.add_argument("--epochs", type=int, default=50)   # P100 budget; shipped count
         s.add_argument("--slug", default="")
         s.add_argument("--wait", action="store_true", help="poll to completion")
     for c in ("status", "output"):
