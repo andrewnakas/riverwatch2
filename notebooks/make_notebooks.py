@@ -214,19 +214,34 @@ def build_eval_nb() -> dict:
            "Validate against the ~0.808 LSTM-ensemble band first."),
         SETUP_CELL,
         DATA_CELL,
+        md("**Cost note.** The evaluator uses single-basin `mblstm.forecast()` "
+           "(~0.03-0.13s/call). Full-531 at `--stride-days 1` is ~hours even on GPU "
+           "because the per-call pandas window rebuild doesn't GPU-accelerate. "
+           "Practical settings: **LSTM** members → `--stride-days 1` full-531 (cheap, "
+           "the protocol-validation run); **δHBV** headline → `--stride-days 3` "
+           "(lead-1, one-third the issue dates, ~2-3 hr, fits a session). First "
+           "validate against the ~0.808 LSTM band, then run δHBV."),
         code(
             "import subprocess, glob",
             "FORCING = 'daymet'",
             "CORPUS = corpus_dir(FORCING)",
+            "# LSTM validation first (cheap, stride-1) → must land ~0.808 band.",
+            "lstm = sorted(glob.glob(f'/kaggle/input/**/camels531_{FORCING}_v2r_s*.pt', recursive=True))[:3]",
+            "if lstm:",
+            "    cmd = (f'python scripts/eval_day1_kratzert.py --ckpt {\":\".join(lstm)} '",
+            "           f'--corpus-dir {CORPUS} --start 1989-10-01 --end 1999-09-30 '",
+            "           f'--stride-days 1 --camels-subset 531 --label {FORCING}_lstm_day1_full531')",
+            "    print('>> LSTM validation:', cmd, flush=True); subprocess.run(cmd, shell=True)",
+        ),
+        code(
+            "# δHBV headline at stride-days 3 (lead-1, ~1/3 cost).",
             "cks = sorted(glob.glob(f'/kaggle/input/rw2-noq-ckpts/**/camels531_{FORCING}_*combined100_s*.pt',",
-            "                       recursive=True)) or \\",
-            "      sorted(glob.glob(f'/kaggle/input/**/camels531_{FORCING}_v2r_s*.pt', recursive=True))",
-            "ckpt = ':'.join(cks[:3])",
-            "cmd = (f'python scripts/eval_day1_kratzert.py --ckpt {ckpt} --corpus-dir {CORPUS} '",
-            "       f'--start 1989-10-01 --end 1999-09-30 --stride-days 1 --camels-subset 531 '",
-            "       f'--label {FORCING}_day1_full531')",
-            "print('>>', cmd, flush=True)",
-            "subprocess.run(cmd, shell=True)",
+            "                       recursive=True))[:3]",
+            "if cks:",
+            "    cmd = (f'python scripts/eval_day1_kratzert.py --ckpt {\":\".join(cks)} '",
+            "           f'--corpus-dir {CORPUS} --start 1989-10-01 --end 1999-09-30 '",
+            "           f'--stride-days 3 --camels-subset 531 --label {FORCING}_dhbv_day1_full531')",
+            "    print('>> δHBV headline:', cmd, flush=True); subprocess.run(cmd, shell=True)",
         ),
     ])
 
