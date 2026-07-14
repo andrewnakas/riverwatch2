@@ -61,8 +61,18 @@ def notebook(cells: list[dict]) -> dict:
 
 
 SETUP_CELL = code(
-    "# --- Setup: clone repo (SHA-logged), install the few deps Kaggle lacks ---",
-    "import os, subprocess, sys, textwrap",
+    "# --- GPU init: verify CUDA is really there BEFORE spending a session ---",
+    "import subprocess",
+    "subprocess.run(['nvidia-smi'], check=False)",
+    "import torch",
+    "assert torch.cuda.is_available(), \\",
+    "    'NO CUDA GPU — set Accelerator to GPU in the notebook settings!'",
+    "print('torch', torch.__version__, '| CUDA', torch.version.cuda,",
+    "      '| device', torch.cuda.get_device_name(0),",
+    "      '| capability', torch.cuda.get_device_capability(0))",
+    "",
+    "# --- Setup: clone repo (SHA-logged). Kaggle has torch/pandas/numpy already ---",
+    "import os, sys, textwrap",
     "os.chdir('/kaggle/working')",
     "if not os.path.exists('riverwatch2'):",
     f"    subprocess.run(['git','clone','--depth','1','--branch','{BRANCH}',",
