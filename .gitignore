@@ -27,3 +27,6 @@ data/mblstm/corpus_sources.json
 dist/
 .DS_Store
 *.egg-info/
+# Kaggle API credentials — never commit
+kaggle.json
+.kaggle/
