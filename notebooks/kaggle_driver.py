@@ -60,13 +60,31 @@ TRAIN_FLAGS = (
 # STATUS line, so failures are diagnosable without log access.
 GPU_INIT = r'''
 print("="*60, "\nGPU INIT", flush=True)
-subprocess.run(["nvidia-smi"], check=False)
+subprocess.run(["nvidia-smi","--query-gpu=name,compute_cap","--format=csv"], check=False)
+# Kaggle's default torch (2.10/cu128) dropped sm_60, but Kaggle often assigns a
+# P100 (sm_60). Probe the GPU arch WITHOUT committing the main import, and if the
+# installed torch can't drive it, pin 2.4.1+cu121 (covers sm_60..sm_90) FIRST so
+# the whole run uses a compatible torch.
+import torch as _t
+_cap = _t.cuda.get_device_capability(0) if _t.cuda.is_available() else (0,0)
+_sm = f"sm_{_cap[0]}{_cap[1]}"
+print("device", _t.cuda.get_device_name(0) if _t.cuda.is_available() else "NONE",
+      "| torch", _t.__version__, "| cap", _cap, "| arch", _t.cuda.get_arch_list(), flush=True)
+assert _t.cuda.is_available(), "NO CUDA GPU — enable the GPU accelerator!"
+if _sm not in _t.cuda.get_arch_list():
+    print(f"{_sm} unsupported by torch {_t.__version__} — pinning torch 2.4.1+cu121", flush=True)
+    subprocess.run([sys.executable,"-m","pip","install","-q","torch==2.4.1",
+        "torchvision==0.19.1","--index-url","https://download.pytorch.org/whl/cu121"], check=True)
+    if os.environ.get("RW2_PINNED")!="1":
+        os.environ["RW2_PINNED"]="1"
+        os.execv(sys.executable, [sys.executable, os.path.abspath(sys.argv[0])])
 import torch
-assert torch.cuda.is_available(), \
-    "NO CUDA GPU — enable the GPU accelerator (enable_gpu) before running!"
-print("torch", torch.__version__, "| CUDA", torch.version.cuda,
-      "| device", torch.cuda.get_device_name(0),
-      "| capability", torch.cuda.get_device_capability(0), flush=True)
+assert _sm in torch.cuda.get_arch_list(), f"{_sm} still unsupported after pin"
+print("EFFECTIVE torch", torch.__version__, "arch", torch.cuda.get_arch_list(),
+      "| GPU usable:", torch.cuda.is_available(), flush=True)
+# quick real GPU op to PROVE it works before the long run
+_x = torch.randn(1000,1000,device="cuda"); print("GPU matmul ok:",
+      float((_x@_x).sum().abs()>0), flush=True); del _x; torch.cuda.empty_cache()
 print("="*60, flush=True)
 
 # --- clone repo (pinned branch), log SHA ---
@@ -86,12 +104,44 @@ for f in ["camels_attrs.json","camels_gauge_ids.json","stations_40_enriched.json
         print("WARNING missing static input:", f)
 
 def corpus_dir(forcing):
-    cands = glob.glob(f"/kaggle/input/rw2-camels-corpus-{forcing}/**/camels_corpus_{forcing}_v2", recursive=True)
-    if not cands:
-        any_gz = glob.glob(f"/kaggle/input/rw2-camels-corpus-{forcing}/**/*.csv.gz", recursive=True)
-        cands = [os.path.dirname(any_gz[0])] if any_gz else []
-    if not cands: raise FileNotFoundError(f"no corpus for {forcing}")
-    return cands[0]
+    """Stage a writable dir of *.csv.gz (the trainer/backtest glob) from the Kaggle
+    input, whatever form it arrived in. Kaggle auto-EXTRACTS uploaded archives, so
+    the corpus lands as flat *.csv (uncompressed). We gzip those into the staged dir
+    (fast, one-time/session). Also handles a .tar or pre-existing *.csv.gz."""
+    import gzip, tarfile
+    # Kaggle mounts datasets under /kaggle/input/datasets/<owner>/<slug>/ on this
+    # account (not the classic /kaggle/input/<slug>/), so search ALL of /kaggle/input
+    # for files whose path contains the slug.
+    slug = f"rw2-camels-corpus-{forcing}"
+    def find(ext):
+        return [f for f in glob.glob(f"/kaggle/input/**/*.{ext}", recursive=True)
+                if slug in f and not os.path.basename(f).startswith("._")]
+    staged = f"/kaggle/working/corpus_{forcing}"
+    os.makedirs(staged, exist_ok=True)
+    if glob.glob(staged + "/*.csv.gz"):
+        pass                                   # already staged this session
+    elif find("csv.gz"):
+        for f in find("csv.gz"):
+            try: os.symlink(f, os.path.join(staged, os.path.basename(f)))
+            except FileExistsError: pass
+    elif find("tar"):
+        with tarfile.open(find("tar")[0]) as t: t.extractall(staged)
+        for f in glob.glob(staged + "/**/*.csv.gz", recursive=True):
+            dst = os.path.join(staged, os.path.basename(f))
+            if f != dst and not os.path.exists(dst): os.symlink(f, dst)
+    else:                                      # flat uncompressed *.csv → gzip them
+        csvs = find("csv")
+        print(f"gzipping {len(csvs)} flat .csv → .csv.gz ...", flush=True)
+        for f in csvs:
+            dst = os.path.join(staged, os.path.basename(f) + ".gz")
+            if not os.path.exists(dst):
+                with open(f, "rb") as i, gzip.open(dst, "wb") as o:
+                    shutil.copyfileobj(i, o)
+    n = len(glob.glob(staged + "/*.csv.gz"))
+    if not n:
+        raise FileNotFoundError(f"no corpus files for {slug} under /kaggle/input")
+    print(f"corpus {forcing}: {n} files -> {staged}", flush=True)
+    return staged
 '''
 
 def build_kernel_src(stage: str, forcing: str = "daymet", seeds="971,972,973",
@@ -210,14 +260,20 @@ def push(slug: str, src: str, datasets: list[str], enable_gpu: bool = True) -> s
         "enable_gpu": "true" if enable_gpu else "false",
         "enable_tpu": "false",
         "enable_internet": "true",       # needed for the git clone
+        # T4 is sm_75 (compatible with Kaggle's torch 2.10/cu128); the default P100
+        # is sm_60 and torch REFUSES it ("not compatible... supports sm_70+"). Force
+        # T4 or training silently can't use the GPU.
+        "machine_shape": "nvidiaTeslaT4" if enable_gpu else "",
         "dataset_sources": datasets,
         "competition_sources": [],
         "kernel_sources": [],
     }
     (work / "kernel-metadata.json").write_text(json.dumps(meta, indent=2))
-    print(f"pushing {slug} (gpu={enable_gpu}, datasets={datasets}) ...")
-    r = subprocess.run(["kaggle", "kernels", "push", "-p", str(work)],
-                       capture_output=True, text=True)
+    print(f"pushing {slug} (gpu={enable_gpu}, T4, datasets={datasets}) ...")
+    cmd = ["kaggle", "kernels", "push", "-p", str(work)]
+    if enable_gpu:
+        cmd += ["--accelerator", "nvidiaTeslaT4"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
     print(r.stdout.strip() or r.stderr.strip())
     return slug
 
