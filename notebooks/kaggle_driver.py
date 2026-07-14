@@ -142,6 +142,19 @@ def corpus_dir(forcing):
         raise FileNotFoundError(f"no corpus files for {slug} under /kaggle/input")
     print(f"corpus {forcing}: {n} files -> {staged}", flush=True)
     return staged
+
+def runlog(cmd):
+    """Run a shell command, STREAM its combined stdout/stderr into RESULT.txt
+    (the bare subprocess otherwise writes to the fd-level stdout the Tee misses),
+    return the exit code."""
+    print(">>", cmd, flush=True)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, text=True, bufsize=1)
+    for line in p.stdout:
+        print(line.rstrip(), flush=True)
+    p.wait()
+    print("rc", p.returncode, flush=True)
+    return p.returncode
 '''
 
 def build_kernel_src(stage: str, forcing: str = "daymet", seeds="971,972,973",
@@ -152,12 +165,15 @@ def build_kernel_src(stage: str, forcing: str = "daymet", seeds="971,972,973",
 CORPUS = corpus_dir("daymet")
 print("corpus:", CORPUS, len(glob.glob(CORPUS+"/*.csv.gz")), "basins", flush=True)
 # 5-epoch 1-seed δHBV to prove GPU training wires up end-to-end
-cmd = ("python scripts/train_mblstm.py --corpus-dir "+CORPUS+" {TRAIN_FLAGS} "
+cmd = ("python scripts/train_mblstm.py --corpus-dir "+CORPUS+
+       " --no-q-input --head dhbv --nmul 16 --dhbv-loss combined --forcing-correction "
+       "--enc-vars camels1f --static-set camels --q-transform linear --hidden 256 "
+       "--batch 256 --val-stride 10 --train-start 1999-10-01 --train-end 2008-09-30 "
+       "--val-start 1998-10-01 --val-end 1999-09-30 --device cuda "
        "--epochs 5 --windows-per-station 100 --seed 999 "
        "--out /kaggle/working/smoke_daymet_s999.pt")
-print(">>", cmd, flush=True)
-rc = subprocess.run(cmd, shell=True).returncode
-print("SMOKE rc", rc, "ckpt" , os.path.exists("/kaggle/working/smoke_daymet_s999.pt"), flush=True)
+rc = runlog(cmd)
+print("SMOKE rc", rc, "ckpt", os.path.exists("/kaggle/working/smoke_daymet_s999.pt"), flush=True)
 '''
     elif stage == "train":
         body = f'''
@@ -169,8 +185,7 @@ for s in SEEDS:
     if os.path.exists(out): print("skip", out, flush=True); continue
     cmd = ("python scripts/train_mblstm.py --corpus-dir "+CORPUS+" {TRAIN_FLAGS} "
            f"--epochs {epochs} --seed {{s}} --out "+out)
-    print(">>", cmd, flush=True)
-    rc = subprocess.run(cmd, shell=True).returncode
+    rc = runlog(cmd)
     print("seed", s, "rc", rc, "saved" if os.path.exists(out) else "NO CKPT", flush=True)
 for f in sorted(glob.glob("/kaggle/working/ckpts/*.pt")):
     print("CKPT", f, round(os.path.getsize(f)/1e6,2),"MB", flush=True)
@@ -271,10 +286,17 @@ def push(slug: str, src: str, datasets: list[str], enable_gpu: bool = True) -> s
     (work / "kernel-metadata.json").write_text(json.dumps(meta, indent=2))
     print(f"pushing {slug} (gpu={enable_gpu}, T4, datasets={datasets}) ...")
     cmd = ["kaggle", "kernels", "push", "-p", str(work)]
-    if enable_gpu:
-        cmd += ["--accelerator", "nvidiaTeslaT4"]
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    print(r.stdout.strip() or r.stderr.strip())
+    # Kaggle caps concurrent GPU sessions at 2 and lags ~1-2 min releasing them;
+    # retry on "Maximum batch GPU session count" until a slot frees.
+    for attempt in range(15):
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        out = (r.stdout + r.stderr).strip()
+        if "session count" in out.lower():
+            print(f"GPU sessions full, waiting 20s (attempt {attempt+1}) ...")
+            time.sleep(20)
+            continue
+        print(out)
+        break
     return slug
 
 
