@@ -92,3 +92,18 @@ predicted (δHBV adds ~+0.01 total, then stops). Still ~0.022 short of 0.83.
 THE REMAINING LEVER IS THE LSTM: our v2r LSTM is a pinball 14-day encoder-decoder
 (~0.76 single); the record's seq-to-one CudaLSTM ensemble is 0.808 and CARRIES the
 0.83. Now training the proper NH (neuralhydrology) CudaLSTM to reproduce that rung.
+
+## NH LSTM fidelity gate — nldas single-forcing (2026-07-15, A100)
+Trained the reference neuralhydrology CudaLSTM (hidden 256, seq 365, dropout 0.4,
+NSE loss, 30 epochs) on nldas via corpus_to_nh.py adapter. TEST median NSE = 0.7155
+(mean 0.669, 531 basins), val plateaued 0.70.
+VERDICT: did NOT beat our old nldas v2r encoder-decoder LSTM (0.732), and well short
+of the published ~0.79. ROOT CAUSE identified: we fed RAW q_cfs as the target, but
+basin flow spans 134× (10→1343 cfs mean). The Kratzert/Li-Shen recipe trains on
+SPECIFIC DISCHARGE (mm/day, area-normalized) so the per-basin NSE loss isn't dominated
+by big-river basins. Fix: convert q_cfs → mm/day using area_gages2 (present in
+camels_attrs) in the adapter, retrain. The fidelity gate correctly caught the
+non-faithful setup BEFORE scaling to the ensemble — do NOT train the 3-forcing
+ensemble until the target fix lands (would just give ~0.72, not 0.808).
+NEXT: corpus_to_nh.py add specific-discharge conversion; re-run nldas gate; if it
+hits ~0.77-0.79, scale to 3-forcing ensemble → 0.808 → grand-ensemble → 0.82-0.83.
