@@ -80,3 +80,15 @@ GRAND ENSEMBLE (fit-weights, 177-basin):
 VERDICT: combined-loss δHBV ADDS +0.0036 pooled (low end of the +0.005-0.015 est).
 First lever that lifts the ensemble. Now 0.806 pooled, ~0.024 short of 0.83 record.
 NEXT: nldas combined50 (training on Lightning T4) + more seeds to compound.
+
+## 3-forcing combined-loss δHBV grand ensemble (Lightning campaign complete, 2026-07-15)
+All 3 forcings' combined-loss δHBV members (daymet+maurer on Kaggle, nldas on
+Lightning T4) trained + dumped. Single-member NSE: daymet 0.758, maurer 0.716, nldas 0.717.
+10-member grand ensemble (fit-weights, 177-basin): pooled 0.8076 / day-1 0.8285.
+  vs baseline 7-member 0.8025 → +0.0051 pooled
+  vs 2-forcing combined 0.8058 → +0.0018 (3rd forcing adds a little)
+VERDICT: δHBV side is MAXED at ~0.808 pooled — plateaus exactly where the research
+predicted (δHBV adds ~+0.01 total, then stops). Still ~0.022 short of 0.83.
+THE REMAINING LEVER IS THE LSTM: our v2r LSTM is a pinball 14-day encoder-decoder
+(~0.76 single); the record's seq-to-one CudaLSTM ensemble is 0.808 and CARRIES the
+0.83. Now training the proper NH (neuralhydrology) CudaLSTM to reproduce that rung.
