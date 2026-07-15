@@ -49,7 +49,14 @@ FORCING_MAP = {
     "shortwave_radiation_sum": "srad",
 }
 DYNAMIC_INPUTS = list(FORCING_MAP.values())          # prcp,tmax,tmin,vp,srad
-TARGET = "q_cfs"
+# The Kratzert/Li-Shen CAMELS record trains on SPECIFIC DISCHARGE (mm/day, area-
+# normalized) — NOT raw cfs. With raw cfs the per-basin NSE loss is dominated by
+# big-river basins (basin mean flow spans ~134x), underfitting the small basins
+# that set the median NSE (our first gate: raw-cfs nldas = 0.716, below par).
+# q_mm/day = q_cfs * 0.0283168 (m3/s per cfs) * 86400 (s/day) / (area_km2 * 1e6 m2)
+#            * 1000 (mm/m)  =  q_cfs * 2.446576 / area_km2
+CFS_TO_MMDAY_PER_KM2 = 0.0283168 * 86400 / 1e6 * 1000   # = 2.446...
+TARGET = "q_mm"       # specific discharge — the record's target
 STATIC_ATTRS = [
     "p_mean", "pet_mean", "aridity", "p_seasonality", "frac_snow",
     "high_prec_freq", "high_prec_dur", "low_prec_freq", "low_prec_dur",
@@ -66,20 +73,24 @@ def load_camels_531(root: Path) -> list[str]:
     return [str(x).strip().zfill(8) for x in d["531"]]
 
 
-def basin_to_nc(csv_path: Path, out_nc: Path) -> bool:
-    """One corpus csv.gz → NH netCDF (coord 'date', vars = 5 forcings + q_cfs)."""
+def basin_to_nc(csv_path: Path, out_nc: Path, area_km2: float) -> bool:
+    """One corpus csv.gz → NH netCDF (coord 'date', vars = 5 forcings + q_mm).
+    Converts raw q_cfs → specific discharge (mm/day) using the basin area so the
+    NSE loss is comparable across basins (the record's target)."""
     df = pd.read_csv(csv_path)
-    if not {*FORCING_MAP, TARGET, "date"} <= set(df.columns):
+    if not {*FORCING_MAP, "q_cfs", "date"} <= set(df.columns):
+        return False
+    if not (area_km2 and np.isfinite(area_km2) and area_km2 > 0):
         return False
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date").set_index("date")
-    # regular daily index (NH wants a gap-free datetime coord; NaNs are fine)
     idx = pd.date_range(df.index[0], df.index[-1], freq="D")
     df = df.reindex(idx)
+    q_mm = df["q_cfs"].to_numpy(dtype="float64") * CFS_TO_MMDAY_PER_KM2 / area_km2
     ds = xr.Dataset(coords={"date": idx.values})
     for src, dst in FORCING_MAP.items():
         ds[dst] = ("date", df[src].to_numpy(dtype="float32"))
-    ds[TARGET] = ("date", df[TARGET].to_numpy(dtype="float32"))
+    ds[TARGET] = ("date", q_mm.astype("float32"))
     out_nc.parent.mkdir(parents=True, exist_ok=True)
     ds.to_netcdf(out_nc)
     return True
@@ -110,7 +121,8 @@ def main() -> int:
     written, attr_rows = [], []
     for i, p in enumerate(files, 1):
         bid = p.name.split(".")[0]
-        if basin_to_nc(p, out / "time_series" / f"{bid}.nc"):
+        area = attrs.get(bid, {}).get("area_gages2")
+        if basin_to_nc(p, out / "time_series" / f"{bid}.nc", area):
             written.append(bid)
             row = {"gauge_id": bid}
             a = attrs.get(bid, {})
