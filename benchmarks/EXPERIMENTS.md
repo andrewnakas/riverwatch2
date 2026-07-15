@@ -66,3 +66,17 @@ Anchored (as-served) and unanchored both reported for headline runs.
 | 38 | 07-13 | ✅ VERIFIED FULL-531 with-q grand — day-1 NSE 0.9016 (all 531 basins, BEATS record) | 3 per-forcing with-q LSTM (2 seeds each, daymet/maurer/nldas, discharge-assimilated), full-531 dumps (stride-stations 1, all 531 basins, LOCAL), combined --fit-weights. VERIFIED on the SAME 531-basin set as Nearing's record (not the 177 screen) | verified all-531 day-1 ≥ 0.879 record, target 0.90 | **VERIFIED full-531 (scorable 531): day-1 NSE 0.9016 / pooled 0.8083 / KGE 0.856. Per-forcing members daymet 0.778/maurer 0.771/nldas 0.775. Beats Nearing 2022 record 0.879 by +0.023 AND clears the 0.90 target — with only 2-seed LSTM ensemble (δHBV members training to push higher).** | **RECORD VERIFIABLY BEATEN on all 531 + 0.90 CLEARED (discharge-assimilating day-1 nowcast). 0.9016 > 0.879 record.** The operational model. δHBV + more seeds + fused = grand ensemble headroom above 0.90. benchmarks/combine_withq_full531_2seed.json
 
 | 39 | 07-13 | TRACK B: combined-loss δHBV (--dhbv-loss combined, Shen 0.5·MSE+0.5·log10(Q+0.1)) — the no-q decorrelation fix | Trained daymet δHBV --dhbv-loss combined --nmul 16, dumped stride-14/ss3, swapped into the no-q grand ensemble (replacing daymet fcorr δHBV) | combined-loss δHBV decorrelates → no-q pooled rises toward 0.82 | **Combined-loss δHBV MEMBER = 0.767 (vs plain δHBV daymet 0.751, +0.016 — the low-flow log term helps the member). No-q grand with it swapped in (1 forcing): pooled 0.8025 / day-1 0.8283 vs prior best 0.8004/0.829 — +0.0021 pooled.** | **Combined loss WORKS (member +0.016, ensemble +0.002) — the research diagnosis was right (δHBV was under-decorrelated on plain MSE). But the lift is SMALL: no-q ceiling remains ~0.80-0.81 pooled. Rolling out to maurer+nldas combined would add a bit more but won't reach 0.83. Confirms the no-q ceiling is real.** benchmarks/combine_combined_noq_test.json
+
+## Combined-loss δHBV (Kaggle/Lightning campaign, 2026-07-15)
+The decorrelation loss (`--dhbv-loss combined`) — NEVER trained into the shipped
+members (cfg dhbv_loss=None is a trainer serialization gap; weights ARE combined-
+trained) — finally trained on Kaggle GPU: daymet+maurer combined50 members, 50ep,
+single-member NSE 0.758/0.716 (177-basin stride-14/ss3).
+GRAND ENSEMBLE (fit-weights, 177-basin):
+  baseline 7-member:           pooled 0.8025 / day-1 0.8283
+  SWAP combined50 in:          pooled 0.8015 / day-1 0.823   (−0.001, swap removes good members)
+  ADD combined50 (9-member):   pooled 0.8058 / day-1 0.825   (+0.0036 pooled — HELPS)
+  ADD combined50+nmul16 (11):  pooled 0.8061 / day-1 0.826   (+0.0036)
+VERDICT: combined-loss δHBV ADDS +0.0036 pooled (low end of the +0.005-0.015 est).
+First lever that lifts the ensemble. Now 0.806 pooled, ~0.024 short of 0.83 record.
+NEXT: nldas combined50 (training on Lightning T4) + more seeds to compound.

@@ -1,0 +1,105 @@
+{
+  "label": "noq_add_combined50",
+  "members": [
+    "data/mblstm/gpu_dumps_s14/camels531_daymet_combined_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_maurer_fcorr_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_nldas_fcorr_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_daymet_v2r_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_maurer_v2r_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_nldas_v2r_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_fused_v2r_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_daymet_combined50_ens_s14.csv.gz",
+    "data/mblstm/gpu_dumps_s14/camels531_maurer_combined50_ens_s14.csv.gz"
+  ],
+  "point": "ymed",
+  "weights": [
+    0.20373725470404708,
+    0.06366937307229152,
+    0.19119345845731892,
+    0.017705107905998874,
+    0.09324891144251701,
+    0.12562187420609222,
+    0.08130392779139571,
+    0.16651179408193806,
+    0.05700829833840069
+  ],
+  "n_windows": 46148,
+  "metrics": {
+    "full": {
+      "log_nse": {
+        "median": 0.8738749248981016,
+        "mean": 0.7949030953409933,
+        "scorable": 177
+      },
+      "pct_bias": {
+        "median": -5.1715920543597225,
+        "mean": -6.690636742347293,
+        "scorable": 177
+      },
+      "kge": {
+        "median": 0.7634887953986638,
+        "mean": 0.7225031348019382,
+        "scorable": 177
+      },
+      "flv": {
+        "median": -40.16874063404492,
+        "mean": -34.74829672358686,
+        "scorable": 174
+      },
+      "nse": {
+        "median": 0.805848131984828,
+        "mean": 0.7666299022405794,
+        "scorable": 177,
+        "frac_gt_0.5": 0.9491525423728814
+      },
+      "fhv": {
+        "median": -24.503444086424437,
+        "mean": -26.381245154648532,
+        "scorable": 177
+      },
+      "pearson_r": {
+        "median": 0.9098387008587092,
+        "mean": 0.891499816251017,
+        "scorable": 177
+      }
+    },
+    "day1": {
+      "log_nse": {
+        "median": 0.8687223465587879,
+        "mean": 0.7925929886339411,
+        "scorable": 177
+      },
+      "pct_bias": {
+        "median": -5.378806765159853,
+        "mean": -5.90475136441822,
+        "scorable": 177
+      },
+      "kge": {
+        "median": 0.7918754226230491,
+        "mean": 0.7257864071237871,
+        "scorable": 177
+      },
+      "flv": {
+        "median": -36.876144352783754,
+        "mean": -31.95563626645995,
+        "scorable": 174
+      },
+      "nse": {
+        "median": 0.8250276984618937,
+        "mean": 0.7751873520633553,
+        "scorable": 177,
+        "frac_gt_0.5": 0.9265536723163842
+      },
+      "fhv": {
+        "median": -23.05647810689925,
+        "mean": -22.824885780845843,
+        "scorable": 177
+      },
+      "pearson_r": {
+        "median": 0.9306928673896787,
+        "mean": 0.9111447988875621,
+        "scorable": 177
+      }
+    }
+  }
+}
