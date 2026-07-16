@@ -107,3 +107,26 @@ non-faithful setup BEFORE scaling to the ensemble — do NOT train the 3-forcing
 ensemble until the target fix lands (would just give ~0.72, not 0.808).
 NEXT: corpus_to_nh.py add specific-discharge conversion; re-run nldas gate; if it
 hits ~0.77-0.79, scale to 3-forcing ensemble → 0.808 → grand-ensemble → 0.82-0.83.
+
+## NH LSTM fidelity gate — nldas, SPECIFIC-DISCHARGE FIX (2026-07-15, A100)
+Applied the mm/day fix: corpus_to_nh.py now converts q_cfs → specific discharge
+(q_mm = q_cfs * 2.4466 / area_gages2_km2). Retrained the identical NH CudaLSTM
+recipe (5 forcings prcp/tmax/tmin/vp/srad, 27 Addor statics, NSE loss, hidden 256,
+seq 365, dropout 0.4, batch 256, 30 epochs, LR 1e-3→5e-4@20→1e-4@25). The mm/day
+target made training converge cleanly (sane loss 0.024 vs the raw-cfs run's degenerate
+0.00000; val NSE 0.678@ep10 vs 0.633; final val 0.705).
+RESULT: **TEST median NSE = 0.7229** (mean 0.680, 531 basins, frac<0.5 = 0.132,
+frac<0 = 0.000). Date windows verified exactly benchmark (train 1999-2008 / test
+1989-99), config faithful (no target leak into statics — re-checked).
+VERDICT: the specific-discharge fix improved CONVERGENCE but NOT the test number
+(0.7155 → 0.7229, +0.007). The reference seq-to-one CudaLSTM lands RIGHT IN THE
+MIDDLE of our own nldas members (v2r 0.717-0.732, δHBV 0.703-0.717) — it reproduces
+them, it does NOT beat them. **This revises the plan's central thesis: the LSTM
+architecture is NOT the whole gap to 0.83 for nldas — our encoder-decoder already
+extracted the same per-forcing signal.** nldas is the WEAKEST forcing (daymet single
+= 0.755-0.761 in our v2r runs), so 0.72 nldas is expected, not a failure. The
+decisive remaining test is DAYMET: if NH daymet lands ~0.78-0.79 (vs our v2r 0.76),
+the architecture buys +0.02-0.03 and the ensemble path to 0.83 reopens; if it ties
+~0.76, the thesis is dead and 0.83-no-q is confirmed above our reachable ceiling
+(consistent with every prior plateau at ~0.80 pooled). Running the daymet gate on
+the idle A100 — the cheapest possible disambiguation (~15 min).
