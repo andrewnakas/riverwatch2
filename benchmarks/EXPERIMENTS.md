@@ -130,3 +130,52 @@ the architecture buys +0.02-0.03 and the ensemble path to 0.83 reopens; if it ti
 ~0.76, the thesis is dead and 0.83-no-q is confirmed above our reachable ceiling
 (consistent with every prior plateau at ~0.80 pooled). Running the daymet gate on
 the idle A100 — the cheapest possible disambiguation (~15 min).
+
+## NH LSTM DECISIVE gate — daymet single-forcing (2026-07-15, A100) — THESIS DISPROVEN
+Trained the identical reference NH CudaLSTM recipe on daymet (the STRONG forcing;
+5 forcings mm/day, 27 Addor statics, NSE loss, hidden 256, seq 365, dropout 0.4,
+batch 256, 30 epochs, LR 1e-3→5e-4@20→1e-4@25). Clean convergence (loss 0.022,
+val NSE climbed 0.710@ep6 → 0.730@ep16 → 0.734@ep26/final).
+RESULT: **TEST median NSE = 0.7496** (mean 0.704, 531 basins, frac<0.5 = 0.087,
+q25 0.642 / q75 0.817).
+VERDICT (DECISIVE): the reference seq-to-one CudaLSTM lands at **0.750 — TIED with
+(if anything a hair below) our own daymet v2r encoder-decoder (0.755-0.761)**. On
+BOTH forcings the reference implementation REPRODUCES our members, it does NOT beat
+them (nldas: NH 0.723 vs v2r 0.717-0.732; daymet: NH 0.750 vs v2r 0.755-0.761).
+**THE PLAN'S CENTRAL THESIS IS DISPROVEN: our pinball 14-day encoder-decoder LSTM
+was NEVER the gap to 0.83.** Our LSTM already extracts the full per-forcing signal
+the reference CudaLSTM does. The ~0.02-0.03 gap between our ensemble (0.80 pooled)
+and the 0.83 record is NOT recoverable by a "better" LSTM architecture — it is down
+to seed depth (the record is a 7-member SEED-AVERAGED grand ensemble) and possibly
+subtle eval/protocol differences, NOT architecture. This is consistent with every
+prior plateau at ~0.80 pooled this campaign. Trained the reference impl precisely to
+remove any doubt we'd subtly re-derived the wrong thing — we hadn't; our members were
+already at the reference LSTM's level. STOPPED the A100 (no point training maurer/nldas
+NH — they would tie too and burn the remaining ~2.7 credits for nothing). One free
+follow-up: fold the daymet-NH dump into the existing local δHBV/v2r ensemble to check
+whether a reference-recipe member decorrelates better (zero A100 cost).
+
+## NH LSTM grand-ensemble decorrelation test (2026-07-15, local, ZERO A100) — CEILING CONFIRMED
+Built the daymet-NH member dump (nh_to_dump.py: continuous daily mm/day sim →
+stride-14 cfs grid, standalone median NSE 0.745 on the 177-station ss3 screen,
+verified == the gate) and folded it into the existing best 7-member grand ensemble
+(3 fcorr δHBV + 3 v2r LSTM + fused v2r), fit-weights on the val slice (t0<=1998-09-30).
+(Bug found + fixed en route: nh_to_dump wrote station_id as an unpadded int while the
+δHBV/v2r dumps store it zero-padded as str — combine_dumps reads station_id as str, so
+the inner-join silently collapsed to the ~34 western basins whose ids have no leading
+zero, faking a 0.854. Padding station_id to 8 chars restored the full 177-station join.)
+RESULT (both 177 stations, 46148 windows):
+  baseline 7-member : pooled 0.7987 / day-1 0.824  (val medNSE 0.8001)
+  + daymet-NH (8-mem): pooled 0.7989 / day-1 0.8261 (val medNSE 0.8014)
+  Δ = +0.0002 pooled / +0.0021 day-1. Fitted weight on the NH member = **0.000**.
+VERDICT (FINAL): the reference-recipe seq-to-one LSTM adds ESSENTIALLY NOTHING to the
+ensemble (+0.0002 pooled) and the weight-optimizer assigns it ZERO weight — it does NOT
+decorrelate; everything it captures is already in the existing members. Combined with
+the standalone gates (daymet NH 0.750 ≈ v2r 0.755; nldas NH 0.723 ≈ v2r 0.732), this
+CLOSES the architecture question: our ~0.80 pooled ceiling is REAL and architecture-
+independent. The proper reference LSTM was NOT a hidden lever. The gap to the 0.83 no-q
+record is down to seed depth (record = 7-member seed-averaged grand ensemble) + subtle
+eval/protocol nuances, NOT a better model we hadn't tried. Stopped here — no maurer/nldas
+NH training (would tie + burn the remaining ~2.7 credits for a confirmed null result).
+NET FOR THE CAMPAIGN: no-q best stays 0.80 pooled / 0.824 day-1 (0.829 day-1 with nmul16);
+the separate WITH-Q model already BEAT its record (day-1 0.9016 vs Nearing 0.879).

@@ -69,17 +69,22 @@ def main() -> int:
     # existing δHBV dump so combine_dumps.py joins them cleanly.
     keep_stations: set[int] | None = None
     template_t0: list[pd.Timestamp] | None = None
+    keep_stations_s: set[str] | None = None
     if args.stations_like:
         tdf = pd.read_csv(args.stations_like, compression="gzip",
-                          usecols=["station_id", "t0"])
-        keep_stations = set(tdf["station_id"].unique().tolist())
+                          usecols=["station_id", "t0"], dtype={"station_id": str})
+        keep_stations_s = set(tdf["station_id"].astype(str).unique().tolist())
         template_t0 = sorted(pd.to_datetime(tdf["t0"].unique()))
 
     rows = []
     n_used = 0
     for bid, per in res.items():
-        sid = int(bid)  # NH keys are zero-padded strings; combine uses int ids
-        if keep_stations is not None and sid not in keep_stations:
+        # combine_dumps.py reads station_id as STR — the δHBV/v2r dumps store it
+        # ZERO-PADDED (e.g. "01022500"). Emit the same padded string so the
+        # (station_id,t0,h) inner-join matches (an int "1022500" silently drops
+        # every leading-zero basin → only ~34 western basins survive).
+        sid = str(bid).zfill(8)
+        if keep_stations_s is not None and sid not in keep_stations_s:
             continue
         area = areas.get(str(bid).zfill(8)) or areas.get(bid)
         if not (area and np.isfinite(area) and area > 0):
