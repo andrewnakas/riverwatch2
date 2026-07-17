@@ -121,9 +121,11 @@ def fetch_corpora_from_kaggle() -> str:
 
     # per-dataset remote filename for a basin id
     def remote_name(forcing: str, bid: str) -> str:
+        # verified filenames on the Kaggle datasets: daymet is plain .csv nested
+        # under camels_corpus_daymet_v2/, maurer+nldas are flat plain .csv.
         if forcing == "daymet":
-            return f"camels_corpus_daymet_v2/{bid}.csv.gz"
-        return f"{bid}.csv"     # maurer, nldas are flat plain-csv
+            return f"camels_corpus_daymet_v2/{bid}.csv"
+        return f"{bid}.csv"
 
     results = []
     for forcing in ["daymet", "nldas", "maurer"]:
