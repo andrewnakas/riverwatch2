@@ -101,9 +101,19 @@ def fetch_corpora_from_kaggle() -> str:
         {"username": os.environ["KAGGLE_USERNAME"], "key": os.environ["KAGGLE_KEY"]}))
     (kdir / "kaggle.json").chmod(0o600)
 
+    import threading
     from kaggle.api.kaggle_api_extended import KaggleApi
-    api = KaggleApi()
-    api.authenticate()
+    # the kaggle client is NOT thread-safe (shared http session/state) — give each
+    # worker thread its own authenticated api instance via thread-local storage.
+    _tl = threading.local()
+
+    def _api() -> "KaggleApi":
+        a = getattr(_tl, "api", None)
+        if a is None:
+            a = KaggleApi()
+            a.authenticate()
+            _tl.api = a
+        return a
 
     # 531 basin ids (zero-padded) from the baked repo json
     ids = json.loads(Path("/root/rw/data/camels_gauge_ids.json").read_text())["531"]
@@ -124,17 +134,34 @@ def fetch_corpora_from_kaggle() -> str:
         todo = [b for b in ids if b not in have]
         print(f"[{forcing}] have {len(have)}, fetching {len(todo)} …", flush=True)
 
-        def grab(bid: str) -> tuple[str, bool]:
+        def grab(bid: str) -> tuple[str, bool, str]:
+            import random
+            import time as _t
             tmp = Path(f"/tmp/{forcing}_{bid}")
             tmp.mkdir(parents=True, exist_ok=True)
+            last = "no-file"
             try:
-                api.dataset_download_file(ds, remote_name(forcing, bid),
-                                          path=str(tmp), quiet=True)
-                # find whatever landed (kaggle may add .zip or keep .csv/.csv.gz)
+                # retry with backoff — Kaggle rate-limits (429) bursts and the client
+                # can surface follow-on calls as 404, so be gentle + retry.
+                for attempt in range(6):
+                    try:
+                        _api().dataset_download_file(ds, remote_name(forcing, bid),
+                                                     path=str(tmp), quiet=True)
+                    except Exception as e:
+                        last = f"{type(e).__name__}: {str(e)[:50]}"
+                        _t.sleep(1.5 * (attempt + 1) + random.random())
+                        continue
+                    got = [p for p in tmp.rglob("*")
+                           if p.is_file() and not p.name.startswith("._")]
+                    if got:
+                        break
+                    _t.sleep(1.0 + random.random())
+                else:
+                    return bid, False, last
                 got = [p for p in tmp.rglob("*")
                        if p.is_file() and not p.name.startswith("._")]
                 if not got:
-                    return bid, False
+                    return bid, False, last
                 src = max(got, key=lambda p: p.stat().st_size)
                 out = dst / f"{bid}.csv.gz"
                 if src.suffix == ".gz":
@@ -153,27 +180,31 @@ def fetch_corpora_from_kaggle() -> str:
                 else:  # plain .csv
                     with open(src, "rb") as fi, gzip.open(out, "wb") as fo:
                         shutil.copyfileobj(fi, fo)
-                return bid, True
+                return bid, True, ""
             except Exception as e:
-                return bid, False
+                return bid, False, f"{type(e).__name__}: {e}"
             finally:
                 shutil.rmtree(tmp, ignore_errors=True)
 
         ok = 0
         fails = []
-        with ThreadPoolExecutor(max_workers=16) as ex:
+        errs: dict[str, int] = {}
+        with ThreadPoolExecutor(max_workers=3) as ex:
             futs = {ex.submit(grab, b): b for b in todo}
             for i, fut in enumerate(as_completed(futs), 1):
-                bid, good = fut.result()
+                bid, good, err = fut.result()
                 ok += good
                 if not good:
                     fails.append(bid)
+                    errs[err] = errs.get(err, 0) + 1
                 if i % 100 == 0:
                     print(f"  [{forcing}] {i}/{len(todo)} ({ok} ok)", flush=True)
                     corpora_vol.commit()
         total = len(have) + ok
         results.append(f"{forcing}: {total}/531 (new {ok}, fails {len(fails)})")
-        print(f"[{forcing}] done: {total}/531, fails: {fails[:10]}", flush=True)
+        top_errs = sorted(errs.items(), key=lambda kv: -kv[1])[:3]
+        print(f"[{forcing}] done: {total}/531, fails: {fails[:5]}, "
+              f"top errs: {top_errs}", flush=True)
         corpora_vol.commit()
     corpora_vol.commit()
     return " | ".join(results)
