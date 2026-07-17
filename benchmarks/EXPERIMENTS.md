@@ -179,3 +179,27 @@ eval/protocol nuances, NOT a better model we hadn't tried. Stopped here — no m
 NH training (would tie + burn the remaining ~2.7 credits for a confirmed null result).
 NET FOR THE CAMPAIGN: no-q best stays 0.80 pooled / 0.824 day-1 (0.829 day-1 with nmul16);
 the separate WITH-Q model already BEAT its record (day-1 0.9016 vs Nearing 0.879).
+
+## Paper re-read + Modal 9-member ensemble attempt (2026-07-16/17) — BLOCKED on compute
+Re-read Li/Shen 2025 (HESS 29:6829) + Kratzert 2021 against 3 sources to answer "what
+architecture reaches 0.83?". FINDINGS: (a) the split is IDENTICAL to ours (train
+1999-2008 / test 1989-99, Kratzert 2021 — the paper defers to it); my first read that it
+was 1989-2008/2008-14 was a fast-model misread, corrected. (b) The architecture is the
+same CudaLSTM we already reproduced. (c) Table D1 (verified): LSTM¹ 0.735, LSTM¹²³ 0.808,
+δHBV¹ 0.740, (LSTM+δHBV)¹²³ 0.818, (LSTM+δHBV)seed¹²³ 0.830. Our single members MATCH the
+paper (0.75 vs 0.735); the whole gap is our 3-forcing LSTM ENSEMBLE landing ~0.786 vs
+their 0.808 — i.e. ensemble/seed DEPTH, not architecture. The path to 0.83 is 9 clean NH
+reference-LSTM members (3 forcings × 3 seeds) → 0.808, + our δHBV → 0.818 → 0.83.
+BUILT + VALIDATED the full Modal pipeline (modal/modal_train.py + modal_launch.py):
+corpora fetched from Kaggle (per-file fetch wedges on Modal's rate-limited datacenter IP;
+reliable path = laptop bulk-download → gzip → modal volume put; all 3×531 on the
+riverwatch-corpora Volume), NH-data build + train + eval + nh_to_dump all wired and
+SMOKE-VALIDATED (nldas s111 trained clean, sane NSE loss 0.01-0.07, reached epoch 1+).
+Launched all 9 members. BLOCKED: Modal free-tier "workspace billing cycle spend limit
+reached" killed all 9 at ~epoch 3 (only model_epoch001.pt saved — too undertrained to use).
+The ~$30 free credit was consumed by 9 parallel L4 containers + earlier wedged-fetch runs +
+image builds. STATE: pipeline is DONE and validated; corpora + NH data cached on the Volume;
+only compute credit blocks the final 9-member run. RESUME when Modal credit resets (monthly)
+or a payment method is added, or port the same app to another GPU provider — then
+`./.venv/bin/python modal/modal_launch.py train` (leave the app UNTOUCHED while it runs —
+stop/redeploy severs running containers) → pull → grand ensemble vs Table D1.
