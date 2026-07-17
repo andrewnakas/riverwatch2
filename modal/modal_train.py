@@ -70,6 +70,114 @@ image = (
 corpora_vol = modal.Volume.from_name(VOLUME, create_if_missing=True)
 out_vol = modal.Volume.from_name(OUT_VOLUME, create_if_missing=True)
 
+# image variant that also has the kaggle client (only the fetch fn needs it)
+fetch_image = image.pip_install("kaggle")
+
+
+@app.function(
+    image=fetch_image,
+    volumes={"/data": corpora_vol},
+    secrets=[modal.Secret.from_name("kaggle-creds")],
+    timeout=60 * 30,
+)
+def fetch_corpora_from_kaggle() -> str:
+    """Download the 3 corpora onto the Volume, normalized to the adapter's layout
+    /data/corpora/camels_corpus_<forcing>_v2/<id>.csv.gz.
+
+    The scoped KGAT token is FORBIDDEN (403) on the bulk dataset-download endpoint,
+    but the PER-FILE endpoint works — so we fetch each of the 531 known basin ids
+    individually (parallel threads). Filenames differ by dataset: daymet stores
+    <camels_corpus_daymet_v2/<id>.csv.gz>, maurer/nldas store flat <id>.csv."""
+    import gzip
+    import json
+    import os
+    import shutil
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    from pathlib import Path
+
+    kdir = Path.home() / ".kaggle"
+    kdir.mkdir(parents=True, exist_ok=True)
+    (kdir / "kaggle.json").write_text(json.dumps(
+        {"username": os.environ["KAGGLE_USERNAME"], "key": os.environ["KAGGLE_KEY"]}))
+    (kdir / "kaggle.json").chmod(0o600)
+
+    from kaggle.api.kaggle_api_extended import KaggleApi
+    api = KaggleApi()
+    api.authenticate()
+
+    # 531 basin ids (zero-padded) from the baked repo json
+    ids = json.loads(Path("/root/rw/data/camels_gauge_ids.json").read_text())["531"]
+    ids = [str(x).strip().zfill(8) for x in ids]
+
+    # per-dataset remote filename for a basin id
+    def remote_name(forcing: str, bid: str) -> str:
+        if forcing == "daymet":
+            return f"camels_corpus_daymet_v2/{bid}.csv.gz"
+        return f"{bid}.csv"     # maurer, nldas are flat plain-csv
+
+    results = []
+    for forcing in ["daymet", "nldas", "maurer"]:
+        ds = f"andrewnakas/rw2-camels-corpus-{forcing}"
+        dst = Path(f"/data/corpora/camels_corpus_{forcing}_v2")
+        dst.mkdir(parents=True, exist_ok=True)
+        have = {p.name.split(".")[0] for p in dst.glob("*.csv.gz")}
+        todo = [b for b in ids if b not in have]
+        print(f"[{forcing}] have {len(have)}, fetching {len(todo)} …", flush=True)
+
+        def grab(bid: str) -> tuple[str, bool]:
+            tmp = Path(f"/tmp/{forcing}_{bid}")
+            tmp.mkdir(parents=True, exist_ok=True)
+            try:
+                api.dataset_download_file(ds, remote_name(forcing, bid),
+                                          path=str(tmp), quiet=True)
+                # find whatever landed (kaggle may add .zip or keep .csv/.csv.gz)
+                got = [p for p in tmp.rglob("*")
+                       if p.is_file() and not p.name.startswith("._")]
+                if not got:
+                    return bid, False
+                src = max(got, key=lambda p: p.stat().st_size)
+                out = dst / f"{bid}.csv.gz"
+                if src.suffix == ".gz":
+                    shutil.copy(src, out)
+                elif src.suffix == ".zip":
+                    import zipfile
+                    with zipfile.ZipFile(src) as z:
+                        inner = [n for n in z.namelist()
+                                 if not n.split("/")[-1].startswith("._")][0]
+                        data = z.read(inner)
+                    if inner.endswith(".gz"):
+                        out.write_bytes(data)
+                    else:
+                        with gzip.open(out, "wb") as fo:
+                            fo.write(data)
+                else:  # plain .csv
+                    with open(src, "rb") as fi, gzip.open(out, "wb") as fo:
+                        shutil.copyfileobj(fi, fo)
+                return bid, True
+            except Exception as e:
+                return bid, False
+            finally:
+                shutil.rmtree(tmp, ignore_errors=True)
+
+        ok = 0
+        fails = []
+        with ThreadPoolExecutor(max_workers=16) as ex:
+            futs = {ex.submit(grab, b): b for b in todo}
+            for i, fut in enumerate(as_completed(futs), 1):
+                bid, good = fut.result()
+                ok += good
+                if not good:
+                    fails.append(bid)
+                if i % 100 == 0:
+                    print(f"  [{forcing}] {i}/{len(todo)} ({ok} ok)", flush=True)
+                    corpora_vol.commit()
+        total = len(have) + ok
+        results.append(f"{forcing}: {total}/531 (new {ok}, fails {len(fails)})")
+        print(f"[{forcing}] done: {total}/531, fails: {fails[:10]}", flush=True)
+        corpora_vol.commit()
+    corpora_vol.commit()
+    return " | ".join(results)
+
 FORCINGS = ["daymet", "nldas", "maurer"]
 SEEDS = [111, 222, 333]
 

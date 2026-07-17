@@ -52,6 +52,28 @@ def upload() -> None:
     print("UPLOAD DONE — corpora on volume", VOLUME)
 
 
+def fetch() -> None:
+    """Download the corpora straight from Kaggle onto the Modal Volume (cloud-side;
+    no SD card, no laptop disk). Uses the DEPLOYED function + .spawn() so a local
+    wifi blip can't kill the server-side job. Needs the `kaggle-creds` secret."""
+    import time
+    import modal
+    fn = modal.Function.from_name("riverwatch-nh-lstm", "fetch_corpora_from_kaggle")
+    call = fn.spawn()
+    print(f"spawned fetch (call id {call.object_id}); running server-side, "
+          f"safe across disconnects. polling …", flush=True)
+    while True:
+        try:
+            print("RESULT:", call.get(timeout=60), flush=True)
+            break
+        except modal.exception.OutputExpiredError:
+            print("  (result expired — check volume with `pull`/`ls`)", flush=True)
+            break
+        except TimeoutError:
+            print("  … still fetching", flush=True)
+            time.sleep(30)
+
+
 def train() -> None:
     # import here so `upload`/`pull` don't require the app image locally
     sys.path.insert(0, str(REPO / "modal"))
@@ -81,6 +103,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "upload":
         upload()
+    elif cmd == "fetch":
+        fetch()
     elif cmd == "train":
         train()
     elif cmd == "pull":
