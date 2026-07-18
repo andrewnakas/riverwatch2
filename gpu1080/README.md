@@ -11,13 +11,18 @@ is ~1-2 hr on a 1080; 9 members ≈ 12-18 hr (or run a few, ensembling is forgiv
 
 ```bash
 cd gpu1080
-# 1. python deps (a venv is cleanest)
-python3 -m pip install neuralhydrology torch pandas numpy xarray netCDF4 scipy
+# 1. python deps — USE THE SCRIPT. A GTX 1080 is Pascal (sm_61); recent cu128
+#    torch wheels dropped Pascal, so a bare `pip install torch` may not run on
+#    the GPU. setup_1080.sh creates ./.venv with torch==2.4.1+cu121 (proven on
+#    sm_60/61) and gates on a real cuda matmul.
+bash setup_1080.sh
 
-# 2. get the 3 corpora (Kaggle bulk-download works from a home IP):
-#    needs ~/.kaggle/kaggle.json with a FULL (non-scoped) key
-export KAGGLE_CONFIG_DIR=~/.kaggle
-bash fetch_corpora.sh          # downloads+gzips daymet/nldas/maurer → ./corpora/
+# 2. corpora: PREFERRED — scp the ready tarballs from the Mac (no Kaggle key):
+#      scp <mac>:.../riverwatch2/data/local_corpora/{daymet,maurer,nldas}.tar.gz .
+#      mkdir -p corpora && for f in daymet maurer nldas; do tar xzf $f.tar.gz -C corpora/; done
+#      # expect corpora/camels_corpus_<f>_v2/ with 531 .csv.gz each
+#    Fallback (needs ~/.kaggle/kaggle.json with a FULL non-scoped key):
+#      export KAGGLE_CONFIG_DIR=~/.kaggle && bash fetch_corpora.sh
 
 # 3. build NH data (netCDF + attributes) for all 3 forcings:
 bash build_nh_data.sh          # → ./nh_data/{daymet,nldas,maurer}/

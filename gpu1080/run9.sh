@@ -4,7 +4,7 @@
 set -u
 cd "$(dirname "$0")"
 BASE="$PWD"
-export PATH="$PATH:$HOME/.local/bin"
+export PATH="$BASE/.venv/bin:$PATH:$HOME/.local/bin"
 DUMP2NH=../scripts/nh_to_dump.py
 mkdir -p dumps nh_runs
 
