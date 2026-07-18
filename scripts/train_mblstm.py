@@ -749,6 +749,11 @@ def main() -> int:
             cfg.pop("forcing_correction", None)
         if args.head == "dhbv" and args.nmul != 1:
             cfg["nmul"] = int(args.nmul)
+        if args.head == "dhbv":
+            # explicit arch/loss markers (build_dhbv_model infers betaet from
+            # "nmul" only for old ckpts that predate these keys)
+            cfg["betaet"] = True
+            cfg["dhbv_loss"] = getattr(args, "dhbv_loss", "mse")
         cfg["head_changed_from"] = base_head if base_head != args.head else None
         if args.forcing_mix:
             cfg["decoder_forcing"] = (f"forcing-mix {args.forcing_mix} "
@@ -791,6 +796,9 @@ def main() -> int:
             cfg["forcing_correction"] = True
         if args.head == "dhbv" and args.nmul != 1:
             cfg["nmul"] = int(args.nmul)
+        if args.head == "dhbv":
+            cfg["betaet"] = True
+            cfg["dhbv_loss"] = getattr(args, "dhbv_loss", "mse")
         if args.forcing_mix:
             cfg["decoder_forcing"] = (f"forcing-mix {args.forcing_mix} "
                                       f"(dynamical.org archives + perfect"

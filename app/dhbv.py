@@ -55,6 +55,15 @@ def build_dhbv_model(cfg: dict):
     # Each component has its own param set; the 16 land discharges are AVERAGED,
     # then routed once. Default 1 = single instance (backward-compatible).
     nmul = int(cfg.get("nmul", 1))
+    # BETAET (16th param, 3rd dynamic) shipped in the same commit as nmul.
+    # Checkpoints from before it (no "nmul" key in cfg) have 15-logit static
+    # heads and 2-param dynamic heads — infer the gate so they still load.
+    betaet = bool(cfg.get("betaet", "nmul" in cfg))
+    param_names = [n for n in hbv.PARAM_NAMES if betaet or n != "BETAET"]
+    n_static = len(param_names)
+    if not betaet:
+        dyn_names = tuple(n for n in dyn_names if n != "BETAET")
+        n_dyn = len(dyn_names)
 
     class DHBVNet(nn.Module):
         def __init__(self) -> None:
@@ -91,7 +100,7 @@ def build_dhbv_model(cfg: dict):
             Tseq = seq_hidden.shape[1]
             # static params → nmul component sets: (B, n_static*M) → (B*M, n_static)
             static_logits = self.static_head(h[-1]).view(B, M, n_static).reshape(B * M, n_static)
-            params = hbv.map_params(static_logits, torch)  # dict{name:(B*M,)}
+            params = hbv.map_params(static_logits, torch, names=param_names)  # dict{name:(B*M,)}
             # dynamic params over the sequence, nmul sets: (B,T,n_dyn*M)→(B*M,T,n_dyn)
             dsig = torch.sigmoid(self.dynamic_head(seq_hidden)).view(B, Tseq, M, n_dyn)
             dsig = dsig.permute(0, 2, 1, 3).reshape(B * M, Tseq, n_dyn)  # (B*M,T,n_dyn)

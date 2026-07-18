@@ -62,12 +62,13 @@ N_HBV_PARAMS = len(PARAM_NAMES)
 DYNAMIC_PARAMS = ("BETA", "K0", "BETAET")
 
 
-def map_params(raw, torch):
-    """raw: (..., N_HBV_PARAMS) unbounded logits → dict{name: (...) tensor} in
-    physical ranges via sigmoid squash (smooth, keeps gradients everywhere)."""
+def map_params(raw, torch, names=None):
+    """raw: (..., len(names or PARAM_NAMES)) unbounded logits → dict{name: (...)
+    tensor} in physical ranges via sigmoid squash (smooth, keeps gradients
+    everywhere). `names` lets pre-BETAET checkpoints map their 15 logits."""
     out = {}
     sig = torch.sigmoid(raw)
-    for i, name in enumerate(PARAM_NAMES):
+    for i, name in enumerate(names or PARAM_NAMES):
         lo, hi = PARAM_RANGES[name]
         out[name] = lo + (hi - lo) * sig[..., i]
     return out
@@ -125,6 +126,9 @@ def hbv_forward(precip, tmean, pet, params, torch, n_warmup: int = 0, dyn=None):
     z = torch.zeros(B, dtype=dt, device=dev)
     p = params
     dyn = dyn or {}
+    if "BETAET" not in p and "BETAET" not in dyn:
+        # pre-BETAET checkpoints: exponent 1 == the original linear-ramp ET
+        p = dict(p, BETAET=z + 1.0)
 
     def par(name, t):  # per-step value: dynamic (B,) slice if given, else static
         return dyn[name][:, t] if name in dyn else p[name]
