@@ -1,0 +1,72 @@
+experiment_name: rw2_FORCING_lstm_mm_sSEED
+run_dir: __BASE__/nh_runs
+train_basin_file: __BASE__/nh_data/FORCING/basins.txt
+validation_basin_file: __BASE__/nh_data/FORCING/basins.txt
+test_basin_file: __BASE__/nh_data/FORCING/basins.txt
+data_dir: __BASE__/nh_data/FORCING
+dataset: generic
+train_start_date: "01/10/1999"
+train_end_date: "30/09/2008"
+validation_start_date: "01/10/1980"
+validation_end_date: "30/09/1989"
+test_start_date: "01/10/1989"
+test_end_date: "30/09/1999"
+seed: SEED
+device: cuda:0
+model: cudalstm
+hidden_size: 256
+initial_forget_bias: 3
+output_dropout: 0.4
+head: regression
+output_activation: linear
+optimizer: Adam
+loss: NSE
+learning_rate:
+  0: 1e-3
+  20: 5e-4
+  25: 1e-4
+batch_size: 256
+epochs: 30
+seq_length: 365
+predict_last_n: 1
+num_workers: 4
+validate_every: 30
+save_validation_results: False
+metrics:
+  - NSE
+dynamic_inputs:
+  - prcp
+  - tmax
+  - tmin
+  - vp
+  - srad
+target_variables:
+  - q_mm
+static_attributes:
+  - p_mean
+  - pet_mean
+  - aridity
+  - p_seasonality
+  - frac_snow
+  - high_prec_freq
+  - high_prec_dur
+  - low_prec_freq
+  - low_prec_dur
+  - elev_mean
+  - slope_mean
+  - area_gages2
+  - soil_depth_pelletier
+  - soil_depth_statsgo
+  - soil_porosity
+  - soil_conductivity
+  - max_water_content
+  - sand_frac
+  - silt_frac
+  - clay_frac
+  - frac_forest
+  - lai_max
+  - gvf_max
+  - gvf_diff
+  - root_depth_50
+  - carbonate_rocks_frac
+  - geol_permeability
