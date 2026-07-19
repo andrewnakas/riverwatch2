@@ -232,6 +232,43 @@ if cks:
 for j in glob.glob("benchmarks/day1kratzert_*full531.json"):
     shutil.copy(j, "/kaggle/working/"+os.path.basename(j)); print("OUT", j, flush=True)
 '''
+    elif stage == "nh-train":
+        # REAL neuralhydrology CudaLSTM — the faithful reference that reaches 0.83
+        # (Table D1: LSTM¹²³ 0.808 → +δHBV 0.818 → +seeds 0.830). One forcing × N
+        # seeds per kernel (fits a session). Installs NH, builds NH data via the
+        # adapter, trains + evaluates + dumps each seed → /kaggle/working/dumps/.
+        body = f'''
+FORCING = "{forcing}"; SEEDS = {[int(s) for s in seeds.split(",")]}
+CORPUS = corpus_dir(FORCING)
+runlog(sys.executable + " -m pip install -q neuralhydrology")
+# adapter needs data/camels_*.json (staged above) + reads ROOT/data — ROOT=repo root here, OK
+os.makedirs("/kaggle/working/dumps", exist_ok=True)
+# 1) build NH data ONCE for this forcing
+NHDATA = f"/kaggle/working/nh_data/{{FORCING}}"
+if not os.path.exists(NHDATA + "/basins.txt"):
+    runlog(f"python scripts/corpus_to_nh.py --forcing {{FORCING}} --corpus-dir {{CORPUS}} --out {{NHDATA}}")
+import re
+TMPL = open("gpu1080/nh_config.yml.tmpl").read()
+for s in SEEDS:
+    dump = f"/kaggle/working/dumps/camels531_{{FORCING}}_nhlstm_s{{s}}.csv.gz"
+    if os.path.exists(dump): print("skip", dump, flush=True); continue
+    cfg = (TMPL.replace("__BASE__", "/kaggle/working")
+              .replace("FORCING", FORCING).replace("SEED", str(s)))
+    cfgp = f"/kaggle/working/cfg_{{FORCING}}_s{{s}}.yml"
+    open(cfgp, "w").write(cfg)
+    runlog(f"nh-run train --config-file {{cfgp}}")
+    runs = sorted(glob.glob(f"/kaggle/working/nh_runs/rw2_{{FORCING}}_lstm_mm_s{{s}}_*"),
+                  key=os.path.getmtime)
+    if not runs: print("NO RUN DIR for seed", s, flush=True); continue
+    run = runs[-1]
+    runlog(f"nh-run evaluate --run-dir {{run}} --period test")
+    res = glob.glob(f"{{run}}/test/model_epoch030/test_results.p")
+    if res:
+        runlog(f"python scripts/nh_to_dump.py --results {{res[0]}} --forcing {{FORCING}} --out {{dump}}")
+    print("seed", s, "dump", os.path.exists(dump), flush=True)
+for f in sorted(glob.glob("/kaggle/working/dumps/*.csv.gz")):
+    print("DUMP", f, round(os.path.getsize(f)/1e6,2),"MB", flush=True)
+'''
     else:
         raise SystemExit(f"unknown stage {stage}")
     body = textwrap.dedent(body).replace("{TRAIN_FLAGS}", TRAIN_FLAGS)
@@ -335,7 +372,7 @@ def pull_output(slug: str, dest: str):
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for c in ("smoke", "train", "dump", "eval-day1"):
+    for c in ("smoke", "train", "dump", "eval-day1", "nh-train"):
         s = sub.add_parser(c)
         s.add_argument("--forcing", default="daymet")
         s.add_argument("--seeds", default="971")   # 1 seed/session (~8-9hr on P100)
@@ -355,7 +392,7 @@ def main():
 
     slug = a.slug or f"{USER}/rw2-{a.cmd}" + (f"-{a.forcing}" if a.cmd != "smoke" else "")
     ds = [STATIC_DS]
-    if a.cmd in ("train", "smoke", "dump", "eval-day1"):
+    if a.cmd in ("train", "smoke", "dump", "eval-day1", "nh-train"):
         ds.append(CORPUS_DS[a.forcing if a.cmd != "smoke" else "daymet"])
     if a.cmd in ("dump", "eval-day1"):
         ds.append(CKPTS_DS)
