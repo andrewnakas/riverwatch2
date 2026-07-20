@@ -248,12 +248,14 @@ NHDATA = f"/kaggle/working/nh_data/{{FORCING}}"
 if not os.path.exists(NHDATA + "/basins.txt"):
     runlog(f"python scripts/corpus_to_nh.py --forcing {{FORCING}} --corpus-dir {{CORPUS}} --out {{NHDATA}}")
 import re
+EPOCHS = {epochs}
 TMPL = open("gpu1080/nh_config.yml.tmpl").read()
 for s in SEEDS:
     dump = f"/kaggle/working/dumps/camels531_{{FORCING}}_nhlstm_s{{s}}.csv.gz"
     if os.path.exists(dump): print("skip", dump, flush=True); continue
     cfg = (TMPL.replace("__BASE__", "/kaggle/working")
               .replace("FORCING", FORCING).replace("SEED", str(s)))
+    cfg = re.sub(r"epochs: 30", f"epochs: {{EPOCHS}}", cfg)   # allow fewer epochs to fit the 12hr wall
     cfgp = f"/kaggle/working/cfg_{{FORCING}}_s{{s}}.yml"
     open(cfgp, "w").write(cfg)
     runlog(f"nh-run train --config-file {{cfgp}}")
@@ -262,9 +264,10 @@ for s in SEEDS:
     if not runs: print("NO RUN DIR for seed", s, flush=True); continue
     run = runs[-1]
     runlog(f"nh-run evaluate --run-dir {{run}} --period test")
-    res = glob.glob(f"{{run}}/test/model_epoch030/test_results.p")
+    res = glob.glob(f"{{run}}/test/model_epoch*/test_results.p")
+    res = sorted(res, key=lambda p: int(re.search(r"epoch(\\d+)", p).group(1)))
     if res:
-        runlog(f"python scripts/nh_to_dump.py --results {{res[0]}} --forcing {{FORCING}} --out {{dump}}")
+        runlog(f"python scripts/nh_to_dump.py --results {{res[-1]}} --forcing {{FORCING}} --out {{dump}}")
     print("seed", s, "dump", os.path.exists(dump), flush=True)
 for f in sorted(glob.glob("/kaggle/working/dumps/*.csv.gz")):
     print("DUMP", f, round(os.path.getsize(f)/1e6,2),"MB", flush=True)
