@@ -1,0 +1,96 @@
+{
+  "label": "day1_2basin",
+  "protocol": "rolling_lead1_daily_seq_to_one",
+  "stride_days": 1,
+  "members": [
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s941.pt"
+  ],
+  "corpus_dir": "/Volumes/STORAGE_SD/riverwatch2_data/camels_corpus_daymet_v2",
+  "window": [
+    "1989-10-01",
+    "1999-09-30"
+  ],
+  "n_basins": 2,
+  "metrics": {
+    "full": {
+      "nse": {
+        "median": 0.8124195371603664,
+        "mean": 0.8124195371603664,
+        "scorable": 2,
+        "frac_gt_0.5": 1.0
+      },
+      "flv": {
+        "median": 269.28152952410454,
+        "mean": 269.28152952410454,
+        "scorable": 2
+      },
+      "pct_bias": {
+        "median": 1.671287575117692,
+        "mean": 1.671287575117692,
+        "scorable": 2
+      },
+      "log_nse": {
+        "median": 0.7744001551820172,
+        "mean": 0.7744001551820172,
+        "scorable": 2
+      },
+      "pearson_r": {
+        "median": 0.9047379554087337,
+        "mean": 0.9047379554087337,
+        "scorable": 2
+      },
+      "kge": {
+        "median": 0.8644904451656295,
+        "mean": 0.8644904451656295,
+        "scorable": 2
+      },
+      "fhv": {
+        "median": -18.840962943614116,
+        "mean": -18.840962943614116,
+        "scorable": 2
+      }
+    },
+    "camels_531": {
+      "nse": {
+        "median": 0.8124195371603664,
+        "mean": 0.8124195371603664,
+        "scorable": 2,
+        "frac_gt_0.5": 1.0
+      },
+      "flv": {
+        "median": 269.28152952410454,
+        "mean": 269.28152952410454,
+        "scorable": 2
+      },
+      "pct_bias": {
+        "median": 1.671287575117692,
+        "mean": 1.671287575117692,
+        "scorable": 2
+      },
+      "log_nse": {
+        "median": 0.7744001551820172,
+        "mean": 0.7744001551820172,
+        "scorable": 2
+      },
+      "pearson_r": {
+        "median": 0.9047379554087337,
+        "mean": 0.9047379554087337,
+        "scorable": 2
+      },
+      "kge": {
+        "median": 0.8644904451656295,
+        "mean": 0.8644904451656295,
+        "scorable": 2
+      },
+      "fhv": {
+        "median": -18.840962943614116,
+        "mean": -18.840962943614116,
+        "scorable": 2
+      }
+    }
+  },
+  "per_station_nse": {
+    "01022500": 0.7703491210491956,
+    "01031500": 0.8544899532715373
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "label": "smoke_cont",
+  "protocol": "continuous_daily_sim_nonoverlapping_windows",
+  "members": [
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s941.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s942.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s943.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s944.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s945.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s946.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s947.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s948.pt",
+    "data/mblstm/gpu_ckpts/camels531_daymet_v2r_s949.pt"
+  ],
+  "corpus_dir": "/Users/nakas/Documents/RiverWatch2/riverwatch2/data/local_corpora/camels_corpus_daymet_v2",
+  "window": [
+    "1989-10-01",
+    "1999-09-30"
+  ],
+  "n_basins": 3,
+  "metrics": {
+    "full": {
+      "nse": {
+        "median": 0.8585050492334121,
+        "mean": 0.8645998493798123,
+        "scorable": 3,
+        "frac_gt_0.5": 1.0
+      },
+      "fhv": {
+        "median": -18.95530538244261,
+        "mean": -18.96227434236668,
+        "scorable": 3
+      },
+      "pearson_r": {
+        "median": 0.9299712516797793,
+        "mean": 0.9313959322585729,
+        "scorable": 3
+      },
+      "kge": {
+        "median": 0.8654487162330805,
+        "mean": 0.8639233371747747,
+        "scorable": 3
+      },
+      "log_nse": {
+        "median": 0.8425901181573087,
+        "mean": 0.8490993465911929,
+        "scorable": 3
+      },
+      "pct_bias": {
+        "median": -4.023915087687715,
+        "mean": -4.3169242915802215,
+        "scorable": 3
+      },
+      "flv": {
+        "median": 537.318166209292,
+        "mean": 659.7221645653686,
+        "scorable": 3
+      }
+    },
+    "camels_531": {
+      "nse": {
+        "median": 0.8585050492334121,
+        "mean": 0.8645998493798123,
+        "scorable": 3,
+        "frac_gt_0.5": 1.0
+      },
+      "fhv": {
+        "median": -18.95530538244261,
+        "mean": -18.96227434236668,
+        "scorable": 3
+      },
+      "pearson_r": {
+        "median": 0.9299712516797793,
+        "mean": 0.9313959322585729,
+        "scorable": 3
+      },
+      "kge": {
+        "median": 0.8654487162330805,
+        "mean": 0.8639233371747747,
+        "scorable": 3
+      },
+      "log_nse": {
+        "median": 0.8425901181573087,
+        "mean": 0.8490993465911929,
+        "scorable": 3
+      },
+      "pct_bias": {
+        "median": -4.023915087687715,
+        "mean": -4.3169242915802215,
+        "scorable": 3
+      },
+      "flv": {
+        "median": 537.318166209292,
+        "mean": 659.7221645653686,
+        "scorable": 3
+      }
+    }
+  },
+  "per_station_nse": {
+    "01022500": 0.8580005411029131,
+    "01031500": 0.8772939578031114,
+    "01047000": 0.8585050492334121
+  }
+}

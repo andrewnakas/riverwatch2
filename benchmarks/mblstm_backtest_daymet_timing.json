@@ -1,0 +1,285 @@
+{
+  "schema_version": 2,
+  "label": "daymet_timing",
+  "ckpt": "data/mblstm/gpu_ckpts/camels531_daymet_dhbv_combined50_s971.pt",
+  "window": [
+    "1989-10-01",
+    "1999-09-30"
+  ],
+  "stride_days": 14,
+  "stride_stations": 120,
+  "corpus_dir": "/Volumes/STORAGE_SD/riverwatch2_data/camels_corpus_daymet_v2",
+  "anchor_decay": 0.0,
+  "min_windows": 5,
+  "point_policy": "default",
+  "forcing_plan": "perfect",
+  "members_source": null,
+  "members_per_window_mean": null,
+  "caveat": "decoder forcing = observed archive weather (perfect forcing); generous at h>3",
+  "crps_caveat": "approx_crps = mean pinball over {0.1,0.5,0.9}, NOT integrated CRPS (valid for internal A/B only; resolved when a CMAL head ships).",
+  "stations": 5,
+  "median_mae_by_h": {
+    "1": {
+      "persistence": 105.27969348659003,
+      "mblstm": 88.97346277034146,
+      "ratio": 0.8451151387677095
+    },
+    "2": {
+      "persistence": 180.09961685823754,
+      "mblstm": 63.3032342382683,
+      "ratio": 0.3514901105430802
+    },
+    "3": {
+      "persistence": 236.88122605363984,
+      "mblstm": 59.85515201116429,
+      "ratio": 0.25268001609215995
+    },
+    "4": {
+      "persistence": 247.44444444444446,
+      "mblstm": 69.8292344786929,
+      "ratio": 0.28220166605668434
+    },
+    "5": {
+      "persistence": 231.01532567049807,
+      "mblstm": 65.73565741178761,
+      "ratio": 0.2845510669952163
+    },
+    "6": {
+      "persistence": 229.35632183908046,
+      "mblstm": 74.05268029980276,
+      "ratio": 0.322871764362175
+    },
+    "7": {
+      "persistence": 244.57471264367817,
+      "mblstm": 75.6156088850964,
+      "ratio": 0.3091718193910794
+    },
+    "8": {
+      "persistence": 267.93869731800766,
+      "mblstm": 64.59589422941207,
+      "ratio": 0.24108460209741678
+    },
+    "9": {
+      "persistence": 263.3141762452107,
+      "mblstm": 69.64025311923119,
+      "ratio": 0.2644758976226896
+    },
+    "10": {
+      "persistence": 280.53256704980845,
+      "mblstm": 85.10443236188412,
+      "ratio": 0.30336738888064235
+    },
+    "11": {
+      "persistence": 308.4367816091954,
+      "mblstm": 91.42370317466415,
+      "ratio": 0.29640985973748907
+    },
+    "12": {
+      "persistence": 301.6666666666667,
+      "mblstm": 96.0265260491152,
+      "ratio": 0.31831997585342053
+    },
+    "13": {
+      "persistence": 304.1954022988506,
+      "mblstm": 108.08776802661319,
+      "ratio": 0.35532347698149813
+    },
+    "14": {
+      "persistence": 292.55555555555554,
+      "mblstm": 96.02754216968785,
+      "ratio": 0.328236946269347
+    }
+  },
+  "nse_median": 0.7836652078587236,
+  "nse_mean": 0.7893178916506435,
+  "nse_scorable_stations": 5,
+  "metrics": {
+    "full": {
+      "flv": {
+        "median": -35.27560964723046,
+        "mean": -28.614156594712995,
+        "scorable": 5
+      },
+      "picp90": {
+        "median": 0.0,
+        "mean": 0.0,
+        "scorable": 5
+      },
+      "nse": {
+        "median": 0.7836652078587236,
+        "mean": 0.7893178916506435,
+        "scorable": 5,
+        "frac_gt_0.5": 1.0
+      },
+      "pct_bias": {
+        "median": -4.059907424925939,
+        "mean": -0.8371593776427855,
+        "scorable": 5
+      },
+      "mpiw_norm": {
+        "median": 0.0,
+        "mean": 0.0,
+        "scorable": 5
+      },
+      "pearson_r": {
+        "median": 0.8880494476984035,
+        "mean": 0.8928239912656034,
+        "scorable": 5
+      },
+      "kge": {
+        "median": 0.8484049652986658,
+        "mean": 0.8599553188507869,
+        "scorable": 5
+      },
+      "fhv": {
+        "median": -13.67033718299441,
+        "mean": -16.811954432504002,
+        "scorable": 5
+      },
+      "log_nse": {
+        "median": 0.8548077854646572,
+        "mean": 0.8494985877006991,
+        "scorable": 5
+      },
+      "approx_crps": {
+        "median": 39.43565275473352,
+        "mean": 40.70709294665092,
+        "scorable": 5
+      },
+      "n_stations": 5
+    },
+    "camels_531": {
+      "flv": {
+        "median": -35.27560964723046,
+        "mean": -28.614156594712995,
+        "scorable": 5
+      },
+      "picp90": {
+        "median": 0.0,
+        "mean": 0.0,
+        "scorable": 5
+      },
+      "nse": {
+        "median": 0.7836652078587236,
+        "mean": 0.7893178916506435,
+        "scorable": 5,
+        "frac_gt_0.5": 1.0
+      },
+      "pct_bias": {
+        "median": -4.059907424925939,
+        "mean": -0.8371593776427855,
+        "scorable": 5
+      },
+      "mpiw_norm": {
+        "median": 0.0,
+        "mean": 0.0,
+        "scorable": 5
+      },
+      "pearson_r": {
+        "median": 0.8880494476984035,
+        "mean": 0.8928239912656034,
+        "scorable": 5
+      },
+      "kge": {
+        "median": 0.8484049652986658,
+        "mean": 0.8599553188507869,
+        "scorable": 5
+      },
+      "fhv": {
+        "median": -13.67033718299441,
+        "mean": -16.811954432504002,
+        "scorable": 5
+      },
+      "log_nse": {
+        "median": 0.8548077854646572,
+        "mean": 0.8494985877006991,
+        "scorable": 5
+      },
+      "approx_crps": {
+        "median": 39.43565275473352,
+        "mean": 40.70709294665092,
+        "scorable": 5
+      },
+      "n_stations": 5
+    }
+  },
+  "by_tercile_median": {
+    "low": {
+      "nse": -0.7000033933132439,
+      "kge": 0.29336788475840314,
+      "log_nse": 0.04264385286472494
+    },
+    "mid": {
+      "nse": -2.5498194040323447,
+      "kge": -0.24084215979858814,
+      "log_nse": -1.2209562719023985
+    },
+    "high": {
+      "nse": 0.6923189671936867,
+      "kge": 0.8072150487156733,
+      "log_nse": 0.5604010370275182
+    }
+  },
+  "per_station": {
+    "01022500": {
+      "nse": 0.8369780671730777,
+      "kge": 0.9152819242745228,
+      "log_nse": 0.8961472783080601,
+      "pct_bias": 1.755935270111763,
+      "fhv": -13.359191170482887,
+      "flv": 0.2987076094357929,
+      "approx_crps": 59.602921029943296,
+      "picp90": 0.0,
+      "windows": 261,
+      "members_mean": null
+    },
+    "02143040": {
+      "nse": 0.7648414121862117,
+      "kge": 0.8504129091900922,
+      "log_nse": 0.8470928878873093,
+      "pct_bias": -5.112185851098461,
+      "fhv": -13.67033718299441,
+      "flv": -35.27560964723046,
+      "approx_crps": 6.500022676777957,
+      "picp90": 0.0,
+      "windows": 261,
+      "members_mean": null
+    },
+    "04196800": {
+      "nse": 0.813381448906495,
+      "kge": 0.8398698209556498,
+      "log_nse": 0.8709161057997782,
+      "pct_bias": -4.059907424925939,
+      "fhv": -23.229469175141872,
+      "flv": -56.620082838764496,
+      "approx_crps": 39.43565275473352,
+      "picp90": 0.0,
+      "windows": 261,
+      "members_mean": null
+    },
+    "08023080": {
+      "nse": 0.7477233221287092,
+      "kge": 0.8458069745350039,
+      "log_nse": 0.7785288810436912,
+      "pct_bias": 8.924218208349798,
+      "fhv": -7.862488444877636,
+      "flv": -37.91932633958438,
+      "approx_crps": 25.18824953521954,
+      "picp90": 0.0,
+      "windows": 261,
+      "members_mean": null
+    },
+    "12175500": {
+      "nse": 0.7836652078587236,
+      "kge": 0.8484049652986658,
+      "log_nse": 0.8548077854646572,
+      "pct_bias": -5.693857090651088,
+      "fhv": -25.938286189023202,
+      "flv": -13.554471757421432,
+      "approx_crps": 72.80861873658029,
+      "picp90": 0.0,
+      "windows": 261,
+      "members_mean": null
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "label": "nh_daymet_solo",
+  "members": [
+    "data/mblstm/gpu_dumps_s14/camels531_daymet_nhlstm_s14.csv.gz"
+  ],
+  "point": "ymed",
+  "weights": "equal",
+  "n_windows": 46197,
+  "metrics": {
+    "full": {
+      "nse": {
+        "median": 0.7453135692548245,
+        "mean": 0.6985096264523122,
+        "scorable": 177,
+        "frac_gt_0.5": 0.9265536723163842
+      },
+      "pct_bias": {
+        "median": -7.064877723393248,
+        "mean": -5.765587488310509,
+        "scorable": 177
+      },
+      "flv": {
+        "median": 1.8839440715428815,
+        "mean": 148.54835396965163,
+        "scorable": 174
+      },
+      "kge": {
+        "median": 0.7468913463636062,
+        "mean": 0.717677337231706,
+        "scorable": 177
+      },
+      "log_nse": {
+        "median": 0.8042997608146903,
+        "mean": 0.6815076297684187,
+        "scorable": 177
+      },
+      "fhv": {
+        "median": -22.319583357197516,
+        "mean": -23.429121107749523,
+        "scorable": 177
+      },
+      "pearson_r": {
+        "median": 0.87827469212465,
+        "mean": 0.8582864874697796,
+        "scorable": 177
+      }
+    },
+    "day1": {
+      "nse": {
+        "median": 0.7579745908004115,
+        "mean": 0.655583262529688,
+        "scorable": 177,
+        "frac_gt_0.5": 0.8926553672316384
+      },
+      "pct_bias": {
+        "median": -4.410155420923447,
+        "mean": -4.14390008843711,
+        "scorable": 177
+      },
+      "flv": {
+        "median": -3.5960048049031297,
+        "mean": 77.06079637768146,
+        "scorable": 174
+      },
+      "kge": {
+        "median": 0.7460716575193831,
+        "mean": 0.6958675735698915,
+        "scorable": 177
+      },
+      "log_nse": {
+        "median": 0.8199757528666258,
+        "mean": 0.6741681411543524,
+        "scorable": 177
+      },
+      "fhv": {
+        "median": -20.553290488237575,
+        "mean": -18.162982293208795,
+        "scorable": 177
+      },
+      "pearson_r": {
+        "median": 0.9046267674403518,
+        "mean": 0.8769784430023324,
+        "scorable": 177
+      }
+    }
+  }
+}
