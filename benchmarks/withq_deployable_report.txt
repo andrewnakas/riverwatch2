@@ -1,0 +1,29 @@
+Published claim: day-1 median NSE 0.9016 via --fit-weights [0.411,0.263,0.326]
+Those weights were fit on TEST observations -> ORACLE, not publishable as a deployable record.
+
+Record to beat: Nearing et al. 2022 AR-LSTM = 0.879 (CAMELS-531, day-1 nowcast, 1-day-lag Q)
+
+=== 2-seed members (the published set) ===
+  rows=138488 basins=531
+  member daymet   day-1 medNSE = 0.8821
+  member maurer   day-1 medNSE = 0.8686
+  member nldas    day-1 medNSE = 0.8708
+  [DEPLOYABLE] plain mean       = 0.9019  (basins=531)
+               vs Nearing 0.879 : +0.0229 BEATS
+  [oracle] best 2-member subset = 0.9024  ('daymet', 'nldas')
+  [oracle] NNLS fit-weights     = 0.8996  w=[0.621, 0.225, 0.154]
+
+=== 4-seed members (deeper averaging - still deployable) ===
+  rows=138488 basins=531
+  member daymet   day-1 medNSE = 0.8868
+  member maurer   day-1 medNSE = 0.8797
+  member nldas    day-1 medNSE = 0.8777
+  [DEPLOYABLE] plain mean       = 0.9054  (basins=531)
+               vs Nearing 0.879 : +0.0264 BEATS
+  [oracle] best 2-member subset = 0.9045  ('daymet', 'nldas')
+  [oracle] NNLS fit-weights     = 0.9042  w=[0.597, 0.21, 0.193]
+
+=== READING ===
+  Plain mean has ZERO fitted parameters and is the rule Li/Song use
+  for their own headline, so it is the honest number for a paper.
+  If it clears 0.879, the record beat stands without any oracle.

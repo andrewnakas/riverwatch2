@@ -1,0 +1,69 @@
+{
+  "label": "withq_deployable_plain_mean",
+  "note": "Non-oracle replacement for the --fit-weights claim. Plain arithmetic mean of the 3 per-forcing with-q members; ZERO fitted parameters, no test observations used in combination.",
+  "record_reference": {
+    "source": "Nearing et al. 2022 HESS 26:5493 AR-LSTM",
+    "day1_median_nse": 0.879,
+    "protocol": "CAMELS-531, test 1989-10-01..1999-09-30, day-1 nowcast, 1-day-lag Q"
+  },
+  "deployable": {
+    "2seed_plain_mean": {
+      "day1_median_nse": 0.9019,
+      "delta_vs_record": 0.0229,
+      "members": [
+        "daymet",
+        "maurer",
+        "nldas"
+      ],
+      "seeds": 2
+    },
+    "4seed_plain_mean": {
+      "day1_median_nse": 0.9054,
+      "delta_vs_record": 0.0264,
+      "members": [
+        "daymet",
+        "maurer",
+        "nldas"
+      ],
+      "seeds": 4
+    }
+  },
+  "oracle_for_contrast": {
+    "published_fit_weights_2seed": {
+      "day1_median_nse": 0.9016,
+      "weights": [
+        0.411,
+        0.263,
+        0.326
+      ]
+    },
+    "nnls_2seed": {
+      "day1_median_nse": 0.8996
+    },
+    "nnls_4seed": {
+      "day1_median_nse": 0.9042
+    },
+    "best_2_subset_4seed": {
+      "day1_median_nse": 0.9045,
+      "members": [
+        "daymet",
+        "nldas"
+      ]
+    }
+  },
+  "per_member_day1_median_nse": {
+    "2seed": {
+      "daymet": 0.8821,
+      "maurer": 0.8686,
+      "nldas": 0.8708
+    },
+    "4seed": {
+      "daymet": 0.8868,
+      "maurer": 0.8797,
+      "nldas": 0.8777
+    }
+  },
+  "key_finding": "Plain mean (0.9019) EXCEEDS the fitted-weight oracle (0.9016) on the same members, and NNLS (0.8996) is worse than plain mean. Weighting buys nothing here, so the record beat needs no oracle component.",
+  "basins": 531,
+  "rows_day1": 138488
+}
