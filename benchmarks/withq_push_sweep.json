@@ -1,0 +1,10 @@
+{
+  "point_ymed": 0.9053615464347813,
+  "point_mid": 0.9058134128425139,
+  "pool_4-seed only (3 streams)": 0.9058134128425139,
+  "pool_2-seed + 4-seed (6 streams)": 0.9037354940480659,
+  "mean_arithmetic": 0.9037354940480659,
+  "mean_geometric": 0.9038306372937641,
+  "clip_raw": 0.9037354940480659,
+  "clip_clipped": 0.9037354940480659
+}

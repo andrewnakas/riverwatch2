@@ -1,0 +1,41 @@
+{
+  "label": "withq_deployable_final",
+  "config": {
+    "members": [
+      "daymet",
+      "maurer",
+      "nldas"
+    ],
+    "seeds": 4,
+    "point_estimator": "quantile midpoint (ylo+yhi)/2",
+    "combination": "plain arithmetic mean, zero fitted parameters",
+    "oracle_components": "none"
+  },
+  "protocol": {
+    "dataset": "CAMELS-531",
+    "test_window": [
+      "1989-10-01",
+      "1999-09-30"
+    ],
+    "metric": "day-1 (h=1) median per-basin NSE, raw/unclipped",
+    "lag": "1-day-lag observed discharge (nowcast)"
+  },
+  "headline_day1_median_nse": 0.9058134128425139,
+  "record_reference": {
+    "source": "Nearing et al. 2022, HESS 26:5493 (AR-LSTM)",
+    "value": 0.879
+  },
+  "margin": 0.02681341284251393,
+  "bootstrap_95ci": [
+    0.8940217899411519,
+    0.9125771287754774
+  ],
+  "p_gt_record": 1.0,
+  "basins_scorable": 531,
+  "rows_day1": 138488,
+  "distribution": {
+    "mean": 0.8274243274754093,
+    "frac_gt_0.5": 0.9717514124293786,
+    "frac_gt_0.8": 0.800376647834275
+  }
+}
