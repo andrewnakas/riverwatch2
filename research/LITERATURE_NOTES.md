@@ -291,6 +291,85 @@ and a documented account of why the sophisticated methods failed.*
 
 ---
 
+## 14. Is there a CEILING? What the field says, and what our data says
+
+### The literature debate is explicit
+
+- **[Probing the limit of hydrologic predictability with the Transformer
+  network](https://www.sciencedirect.com/science/article/abs/pii/S0022169424007844)**
+  (J. Hydrology, 2024) — built a Transformer specifically to test whether LSTM
+  is at a limit. Conclusion: LSTMs "may be nearing their performance ceiling,
+  with additional improvements potentially limited by **data uncertainties or
+  intrinsic constraints of current hydrologic datasets**."
+- **[HESS 29:6811 (2025)](https://hess.copernicus.org/articles/29/6811/2025/)** —
+  11 attention architectures, none beat LSTM (0.80 vs ~0.73 best). Independent
+  corroboration that architecture is not the binding constraint.
+- **[Unveiling the limits of deep learning models in hydrological extrapolation](https://hess.copernicus.org/articles/29/5871/2025/)**
+  (HESS 2025) — a *different* ceiling: a stand-alone LSTM cannot predict
+  discharge above a theoretical **73 mm/day**, below the **183 mm/day** maximum
+  in its own training data. LSTMs show a concave runoff response to extreme
+  precipitation that hybrid physics-ML models do not. This is an architectural
+  limit on **extremes**, not on median NSE.
+
+### Two hard bounds on any achievable score
+
+- **Gauge uncertainty.** Discharge measurement error runs to **20%** of observed
+  value ([Hydrol. Process. rating-curve review](https://onlinelibrary.wiley.com/doi/10.1002/hyp.9567)).
+  No model can score above the noise in its own target.
+- **Forcing error.** Precipitation products disagree materially — which is
+  *why* multi-forcing ensembling is worth +0.027 (§2). The gain exists precisely
+  because no single product is right.
+- Li/Song's own worst basins (NSE 0.3-0.4) are Great Plains / West with "high
+  dam density or heterogeneous hydrogeological conditions" — anthropogenic
+  modification and karst, physically unpredictable from weather alone.
+
+### [measured] Our own ceiling probe — we are NOT data-limited yet
+
+`ceiling_probe.py`, no-q test set, 531 basins, 7 streams. The discriminating
+test: **in bad basins, do members disagree (model-limited) or agree-and-fail
+(data-limited)?**
+
+| quantity | value | reading |
+|---|---|---|
+| spearman(inter-member spread, basin NSE) | **−0.371** | where members disagree, we do badly |
+| mean spread, poor basins (NSE<0.5, n=48) | 0.263 | |
+| mean spread, good basins (NSE≥0.8) | 0.125 | |
+| **spread ratio poor/good** | **2.10** | poor basins are much more *contested* |
+
+**Verdict: still MODEL-limited, not data-limited.** If the residual error were
+irreducible observation noise, members would agree and still be wrong. They
+don't — disagreement means information remains recoverable by better or more
+decorrelated members.
+
+### [measured] But the median is a badly-behaved target
+
+| quantity | value |
+|---|---|
+| plain-mean ensemble | 0.8298 |
+| per-basin best member (oracle over current members) | 0.8478 |
+| headroom from **recombination alone** | +0.0180 = **10.6%** of the remaining gap |
+| headroom to a perfect NSE 1.0 | +0.1522 = the other **89.4%** |
+| median vs mean | 0.8298 vs **0.6289** (gap 0.2009 — a severe hard tail) |
+| basins with NSE < 0 | **2.8%** (worse than predicting mean flow) |
+| **basins within 0.01 of the median** | **50** |
+| basins within 0.05 of the median | 186 |
+
+**The structural insight:** a median moves by improving the basins *adjacent to
+it* — around the 265th-ranked basin — not the catastrophic failures. Only ~50
+basins actually control the metric.
+
+That explains why every global lever in this campaign returned +0.001 to +0.004:
+**global methods spread effort over all 531 basins when ~50 determine the
+score.** It also explains why per-basin targeting is so attractive *and* why it
+fails (§8) — the per-basin signal needed to exploit this does not transfer from
+the training window.
+
+**Consequence for 0.84:** +0.006 from 0.8339 requires moving ~50 specific
+mid-ranked basins. Seed depth (capped at 0.8395, §6) and recombination (10.6% of
+the gap) cannot do it. Only a genuinely new information source — a decorrelated
+4th forcing, or discharge assimilation — plausibly can. This is the strongest
+argument for the ERA5-Land member.
+
 ## Open threads
 
 - **ERA5-Land as a 4th decorrelating forcing** — fetch paused so the CDS
