@@ -370,12 +370,223 @@ the gap) cannot do it. Only a genuinely new information source — a decorrelate
 4th forcing, or discharge assimilation — plausibly can. This is the strongest
 argument for the ERA5-Land member.
 
+## 15. WHY the shared error is shared: one gauge base, measured three ways
+
+**2026-08-04.** §14 left the 70% shared component unexplained. It now has a
+mechanism, a literature basis, and three independent measurements.
+
+### 15.1 Provenance — the four forcings are not four independent views
+
+| product | precipitation source | lineage |
+|---|---|---|
+| Daymet | **GHCN-Daily** direct (Thornton 1997 interpolation) | GHCN |
+| NLDAS-2 | CPC 1/8° gauge-only daily, PRISM-adjusted, radar-disaggregated (daily totals unchanged) | COOP/GTS via CPC (Chen 2008, JGR 113 D04110) |
+| Maurer | NCDC **COOP**, SYMAP/Shepard + PRISM scaling | COOP |
+| AORC | Livneh daily (COOP-derived) + NLDAS-2 method + Stage II/CMORPH → Stage IV | COOP + radar |
+
+They are **four interpolations of one heavily overlapping COOP/GHCN gauge base**,
+differing mainly in interpolation scheme, orographic adjustment, and (AORC) radar
+sub-daily structure. A gauge that missed a storm is invisible to all four — which
+is exactly the signature of error that survives ensembling.
+
+*Verified:* Daymet↢GHCN (ORNL DAAC V4 guide), NLDAS-2↢CPC (NASA LDAS FAQ).
+*Partial:* Maurer 2002 (J.Climate 15:3237) via secondary sources. *Unverified:*
+AORC's gauge list first-hand (Fall 2023 JAWRA paywalled; NOAA PDFs unreadable).
+
+⚠️ **ASOS is INSIDE GHCN-Daily**, so it cannot serve as an independent check —
+GHCN's US component explicitly compiles ASOS alongside COOP and RAWS. Separately,
+ASOS precipitation is documented as biased: heated tipping buckets undercatch
+**2-10% vs COOP**, capture almost nothing below 15 °F, and the rising ASOS share
+imparted a measurable drying trend to gridded products (Diem 2026, HESS
+30:1999-2011; National Academies 2012 App. E). We also measured `p01m` as only
+**4.3% populated in 1995**, with precip-reporting stations within 25 km of just
+7 of 531 basins. ASOS is not a usable precipitation reference for this window.
+
+### 15.2 Three measurements, one direction
+
+1. **Products disagree more with each other on failure days.** Magnitude-matched:
+   at the same rainfall, spread on top-1% error days is **1.272×** ordinary days
+   (consistent across bins 0.1-40 mm). ⚠️ Raw statistics mislead here — pairwise
+   *r* says "worse" (0.704 vs 0.771) while *CV* says "better" (0.528 vs 0.844),
+   because event days are **8.1× wetter**; only the matched control is defensible.
+2. **Products track gauges worse on failure days.** Against a 529-basin GHCN
+   station corpus, matched on *observed* rainfall: mean Δcorr **−0.074**
+   (daymet −0.097, maurer −0.093, nldas −0.068, aorc −0.039), with |bias| growing
+   7-13 mm. Survives a within-observed-rainfall control (**−0.066**), so it is
+   specific to failure days, not a wet-day artifact.
+3. **All four are biased WET on those days** (+0.85 to +4.53 mm, mean +2.45). The
+   ensemble under-predicts flow while the forcings over-report rain.
+
+### 15.3 What this does NOT support
+
+- **Input error is a contributor, not the explanation.** Product spread predicts
+  error at only **r = 0.09-0.19**. Far too weak to carry the 70%. Do not overclaim.
+- **The orographic hypothesis failed at the event-day level.** Event-weighted
+  `elev_mean` 442 vs 439 unweighted, `frac_snow` 0.100 vs 0.105 — flat. The one
+  real signal is `p_mean` (4.23 vs 3.63): **wet basins own the failures**.
+- **Circularity.** Daymet agreeing best with GHCN stations (0.85 COOP-only, 0.93
+  SNOTEL) is partly definitional — it ingests them. Always state this.
+- **Point-vs-areal.** A station is a point, a basin mean areal (53% effect, §
+  AORC orography). Absolute product-vs-station gaps are *not* product error; only
+  the ordinary→failure *change* is load-bearing, since the penalty cancels.
+
+### 15.4 The gap in the literature
+
+**Kratzert et al. 2021 (HESS 25:2685)** established the canonical multi-forcing
+result — single-forcing 10-member LSTM ensembles ≈ 0.77/0.77/0.74 (Daymet/Maurer/
+NLDAS), three-forcing **0.82**, ΔNSE 0.074, gains scaling with inter-product
+disagreement. **They never ask whether the three products share a station network,
+and never separate forcing error from structural error.** That omission is the
+opening. **Renard et al. 2010 (WRR 46:W05521)** states input and structural error
+are weakly identifiable *without independent information on rainfall error*; an
+ambiguity decomposition plus a provenance-tagged corpus is leverage on exactly
+that. Novelty checked: **Willard et al. 2025** (JGR-MLC 10.1029/2025JH000732), the
+nearest competitor, is stream *temperature* in unmonitored basins — different
+target, does not occupy this framing.
+
+### 15.5 The true ceiling is BELOW our computed 0.930
+
+Discharge itself is uncertain, worst exactly where our error lives. **Coxon et al.
+2015 (WRR 51:5531)**, 500 UK stations: relative uncertainty 9-397%, low flows
+20-397%, and **44% of station-groups had missing high-flow values because ratings
+could not extrapolate**. **Kiang et al. 2018 (WRR 54)**: 95% widths 3-17% at median
+flow but **41-200% at high flows in extrapolated rating sections**. Our 1% of days
+carrying 93% of squared error are precisely the extrapolated-rating days — so
+0.9301 is an upper bound on *ensembling*, and the attainable ceiling is lower.
+This strengthens the paper rather than weakening it.
+
+## 16. What is now CLOSED, and what that implies (2026-08-04)
+
+Six results this cycle, all measured rather than argued. Together they say the
+same thing: **reprocessing the same information is finished; only genuinely new
+information can move the number.**
+
+### 16.1 With-q record 0.9203 — but seed depth is saturated
+
+| config | medNSE | medKGE | alpha | basins |
+|---|---|---|---|---|
+| baseline (3 forcings × 5 seeds) | 0.9137 | 0.8768 | 0.9401 | 531 |
+| + AORC 4 seeds (prior record) | 0.9196 | 0.8850 | 0.9512 | 530 |
+| **+ AORC 5 seeds** | **0.9203** | **0.8861** | 0.9507 | **531** |
+
+First result on the **complete** benchmark (the 0.9196 record was 530 basins —
+AORC lacked 13235000, since reconstructed). CI95 [0.9091, 0.9264]; Nearing 2022 =
+0.879.
+
+**Decomposed on the same 530 basins:** the 5th seed contributes **+0.0005** and
+the coverage fix **+0.0002**. The reconstructed basin scores NSE 0.9934, so it
+lifts the median by re-ranking — a **coverage fix, not a skill gain**. Against
++0.0059 for adding AORC as a 4th *forcing*, **seed depth is exhausted.**
+
+**A pre-registered mechanism check came back negative.** The 0.9196 gain came with
+alpha 0.9401→0.9512, attributed to reduced under-dispersion. The 5th seed moves
+alpha 0.9512→**0.9506 (flat)** while still adding skill, so that mechanism
+explains the *forcing* addition, not the *seed* addition. Do not extend it.
+
+### 16.2 Combination rules are exhausted too
+
+Train-side gate over 22 rules (no test observations touched): plain mean
+**0.9420**, best rule (`gate k=6 lam=0.7`) **0.9429** — a **+0.0009** spread
+across every shrunk-inverse-MSE, top-k and static-gate variant.
+
+This is the forecast-combination puzzle (Bates-Granger 1969; Timmermann 2006) in
+our own data, and it is now established **train-side**, where it is actually
+decidable — the earlier oracle audit (global NNLS 0.8321 vs plain 0.8298) could
+only hint at it from the test side. **Stop tuning weighting schemes.**
+
+### 16.3 AORC no-q fails on OWN SKILL — the discriminator, restated
+
+| stream | day-1 median NSE | seeds |
+|---|---|---|
+| daymet | 0.7759 | 3 |
+| maurer | 0.7749 | 3 |
+| nldas | 0.7532 | 3 |
+| **aorc** | **0.7292** | 2 |
+
+**s222 trained 31% better than s111 (0.00833 vs 0.01089) and scored 0.004
+WORSE** — two independent seeds, one healthy and one salvaged from divergence,
+landing within 0.004. This is the forcing, not a bad seed. Verified not an
+artifact: 189,241-row inner join, 531 basins, `max|Δtruth| = 0.000000`, prediction
+correlation 0.9079 with daymet.
+
+**Same forcing, opposite verdicts across tracks.** AORC *won* on with-q (+0.0062)
+where its members hit val 0.818-0.822, in band with peers; it fails on no-q where
+they do not. Decorrelation is 0.0398 in both cases. **Own skill is the
+discriminator, not decorrelation** — the cleanest evidence this campaign has for
+that rule, and the reason a member must clear the peer band before its diversity
+is worth anything (Krogh-Vedelsby: `MSE(ens) = mean member MSE − diversity`).
+
+*Method note:* the original pre-registration rested on AORC being in band on
+**training loss** at matched epoch. It was — and training loss did not rank test
+skill. A matched-epoch loss comparison is not a substitute for measuring skill.
+
+### 16.4 Station-corrected daymet — built, measured, rejected without training
+
+Two corpora built from the GHCN station corpus (§15): `daymetSC` (per-basin
+scalar) and `daymetSB` (daily weighted blend), both terrain-gated to elev<400 m,
+frac_snow<0.15, station ≤15 km, with train-period-only fits.
+
+The gate threshold was **tuned, not guessed**: at 1000 m the correction still
+tracked terrain (corr −0.337), because the station/daymet ratio falls monotonically
+with elevation (0.964 → 0.936 → 0.883 across 0-300/300-600/600-1000 m). At 400 m
+it is essentially terrain-free (−0.087).
+
+**Both rejected on measurement, before spending any GPU:**
+
+| variant | corr with daymet | decorrelation vs other forcings |
+|---|---|---|
+| daymetSC (scalar) | **1.0000** | 0 (volume only) |
+| daymetSB (blend) | **0.9943** | **−0.0048** (wrong direction) |
+
+A member 0.994-correlated with one already in the ensemble cannot add ensemble
+value, and the blend is *more* like maurer/nldas/AORC than plain daymet is.
+
+**Why it washed out is itself the lesson.** The probe that justified building it
+measured a 50/50 blend moving heavy days 4.67 mm; the shipped version realised
+mean weight 0.226 across only 24% of basins, because confidence weighting and the
+terrain gate — each correct in isolation — compounded. **This approach is squeezed
+between two constraints: where stations are trustworthy (low, flat, close) daymet
+already agrees with them; where they would change things materially (mountains)
+they are the biased estimator.** The 0.3% bias² share said as much in advance.
+
+### 16.5 What remains
+
+Every cheap lever is now closed by measurement: phase/timing, sub-daily intensity,
+KGE variance inflation, model-family diversity, seed depth, combination rules,
+station-corrected forcings, and AORC on the no-q track. What is left is a source
+that is **not another interpolation of the COOP/GHCN gauge base** — which is the
+entire case for CONUS404 (WRF reanalysis), currently extracting.
+
+Its criteria are pre-registered: **own skill first** (no-q stream ≥0.750, i.e.
+inside the peer band, not merely above AORC's failed 0.7292), then decorrelation
+≥0.08 (2× the same-family axis), then train-CV delta ≥+0.001. Honest prior: ~50/50
+— decorrelation should pass since a reanalysis genuinely is new information, but
+reanalysis precipitation is not gauge-corrected and own skill is the real risk.
+
+If it fails, the defensible conclusion is that **with-q 0.9203 / no-q ~0.836 is
+where this architecture tops out on this data**, with the remaining error being
+input and observational rather than anything ensembling can reach.
+
 ## Open threads
 
-- **ERA5-Land as a 4th decorrelating forcing** — fetch paused so the CDS
-  per-dataset queue can drain; restart is patched with serial + exponential
-  backoff. ~2 h/year ⇒ ~2.5-3 days for 1980-2010. This is the remaining lever
-  for 0.84, since seed depth is capped at 0.8395.
+- ⚠️ **STALE ENTRIES BELOW** — several of these were written before §15-16 and are
+  superseded. Current status, 2026-08-04:
+  - **CONUS404** is the live lever, extracting **serially** (~43 h, per-tile cost
+    ~3.9 h × 11 tiles). PAR=4 failed twice from truncated chunk reads
+    (`ContentLengthError: received 6974636 of 14822897 bytes`) — bandwidth does
+    not parallelize away. Polygon averaging verified (0 point-fallbacks).
+  - **AORC no-q** resolved: stream 0.7292, below every peer — see §16.3. The
+    train-side gate decides inclusion against a baseline of **0.9420** locked
+    before the stream existed; prediction on record is that it adds ~nothing.
+  - **Seed depth and combination rules** are both closed (§16.1, §16.2).
+  - **Station corpus** published (529/531 basins, GHCN COOP+ASOS+SNOTEL,
+    provenance-tagged) and used diagnostically in §15; it is NOT yet tested as a
+    member input, and the derived `daymetSC`/`daymetSB` variants were rejected
+    on measurement (§16.4).
+
+- **ERA5-Land as a 4th decorrelating forcing** — *superseded*: AORC took this slot
+  (with-q +0.0062), and the CDS fetch was measured at ~6 months for 1980-2010.
+  Dead for this campaign.
 - **Fused with-q member** (`camels3fv2`) — corpus built (671 basins, 18 cols,
   1980-2008; Maurer's end date truncates it, so **with-q track only**). Fusion
   was +0.027 on no-q and has never been tried with discharge active.
@@ -383,3 +594,18 @@ argument for the ERA5-Land member.
   inclusion.
 - **Significance for the no-q margin** — +0.0053 over baseline is not yet
   bootstrap-significant; with-q already is.
+- **Station corpus is built and unused as a MEMBER** —
+  `data/local_corpora/camels_corpus_station_v1/` (529/531 basins, GHCN COOP+ASOS+
+  SNOTEL, provenance-tagged). §15 uses it diagnostically only. Open question:
+  does a station-observed **DTR** channel help maurer/nldas, which have
+  `tmax==tmin` on **100%** of days? Gate before shipping: in band on own skill
+  AND train-CV ensemble delta ≥ +0.001 — decorrelation alone is insufficient
+  (AORC 0.0398 and δHBV 0.039 both bought ~nothing).
+- **SNOTEL as the clean independent control** — `app/snotel.py` now takes an
+  `elements` argument (AWDB REST, no credentials; default `WTEQ,SNWD` preserved).
+  NRCS sits outside the COOP/GHCN base: 913 sites, 470 pre-1980, 68 basins with a
+  pre-1990 site ≤25 km. Measured daymet 0.833 vs maurer 0.641 / aorc 0.623 /
+  nldas 0.581 on WY1996-2000 precip — the provenance ordering, independently.
+- **Publish the corpus** — HF push blocked on a token (`huggingface_hub` not
+  installed). Reuse `scripts/sync_openmeteo_corpus.py`; cite Menne et al. 2012
+  (GHCN-Daily, doi:10.7289/V5D21VHZ) and state the Daymet-circularity caveat.
