@@ -388,7 +388,7 @@ rank, and ranks do not persist: only **27%** of the cohort is shared between the
 fitting and validation windows. A near-median specialist cannot be targeted in
 advance.
 
-### 5.5 One lever survives: neighbouring gauges
+### 5.5 A lever that looked alive, and the screen that killed it
 
 Every combination and post-processing lever we tested this round failed on honest
 splits (regime-conditional weights −0.0001, cohort-conditional −0.0004, robust
@@ -406,24 +406,45 @@ residual at nearby basins, and the correlation decays cleanly with distance:
 | >1000 km | −0.0010 | 0.0057 |
 
 The lift is **larger on peak days** than overall — precisely where our error
-lives. Correcting each basin from its three nearest non-nested neighbours, under
-fully nested selection (fit 1981-87, shrinkage selected on 1987-90, scored
-1990-95), yields a median gain of **+0.00142** with a bootstrap CI of
-**[+0.00071, +0.00227]** that excludes zero, improving 60.9% of basins.
+lives. Correcting each basin from its three nearest neighbours (excluded if
+within 25 km *and* differing more than fivefold in area, our initial nesting
+guard) yielded a median gain of **+0.0041**.
 
-The control is what makes this credible: substituting the basin's **own lag-1
-residual** — testing whether this is merely temporal autocorrelation — gives
-**exactly +0.00000**, improving 50.0% of basins. The information is spatial.
+**That result did not survive its own pre-registered screen, and the failure is
+the most useful part of this section.** Before committing GPU to a
+neighbour-assimilating member, we audited the neighbour definition against USGS
+hydrologic unit codes and found **163 basin pairs sharing an 8-digit HUC** — the
+same hydrologic sub-basin, hence very likely the same river system — that the
+distance-and-area guard did not catch. Two gauges 60 km apart with a threefold
+area ratio pass that guard and are still nested, and a nested neighbour's
+discharge is partly *the same water* as the target's.
 
-⚠️ **This is not a legal no-q result.** It uses neighbours' *observed* discharge,
-which the no-discharge protocol forbids; applied as post-processing to our no-q
-ensemble it would be leakage, and we do not include it in the 0.8363. Its value
-is as a **diagnostic**, and there it is important: it demonstrates that
-information about our residual exists *outside the basin*. A residual that is
-partly spatially structured is not purely irreducible scatter — which is the one
-principled way past a conditional-mean bound, since that bound is beaten only by
-new information. Building a neighbour-assimilating model is a well-defined next
-study under a different protocol.
+| nesting filter | median gain | improved | bootstrap CI95 |
+|---|---|---|---|
+| distance/area only (original) | **+0.00410** | 75.1% | [−0.00397, +0.01292] |
+| **+ same-HUC8 excluded** | **+0.00074** | 68.2% | [−0.00669, +0.01004] |
+| + same-HUC4 excluded (strictest) | −0.00010 | 68.0% | [−0.00738, +0.00881] |
+| **control: shuffled neighbours** | −0.00023 | 45.6% | [−0.00756, +0.00725] |
+
+About **82% of the apparent gain was nesting**, and every clean configuration has
+a confidence interval straddling zero, statistically indistinguishable from the
+shuffled-neighbour control. We withdraw the gain.
+
+Two things survive, and both matter. The **correlation structure itself is
+real** — nesting cannot produce a smooth monotone decay across 140,715 pairs —
+and the **own-lag control gives exactly +0.00000** at 50.0% of basins improved,
+so what correlation exists is spatial rather than temporal autocorrelation. The
+honest conclusion is that neighbouring gauges' residuals are correlated, but that
+correlation is **not exploitable for a median gain** once same-river pairs are
+removed; what remains is largely shared forcing and state error that a neighbour
+cannot resolve.
+
+We report this in full because the same trap is available to anyone using a
+distance-based neighbour definition without an explicit same-river exclusion, and
+because it is consistent with Kirschstein & Sun (ICML 2024), who found basin
+topology gives no benefit in graph models of streamflow. It is also the one point
+in this campaign where a pre-registered screen killed a candidate *before* the
+GPU spend rather than after.
 
 ---
 
