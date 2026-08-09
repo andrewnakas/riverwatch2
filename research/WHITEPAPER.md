@@ -259,12 +259,37 @@ We report this because the earlier form understated every ceiling by roughly
 was performed at constant σ and was correct as far as it went — it simply was not
 a validation of the code path in use. **Validate the path you run.**
 
-Two further assumptions we checked rather than assumed. **Persistence:** rating
-curves shift on multi-month timescales, so daily gauge errors are not independent;
-simulating AR(1) error from ρ = 0 to ρ = 0.98 moves the median ceiling only
-0.9524 → 0.9565, so persistence widens the confidence band without biasing the
-point estimate. **Symmetry:** the multiplicative lognormal parameterisation is
-median-unbiased by construction, and the simulated mean bias is +0.0005.
+Three further assumptions we checked rather than assumed.
+
+**Persistence.** Rating curves shift on multi-month timescales, so daily gauge
+errors are not independent. Simulating AR(1) error from ρ = 0 to ρ = 0.98 moves
+the median ceiling only 0.9524 → 0.9565: persistence widens the confidence band
+without biasing the point estimate.
+
+**Symmetry.** The multiplicative lognormal parameterisation is median-unbiased by
+construction, and the simulated mean bias is +0.0005.
+
+**The shape of σ(q).** Because the corrected form is flow-weighted, it could in
+principle be sensitive to *how* σ varies between its low- and high-flow endpoints
+— and our choice (linear in log-flow, between the 5th and 95th flow percentiles)
+is a modelling assumption. Holding the endpoints fixed at the central scenario
+and varying only the shape:
+
+| σ(q) shape | median ceiling |
+|---|---|
+| linear in log-flow (ours) | 0.9554 |
+| step function at the median | 0.9574 |
+| constant at the flow-weighted RMS of ours | 0.9554 |
+| constant at the high-flow value | 0.9579 |
+
+These agree within 0.0025, while moving the *endpoints* from all-high to all-low σ
+spans 0.0695 — nearly thirty times more. **The ceiling is governed almost entirely
+by the high-flow σ, and barely at all by the interpolation shape.** That is a
+desirable property: it means the result depends on the one quantity our
+extrapolation measurement (§4.2) actually constrains. The single exception is a
+σ linear in *raw* flow (0.9292), which we reject on physical grounds — in a
+right-skewed series it holds σ near its low-flow value across almost the entire
+range.
 
 `M/V = 1 + mean²/variance`, which yields a result we initially got backwards:
 **flashy basins have *lower* M/V (1.17 vs 1.57) and therefore a *higher*
