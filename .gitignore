@@ -30,3 +30,9 @@ dist/
 # Kaggle API credentials — never commit
 kaggle.json
 .kaggle/
+
+# Accidental rsync artifact: a full nested copy of the repo inside the data
+# dir (264 MB). Every checkpoint and dump in it is duplicated in the main
+# tree — verified 2026-08-09 — so it is safe to delete, but that is the
+# user's call. Ignored so it stops cluttering git status.
+data/mblstm/gpu_dumps_s14/riverwatch2/
