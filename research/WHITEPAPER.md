@@ -48,12 +48,22 @@ every basin to its own gauge-error ceiling bounds the achievable median at
 both records retain measurable headroom — roughly **+0.025** and **+0.082**
 respectively — and **50%** of with-q basins are already saturated.
 
+**Fourth, and least expected, we find that the binding constraint is the metric.**
+Median NSE is a rank statistic, so only basins near the median rank can move it —
+improving the worst 50 basins by any amount changes it by exactly zero. Combining
+that with the ceiling, just **44 of 531 basins** are simultaneously below their
+gauge-error ceiling and near enough the median to matter; raising only those to
+their ceilings would carry the no-q median past its target. Meanwhile **421 of
+531 basins have real headroom the metric cannot see**, and the 44 cannot be
+identified in advance because rank does not transfer between windows (27%
+overlap). The observations have room almost everywhere; the *statistic* does not.
+
 The scientific content is therefore not "we got a higher number." It is that the
 benchmark now has a **stated upper bound derived from the observations rather than
 from model performance**, that the bound is **steeply sensitive to the assumed
-gauge error** (σ = 0.13 → 0.41 moves it from 0.977 to 0.756), and that measuring
-which σ regime CAMELS occupies is therefore more valuable than another model. We
-support this with a series of negative results that share one diagnosed
+gauge error** (σ = 0.13 → 0.41 moves it from 0.977 to 0.756), and that both facts
+are dominated by a **reporting choice** that discards most of the available
+signal. We support this with a series of negative results sharing one diagnosed
 mechanism: the residual error is **scatter in peak magnitude**, not bias, not
 timing, and not an architectural output limit.
 
@@ -467,6 +477,32 @@ rank, and ranks do not persist: only **27%** of the cohort is shared between the
 fitting and validation windows. A near-median specialist cannot be targeted in
 advance.
 
+Combining the rank constraint with the corrected ceiling gives the operational
+map. Effort can only pay where a basin is *both* below its gauge-error ceiling
+(the observations can reward improvement) *and* near the median rank (it can move
+the reported number). On the held-out no-q frame:
+
+| | central σ | optimistic σ |
+|---|---|---|
+| basins below their ceiling | 421/531 | 530/531 |
+| basins near the median rank | 44/531 | 44/531 |
+| **both** | **44/531** | **44/531** |
+| median gain if only those reach their ceiling | **+0.019** | **+0.019** |
+| median gain if all below-ceiling basins do | +0.082 | +0.139 |
+
+All 44 near-median basins are below their ceiling under both scenarios, and
+raising only those to their ceilings would take the no-q median from 0.8363 to
+roughly 0.855 — past the 0.845 target. They are also **unremarkable catchments**
+(median flashiness 16.4 against 17.4 overall), not the flashy, arid, ephemeral
+extremes this campaign spent months targeting.
+
+This yields the sharpest statement the analysis supports, and it is not the one
+we expected. The observations have room almost everywhere (421 of 531 basins).
+Only about 44 basins can move the reported statistic. And those 44 cannot be
+identified in advance, because rank does not transfer. **The binding constraint
+on CAMELS median-NSE progress is the metric itself — not the observations, and
+not the models.**
+
 ### 5.5 A lever that looked alive, and the screen that killed it
 
 Every combination and post-processing lever we tested this round failed on honest
@@ -661,13 +697,21 @@ held-out **0.8363** exceeds the prior record of 0.8294 against a bound of
 **0.9186**, and the 0.845 target requires only **6%** of what the optimistic
 error model says is recoverable.
 
-The more durable finding is how strongly both bounds depend on the assumed gauge
-error: the achievable median runs from 0.977 at σ = 0.13 to 0.756 at σ = 0.41,
-a range that spans the published literature on discharge uncertainty. Under the
-optimistic regime our extrapolation measurement supports, **only 1 of 531 no-q
-basins is saturated**; under the central regime, 110 are. Establishing which
-regime CAMELS occupies is therefore worth more than another modelling round —
-and it is a measurement, not a model.
+Two findings outlast those numbers. The first is how strongly both bounds depend
+on the assumed gauge error: the achievable median runs from 0.977 at σ = 0.13 to
+0.756 at σ = 0.41, a range spanning the published literature on discharge
+uncertainty. Under the optimistic regime our extrapolation measurement supports,
+**only 1 of 531 no-q basins is saturated**; under the central regime, 110 are.
+Establishing which regime CAMELS occupies is worth more than another modelling
+round — and it is a measurement, not a model.
+
+The second is that the reported metric discards most of what is available.
+**421 of 531 basins sit below their gauge-error ceiling, but only ~44 can move a
+median**, and those 44 cannot be targeted in advance because rank does not
+transfer. A field optimising median NSE on CAMELS is therefore competing over a
+statistic that is insensitive to most of the improvement its data could still
+reward. We would rather see that stated plainly than see another decimal place
+added to it.
 
 The remaining error, in both tracks, is peak-magnitude **scatter** — established
 here from four independent directions (bias/scatter decomposition, failed
