@@ -338,11 +338,92 @@ error, holding all else fixed, moves the median dramatically: a 20% reduction
 takes with-q from 0.9177 to 0.9440 and no-q past its target.
 
 Headroom is **highly concentrated**: 353/531 with-q basins sit below their
-ceiling, but the **top 50 hold 56%** of all remaining headroom and the top 100 hold
-73%. Those 50 basins have median NSE **0.601** against 0.925 for the rest, and
-median flashiness 52 against 17. Several are negative. We verified they are
-genuine ephemeral desert catchments, not corrupt data: 08194200 is dry 76% of days
-and then floods to 2,550 cfs.
+ceiling, but the **top 50 hold 56%** of all remaining *summed* headroom and the
+top 100 hold 73%. Those 50 basins have median NSE **0.601** against 0.925 for the
+rest, and median flashiness 52 against 17. Several are negative. We verified they
+are genuine ephemeral desert catchments, not corrupt data: 08194200 is dry 76% of
+days and then floods to 2,550 cfs.
+
+### 5.4 A metric-definition error: summed headroom is not the reported number
+
+The sentence above is true and, for the purpose of the benchmark, almost
+irrelevant. We report the **median** of per-basin NSE, which is a **rank
+statistic** determined by the basins near rank 266 of 531. Improving a basin at
+rank 20 changes it by exactly nothing.
+
+| improvement applied | change in median (with-q) |
+|---|---|
+| top-50 target basins, +0.05 NSE | **+0.00000** |
+| top-50 target basins, +0.20 | +0.00134 |
+| top-50 target basins, +0.35 | +0.00692 |
+| **62 near-median basins, +0.05** | **+0.01578** |
+
+The top-50 target basins occupy ranks 1–66; **not one is above the median rank**.
+The same holds on the no-q track, where improving the worst 50 basins by +0.10
+moves the median by 0.00000. The two cohorts have **zero overlap** and are
+physically distinct: near-median basins are wetter (aridity 0.78), snowier
+(frac_snow 0.13) and smaller (298 km²), while the worst basins are arid (1.14),
+dry and large (402 km²).
+
+We report this because it invalidates a targeting strategy we ourselves pursued —
+the arid/flashy specialist programme optimises a quantity (summed per-basin
+headroom) that the benchmark does not report. It does **not** affect the ceiling
+analysis, which computes a median throughout, nor the measured ensemble deltas of
+multi5/multi6, which were always median deltas. It does mean that **only broad
+gains move this metric**: multi5 works precisely because 93.6% of basins improve.
+
+Diagnosing the near-median cohort sharpens the ceiling result considerably. Under
+the central σ scenario **all 78 of them already sit at or above their own
+gauge-error ceiling**, and the maximum achievable median equals the current value
+to four decimals — the metric cannot move at all. Under the optimistic scenario
+(which our 7.2% extrapolation measurement supports) 58/78 are saturated and the
+bound rises to 0.9581 on that window. **The σ scenario, not the modelling, now
+decides whether the benchmark is finished.**
+
+We also attempted to exploit the finding directly, and failed: weights fit on the
+near-median cohort, dHBV-dropping, rank-based weights, and direct
+median-maximising coordinate ascent all scored **negative** out of sample
+(−0.0001 to −0.0005). The reason is that near-median membership is defined by a
+rank, and ranks do not persist: only **27%** of the cohort is shared between the
+fitting and validation windows. A near-median specialist cannot be targeted in
+advance.
+
+### 5.5 One lever survives: neighbouring gauges
+
+Every combination and post-processing lever we tested this round failed on honest
+splits (regime-conditional weights −0.0001, cohort-conditional −0.0004, robust
+and trimmed combination below the weighted mean, asinh-space averaging −0.0014,
+ridge stacking −0.0009, per-regime stacking −0.0140). One thing did not.
+
+The residual of our ensemble at one basin is correlated with the concurrent
+residual at nearby basins, and the correlation decays cleanly with distance:
+
+| distance | residual corr (all days) | **residual corr (peak days)** |
+|---|---|---|
+| 0–50 km | 0.2426 | **0.2875** |
+| 100–200 km | 0.0587 | 0.0725 |
+| 500–1000 km | 0.0011 | 0.0095 |
+| >1000 km | −0.0010 | 0.0057 |
+
+The lift is **larger on peak days** than overall — precisely where our error
+lives. Correcting each basin from its three nearest non-nested neighbours, under
+fully nested selection (fit 1981-87, shrinkage selected on 1987-90, scored
+1990-95), yields a median gain of **+0.00142** with a bootstrap CI of
+**[+0.00071, +0.00227]** that excludes zero, improving 60.9% of basins.
+
+The control is what makes this credible: substituting the basin's **own lag-1
+residual** — testing whether this is merely temporal autocorrelation — gives
+**exactly +0.00000**, improving 50.0% of basins. The information is spatial.
+
+⚠️ **This is not a legal no-q result.** It uses neighbours' *observed* discharge,
+which the no-discharge protocol forbids; applied as post-processing to our no-q
+ensemble it would be leakage, and we do not include it in the 0.8363. Its value
+is as a **diagnostic**, and there it is important: it demonstrates that
+information about our residual exists *outside the basin*. A residual that is
+partly spatially structured is not purely irreducible scatter — which is the one
+principled way past a conditional-mean bound, since that bound is beaten only by
+new information. Building a neighbour-assimilating model is a well-defined next
+study under a different protocol.
 
 ---
 
