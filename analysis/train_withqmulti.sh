@@ -53,7 +53,7 @@ print(f'18/18 vars present, max NaN {max(d[v].isna().mean() for v in V):.4f}')
 " >> $LOG 2>&1 || { echo "[$(date +%T)] ABORT: corpus var check failed" >> $LOG; exit 1; }
 
 # ---- train seeds -------------------------------------------------------
-SEEDS="971 972 973"
+SEEDS="973 974 975"
 for S in $SEEDS; do
   CKPT="$CK/camels531_withqmulti_s${S}.pt"
   if [ -f "$CKPT" ]; then

@@ -1,0 +1,45 @@
+=== WITHQMULTI VERDICT  2026-08-09_17:14:46 ===
+-rw-r--r-- 1 nakas nakas 47432826 Aug  9 17:14 data/mblstm/gpu_dumps_s14/camels531_withqmulti_full531.csv.gz
+
+joined rows 138,488 -> 138,488   basins 531
+
+======================================================================
+GATE 1 — MEMBER (band >=0.85; <0.80 = broken)
+======================================================================
+  withqmulti day-1 median NSE   0.9206  (n=531)
+    daymet     0.8984
+    maurer     0.8964
+    nldas      0.8891
+    aorc       0.8973
+
+======================================================================
+GATE 2/3 — ENSEMBLE and CONTROL
+======================================================================
+  4-member record ensemble      0.9203
+  + withqmulti (5 members)      0.9253   delta +0.00498
+  control: 5th seed of a forcing gave +0.0005 (seed depth saturated)
+  => PASSES the +0.001 ship threshold; clears the control
+
+======================================================================
+GATE 4 — LEAVE-ONE-OUT (removing it must cost >= +0.001)
+======================================================================
+  drop daymet     0.9237   loss +0.00160
+  drop maurer     0.9257   loss -0.00043
+  drop nldas      0.9221   loss +0.00319
+  drop aorc       0.9237   loss +0.00165
+  drop withqmulti  0.9203   loss +0.00498
+
+======================================================================
+GATE 5 — TOP-50 COHORT (POOLED error, not per-basin medians)
+======================================================================
+  record 4       pooled NSE 0.5868
+  +withqmulti    pooled NSE 0.6249
+
+======================================================================
+GATE 6 — BREADTH (a narrow gain cannot move a median)
+======================================================================
+  basins improved   415/531 = 78.2%
+  mean delta        +0.01261
+  bootstrap 95% CI  [-0.00693, +0.01685]  STRADDLES ZERO
+
+  (for scale: multi5 improved 93.6% of basins on the no-q track)
