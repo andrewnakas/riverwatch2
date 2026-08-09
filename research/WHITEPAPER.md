@@ -41,18 +41,28 @@ gauging**, so peaks are rarely unmeasured but frequently measured badly.
 
 **Third, we place two records against the ceiling.** On the discharge-assimilating
 protocol we reach **median day-1 NSE 0.9203** on all 531 basins (prior published
-record: Nearing et al. 2022, 0.879). Against the central-scenario ceiling of
-**0.9241**, that leaves a gap of **0.0035**, and **63% of basins already score at
-or above their own gauge-error ceiling**. On the strict no-discharge protocol we
-reach a held-out **0.8363** (prior published record: Li et al. 2025, 0.8294) with
-substantially more room: 0.845 remains reachable.
+record: Nearing et al. 2022, 0.879). On the strict no-discharge protocol we reach
+a held-out **0.8363** (prior published record: Li et al. 2025, 0.8294). Raising
+every basin to its own gauge-error ceiling bounds the achievable median at
+**0.9453** (with-q) and **0.9186** (no-q) under the central error scenario, so
+both records retain measurable headroom — roughly **+0.025** and **+0.082**
+respectively — and **50%** of with-q basins are already saturated.
 
-The scientific content is therefore not "we got a higher number." It is that on
-the discharge-assimilating protocol **CAMELS is essentially finished** — further
-median-NSE gains there are largely fitting gauge error — while the no-discharge
-protocol retains real headroom. We support this with a series of negative results
-that share one diagnosed mechanism: the residual error is **scatter in peak
-magnitude**, not bias, not timing, and not an architectural output limit.
+The scientific content is therefore not "we got a higher number." It is that the
+benchmark now has a **stated upper bound derived from the observations rather than
+from model performance**, that the bound is **steeply sensitive to the assumed
+gauge error** (σ = 0.13 → 0.41 moves it from 0.977 to 0.756), and that measuring
+which σ regime CAMELS occupies is therefore more valuable than another model. We
+support this with a series of negative results that share one diagnosed
+mechanism: the residual error is **scatter in peak magnitude**, not bias, not
+timing, and not an architectural output limit.
+
+⚠️ **Correction notice.** An earlier draft reported the with-q record as sitting
+0.0035 below a central-scenario ceiling of 0.9241 and concluded the protocol was
+"essentially finished." That was an artifact of an error in our own closed form
+under flow-dependent σ (§4.1); the corrected bound is 0.9453 and the conclusion
+does not hold. We describe the error and its diagnosis rather than quietly
+restating the numbers.
 
 ---
 
@@ -216,15 +226,45 @@ model predicting `y` exactly is scored against `ŷ`. Taking expectations,
 E[(ŷ − y)²] = E[y²]·(e^{σ²} − 1) = M·(e^{σ²} − 1)
 ```
 
-and since NSE = 1 − MSE/Var(ŷ) ≈ 1 − MSE/V for small σ,
+and since NSE = 1 − MSE/Var(ŷ),
 
 ```
-NSE_ceiling = 1 − (M/V)·(e^{σ²} − 1).
+NSE_ceiling = 1 − (M/V)·(e^{σ²} − 1)          [constant σ]
 ```
 
-Monte Carlo simulation (`analysis/gauge_ceiling_mc.py`; perturb observed
-discharge, score the unperturbed truth against it) agrees with the closed form to
-~0.005 over σ = 0.13–0.70.
+Monte Carlo simulation (perturb observed discharge, score the unperturbed truth
+against it) agrees with this to **+0.0003 at σ = 0.13**.
+
+**This form is only valid for constant σ, and we initially misapplied it.** Gauge
+error is not constant — it is larger at low flow — so every feasibility
+calculation uses a flow-dependent σ(y). Substituting `mean(σ²)` into the constant-σ
+formula is wrong twice over, and both errors push the ceiling *down*: it applies
+the low-flow σ to the high-flow mass that dominates `M = E[y²]`, and it divides by
+`Var(truth)` when NSE divides by the variance of the series being scored against,
+which is the noisier observation. The correct expression is
+
+```
+NSE_ceiling = 1 − E[y²(e^{σ(y)²} − 1)] / ( E[y² e^{σ(y)²}] − (E[y])² )
+```
+
+Validated per basin against Monte Carlo (200 basins, 25 replicates each):
+
+| form | central scenario | optimistic |
+|---|---|---|
+| naive `mean(σ²)`, median abs. error vs MC | **0.0361** (20% of basins within 0.01) | 0.0285 (0%) |
+| **corrected**, median abs. error vs MC | **0.0034** (82% within 0.01) | **0.0013** (100%) |
+
+We report this because the earlier form understated every ceiling by roughly
+0.03–0.04 and produced a materially different conclusion. The original validation
+was performed at constant σ and was correct as far as it went — it simply was not
+a validation of the code path in use. **Validate the path you run.**
+
+Two further assumptions we checked rather than assumed. **Persistence:** rating
+curves shift on multi-month timescales, so daily gauge errors are not independent;
+simulating AR(1) error from ρ = 0 to ρ = 0.98 moves the median ceiling only
+0.9524 → 0.9565, so persistence widens the confidence band without biasing the
+point estimate. **Symmetry:** the multiplicative lognormal parameterisation is
+median-unbiased by construction, and the simulated mean bias is +0.0005.
 
 `M/V = 1 + mean²/variance`, which yields a result we initially got backwards:
 **flashy basins have *lower* M/V (1.17 vs 1.57) and therefore a *higher*
@@ -260,20 +300,30 @@ constrained.
 
 ### 4.3 Where each record sits
 
+All figures below use the **corrected** closed form.
+
 | | **no-q** (Li/Song protocol) | **with-q** (Kratzert protocol) |
 |---|---|---|
-| this work | **0.8363** (held-out) | **0.9203** (0.9206 on the 530-basin ceiling frame) |
+| this work | **0.8363** (held-out) | **0.9203** |
 | prior record | 0.8294 | 0.879 |
-| **central-scenario ceiling** | 0.8890 | **0.9241** |
-| optimistic-scenario ceiling | higher | 0.9541 |
-| **basins already at/above ceiling** | 29% | **63%** |
-| target | 0.845 needs **12–23%** of headroom ✅ | 0.95 **unreachable** centrally; needs **88%** optimistically |
+| **central: all basins → ceiling** | **0.9186** | **0.9453** |
+| **optimistic: all basins → ceiling** | **0.9755** | **0.9772** |
+| basins saturated (central) | 110/531 (21%) | 266/531 (50%) |
+| basins saturated (optimistic) | **1/531** | 84/531 (16%) |
+| target | 0.845 needs **6%** of headroom (optimistic) ✅ | 0.95 **reachable** under both scenarios |
 
-⭐ **The central result: on the discharge-assimilating protocol the deployable
-ensemble sits 0.0035 below the central-scenario ceiling, with 63% of basins
-already saturated.** Under that error model, CAMELS with-q is effectively
-finished — remaining median-NSE gains are largely fitting gauge noise. The
-no-discharge track is the one with real room left.
+The headroom is real but modest in absolute terms: **+0.025** for with-q and
+**+0.082** for no-q against the central-scenario bound. Half of all with-q basins
+are already at or above what their gauge can reward, which is why broad gains are
+hard to come by there.
+
+⭐ **The result that survives is about sensitivity, not saturation.** The bound
+moves from 0.977 to 0.756 as σ goes from 0.13 to 0.41 — a range spanning the
+entire published literature on discharge uncertainty. The gradient d(ceiling)/dσ
+runs from −0.31 to −1.17 across that range. **Which σ regime CAMELS occupies
+determines the answer more than any modelling choice does**, which is why §4.2's
+measurement is the load-bearing contribution of this paper rather than a
+supporting detail.
 
 ---
 
@@ -372,13 +422,17 @@ analysis, which computes a median throughout, nor the measured ensemble deltas o
 multi5/multi6, which were always median deltas. It does mean that **only broad
 gains move this metric**: multi5 works precisely because 93.6% of basins improve.
 
-Diagnosing the near-median cohort sharpens the ceiling result considerably. Under
-the central σ scenario **all 78 of them already sit at or above their own
-gauge-error ceiling**, and the maximum achievable median equals the current value
-to four decimals — the metric cannot move at all. Under the optimistic scenario
-(which our 7.2% extrapolation measurement supports) 58/78 are saturated and the
-bound rises to 0.9581 on that window. **The σ scenario, not the modelling, now
-decides whether the benchmark is finished.**
+Diagnosing the near-median cohort sharpens the σ-sensitivity result considerably.
+Under the central scenario **70 of the 78 already sit at or above their own
+gauge-error ceiling** (median headroom −0.052), so the metric has very little room
+to move. Under the optimistic scenario — which our 7.2% extrapolation measurement
+supports — only **8 of 78** are saturated and median headroom flips positive to
+**+0.022**, with the achievable bound rising from 0.9522 to 0.9773 on that window.
+
+**The same cohort is either finished or has real room, depending entirely on which
+gauge-error regime holds.** That is the sharpest statement this analysis
+supports, and it is why measuring σ empirically matters more than another
+modelling round.
 
 We also attempted to exploit the finding directly, and failed: weights fit on the
 near-median cohort, dHBV-dropping, rank-based weights, and direct
@@ -575,15 +629,20 @@ which error regime CAMELS actually occupies rather than assuming one, and place
 two records against the result.
 
 On the **discharge-assimilating** protocol, median day-1 NSE **0.9203** on all 531
-basins exceeds the prior published record by +0.041 — and sits **0.0035** below the
-central-scenario observational ceiling, with **63% of basins already at or above
-their own ceiling**. On this protocol the benchmark is, to a good approximation,
-finished; we would treat further median-NSE improvements there as evidence about
-gauge error rather than about hydrology.
+basins exceeds the prior published record by +0.041, against a central-scenario
+bound of **0.9453** — headroom of about +0.025, with **half** of all basins
+already at or above their own ceiling. On the **no-discharge** protocol, a
+held-out **0.8363** exceeds the prior record of 0.8294 against a bound of
+**0.9186**, and the 0.845 target requires only **6%** of what the optimistic
+error model says is recoverable.
 
-On the **no-discharge** protocol, a held-out **0.8363** exceeds the prior record of
-0.8294 with genuine headroom remaining: 0.845 requires only 12–23% of what the
-gauge-error model says is recoverable.
+The more durable finding is how strongly both bounds depend on the assumed gauge
+error: the achievable median runs from 0.977 at σ = 0.13 to 0.756 at σ = 0.41,
+a range that spans the published literature on discharge uncertainty. Under the
+optimistic regime our extrapolation measurement supports, **only 1 of 531 no-q
+basins is saturated**; under the central regime, 110 are. Establishing which
+regime CAMELS occupies is therefore worth more than another modelling round —
+and it is a measurement, not a model.
 
 The remaining error, in both tracks, is peak-magnitude **scatter** — established
 here from four independent directions (bias/scatter decomposition, failed
@@ -594,7 +653,11 @@ peak error resists modelling is closely related to the reason the observations
 cannot reward removing it.
 
 **Limitations.** The ceiling is our own derivation, not a citation, and scenario
-choice drives it — we report the full table. Multi-hundred-gauge uncertainty base
+choice drives it — we report the full table. We also got the derivation wrong
+once, in a way that changed the conclusion (§4.1): a constant-σ closed form
+applied to flow-dependent σ understated every ceiling by 0.03–0.04 and produced a
+"the benchmark is finished" reading that the corrected form does not support.
+Multi-hundred-gauge uncertainty base
 rates are UK (Coxon; CAMELS-GB); Kiang et al. is USGS-coauthored but covers three
 sites. The two tracks use different protocols and windows and must not be
 compared. Per-basin with-q NSE rests on 261 points and is fragile. And the no-q
