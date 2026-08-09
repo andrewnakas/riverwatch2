@@ -381,7 +381,42 @@ peak days (0.503) than overall (0.399) in both heads — falsifying the premise 
 the model is unaware of its peak uncertainty. Caveat: one seed and 30 epochs each,
 with both NLLs still improving at cutoff.
 
-### 6.3 What else is closed
+### 6.3 Differentiable physics does not rescue the extremes here
+
+Song et al. (2026) report that δHBV1.1p beats LSTM on CAMELS events with return
+period ≥5 years (+0.06 median NSE on those events; lower peak error in 80% of
+cases), attributing it to mass balance constraining peak underestimation. This is
+the one published result aimed squarely at our surviving error mode, and it was
+free for us to test: **our δHBV members already are δHBV1.1p** — 16 parallel
+components, all three dynamic parameters (BETA, K0, BETAET), and the combined
+`0.5·MSE + 0.5·MSE(log₁₀)` loss.
+
+The direction replicates; the magnitude does not. Pooled NSE by flow regime,
+averaged within family:
+
+| regime | δHBV | LSTM | difference |
+|---|---|---|---|
+| all days | 0.8645 | 0.8872 | −0.0227 |
+| top 10% | 0.8441 | 0.8653 | −0.0213 |
+| top 1% | 0.8246 | 0.8427 | **−0.0180** |
+
+The gap narrows monotonically toward the extremes — consistent with the proposed
+mechanism — but never crosses zero, and `lstm_multi5` remains the single best
+stream at every regime including the top 1%. The deciding test is the ensemble:
+upweighting δHBV **on peak days only** degrades it monotonically (×1.5: −0.0009;
+×2: −0.0012; ×3: −0.0017). Inverse-MSE weighting has already given the family the
+weight it earns.
+
+**Scope of this negative, stated precisely.** We tested our already-trained
+members on the Li/Song no-q protocol, using flow percentiles as a proxy for return
+period — a 13.2-year record cannot resolve a 5-year return period per basin. We
+did not retrain under Song's exact configuration, and their result is
+event-conditional where ours is a pooled and median comparison. A defender of that
+paper could reasonably object on those grounds. What we can say is that the
+architecture they advocate, as trained here, carries no extreme-event skill that
+our weighting is discarding.
+
+### 6.4 What else is closed
 
 - **Timing.** A stride-1 probe across 16 basins finds shift 0 optimal for **all
   16**; the per-basin oracle shift buys +0.0000. The model is on time and too
