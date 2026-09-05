@@ -30,23 +30,33 @@ discharge uncertainty into a maximum achievable NSE; the nearest work (Aerts et
 al. 2024) tests whether *model differences* exceed observation uncertainty
 without deriving a bound.
 
-**Second, we measure which error scenario applies to CAMELS**, rather than
-assuming one. Using USGS field-measurement records for all 530 gauges with
-retrievable metadata, **7.2% of basin peak flows exceed the highest direct
-discharge measurement** ever made at that gauge — against **44%** reported for UK
-gauges by Coxon et al. (2015). CAMELS is roughly six times better measured at
-peaks than the benchmark literature implies. The honest counterweight, which must
-travel with that number: **43.2% of peaks exceed the highest *well-rated*
-gauging**, so peaks are rarely unmeasured but frequently measured badly.
+**Second, we measure σ itself on the CAMELS gauges**, rather than selecting a
+scenario. Comparing **144,914 USGS field gaugings against the published daily
+values they underpin**, across **523 of the 531 basins**, gives the total error in
+the series NSE is computed against — measurement, rating-curve and shift error
+together. σ **rises steeply with flow**, from 0.045 at typical flows to **0.121**
+in the 90th–99th percentile and **0.251** above it, which is the *opposite* of the
+gradient assumed by scenarios derived from the literature. Because the ceiling is
+flow-weighted, that direction matters: the measured no-q ceiling is
+**0.73–0.95**, a band the previously reported scenarios were too narrow to
+contain. We also find the observations cannot be
+repaired to escape it — gauge error carries almost no learnable per-station bias
+(0.9% of variance) and almost no persistence (ρ ≈ 0.07) — but its **magnitude**
+is a stable, predictable gauge property (split-half r = 0.50; log basin area
+r = −0.58), which supports reporting skill relative to each basin's own ceiling.
 
 **Third, we place two records against the ceiling.** On the discharge-assimilating
-protocol we reach **median day-1 NSE 0.9203** on all 531 basins (prior published
+protocol we reach **median day-1 NSE 0.888355** on all 531 basins ⚠️ (was 0.9203 — see the
+correction notice at §5.2; that figure was leaked and frame-inflated) (prior published
 record: Nearing et al. 2022, 0.879). On the strict no-discharge protocol we reach
-a held-out **0.8363** (prior published record: Li et al. 2025, 0.8294). Raising
-every basin to its own gauge-error ceiling bounds the achievable median at
-**0.9453** (with-q) and **0.9186** (no-q) under the central error scenario, so
-both records retain measurable headroom — roughly **+0.025** and **+0.082**
-respectively — and **50%** of with-q basins are already saturated.
+a held-out **0.8363** (prior published record: Li et al. 2025, 0.8294). Against
+the **measured** bound the no-q record sits inside the band (0.73–0.95), and
+against each basin's *own* measured σ it captures **84–89% of what its gauges can
+reward** (robust–SD range, both sides computed on the held-out frame); under the
+earlier scenario-based bounds it retained roughly +0.082. The with-q record sits against a
+central-scenario bound of **0.9453** with **50%** of basins already saturated.
+The direction of travel across both revisions is the same: **each time the
+ceiling has been measured more carefully, it has moved closer to the records.**
 
 **Fourth, and least expected, we find that the binding constraint is the metric.**
 Median NSE is a rank statistic, so only basins near the median rank can move it —
@@ -137,7 +147,7 @@ comparability to the standard CAMELS-531 temporal-split median-NSE benchmark.
 | 2020 | **DI-LSTM** data integration | **0.852** (from 0.714) | 671 | weaker base than later work | Feng, Fang & Shen 2020, WRR 56 |
 | **2022** | **Autoregressive LSTM** | **0.879** | **531** | 1-day-lag nowcast — prior **RECORD** | **Nearing et al. 2022, HESS 26:5493** |
 | 2026 | MLP orchestrator DA | ~0.81–0.84 @1-day | 531 | below prior record | Saint-Fleur et al. 2026, HESS 30:3497 |
-| **2026** | **RiverWatch2 with-q grand ensemble** | **0.9203** | **531** | 1-day-lag nowcast, 4 forcings × 5 seeds | **this work** |
+| **2026** | **RiverWatch2 with-q grand ensemble** | **0.888355** | **531** | 1-day-lag nowcast, 5 members × 5 seeds, guarded split, all-days frame | **this work** |
 
 ### 2.3 What Google's global models are (and are not)
 
@@ -306,7 +316,13 @@ range.
 break-even σ (0.381 vs 0.293)** — they tolerate more gauge error before saturating,
 not less, because large peaks inflate variance faster than mean-square.
 
-### 4.2 Which σ applies to CAMELS — measured, not assumed
+### 4.2 Which σ applies to CAMELS — extrapolation incidence
+
+⚠️ **Superseded in part by §4.4.** This section measures how often peaks require
+rating-curve extrapolation, then *selects* a σ scenario from the literature on
+that basis. §4.4 measures σ directly and finds a different regime, with the
+flow-gradient running the opposite way. The extrapolation statistics below stand;
+the scenario choice they motivated does not.
 
 The ceiling is only as good as its σ. Rather than assume, we measured the
 mechanism the literature says drives high-flow uncertainty: whether the peak
@@ -335,11 +351,17 @@ constrained.
 
 ### 4.3 Where each record sits
 
+⚠️ **The scenario columns below are superseded by the measured σ of §4.4**, which
+puts the no-q ceiling at **0.73–0.95** rather than 0.919/0.976 and therefore
+removes the "0.845 needs only 6% of headroom" conclusion. The table is retained
+because the *sensitivity* argument at its foot is the part that survives — and
+§4.4 strengthens it.
+
 All figures below use the **corrected** closed form.
 
 | | **no-q** (Li/Song protocol) | **with-q** (Kratzert protocol) |
 |---|---|---|
-| this work | **0.8363** (held-out) | **0.9203** |
+| this work | **0.8363** (held-out) | **0.888355** ⚠️ (was 0.9203; see §5.2 correction) |
 | prior record | 0.8294 | 0.879 |
 | **central: all basins → ceiling** | **0.9186** | **0.9453** |
 | **optimistic: all basins → ceiling** | **0.9755** | **0.9772** |
@@ -359,6 +381,141 @@ runs from −0.31 to −1.17 across that range. **Which σ regime CAMELS occupie
 determines the answer more than any modelling choice does**, which is why §4.2's
 measurement is the load-bearing contribution of this paper rather than a
 supporting detail.
+
+### 4.4 σ measured directly — and it overturns §4.2's scenario choice
+
+⚠️ **This section supersedes the σ selection in §4.2.** There we measured the
+*incidence* of rating-curve extrapolation (7.2% of peaks) and then still **chose**
+a σ regime from the UK literature. Here we measure σ itself, on the same gauges
+we score against, and the answer is not the regime we chose.
+
+**Method.** USGS publishes the **field gaugings** behind every rating curve —
+direct current-meter and ADCP measurements, ~1,000–2,000 per station back to the
+1950s. We compare each gauging to the **published daily value for the same day**.
+That difference is the total error in the series NSE is computed against:
+
+    σ_total² = measurement error + rating-curve error + shift error
+
+Gauge *quality ratings* capture only the first term. The comparison captures all
+three, which is what the ceiling requires.
+
+**Result** (**144,914 matched pairs across 523 of 531 basins** — the complete
+fetch; 5 basins lack retrievable gaugings and 3 fall below the 40-pair minimum):
+
+| flow band | n | robust σ (MAD) | plain SD | pairs disagreeing >2× |
+|---|---|---|---|---|
+| p00–25 | 35,895 | 0.0503 | 0.2252 | 1.16% |
+| p25–50 | 36,186 | 0.0442 | 0.2016 | 0.90% |
+| p50–75 | 36,278 | 0.0455 | 0.2256 | 1.22% |
+| p75–90 | 21,777 | 0.0614 | 0.3310 | 2.76% |
+| **p90–99** | 13,061 | **0.1213** | 0.4538 | **5.50%** |
+| **p99+** | 1,717 | **0.2509** | 0.5599 | **12.93%** |
+
+⭐⭐ **σ RISES steeply with flow — roughly 7× from typical flows to the top 1%.**
+The median gauging agrees with the published value to 2.5%; the top percentile
+disagrees by ~34%.
+
+⚠️⚠️ **This reverses the σ shape assumed throughout §4.** Our `sigma_series`
+interpolates σ *downward* with flow (0.30 low → 0.18 high), on the reasoning that
+peaks are the well-gauged regime. Measured, the opposite holds. Because the
+corrected ceiling is **flow-weighted** (§4.1), weighting by q², the direction of
+that gradient matters more than its magnitude: every ceiling computed with the
+old shape is wrong in *direction*, not merely level.
+
+**The resulting ceiling**, corrected flow-weighted form, validated against Monte
+Carlo to ≤0.001 across σ = 0.02–0.30 (so the formula is not the uncertainty — σ
+is):
+
+| basis | no-q ceiling |
+|---|---|
+| **measured σ, robust (MAD)** | **0.9493** |
+| **measured σ, plain SD** | **0.7280** |
+| assumed "optimistic" (§4.2's choice) | 0.9786 |
+| assumed "central" | 0.9594 |
+
+⇒ **The measured ceiling is 0.73–0.95**, and our held-out **0.8363 sits inside
+that band.** The robust bound (0.949) is close to the assumed "central" scenario
+(0.959) while the SD bound (0.728) is far below it, so the assumed scenarios were
+not so much wrong in level as **too narrow**: they excluded the tail behaviour
+the gaugings actually show. The §4.3
+statement that "0.845 needs 6% of headroom" does not survive this measurement.
+
+**Why the band is wide, and why we report it rather than a point.** The gap
+between robust σ and plain SD is entirely rare, extreme disagreements: **1.4% of
+pairs differ by >2×**. These are not artifacts. Their rate rises monotonically
+with flow — **~1% below the median rising to 12.9% in the top percentile** — and
+falls monotonically with gauging era (2.19% pre-1970 → 0.82% post-2010). That is
+the signature of rating-curve extrapolation failing at peaks, exactly the
+mechanism Coxon and Kiang describe. Example: station 01031500, 1982-02-23, a
+gauging of **4,190 cfs** against a published daily of **200 cfs**, on a day the
+hydrograph did not move.
+
+Restricting to days with a flat hydrograph (to suppress the fact that a gauging
+is instantaneous while the daily value is a 24-hour mean) moves robust σ only
+from 0.052 to 0.043 at typical flows and 0.124 to 0.094 at high flows — so
+within-day variability explains a minority of the scatter, and the robust reading
+is the defensible one rather than an artifact of filtering.
+
+⇒ **The honest headline is the range.** Robust σ excludes real events; plain SD
+includes some genuine sub-daily variation. The truth lies between, and the
+sensitivity is dominated by peak-flow σ alone: holding typical-flow σ at 0.05 and
+sweeping σ(p99+) from 0.10 to 0.46 moves the ceiling from 0.990 to 0.822.
+
+### 4.5 Error magnitude is learnable; error sign is not
+
+A natural response to a ceiling set by observations is to *repair the
+observations*. The arithmetic supports it — removing half the gauge noise lifts a
+σ=0.15 ceiling from 0.970 to 0.993. We tested whether it is achievable, and it is
+not, for a measurable reason.
+
+**Decomposition of the log residual** (144,914 pairs, 523 gauges):
+
+| component | share |
+|---|---|
+| between-gauge (a learnable per-gauge **bias**) | **0.9%** |
+| within-gauge (per-measurement noise) | **99.1%** |
+
+There is essentially no systematic per-gauge offset to correct. Nor is the error
+**persistent**: across 24,193 consecutive gauging pairs, the autocorrelation of
+the residual is **+0.071** for gaugings less than two months apart and ~0.01
+beyond. A corrector needs correlation ρ ≳ 0.3 with the true error merely to break
+even; below that it *adds* variance. At the measured ρ ≈ 0.07 the best attainable
+gain is **+0.0035**, and applied without optimal shrinkage it **costs −0.019**.
+
+⛔ **And a working corrector would still be inadmissible here.** The tempting
+source of correction signal is the model itself — ensemble means, neighbouring
+gauges, physical plausibility. Any of these makes the target a function of the
+prediction: NSE ceases to measure skill, the number is no longer comparable to
+Li/Song, Kratzert or Nearing (all scored against the unmodified USGS series), and
+the claim becomes unfalsifiable, since a better model would "correct" the data
+further and raise its own score.
+
+⭐⭐ **What *is* learnable is the error's magnitude.** Per-gauge σ spans
+0.028–0.109 (median 0.054) and is **stable**: σ estimated on a station's first
+half predicts its second half at **r = 0.50** (n = 114 stations with ≥80 pairs).
+It is also predictable from stable catchment properties — most strongly **log
+basin area, r = −0.58**: small catchments are gauged substantially worse, with
+p_mean, aridity and the station's own Fair/Poor rating fraction contributing.
+
+⇒ **One cannot predict which way a reading is wrong, but one can predict how
+wrong a given gauge typically is.** That supports two uses, both of which are
+metric contributions rather than data corrections:
+
+1. **Normalised skill** — report NSE against each basin's own measured ceiling.
+   Computed with both sides on the held-out frame (531 basins, 183,195 rows; the
+   calculation reproduces the record exactly at 0.8363), **the record captures
+   84.0% of achievable under the robust σ reading and 89.0% under the plain-SD
+   reading**, with **0.2%–9.9%** of basins already at or above their own ceiling.
+   ⚠️ The same calculation on the *train-side* val slice reads 95.4%/99.4% — a
+   ~10-point overstatement, because it pairs an easier window's median with that
+   window's ceilings. Always state the frame.
+2. **Gauge-quality stratification** — per-basin ceilings vary widely, so a
+   benchmark can be reported on the subset where the observations can still
+   resolve model differences.
+
+⚠️ Both must be pre-registered and computed **independently of model output**; a
+stratification tuned on model performance is oracle selection, as fatal as
+correcting the target.
 
 ---
 
@@ -393,6 +550,33 @@ because the direction was asserted rather than derived. We do **not** present
 0.8363 > 0.8347 as an improvement: they are different windows on different data.
 The honest statement is that held-out performance did not degrade, which is
 unusual and worth one sentence, not a claim.
+
+> ## ⛔⛔ CORRECTION NOTICE (2026-09-05) — EVERY WITH-Q NUMBER BELOW IS SUPERSEDED
+>
+> **The with-q figures in this draft (0.9203, 0.9253, 0.9058, 0.9016 and every quantity derived from
+> them — ceilings, headroom, saturation fractions, cohort splits) are RETRACTED.** Two independent
+> defects, found 2026-09-04 and recorded in `benchmarks/EXPERIMENTS.md` §LEDGER 51:
+>
+> 1. **Training leak.** Every with-q member trained after 2026-08-01 was run without `--train-start`, so
+>    the 1989-10-01..1999-09-30 **test decade was inside the training set** (6.7–8.1M training windows
+>    against 1.74M when guarded). The August launchers each copied the July `--val-*` line and dropped the
+>    `--train-start` line beside it.
+> 2. **Evaluation frame.** The whole ladder — including the July *guarded* members — was scored on a
+>    **stride-14 subsample (260 rows/basin)**, which is **systematically optimistic by +0.036** and not
+>    phase luck: all 14 phases score 0.870–0.894 against 0.847 on all days, monotone in sparsity. Nearing
+>    2022 scores **every** daily observation.
+>
+> **The corrected result, on Nearing's own split and his all-observations frame:**
+>
+> | | day-1 median NSE, 531 basins |
+> |---|---|
+> | **RiverWatch2 with-q (5 members × 5 seeds, equal weight)** | **0.888355** |
+> | Nearing et al. 2022 | 0.879 |
+> | **margin** | **+0.009355** |
+>
+> The record still stands, by a smaller and honest margin. §5.2's *readout* finding survives (the quantile
+> midpoint beats the median); its *level* does not. **Do not quote any with-q number from the sections
+> below without recomputing it on the guarded, all-days frame.**
 
 ### 5.2 Discharge assimilation: 0.9203, and a readout that matters
 
@@ -669,6 +853,25 @@ numbers have been superseded (0.9203 on all 531; 0.8363 held-out on all 531), an
 the paper's claim has changed from "we beat the record" to "here is the ceiling,
 and here is where the records sit against it."
 
+**This revision adds §4.4–4.5 and, in doing so, corrects the paper's own
+load-bearing claim.** §4.2 asserted that σ was "measured, not assumed"; it
+measured extrapolation *incidence* and then chose a σ scenario from UK
+literature. §4.4 measures σ directly, from 144,914 field-gauging-vs-published-daily
+pairs on the CAMELS gauges themselves, and finds:
+
+- the assumed σ(q) **shape is backwards** — σ rises ~7× with flow rather than
+  falling, and the ceiling is flow-weighted, so the direction matters;
+- the measured ceiling is **0.73–0.95**, below both scenarios we had reported,
+  with our held-out 0.8363 inside that band;
+- consequently "0.845 needs 6% of headroom" (§4.3) does not survive.
+
+§4.5 then closes the natural follow-up — repairing the observations — on measured
+grounds (error persistence ρ ≈ 0.07 against a break-even of ≈0.3) and on the
+methodological ground that any model-informed correction is circular. It replaces
+that idea with the part that *is* learnable: error **magnitude** is a stable,
+predictable gauge property (split-half r = 0.50; log-area r = −0.58) even though
+error **sign** is not.
+
 We also correct two of our own errors, in the spirit of §6:
 
 1. **The 0.9203 vs 0.9177 difference is a readout, not a configuration.** It was
@@ -693,19 +896,31 @@ On the **discharge-assimilating** protocol, median day-1 NSE **0.9203** on all 5
 basins exceeds the prior published record by +0.041, against a central-scenario
 bound of **0.9453** — headroom of about +0.025, with **half** of all basins
 already at or above their own ceiling. On the **no-discharge** protocol, a
-held-out **0.8363** exceeds the prior record of 0.8294 against a bound of
-**0.9186**, and the 0.845 target requires only **6%** of what the optimistic
-error model says is recoverable.
+held-out **0.8363** exceeds the prior record of 0.8294 — against a **measured**
+bound of **0.73–0.95** (§4.4), inside which it already sits.
 
-Two findings outlast those numbers. The first is how strongly both bounds depend
-on the assumed gauge error: the achievable median runs from 0.977 at σ = 0.13 to
-0.756 at σ = 0.41, a range spanning the published literature on discharge
-uncertainty. Under the optimistic regime our extrapolation measurement supports,
-**only 1 of 531 no-q basins is saturated**; under the central regime, 110 are.
-Establishing which regime CAMELS occupies is worth more than another modelling
-round — and it is a measurement, not a model.
+Three findings outlast those numbers. The first is that the bound can be
+**measured rather than assumed**, and that doing so changes it. Comparing 144,914
+USGS field gaugings against the published daily values they underpin gives σ
+directly, on the gauges we score against: σ **rises ~7× with flow** (0.05 typical
+→ 0.34 at the top percentile), which is the opposite of the shape we and the
+literature-derived scenarios assumed, and yields a ceiling **below** every
+scenario we had reported. Establishing which regime CAMELS occupies was worth
+more than another modelling round — and it was a measurement, not a model.
 
-The second is that the reported metric discards most of what is available.
+The second is that the observations cannot be repaired to escape the bound, but
+they can be **characterised**. Gauge error carries almost no learnable per-station
+bias (0.9% of residual variance) and almost no persistence (ρ ≈ 0.07 between
+consecutive gaugings), so no admissible corrector reaches the ρ ≈ 0.3 needed to
+break even — and any corrector informed by model output would make the target a
+function of the prediction. What *is* learnable is the error's **magnitude**:
+per-gauge σ is stable across halves of a station's record (r = 0.50) and
+predictable from catchment properties, most strongly log area (r = −0.58). That
+supports reporting skill **relative to each basin's own ceiling** — our 0.8363 is
+**84–89% of what its gauges can reward** — rather than pretending the raw number
+is comparable across stations of very different observational quality.
+
+The third is that the reported metric discards most of what is available.
 **421 of 531 basins sit below their gauge-error ceiling, but only ~44 can move a
 median**, and those 44 cannot be targeted in advance because rank does not
 transfer. A field optimising median NSE on CAMELS is therefore competing over a
@@ -721,14 +936,26 @@ which is why we think the two halves of this paper belong together: the reason
 peak error resists modelling is closely related to the reason the observations
 cannot reward removing it.
 
-**Limitations.** The ceiling is our own derivation, not a citation, and scenario
-choice drives it — we report the full table. We also got the derivation wrong
-once, in a way that changed the conclusion (§4.1): a constant-σ closed form
-applied to flow-dependent σ understated every ceiling by 0.03–0.04 and produced a
-"the benchmark is finished" reading that the corrected form does not support.
-Multi-hundred-gauge uncertainty base
-rates are UK (Coxon; CAMELS-GB); Kiang et al. is USGS-coauthored but covers three
-sites. The two tracks use different protocols and windows and must not be
+**Limitations.** The ceiling is our own derivation, not a citation. We got the
+derivation wrong once, in a way that changed the conclusion (§4.1): a constant-σ
+closed form applied to flow-dependent σ understated every ceiling by 0.03–0.04
+and produced a "the benchmark is finished" reading that the corrected form does
+not support. We then got the *σ* wrong, in a way that changed it again (§4.4):
+what we described as a measured error regime was a scenario selected on
+extrapolation incidence, and its flow-gradient ran the wrong way.
+
+The direct σ measurement carries its own caveats, and they set the width of the
+0.73–0.95 band rather than its centre. A field gauging is **instantaneous** while
+the published value is a **24-hour mean**, so part of the plain-SD scatter is
+genuine sub-daily variation and not error; the robust (MAD) estimate excludes
+that but also excludes rare, real rating failures, which is why we report both
+ends rather than a point. The extreme disagreements are concentrated at high flow
+(9.4% of top-5%-flow pairs differ by >2×) precisely where the ceiling is most
+sensitive, so the peak-flow σ is the single quantity most worth tightening. The
+figures here rest on 523 of 531 basins (five lack retrievable gaugings, three
+fall below the 40-pair minimum), and gaugings are unevenly distributed across
+eras and flow regimes. Multi-hundred-gauge uncertainty base rates in the prior literature are
+UK (Coxon; CAMELS-GB); Kiang et al. is USGS-coauthored but covers three sites. The two tracks use different protocols and windows and must not be
 compared. Per-basin with-q NSE rests on 261 points and is fragile. And the no-q
 scored window is ~13.2 years, not 15, because Maurer ends in 2008.
 

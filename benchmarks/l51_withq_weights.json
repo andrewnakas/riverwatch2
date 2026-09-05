@@ -1,0 +1,25 @@
+{
+ "readout": "mid",
+ "rule": "drop daymeth1",
+ "weights": {
+  "maurerh1": 1.0,
+  "nldash1": 1.0,
+  "fused3h1": 1.0
+ },
+ "select_median_nse": 0.916575579902561,
+ "members": [
+  "daymeth1",
+  "maurerh1",
+  "nldash1",
+  "fused3h1"
+ ],
+ "fit_window": [
+  "1980-10-01",
+  "1985-10-01"
+ ],
+ "select_window": [
+  "1985-10-01",
+  "1989-09-30"
+ ],
+ "note": "chosen on the held-out val window; apply to test ONCE"
+}

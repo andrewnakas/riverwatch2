@@ -1,0 +1,24 @@
+{
+ "frame": "test1",
+ "readout": "mid",
+ "members": [
+  "daymeth1",
+  "maurerh1",
+  "nldash1",
+  "aorch1",
+  "fused3h1"
+ ],
+ "seeds": "all",
+ "rows": 1931646,
+ "basins": 531,
+ "weights": null,
+ "ensemble_median_nse": 0.8883553662383529,
+ "n_scored": 531,
+ "member_median_nse": {
+  "daymeth1": 0.8681590580590396,
+  "maurerh1": 0.8601686487841231,
+  "nldash1": 0.8571876221351902,
+  "aorch1": 0.8429636402924733,
+  "fused3h1": 0.8721621029846389
+ }
+}

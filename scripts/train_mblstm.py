@@ -99,6 +99,19 @@ CAMELS1F_VARS = COMPAT_VARS + ["vapor_pressure"]           # single product, 6
 CAMELS3FV2_VARS = [f"{v}_{p}" for p in ("daymet", "maurer", "nldas")
                    for v in CAMELS1F_VARS]                 # fused, 18
 CAMELS3FV2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # _daymet decoder, 6
+# LEDGER 51: the with-q ensemble carries AORC as a 4th single-forcing member
+# (+0.0059 when it was added) but no fused corpus has ever included it.
+CAMELS4FV2_VARS = [f"{v}_{p}" for p in ("daymet", "maurer", "nldas", "aorc")
+                   for v in CAMELS1F_VARS]                 # fused, 24
+CAMELS4FV2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # _daymet decoder, 6
+
+# Snow-state variant: the 120 basins that control the CAMELS-531 median are the
+# SNOWIEST group (frac_snow 0.123 vs 0.025 in the hard tail), and snowmelt
+# timing -- not precipitation totals -- is what limits skill in steep, small,
+# forested catchments. `swe` is carried through from the raw CAMELS
+# basin_mean_forcing files; `swe_delta` is the day-over-day change, i.e. the
+# melt signal. Decoder stays the 6 base vars (no forecast-time snow state).
+CAMELS1F_SWE_VARS = CAMELS1F_VARS + ["swe", "swe_delta"]   # 8
 
 
 # ---------------------------------------------------------------- corpus ----
@@ -432,10 +445,18 @@ def make_batches(corpus, windows, batch, rng, shuffle=True, augment=True):
                 "sd_q": np.asarray([d["sd_q"] for d in dhs], np.float32),
             }
             yield (np.stack(xs), np.stack(xd), np.stack(ys), np.stack(ms),
-                   chunk[:, 0], db)
+                   chunk[:, 0], db, chunk[:, 1])
         else:
             xs, xd, ys, ms = zip(*out)
-            yield (np.stack(xs), np.stack(xd), np.stack(ys), np.stack(ms), chunk[:, 0])
+            # Slots 5/6 mirror the dhbv branch (per-station q stats + t0) so
+            # --dump-day1 can invert z -> physical cfs for the quantile head
+            # too. Every consumer unpacks batch[:4]/batch[:5], so appending
+            # is backward-compatible.
+            _sts = [corpus.stations[int(r[0])] for r in chunk]
+            vst = {"mu_q": np.asarray([t["mu_q"] for t in _sts], np.float32),
+                   "sd_q": np.asarray([t["sd_q"] for t in _sts], np.float32)}
+            yield (np.stack(xs), np.stack(xd), np.stack(ys), np.stack(ms),
+                   chunk[:, 0], vst, chunk[:, 1])
 
 
 # -------------------------------------------------------------- training ----
@@ -458,6 +479,10 @@ def main() -> int:
                          "test decade 1989-99 sits EARLIER — without this "
                          "flag those years leak into training)")
     ap.add_argument("--train-end", default="2024-12-31")
+    ap.add_argument("--h1-weight", type=float, default=-1.0,
+                    help="share of the loss given to lead 1 (the ONLY lead the\n                         CAMELS with-q benchmark scores). The loss is a mean\n                         over all 14 leads, so by default h=1 carries 1/14 =\n                         0.071 of the gradient while 13/14 goes to leads that\n                         are never scored. -1 = uniform (the default).")
+    ap.add_argument("--ar-mask-p", type=float, default=0.3,
+                    help="probability that a training sample has its trailing\n                         1-14 days of encoder discharge masked (stale-gauge\n                         augmentation). The CAMELS with-q benchmark scores a\n                         day-1 nowcast with a COMPLETE observation, so the\n                         default trains for a harder task than is evaluated.")
     ap.add_argument("--no-q-input", action="store_true",
                     help="zero the encoder discharge + mask channels for "
                          "every timestep (pure rainfall-runoff, CAMELS-"
@@ -471,11 +496,18 @@ def main() -> int:
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--windows-per-station", type=int, default=300)
     ap.add_argument("--val-stride", type=int, default=10)
+    ap.add_argument("--dump-allowlist", default="",
+                    help="with --dump-day1: JSON {station_id:[dates]} restricting\n                         val windows to those (station,t0-date) keys (LSTM-aligned grid)")
+    ap.add_argument("--dump-day1", default="",
+                    help="with --epochs 0: write per-basin DAY-1 (h=1) physical-cfs\n                         predictions to this csv.gz (schema station_id,t0,h,truth,ymed)")
+    ap.add_argument("--dump-all-leads", action="store_true",
+                    help="with --dump-day1: emit ALL 14 horizons (h=1..14) instead of\n                         only h=1. The model already predicts them; the default\n                         discards 13/14. Target date = t0 + (h-1), matching the\n                         LSTM dump grid so the frames join on (station,date,h).")
     ap.add_argument("--limit-stations", type=int, default=0)
     ap.add_argument("--compat-vars", action="store_true",
                     help="train on the Daymet/Open-Meteo shared variable set")
     ap.add_argument("--enc-vars",
-                    choices=["full", "compat", "camels3f", "camels1f", "camels3fv2"],
+                    choices=["full", "compat", "camels3f", "camels1f", "camels3fv2",
+                             "camels4fv2", "camels1f_swe"],
                     default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
                          "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "
@@ -551,6 +583,9 @@ def main() -> int:
     ap.add_argument("--device", default="auto")
     ap.add_argument("--out", default=str(ROOT / "data" / "mblstm" / "model.pt"))
     args = ap.parse_args()
+    # Provenance: a with-q audit (2026-09-03) could not tell guarded from
+    # unguarded runs because no log ever recorded the invocation.
+    print("ARGV: " + " ".join(sys.argv[1:]), flush=True)
 
     import torch
 
@@ -582,9 +617,13 @@ def main() -> int:
         # Fused multi-forcing sets fix the decoder by the _daymet suffix scheme
         # (forecast archives are single-source), so --dec-vars is ignored there.
         _fused = {"camels3f": (CAMELS3F_VARS, CAMELS3F_DEC),
-                  "camels3fv2": (CAMELS3FV2_VARS, CAMELS3FV2_DEC)}
+                  "camels3fv2": (CAMELS3FV2_VARS, CAMELS3FV2_DEC),
+                  "camels4fv2": (CAMELS4FV2_VARS, CAMELS4FV2_DEC)}
         if args.enc_vars in _fused:
             enc_vars, dec_vars = _fused[args.enc_vars]
+        elif args.enc_vars == "camels1f_swe":
+            # 6 base vars + snow state; decoder keeps the 6 (subset check holds)
+            enc_vars, dec_vars = CAMELS1F_SWE_VARS, CAMELS1F_VARS
         elif args.enc_vars == "camels1f":
             # single-forcing recipe-v2: 6 unsuffixed vars, decoder == encoder.
             enc_vars = dec_vars = CAMELS1F_VARS
@@ -658,6 +697,8 @@ def main() -> int:
                     q_transform=q_transform, static_feats=static_feats,
                     head=args.head)
     corpus.no_q_input = bool(args.no_q_input)
+    corpus.ar_mask_p = float(args.ar_mask_p)
+    print(f"ar_mask_p={corpus.ar_mask_p}", flush=True)
     if args.head == "dhbv":
         # drop stations with no basin area — HBV can't do the cfs↔mm/day bridge
         n0 = len(corpus.stations)
@@ -718,6 +759,21 @@ def main() -> int:
         train_windows = _filter_in(train_windows, corpus.gfs)
         val_all = _filter_in(val_all, corpus.gfs)
     val_windows = val_all[:: args.val_stride]
+    if getattr(args, "dump_allowlist", ""):
+        import json as _json
+        _allow = _json.load(open(args.dump_allowlist))
+        _allow = {k.zfill(8): set(v) for k, v in _allow.items()}
+        _keep = []
+        for _si, _t0 in val_all[:, :2]:
+            _st = corpus.stations[int(_si)]
+            _d = _st["dates"][int(_t0)].strftime("%Y-%m-%d")
+            if _d in _allow.get(str(_st["id"]).zfill(8), ()):  # noqa
+                _keep.append((int(_si), int(_t0)))
+        import numpy as _np
+        val_windows = (_np.asarray(_keep, dtype=_np.int32) if _keep
+                       else _np.empty((0, 2), dtype=_np.int32))
+        print(f"dump-allowlist: {len(val_windows)} windows kept "
+              f"(of {len(val_all)}) across {len(_allow)} basins", flush=True)
     print(f"windows: train={len(train_windows)} val={len(val_windows)} (of {len(val_all)})")
     if len(train_windows) == 0 or len(val_windows) == 0:
         print("not enough data — fetch more corpus first")
@@ -781,10 +837,13 @@ def main() -> int:
             "static_median": [float(v) for v in corpus.static_median],
             "static_mean": [float(v) for v in corpus.static_mean],
             "static_std": [float(v) for v in corpus.static_std],
-            "train_end": args.train_end, "val_range": [args.val_start, args.val_end],
+            "train_start": args.train_start, "train_end": args.train_end,
+            "val_range": [args.val_start, args.val_end],
             "n_stations": len(corpus.stations),
             "q_transform": q_transform,
             "no_q_input": bool(args.no_q_input),
+            "ar_mask_p": float(args.ar_mask_p),
+            "h1_weight": float(args.h1_weight),
             "decoder_forcing": "observed-archive (perfect-forcing caveat for h>3)",
             "trained_at": pd.Timestamp.utcnow().isoformat(),
         }
@@ -884,7 +943,20 @@ def main() -> int:
             return 0.5 * mse_z + 0.5 * mse_log
         return (e * e).sum() / m.sum().clamp(min=1)
 
+    # LEDGER 51 P4 — a train/eval mismatch on the LEAD axis: the benchmark
+    # scores lead 1 only, but the loss averages 14 leads. Reweighting the mask
+    # reweights the loss AND its normaliser, so this stays a weighted mean.
+    _lw = None
+    if args.h1_weight > 0:
+        _w = np.full(HORIZON, (1.0 - args.h1_weight) / (HORIZON - 1), dtype=np.float32)
+        _w[0] = float(args.h1_weight)
+        _w = _w / _w.mean()   # keep the loss on the same scale as uniform
+        _lw = torch.from_numpy(_w).to(dev)[None, :]
+        print(f"lead weights: h1={_w[0]:.4f} h2-14={_w[1]:.4f}", flush=True)
+
     def head_loss(out, y, m):
+        if _lw is not None:
+            m = m * _lw
         if head == "cmal":
             return cmal_nll(out, y, m)
         if args.point_loss == "mse":
@@ -903,6 +975,7 @@ def main() -> int:
             return cmal_mean(out, lib=torch).cpu().numpy()
         return out[:, :, med_i].cpu().numpy()
 
+    _dump_rows = [] if getattr(args, "dump_day1", "") else None
     def run_val():
         model.eval()
         tot, num = 0.0, 0.0
@@ -919,10 +992,66 @@ def main() -> int:
                            torch.from_numpy(batch[5]["sd_q"]).to(dev))
                     tot += float(dhbv_loss(zp, ys_t, ms_t, stats=vst) * ms_t.sum())
                     yh = zp.cpu().numpy()
+                    if _dump_rows is not None:
+                        # day-1 = horizon index 0. invert z -> physical cfs.
+                        mu = batch[5]["mu_q"]; sd = batch[5]["sd_q"]
+                        t0s = batch[6]
+                        # Default: horizon index 0 only (h=1), the historical
+                        # behaviour. With --dump-all-leads, emit every horizon —
+                        # the model computes all HORIZON of them either way, and
+                        # h==1 is only 1/14 of the available dates.
+                        _hs = range(yh.shape[1]) if getattr(args, "dump_all_leads", False) else (0,)
+                        for _hi in _hs:
+                            zh = yh[:, _hi]
+                            yth_z = ys[:, _hi]; mh = ms[:, _hi] > 0
+                            qt_p = zh * np.maximum(sd, 1e-6) + mu
+                            qt_t = yth_z * np.maximum(sd, 1e-6) + mu
+                            if q_tf == "asinh":
+                                pred_phys = np.sinh(qt_p); truth_phys = np.sinh(qt_t)
+                            else:
+                                pred_phys = qt_p; truth_phys = qt_t
+                            pred_phys = np.maximum(pred_phys, 0.0)
+                            for b in range(len(sis)):
+                                if not mh[b]:
+                                    continue
+                                si = int(sis[b]); t0i = int(t0s[b])
+                                stn = corpus.stations[si]
+                                t0date = stn["dates"][t0i].strftime("%Y-%m-%d")
+                                _dump_rows.append((stn["id"], t0date, _hi + 1,
+                                                   float(truth_phys[b]), float(pred_phys[b])))
                 else:
                     yq = model(xs_t, xd_t)
                     tot += float(head_loss(yq, ys_t, ms_t) * ms_t.sum())
                     yh = head_point(yq)
+                    if _dump_rows is not None:
+                        # Emit all three predictive slots so a scorer can
+                        # reproduce ANY readout — the with-q record's point
+                        # prediction is (ylo+yhi)/2, not ymed. Physical cfs,
+                        # UNSORTED and UNCLIPPED: seed averaging happens
+                        # downstream, and app/mblstm.py averages FIRST, then
+                        # sorts, then clips at 0.
+                        _yq = yq.detach().cpu().numpy()
+                        _mu = batch[5]["mu_q"]; _sd = np.maximum(batch[5]["sd_q"], 1e-6)
+                        _t0s = batch[6]
+                        _hs = (range(_yq.shape[1])
+                               if getattr(args, "dump_all_leads", False) else (0,))
+                        for _hi in _hs:
+                            _mh = ms[:, _hi] > 0
+                            _cols = [_yq[:, _hi, 0], _yq[:, _hi, med_i], _yq[:, _hi, -1]]
+                            _phys = [c * _sd + _mu for c in _cols]
+                            _tru = ys[:, _hi] * _sd + _mu
+                            if q_tf == "asinh":
+                                _phys = [np.sinh(c) for c in _phys]
+                                _tru = np.sinh(_tru)
+                            for b in range(len(sis)):
+                                if not _mh[b]:
+                                    continue
+                                _stn = corpus.stations[int(sis[b])]
+                                _dump_rows.append((
+                                    _stn["id"],
+                                    _stn["dates"][int(_t0s[b])].strftime("%Y-%m-%d"),
+                                    _hi + 1, float(_tru[b]), float(_phys[0][b]),
+                                    float(_phys[1][b]), float(_phys[2][b])))
                 num += float(ms_t.sum())
                 for b in range(len(sis)):
                     si = int(sis[b]); m = ms[b] > 0
@@ -943,6 +1072,18 @@ def main() -> int:
         # --out == --init-ckpt: the bar starts at the loaded model's own val.
         best, nse0 = run_val()
         print(f"init-ckpt val_{loss_name}={best:.4f}  val_medNSE={nse0:.3f}", flush=True)
+        if _dump_rows is not None:
+            import gzip as _gz
+            dp = Path(args.dump_day1)
+            dp.parent.mkdir(parents=True, exist_ok=True)
+            _hdr = ("station_id,t0,h,truth,ymed" if head == "dhbv"
+                    else "station_id,t0,h,truth,ylo,ymed,yhi")
+            with _gz.open(dp, "wt") as _fh:
+                _fh.write(_hdr + "\n")
+                for r in _dump_rows:
+                    _fh.write(",".join([str(r[0]), str(r[1]), str(r[2])]
+                                       + [f"{v:.6f}" for v in r[3:]]) + "\n")
+            print(f"DUMP-DAY1: wrote {len(_dump_rows)} rows -> {dp}", flush=True)
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     frac_perfect = next((f for n, f in mix if n == "perfect"), 0.0) if mix else 1.0
