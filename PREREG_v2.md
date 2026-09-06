@@ -2530,3 +2530,160 @@ produced it.**
   value of the historical 0.9058 ladder is unmeasured (its frame inflation is bounded at ≈+0.036).
 - `research/WHITEPAPER.md` carries a correction notice at §5.2; the numeric claims in §5.3–§8 (ceilings,
   headroom, saturation) are all computed from retracted with-q dumps and **need recomputation**.
+
+---
+
+# LEDGER 52 — CAN THE WITH-Q RECORD REACH 0.89? (opened 2026-09-05, before any result)
+
+Record after LEDGER 51: **0.888355** (Nearing split, all-days frame, 531 basins). **0.89 needs +0.0016.**
+⚠️ Stated in advance: **0.90 needs +0.0116, which exceeds the entire lead-weighting gain (+0.0111 at
+ensemble level). It is not reachable by tuning** and is not a target of this ledger.
+
+## The premise, and why it is not a fishing expedition
+
+Every gain in LEDGER 51 came from removing a **train/eval mismatch**, never from new data. Two of the three
+mismatches found are now fixed (the evaluation frame, the lead weighting). This ledger tests the remaining
+one plus a proper tuning of the fix that worked.
+
+## S1 — CHECKPOINT SELECTION ON THE SCORED QUANTITY (`--select-by nse`)
+
+`train_mblstm.py` keeps the epoch with the lowest **val pinball loss**; the benchmark scores **NSE at lead
+1**. Measured over **all 28 LEDGER-51 runs** before building anything:
+
+| | |
+|---|---|
+| runs where best-pinball and best-NSE are the **same** epoch | **5 / 28 (18 %)** |
+| mean val-NSE gap (best-NSE minus best-pinball epoch) | **+0.00146** |
+| median / max | +0.00100 / +0.00400 |
+
+⇒ In 82 % of runs the saved checkpoint is **not** the best day-1 model the run produced.
+Implementation adds `--select-by {loss,nse}`; `nse` keeps the highest **lead-1** median NSE (the existing
+`val_medNSE` pools all 14 leads, so a new `val_h1NSE` is computed and logged). NSE is invariant under a
+common per-basin affine transform, so the z-space value equals the physical one.
+
+**Prediction: +0.000…+0.004 solo** at 3 matched seeds. ⚠️ The +0.00146 above is an **upper bound** — it is
+the val-side gap, measured on the window the selection itself uses, so it will not transfer 1:1.
+
+## S2/S3 — IS 0.5 ACTUALLY THE OPTIMAL LEAD WEIGHT? (`--h1-weight` 0.3 and 0.7)
+
+`--h1-weight 0.5` shipped after comparing **only 0.5 against 0.9, at one seed each**, where the two windows
+disagreed in sign. That is a coarse tuning of the campaign's largest lever. P2 demonstrated the hazard the
+same day: its 1-seed test signal (+0.001888, CI excluding zero) **evaporated at 3 seeds** (+0.000290, CI
+straddling zero). 0.3 and 0.7 bracket the shipped value at 3 seeds each.
+
+**Prediction: flat, |Δ| < 0.002 vs 0.5.** The 0.5-vs-0.9 gap was ~0.5 sd, which suggests a broad plateau.
+
+## DECISION RULE (fixed now)
+
+Selection on **val1** (stride-1, held out, the honest frame — never val7, whose grids are offset across
+corpora and which is inflated ≈+0.023). A change ships only if, at **3 matched seeds**: paired Δ > 0,
+basin-bootstrap 95 % CI **excludes zero**, breadth ≥ 0.5. Test is read **after** the val decision and never
+selects. A winner is then applied to all 5 members (25 seeds) before any new record is claimed.
+
+**Falsifier, stated in advance:** if all three screens are within noise on val1, **the recipe is final at
+0.888355 and tuning is exhausted** — that is the reportable result, and the next move would have to be a
+new member class (NeuralHydrology's `arlstm`, installed and never run here; or a δHBV with-q member at
+78 GPU-h), not another sweep.
+
+## Already closed this ledger, at zero GPU
+
+**READOUT — no change.** Ten point-readouts swept on val. At **member** level two beat the record readout on
+**both** frames (`.40lo+.20med+.40hi` +0.0011 on stride-1, `(ylo+ymed+yhi)/3` +0.0010 on stride-7), but at
+**ensemble** level the record `(ylo+yhi)/2` wins (the best alternative is −0.0011). ⭐ The disagreement is
+**level, not frame**: averaging across members already widens the point estimate, so an individually
+under-dispersed member gains from widening and the ensemble does not. **The record is an ensemble number, so
+the decision is made at ensemble level.** `(ylo+yhi)/2` stands.
+
+### LEDGER 52 — INTERIM (3 seeds, val stride-7; formal decision pending on val1)
+
+| variant | val7, 3 seeds | vs shipped 0.5 | **1-seed read** |
+|---|---|---|---|
+| `fused3h1` (`--h1-weight 0.5`, shipped) | 0.894470 | — | — |
+| **`fused3h1w07` (0.7)** | **0.900560** | **+0.006090** | +0.0031 |
+| `fused3h1sel` (`--select-by nse`) | 0.895776 | +0.001306 | **−0.0032** |
+| `fused3h1w03` (0.3) | 0.893480 | −0.000990 | −0.0054 |
+
+⚠️ **MY PREDICTION WAS WRONG.** I predicted the weight curve would be **flat, |Δ| < 0.002**, on the
+grounds that 0.5-vs-0.9 was ~0.5 sd. Measured: **0.7 is +0.006 over 0.5** — a third of the size of the
+original lead-weighting discovery, left on the table because I tuned the campaign's largest lever with
+**two points at one seed each**. The lesson is not "0.7 is better"; it is that **the coarse sweep that
+established a lever is not a substitute for tuning it**, and 0.5 was simply the first value I tried.
+
+⚠️ **Both single-seed reads misled**, one in sign (`sel` −0.0032 → +0.0013; `w07` +0.0031 → +0.0061).
+That is the third time in two days that a 1-seed read did not survive to 3 seeds (after P2). **Treat any
+1-seed screen on this stack as directional only.**
+
+⇒ The sweep is extended to **0.8 and 0.9 at 3 seeds** (the optimum is clearly above 0.5 and 0.9 was only
+ever read at 1 seed). S1 (`--select-by nse`) is positive but small and still inside its predicted band;
+its formal verdict waits for val1 with a paired CI.
+
+⚠️ These are **val7** numbers, used for direction only — the pre-registered decision rule selects on
+**val1**, whose dumps are running.
+
+### ⚠️ LEDGER 52 — THE INTERIM READING ABOVE IS WITHDRAWN (formal decision on val1, paired)
+
+The interim table said `--h1-weight 0.7` was **+0.006090** over 0.5 and that my "flat curve" prediction had
+failed. **Both statements are wrong.** That reading used **val7 medians**; the pre-registered rule is
+**val1 + the paired statistic**:
+
+| variant | val1 median Δ | **PAIRED Δ** | CI | breadth | ship |
+|---|---|---|---|---|---|
+| `fused3h1w07` (0.7) | +0.001302 | **−0.000262** | [−0.000659, +0.000073] | **0.467** | **no** |
+| `fused3h1sel` (`--select-by nse`) | −0.000323 | −0.000093 | [−0.000255, +0.000042] | 0.465 | no |
+| `fused3h1w03` (0.3) | −0.003727 | −0.001663 | [−0.002323, −0.001231] | 0.383 | no (worse) |
+
+**The +0.0061 was inflated twice**: the frame (val7 median +0.0061 → val1 median +0.0013) and then the
+statistic (val1 median +0.0013 → **paired −0.000262**, breadth 0.467). Difference-of-medians vs paired have
+now disagreed **six times** across ledgers 51–52, and the paired statistic has been right every time.
+
+⇒ **My original prediction (flat, |Δ| < 0.002) was CORRECT**, and the self-criticism recorded in the interim
+block ("I under-tuned the campaign's largest lever") was itself an artifact of reading a rank statistic on
+an inflated frame. **`--h1-weight 0.5` stands.** ⭐ The transferable point is sharper than the one I wrote
+before: *a lever can look under-tuned purely because the diagnostic is a median on a sparse frame.* Check
+the statistic before rewriting the conclusion.
+
+⚠️ `w08`/`w09` val1 dumps still pending; the verdict is provisional until they land, but three of five
+weights now sit inside noise on the honest reading.
+
+## ⛔ LEDGER 52 — CLOSED NEGATIVE. THE FALSIFIER TRIGGERED; THE RECORD IS FINAL AT 0.888355
+
+Final decision, **val1 (stride-1, held out), paired statistic, 3 matched seeds**, as pre-registered:
+
+| variant | val1 median Δ | **PAIRED Δ** | CI | breadth | ship |
+|---|---|---|---|---|---|
+| `w03` (0.3) | −0.003727 | −0.001663 | [−0.002323, −0.001231] | 0.383 | no — **worse** |
+| `w07` (0.7) | +0.001406 | +0.000039 | [−0.000202, +0.000491] | 0.510 | no |
+| **`w08` (0.8)** | +0.001512 | **+0.000311** | **[−0.000017, +0.000638]** | 0.539 | **no** — CI lower bound misses zero by **1.7e-5** |
+| `w09` (0.9) | −0.000290 | −0.000226 | [−0.000668, +0.000240] | 0.469 | no |
+| `sel` (`--select-by nse`) | −0.000323 | −0.000093 | [−0.000255, +0.000042] | 0.465 | no |
+
+**Every screen fails the bar.** The lead-weight curve is a **very shallow plateau**: 0.3 is clearly worse
+(−0.0017), and 0.5 / 0.7 / 0.8 / 0.9 are mutually indistinguishable at ~±0.0003 — an order of magnitude
+below the campaign's ±0.00103 significance floor. `w08` is the nearest miss and even if 5 seeds tightened
+its CI to exclude zero, **+0.0003 would not carry 0.888355 to 0.89** (which needs +0.0016).
+
+⇒ **`--h1-weight 0.5` stands. `--select-by loss` stands. The with-q recipe is FINAL at 0.888355.**
+
+### Predictions scored
+| prediction | outcome |
+|---|---|
+| S1 `--select-by nse`: **+0.000…+0.004** | **−0.000093** — ❌ falsified (just outside the band) |
+| S2/S3 weight sweep: **flat, \|Δ\| < 0.002** | ✅ **CORRECT** (max \|paired Δ\| = 0.0017, and that is the *worse* end) |
+| "0.89 is likely reachable" (told to the user) | ❌ **WRONG** — no tuning lever reaches it |
+| "0.90 is not reachable by tuning" | ✅ correct, and the same now applies to 0.89 |
+
+⭐ **S1's failure is instructive and I should have foreseen it.** The +0.00146 "gap" I measured from the
+logs was the **argmax of a noisy validation curve**; taking that argmax as the checkpoint is selecting on
+val noise, not on signal. **A measured gap that is itself an argmax over a noisy series is not available
+headroom** — it is the optimism of maximisation. Same family as the in-sample/oracle bounds this campaign
+already knows to distrust.
+
+⚠️ And the interim block above stands as a recorded error of mine: reading val7 **medians** made a flat
+lever look like a +0.006 lever, and I wrote a confident self-criticism on that basis before running the
+paired test on the honest frame.
+
+### ⇒ What would actually be needed to pass 0.89
+Not a sweep. A new member class: **NeuralHydrology's `arlstm`** (installed in the box venv, never run here,
+and it is the reference implementation of Nearing's own AR setup), or a **δHBV with-q member** (no
+process-model member exists on this track; ~78 GPU-h each on the 1080). Both are ledger-sized undertakings,
+not tuning.

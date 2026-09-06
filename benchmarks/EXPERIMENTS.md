@@ -6163,3 +6163,27 @@ it. Acting on the single-seed number would have shipped a member worth nothing. 
 ⇒ **All four probes are now closed: P4 (lead-1 loss weighting) SHIPPED; P1, P2, P3 rejected.**
 The record stands at **0.888355**, and adding AORC as a fused input channel is closed on the with-q track
 — consistent with AORC being the weakest solo forcing measured here (0.7047 on no-q).
+
+## ⛔ LEDGER 52 — TUNING IS EXHAUSTED; THE WITH-Q RECORD IS FINAL AT 0.888355 (2026-09-06)
+
+Five screens, 3 matched seeds each, decided on val1 (stride-1, held out) with the paired statistic:
+`--select-by nse` (checkpoint chosen by the scored metric rather than the training loss) and lead weights
+0.3 / 0.7 / 0.8 / 0.9 against the shipped 0.5. **All five fail the ship bar.** The weight curve is a shallow
+plateau — 0.3 clearly worse (paired −0.0017), and 0.5/0.7/0.8/0.9 indistinguishable at ~±0.0003, an order of
+magnitude below the ±0.00103 floor.
+
+⭐ **Two methodological results worth more than the tuning:**
+
+1. **A gap that is an argmax over a noisy series is not headroom.** From the 28 LEDGER-51 logs, best-val-NSE
+   and best-val-pinball epochs differ in **82 %** of runs with a mean val-NSE gap of **+0.00146**. Selecting
+   the max-NSE checkpoint scores **−0.000093 paired** — the "gap" was the optimism of maximisation over
+   validation noise, not signal.
+2. **A rank statistic on a sparse frame can invent a lever.** Lead weight 0.7 read **+0.006090** on val7
+   medians; on val1 medians +0.0014; on val1 **paired, +0.000039 at breadth 0.510**. Inflated first by the
+   frame, then by the statistic. Difference-of-medians and paired have now disagreed **six times** across
+   ledgers 51–52 and the paired statistic has been correct every time.
+
+⇒ **0.888355 stands** (5 members × 5 seeds, `--h1-weight 0.5`, `--select-by loss`, equal weight,
+readout `(ylo+yhi)/2`). Passing 0.89 needs a new member class — NeuralHydrology's `arlstm` (installed,
+never run, and the reference implementation of Nearing's own AR setup) or a δHBV with-q member (~78 GPU-h)
+— not another sweep.

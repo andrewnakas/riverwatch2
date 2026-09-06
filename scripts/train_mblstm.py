@@ -479,6 +479,8 @@ def main() -> int:
                          "test decade 1989-99 sits EARLIER — without this "
                          "flag those years leak into training)")
     ap.add_argument("--train-end", default="2024-12-31")
+    ap.add_argument("--select-by", choices=["loss", "nse"], default="loss",
+                    help="which validation quantity picks the best-epoch\n                         checkpoint. 'loss' (default) keeps the lowest val\n                         pinball; 'nse' keeps the highest val LEAD-1 median\n                         NSE, i.e. the quantity the benchmark actually scores.\n                         Measured 2026-09-05: the two peak at DIFFERENT epochs\n                         in 82%% of runs (mean val-NSE gap +0.0015).")
     ap.add_argument("--h1-weight", type=float, default=-1.0,
                     help="share of the loss given to lead 1 (the ONLY lead the\n                         CAMELS with-q benchmark scores). The loss is a mean\n                         over all 14 leads, so by default h=1 carries 1/14 =\n                         0.071 of the gradient while 13/14 goes to leads that\n                         are never scored. -1 = uniform (the default).")
     ap.add_argument("--ar-mask-p", type=float, default=0.3,
@@ -844,6 +846,7 @@ def main() -> int:
             "no_q_input": bool(args.no_q_input),
             "ar_mask_p": float(args.ar_mask_p),
             "h1_weight": float(args.h1_weight),
+            "select_by": str(args.select_by),
             "decoder_forcing": "observed-archive (perfect-forcing caveat for h>3)",
             "trained_at": pd.Timestamp.utcnow().isoformat(),
         }
@@ -981,6 +984,9 @@ def main() -> int:
         tot, num = 0.0, 0.0
         sse: dict[int, float] = {}; sst_y: dict[int, list] = {}
         preds: dict[int, list] = {}
+        # LEAD-1 only, kept separately: run_val's pooled NSE mixes all 14
+        # leads, but the benchmark scores lead 1 alone.
+        preds1: dict[int, list] = {}; sst1: dict[int, list] = {}
         with torch.no_grad():
             for batch in make_batches(corpus, val_windows, args.batch, rng, shuffle=False, augment=False):
                 xs, xd, ys, ms, sis = batch[:5]
@@ -1057,20 +1063,29 @@ def main() -> int:
                     si = int(sis[b]); m = ms[b] > 0
                     preds.setdefault(si, []).append(yh[b][m])
                     sst_y.setdefault(si, []).append(ys[b][m])
-        nses = []
-        for si in preds:
-            yh = np.concatenate(preds[si]); yt = np.concatenate(sst_y[si])
-            if len(yt) < 20 or np.var(yt) < 1e-9:
-                continue
-            nses.append(1.0 - np.mean((yt - yh) ** 2) / np.var(yt))
+                    if m[0]:
+                        preds1.setdefault(si, []).append(yh[b][:1])
+                        sst1.setdefault(si, []).append(ys[b][:1])
+        def _med_nse(pd_, yd_):
+            o = []
+            for si in pd_:
+                a = np.concatenate(pd_[si]); b = np.concatenate(yd_[si])
+                if len(b) < 20 or np.var(b) < 1e-9:
+                    continue
+                o.append(1.0 - np.mean((b - a) ** 2) / np.var(b))
+            return float(np.median(o)) if o else float("nan")
+        # NSE is invariant under a common per-basin affine transform, so the
+        # z-space value equals the physical one.
+        nse_all, nse_h1 = _med_nse(preds, sst_y), _med_nse(preds1, sst1)
         model.train()
-        return tot / max(num, 1), (float(np.median(nses)) if nses else float("nan"))
+        return tot / max(num, 1), nse_all, nse_h1
 
     best = float("inf")
+    best_h1 = -float("inf")
     if base_payload is not None:
         # Don't let a weak first epoch overwrite the loaded checkpoint when
         # --out == --init-ckpt: the bar starts at the loaded model's own val.
-        best, nse0 = run_val()
+        best, nse0, nse0_h1 = run_val()
         print(f"init-ckpt val_{loss_name}={best:.4f}  val_medNSE={nse0:.3f}", flush=True)
         if _dump_rows is not None:
             import gzip as _gz
@@ -1149,15 +1164,17 @@ def main() -> int:
             opt.step()
             tot += float(loss.detach()) * float(ms_t.sum()); num += float(ms_t.sum()); steps += 1
         sched.step()
-        val_pin, val_nse = run_val()
+        val_pin, val_nse, val_nse_h1 = run_val()
         marker = ""
-        if val_pin < best:
-            best = val_pin
+        improved = (val_nse_h1 > best_h1) if args.select_by == "nse" else (val_pin < best)
+        if improved:
+            best = min(best, val_pin); best_h1 = max(best_h1, val_nse_h1)
             torch.save({"state_dict": {k: v.cpu() for k, v in model.state_dict().items()},
                         "cfg": cfg}, out_path)
             marker = "  *saved*"
         print(f"epoch {ep}/{args.epochs}  train_{loss_name}={tot / max(num, 1):.4f}  "
               f"val_{loss_name}={val_pin:.4f}  val_medNSE(norm-asinh)={val_nse:.3f}  "
+              f"val_h1NSE={val_nse_h1:.5f}  "
               f"steps={steps}  skipped={skipped}  {time.time() - t0:.0f}s{marker}", flush=True)
 
     print(f"\nbest val {loss_name} {best:.4f} → {out_path}")
