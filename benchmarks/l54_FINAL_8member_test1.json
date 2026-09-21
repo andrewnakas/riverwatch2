@@ -1,0 +1,965 @@
+{
+ "frozen_utc": "2026-09-21T11:40:54+00:00",
+ "composition": [
+  "fused3h1",
+  "daymeth1",
+  "nldash1",
+  "maurerh1",
+  "aorch1",
+  "nhar",
+  "nhar0",
+  "nhar0h256"
+ ],
+ "new_member": "nhar0h256",
+ "ship_bar_seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "protocol": "nearing2022: train 1999-10-01..2008-09-30, val 1980-10-01..1989-09-30, test 1989-10-01..1999-09-30, 531 basins, day-1, ALL daily observations, median NSE",
+ "combination": "equal weight, zero fitted parameters",
+ "readout": "(ylo+yhi)/2",
+ "reference_nearing_2022_single_model": 0.879,
+ "git_commit": "dfa93050c5ecf9c96c3bd2b975769e84141bc936",
+ "val1": {
+  "rows": 1458982,
+  "basins": 527,
+  "ensemble_median_nse": 0.9008793900169291,
+  "without_new_member": 0.9003584888719807,
+  "new_member_solo": 0.8941130385979255,
+  "solo": {
+   "fused3h1": 0.8814959529560684,
+   "daymeth1": 0.8786427970794258,
+   "nldash1": 0.8699918976154363,
+   "maurerh1": 0.8665358832829202,
+   "aorch1": 0.8509688470109597,
+   "nhar": 0.8870976724022677,
+   "nhar0": 0.8874356336528082,
+   "nhar0h256": 0.8941130385979255
+  },
+  "new_member_loo_paired": {
+   "delta": 0.00037575500199527045,
+   "ci": [
+    0.00018150659885873832,
+    0.0005358288993847493
+   ],
+   "breadth": 0.6318785578747628,
+   "significant": true
+  },
+  "loo_all": {
+   "fused3h1": {
+    "delta": 0.0006003691636283781,
+    "ci": [
+     0.0004211728240649526,
+     0.0009088905169951644
+    ],
+    "breadth": 0.6774193548387096
+   },
+   "daymeth1": {
+    "delta": 0.0005824277860059235,
+    "ci": [
+     0.0003511953911076171,
+     0.0007410179830287245
+    ],
+    "breadth": 0.6451612903225806
+   },
+   "nldash1": {
+    "delta": 5.702690308806435e-05,
+    "ci": [
+     -9.606753268287527e-05,
+     0.0001617089789290871
+    ],
+    "breadth": 0.5104364326375711
+   },
+   "maurerh1": {
+    "delta": 0.0005471033102292244,
+    "ci": [
+     0.00034099017867139647,
+     0.0007625939688122862
+    ],
+    "breadth": 0.6413662239089184
+   },
+   "aorch1": {
+    "delta": 0.00014443228350424775,
+    "ci": [
+     1.8939676845186604e-05,
+     0.0003090205297593407
+    ],
+    "breadth": 0.5464895635673624
+   },
+   "nhar": {
+    "delta": -5.4946805404076926e-05,
+    "ci": [
+     -0.0001532064858490445,
+     4.4395946677266984e-05
+    ],
+    "breadth": 0.4648956356736243
+   },
+   "nhar0": {
+    "delta": -9.377700986856752e-06,
+    "ci": [
+     -0.00012546499625043506,
+     0.00011052759825280756
+    ],
+    "breadth": 0.4990512333965844
+   },
+   "nhar0h256": {
+    "delta": 0.00037575500199527045,
+    "ci": [
+     0.00018150659885873832,
+     0.0005358288993847493
+    ],
+    "breadth": 0.6318785578747628
+   }
+  },
+  "dup_control_medians": {
+   "fused3h1": -0.000710630427989023,
+   "daymeth1": -0.001600706530783147,
+   "nldash1": -0.000730503814870942,
+   "maurerh1": -0.0009971910869289724,
+   "aorch1": -0.0010200432717480945,
+   "nhar": -0.00012693007906228182,
+   "nhar0": 0.0007060617652414614,
+   "nhar0h256": 6.516477828333311e-05
+  }
+ },
+ "test1": {
+  "rows": 1931646,
+  "basins": 531,
+  "ensemble_median_nse": 0.8983638624313959,
+  "without_new_member": 0.8969074990305809,
+  "new_member_solo": 0.893660838350423,
+  "solo": {
+   "fused3h1": 0.8721620967625558,
+   "daymeth1": 0.8681590615601487,
+   "nldash1": 0.8571876184839002,
+   "maurerh1": 0.8601686457265212,
+   "aorch1": 0.8429636430014361,
+   "nhar": 0.8888352119618874,
+   "nhar0": 0.889166143730442,
+   "nhar0h256": 0.893660838350423
+  },
+  "new_member_loo_paired": {
+   "delta": 0.0007593333947781833,
+   "ci": [
+    0.000555189979880244,
+    0.0009492899305543201
+   ],
+   "breadth": 0.7005649717514124,
+   "significant": true
+  },
+  "loo_all": {
+   "fused3h1": {
+    "delta": 0.0004447575024623118,
+    "ci": [
+     0.00029212651487042773,
+     0.0006161440694997244
+    ],
+    "breadth": 0.655367231638418
+   },
+   "daymeth1": {
+    "delta": 0.00017446219077710268,
+    "ci": [
+     9.59510122612306e-05,
+     0.00035178905879340583
+    ],
+    "breadth": 0.5875706214689266
+   },
+   "nldash1": {
+    "delta": 3.978631761814011e-05,
+    "ci": [
+     -4.1488654057841856e-05,
+     0.0001629845768338356
+    ],
+    "breadth": 0.519774011299435
+   },
+   "maurerh1": {
+    "delta": 4.833785568125748e-05,
+    "ci": [
+     -6.509168593160641e-05,
+     0.00019946067550202784
+    ],
+    "breadth": 0.519774011299435
+   },
+   "aorch1": {
+    "delta": 0.00013728143382207847,
+    "ci": [
+     1.210174594290514e-05,
+     0.00024368143215947047
+    ],
+    "breadth": 0.5480225988700564
+   },
+   "nhar": {
+    "delta": 0.00020119651475258848,
+    "ci": [
+     3.6649145115141835e-05,
+     0.00042930839446908564
+    ],
+    "breadth": 0.5480225988700564
+   },
+   "nhar0": {
+    "delta": 0.0003932978602484427,
+    "ci": [
+     0.00015508865862212673,
+     0.0005744875384021686
+    ],
+    "breadth": 0.623352165725047
+   },
+   "nhar0h256": {
+    "delta": 0.0007593333947781833,
+    "ci": [
+     0.000555189979880244,
+     0.0009492899305543201
+    ],
+    "breadth": 0.7005649717514124
+   }
+  },
+  "dup_control_medians": {
+   "fused3h1": -0.0011600227098708116,
+   "daymeth1": -0.00138285081728462,
+   "nldash1": -0.002004668152087996,
+   "maurerh1": -0.0016168722024112459,
+   "aorch1": -0.0024913065556275704,
+   "nhar": 4.009745399846665e-05,
+   "nhar0": -0.00014658957489344093,
+   "nhar0h256": 0.00045198492092335396
+  }
+ },
+ "ship_bar": {
+  "seeds_ok": true,
+  "val1_paired_positive": true,
+  "val1_ci_excludes_zero": true,
+  "val1_breadth_ge_0.5": true,
+  "PASS": true
+ },
+ "record_test1": 0.8983638624313959,
+ "margin_vs_nearing": 0.019363862431395873,
+ "provenance": {
+  "val1": [
+   {
+    "member": "fused3h1",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "742dd16e48bbf801ccf04d29f4c58c17",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "bd90fa52f4f88de067c0cc78c9c7b3a3",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "ae2713cd42089060c5dbeb2507efa473",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "85a2d7ecb508e9f7fe95c3249344e1e6",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "5bfb817e0399bd34fb1342b3c7aac545",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "c1a101a42d2ce9f4e46d9ec148ab5ef4",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "6ddd7d809c5be4b42b0fad80757eec18",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "1fcd675baa792a248f458a49a78cee22",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "07f5f38e6479468fe50315d162cb2aa3",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "4a5541fb474d1467f35bb3d7c8b14b61",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "a26f5f6c6427731c09096f4a00f53a05",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "c4b0c36f0a2bca5b60ce16ba5088cd16",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "1080716546da74120f73dd664b4e0c4e",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "f636a4a62879eeba116ba65b76a2a418",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "d273bc1c4429c788b6f2d0c7db023baa",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "a6842bd8a3d4c5cd1564e70bbf2353a4",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "94ad773466dbb0c1b2d2090ba584757a",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "fd1f7fd0694aa5878e6334bd72adc9e0",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "97297564b7d3ae920334d2afca71a3a5",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1589124,
+    "ckpt_md5": "6211aaa933702e43edf75e57aa19d109",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1458982,
+    "ckpt_md5": "3940787ea56234e42b9bab36ab241b7d",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1458982,
+    "ckpt_md5": "37555c08cf8745ec81a8e577ebf38ca8",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1458982,
+    "ckpt_md5": "cd4c8494d6213d0aae370ec42818c4b1",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1458982,
+    "ckpt_md5": "c400d6fcbed8a28dcd3f075ee4c4369e",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1458982,
+    "ckpt_md5": "facff50c657c1c941458ae52a25e5046",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "6af72d9cb53435a044358ac5091406de",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "79671371cf6041fc6fd60e227e2fbb51",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "9a8fdb55bccee20ec40dba2050fb387c",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "d4f8f221776c12bece42b18187f3ff2c",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "0df440d908776940f7d1e7266f163849",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "89e576e2f2601b0c80667566122a81a7",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "00bc3692b48defd35518dc0f211b099d",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "172171a40b84b9f3bf76d5114f111dc9",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "1d4ee2dbd419e2a2f48bf0e3b7083e26",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "ae8d98d3bf29df5af8cd372707f4d3e0",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 501,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "9940564d5cf9834cbf4baacfaf55fb9c",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 502,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "11e8e09b0cd57b4a55a3d43e487821f9",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 503,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "c17f2b3ee01c3cb8e321d8699f4fd925",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 504,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "ba74f0d060d099907fba8af8026027f0",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 505,
+    "frame": "val1",
+    "rows": 1697607,
+    "ckpt_md5": "dffe09020ae1b8ab4c305b21326efc3f",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   }
+  ],
+  "test1": [
+   {
+    "member": "fused3h1",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "742dd16e48bbf801ccf04d29f4c58c17",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "bd90fa52f4f88de067c0cc78c9c7b3a3",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "ae2713cd42089060c5dbeb2507efa473",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "85a2d7ecb508e9f7fe95c3249344e1e6",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "fused3h1",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "5bfb817e0399bd34fb1342b3c7aac545",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "c1a101a42d2ce9f4e46d9ec148ab5ef4",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "6ddd7d809c5be4b42b0fad80757eec18",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "1fcd675baa792a248f458a49a78cee22",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "07f5f38e6479468fe50315d162cb2aa3",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "daymeth1",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "4a5541fb474d1467f35bb3d7c8b14b61",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "a26f5f6c6427731c09096f4a00f53a05",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "c4b0c36f0a2bca5b60ce16ba5088cd16",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "1080716546da74120f73dd664b4e0c4e",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "f636a4a62879eeba116ba65b76a2a418",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nldash1",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "d273bc1c4429c788b6f2d0c7db023baa",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "a6842bd8a3d4c5cd1564e70bbf2353a4",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "94ad773466dbb0c1b2d2090ba584757a",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "fd1f7fd0694aa5878e6334bd72adc9e0",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "97297564b7d3ae920334d2afca71a3a5",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "maurerh1",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "6211aaa933702e43edf75e57aa19d109",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "3940787ea56234e42b9bab36ab241b7d",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "37555c08cf8745ec81a8e577ebf38ca8",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "cd4c8494d6213d0aae370ec42818c4b1",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "c400d6fcbed8a28dcd3f075ee4c4369e",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "aorch1",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1931646,
+    "ckpt_md5": "facff50c657c1c941458ae52a25e5046",
+    "engine": "mblstm",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "6af72d9cb53435a044358ac5091406de",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "79671371cf6041fc6fd60e227e2fbb51",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "9a8fdb55bccee20ec40dba2050fb387c",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "d4f8f221776c12bece42b18187f3ff2c",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "0df440d908776940f7d1e7266f163849",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "89e576e2f2601b0c80667566122a81a7",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "00bc3692b48defd35518dc0f211b099d",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "172171a40b84b9f3bf76d5114f111dc9",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "1d4ee2dbd419e2a2f48bf0e3b7083e26",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "ae8d98d3bf29df5af8cd372707f4d3e0",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 501,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "9940564d5cf9834cbf4baacfaf55fb9c",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 502,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "11e8e09b0cd57b4a55a3d43e487821f9",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 503,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "c17f2b3ee01c3cb8e321d8699f4fd925",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 504,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "ba74f0d060d099907fba8af8026027f0",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   },
+   {
+    "member": "nhar0h256",
+    "seed": 505,
+    "frame": "test1",
+    "rows": 1939212,
+    "ckpt_md5": "dffe09020ae1b8ab4c305b21326efc3f",
+    "engine": "neuralhydrology",
+    "protocol": "nearing2022"
+   }
+  ]
+ }
+}
