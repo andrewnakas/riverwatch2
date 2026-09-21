@@ -1,0 +1,104 @@
+# LEDGER 53 — NeuralHydrology AR-LSTM member on the Nearing 2022 protocol.
+# Recipe = Nearing et al. 2022 (HESS 26:5493), Sect. 2/3, fetched 2026-09-06:
+#   single AR-LSTM, all three CAMELS forcings as simultaneous inputs, NSE loss,
+#   365-d sequences, batch 256, 30 epochs, lr 1e-3 -> 5e-4 @10 -> 1e-4 @25,
+#   lagged discharge as an autoregressive input with a binary obs/sim flag,
+#   trained with 50 % of the lagged discharge withheld in random gaps of mean
+#   length 5 d (NH's random_holdout_from_dynamic_features, written by Nearing).
+# Placeholders: __BASE__ __VARIANT__ __SEED__ __HIDDEN__ __HOLDOUT__
+experiment_name: l53___VARIANT___s__SEED__
+run_dir: __BASE__/nh_runs
+train_basin_file: __BASE__/nh_data_multi/basins.txt
+validation_basin_file: __BASE__/nh_data_multi/basins.txt
+test_basin_file: __BASE__/nh_data_multi/basins.txt
+data_dir: __BASE__/nh_data_multi
+dataset: generic
+# Nearing 2022 split (identical to LEDGER 51's MB-LSTM members)
+train_start_date: "01/10/1999"
+train_end_date: "30/09/2008"
+validation_start_date: "01/10/1980"
+validation_end_date: "30/09/1989"
+test_start_date: "01/10/1989"
+test_end_date: "30/09/1999"
+seed: __SEED__
+device: cuda:0
+model: arlstm
+hidden_size: __HIDDEN__
+initial_forget_bias: 3
+output_dropout: 0.4
+head: regression
+output_activation: linear
+optimizer: Adam
+loss: NSE
+learning_rate:
+  0: 1e-3
+  10: 5e-4
+  25: 1e-4
+batch_size: 256
+epochs: 30
+seq_length: 365
+predict_last_n: 1
+clip_gradient_norm: 1
+num_workers: 2   # 4 x 3 trainers + a 3.9 GB cron job thrashed the box on 09-07
+# in-training validation is run WITH the holdout (NH applies it at load time),
+# so it is a training-health curve only; the scored evaluation is done by
+# scripts/nh_arlstm_eval.py with the holdout removed.
+validate_every: 10
+validate_n_random_basins: 20
+save_validation_results: False
+metrics:
+  - NSE
+dynamic_inputs:
+  - prcp_daymet
+  - tmax_daymet
+  - tmin_daymet
+  - vp_daymet
+  - srad_daymet
+  - prcp_nldas
+  - tmax_nldas
+  - tmin_nldas
+  - vp_nldas
+  - srad_nldas
+  - prcp_maurer
+  - tmax_maurer
+  - tmin_maurer
+  - vp_maurer
+  - srad_maurer
+target_variables:
+  - q_mm
+lagged_features:
+  q_mm: [1]
+autoregressive_inputs:
+  - q_mm_shift1
+random_holdout_from_dynamic_features:
+  q_mm_shift1:
+    missing_fraction: __HOLDOUT__
+    mean_missing_length: 5
+static_attributes:
+  - p_mean
+  - pet_mean
+  - aridity
+  - p_seasonality
+  - frac_snow
+  - high_prec_freq
+  - high_prec_dur
+  - low_prec_freq
+  - low_prec_dur
+  - elev_mean
+  - slope_mean
+  - area_gages2
+  - soil_depth_pelletier
+  - soil_depth_statsgo
+  - soil_porosity
+  - soil_conductivity
+  - max_water_content
+  - sand_frac
+  - silt_frac
+  - clay_frac
+  - frac_forest
+  - lai_max
+  - gvf_max
+  - gvf_diff
+  - root_depth_50
+  - carbonate_rocks_frac
+  - geol_permeability

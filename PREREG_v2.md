@@ -2687,3 +2687,500 @@ Not a sweep. A new member class: **NeuralHydrology's `arlstm`** (installed in th
 and it is the reference implementation of Nearing's own AR setup), or a **δHBV with-q member** (no
 process-model member exists on this track; ~78 GPU-h each on the 1080). Both are ledger-sized undertakings,
 not tuning.
+
+# LEDGER 53 — A SECOND MEMBER CLASS: NEARING'S OWN AR-LSTM (opened 2026-09-06, before any result)
+
+Record after LEDGER 52: **0.888355** (5 MB-LSTM members × 5 seeds, equal weight, Nearing split, all-days
+frame). User directive: *"do what it takes to get the strongest members possible for the 0.90 with-q
+Nearing NSE record push."* Stated in advance: **0.89 needs +0.001645 on the ensemble, 0.90 needs +0.011645.**
+Tuning of the MB-LSTM recipe is exhausted (LEDGER 52); the only routes left are a new member class.
+
+## The member: NeuralHydrology `arlstm`, Nearing 2022's recipe, reproduced exactly
+
+Fetched from HESS 26:5493 (2026-09-06), not assumed: Nearing's headline **0.879 is a SINGLE model** — one
+AR-LSTM, **128** cell states, **all three CAMELS forcings as simultaneous inputs** (15 dynamic vars), the 27
+Kratzert statics, NSE loss, 365-d sequences, batch 256, 30 epochs, lr 1e-3 → 5e-4 @10 → 1e-4 @25, lagged
+discharge as an autoregressive input with a binary obs/sim flag, trained with **50 % of the lagged discharge
+withheld in random gaps of mean length 5 d**, evaluated with complete lagged discharge, all observations,
+median over 531 basins. ⭐ **A single seed of that recipe (0.879) beats every single seed we have
+(0.847–0.861 all-days), and our best 5-seed member (`fused3h1`, 0.872).** So the highest-prior new member is
+not "a different architecture" — it is *the* architecture the record we are chasing was set with, which we
+have never run.
+
+Implementation (all on nakas-1080, Mac copies committed): `gpu1080/nh_arlstm_config.yml.tmpl` (the recipe
+above, placeholders for seed/hidden/holdout), `gpu1080/queue_l53_nhar.sh <variant> <seed>` (builds the
+config, trains, then a **guard reads the protocol back out of the run's own `config.yml` + `output.log`**
+before any dump is written), `scripts/nh_arlstm_eval.py` (evaluation with the holdout **removed** — see
+trap 1), `scripts/nh_to_l51dump.py` (NH results → LEDGER-51 dump + provenance sidecar; **t0 = target − 1 d,
+h = 1**, cfs = mm/d × area / 2.446576), scored by the unchanged `analysis/l51_withq_score.py`.
+Variants: `nhar` = Nearing-exact (hidden 128, holdout 0.5); `nhar256` (hidden 256); `nhar0` (no holdout).
+Data: `gpu1080/nh_data_multi` (531/531, 1980-01-01..2008-12-31, 15 forcing vars + q_mm; identical discharge
+to the MB-LSTM corpora — the scorer's truth-agreement assertion passed on both frames in the smoke test).
+
+**Three traps found and closed in the smoke test (8 basins, 1 epoch), before any real run:**
+1. NH applies `random_holdout_from_dynamic_features` at dataset LOAD time for **every period** (no
+   `is_train` guard in `basedataset.py`), so a plain `nh-run evaluate` scores the model with 50 % of the
+   lagged discharge missing. The paper's number is the complete-discharge case; `nh_arlstm_eval.py` clears
+   the holdout before evaluating.
+2. `tester.py` evaluates the **validation** period on only the first `validate_n_random_basins` basins
+   (the in-training subsample, persisted into the run's config); the first smoke val dump had **0 basins**.
+   The eval script lifts it to all 531.
+3. NH 1.13.0's `bernoulli_subseries_sampler` (numba) fails to type on the read-only float32 view pandas
+   hands it (`float32 readonly` vs `float64` return branches). Patched in the venv with a cast
+   (`samplingutils.py.bak_l53_readonly_float32` kept); verified 50 % missing at mean gap 5.0.
+
+## Cost, measured
+1.36 batch/s solo on the smoke, **1.07–1.12 batch/s** on the full 531-basin run (6,821 batches/epoch)
+⇒ **~52 GPU-h per seed serial**; three seeds concurrently run at 1.78 s/batch each (GPU 80–94 %) ⇒ **the
+3-seed screen takes ~4.2 days wall** (1.5× the serial throughput). The loop is kernel-launch bound (GPU ~30 %
+solo), so a CUDA-graph replay of the identical model is the one legitimate speed-up; it will be attempted
+alongside the running seeds and used only if it is verified numerically equivalent on the same batch.
+Evaluation (val + test, holdout off) ≈ 1.3 GPU-h per seed. Seeds s501–503 launched 03:09–03:11 box time.
+
+## Predictions (written before any result; bands are pass/fail, not hopes)
+| quantity | band |
+|---|---|
+| `nhar` **1-seed** solo, test1 all-days median NSE | **0.868…0.885** (Nearing 0.879; our corpora, dropout 0.4) |
+| `nhar` 3-seed solo, val1 | ≥ `fused3h1` 3-seed val1 (0.8785 on shared rows) − 0.005 |
+| adding `nhar` (3 seeds) to the 5-member ensemble, **val1 paired Δ** | **+0.0010…+0.0045**, breadth ≥ 0.55 |
+| same, test1, read AFTER the val decision | +0.0010…+0.0045 |
+| `nhar` LOO contribution in the 6-member ensemble | ≥ `fused3h1`'s (+0.0016) — this is what 0.89 needs |
+| 6-member ensemble, test1 | **0.889…0.893** |
+
+**Mechanism claimed**: a *stronger* solo member (not decorrelation — refuted 4× as a value predictor) from a
+different implementation family (single-step, NSE loss, AR flag), on the same information. The ensemble
+sensitivity map says value ∝ weight and is convex in solo gain; a member with solo ≥ the best existing one
+gets the largest equal-weight share of "truth pull" the ensemble has ever had.
+
+**Falsifiers, stated now**: (i) `nhar` 1-seed test1 solo < 0.860 ⇒ the reproduction failed (a data or recipe
+defect, not a verdict on the architecture) — stop, diagnose, do not add seeds; (ii) 3-seed val1 paired Δ of the
+6-member ensemble ≤ 0 or CI includes zero ⇒ the member class is closed at 3 seeds; (iii) 6-member test1
+< 0.89 with `nhar` LOO < +0.0009 ⇒ 0.89 is not reachable this way and 0.90 is out of reach of any single
+member (report, do not sweep).
+
+## Decision rule (fixed now, identical to LEDGERS 51–52)
+Selection on **val1** (stride 1, held out), **paired** per-basin Δ, basin-bootstrap 95 % CI, breadth; 3 matched
+seeds to screen, 5 to ship; test1 read after the val decision and never selecting. Composition candidates
+pre-registered: (A) 6 members equal weight; (B) `nhar` **replaces** `aorch1` (LOO −0.000008, breadth 0.495);
+(C) 5 members + `nhar` at 2× weight. **Chosen on val1 by paired Δ; the test1 number of the chosen one is the
+record.** Duplicate-member control must be ≤ 0. `nhar256` / `nhar0` are run only if `nhar` passes (i), each
+decided against `nhar` on val1 at 3 matched seeds.
+
+### LEDGER 53 — ADDENDUM 2026-09-09 15:20 (before any `nhar0`/`nhar256` result exists)
+
+**Reproduction check (i) PASSED**: `nhar` single seeds score **0.870347 / 0.873790 / 0.870147** on test1 (band
+0.868…0.885), 3-seed solo **0.886176** test1 / **0.884149** val1. The val1 composition decision is pending only
+because `daymeth1/nldash1/maurerh1/aorch1` had never been dumped on the stride-1 val frame; those 22 dumps are
+being produced with the launcher's exact flags (`gpu1080/dump_l53_val1.sh`) and the watcher re-runs itself.
+Ensemble test1 files exist on disk and remain **unread** until val1 decides.
+
+**Re-fetched from the paper (HESS 26:5493, Table 2 and text)**: the 0.879 is the AR model **trained with NO
+holdout** ("AR (with no holdout) improved the median NSE by ∼10 %"); the paper adds that AR trained with and
+without missing lagged streamflow "performed similarly with no missing data during inference." Our `nhar` is
+the 50 %-holdout variant and sits ~0.008 below 0.879. Our own MB-LSTM evidence on the same knob (P3, ledger 51)
+was +0.0097 on test, −0.003 on val. ⇒ **`nhar0` (identical recipe, `missing_fraction: 0.0`) is the exact
+reproduction and takes the variant slot ahead of `nhar256`**: lane F switches from `nhar256:501` (killed at
+~15 min, nothing kept) to `nhar0:501`; the continuation lanes D/E carry `nhar0:502/503` after `nhar:504/505`.
+`nhar256` is deferred, not closed.
+
+**Predictions for `nhar0`, written now**: 1-seed test1 solo **0.874…0.884** (the paper's 0.879 is inside);
+val1 1-seed solo within ±0.004 of `nhar`'s (0.8712/0.8716/0.8744) — the MB-LSTM sign flip on this knob is the
+thing to watch. **Decision use**: whether `nhar0` replaces or joins `nhar` in the ensemble is decided on
+**val1, paired, 3 matched seeds**, exactly like every other member; the test1 solo is read only as the
+reproduction number the user asked for, and it selects nothing.
+
+## ✅ LEDGER 53 — SCREEN PASSES. NEW WITH-Q RECORD **0.893652** (3 seeds of `nhar`; 2026-09-11)
+
+Decision made on **val1** exactly as pre-registered, then test1 read. Artifacts:
+`benchmarks/l53/COMPOSITION_{val1,test1}_3seed.json`, `benchmarks/l53/VERDICT_3seed.json`,
+tool `analysis/l53_composition.py` (all four compositions scored on the SAME rows — the 6-member inner join,
+1,458,982 rows / 527 basins on val1, 1,931,646 / 531 on test1).
+
+### The val1 decision (selection; test never selects)
+| composition | val1 median | paired vs base5 | CI | breadth |
+|---|---|---|---|---|
+| `base5` (the 0.888355 record) | 0.895178 | — | — | — |
+| **A = base5 + `nhar`, equal weight** | **0.898500** | **+0.000990** | **[+0.000496,+0.001304]** | **0.626** |
+| B = `nhar` replaces `aorch1` | 0.897288 | +0.000573 | [+0.000072,+0.001369] | 0.546 |
+| C = base5 + `nhar` at 2× | 0.898968 | +0.001047 | [+0.000313,+0.001490] | 0.571 |
+
+**C vs A paired: +0.000014, CI [−0.000184,+0.000230], breadth 0.501** — the 2× weight buys **nothing**, while
+its *difference of medians* claims +0.000468. ⭐ **That is the SEVENTH time difference-of-medians and the paired
+test have disagreed in ledgers 51–53, and the paired test has been right every time.** B vs A is also zero
+(−0.000122, straddles). ⇒ **A ships**: the most conservative candidate, equal weight, **zero fitted combination
+parameters**, consistent with every prior combination result on this campaign.
+
+⚠️ **Honest reporting of the duplicate-member bar.** The pre-registered bar reads "duplicate-member control ≤ 0";
+the scorer computes it as a **difference of medians** and `nhar` reads **+0.000468**, so the bar **as literally
+written is violated**. Measured with the paired statistic this same pre-registration mandates everywhere else it
+is **+0.000014, CI [−0.000184,+0.000230]** — i.e. exactly zero, and it is the *same comparison* as C vs A
+(a duplicate is a 2× weight). Both numbers are recorded; the bar's purpose (is the gain new information, or just
+more weight on a strong member?) is answered **new information**. Every other member's dup control is ≤ −0.0012.
+
+### The result (test1, all daily observations, 531 basins, read AFTER the val decision)
+| | day-1 median NSE |
+|---|---|
+| Nearing et al. 2022 (HESS 26:5493), single AR-LSTM | 0.879 |
+| LEDGER 51–52 record (5 members × 5 seeds) | 0.888355 |
+| **LEDGER 53, composition A (6 members; `nhar` at 3 seeds)** | **0.893652** |
+| margin vs the old record | **+0.005297** (paired +0.002065, CI [+0.001535,+0.002475], breadth 0.744) |
+| margin vs Nearing | **+0.014652** |
+
+`base5` re-scores to **0.888355** on these rows — the record reproduces to the digit, so the frame, scorer and
+row set are unchanged. `nhar` solo (3 seeds) is **0.886153**, i.e. **one member nearly matches the entire
+25-model ensemble it is joining**, and its LOO contribution **+0.002065 exceeds `fused3h1`'s +0.001604** — the
+brief's spec ("a 6th member must contribute ≈ +0.0016") is met and exceeded.
+
+⚠️ **C's test1 number is 0.896020 and is NOT the record.** C vs A is significant on test (+0.000543, CI excludes
+zero) and zero on val — a window disagreement. The pre-registered rule selects on val, so A stands; taking C
+because test prefers it is precisely the mechanism that produced the retracted 0.9253.
+
+### Status of the claim
+This is the **3-seed screen**, which the pre-registration requires to pass before spending the remaining seeds;
+**the ship bar is 5 seeds**. `nhar` s504/s505 are training (epoch 18/30) and the number will be re-read at 5
+seeds before 0.893652 is called final. **0.90 is not reached** — A is 0.0064 short, and the remaining seeds are
+worth ~+0.001 by the L51 seed-depth curve, so 0.90 needs another member class, not more of this one.
+
+# LEDGER 54 — CAN AN AR-LSTM *FAMILY* REACH 0.90? (opened 2026-09-11, before any result)
+
+Record after LEDGER 53: **0.893652** (3-seed screen; 5-seed ship number pending). User directive:
+*"get to .9 — and beat Nearing's single member too with a single member."* **0.90 needs +0.0064.**
+
+## GATE 0 (zero GPU, `analysis/l53_arfamily_map.py`, `benchmarks/l53/ARMAP_val1.json`) — MEASURED FIRST
+
+⭐⭐ **`nhar` is NOT a new error block.** Median per-basin error correlation: MB-LSTM block (10 pairs) **0.8072**,
+`nhar` vs the MB members (5 pairs) **0.8079**. It is −0.0006 *more* correlated than the block it joined. **The
+AR-LSTM won on SKILL, not diversity** — the fifth independent refutation of decorrelation as a value predictor
+([[the-ensemble-sensitivity-map]] §4b, [[multi10-ealstm-PROBE-FAILED-decorrelation-refuted]]).
+
+⛔ **More weight on the same member is exhausted.** Ensemble median vs the AR family's weight share w (val1):
+w=0.167 (K=1) 0.898500 · w=0.286 (K=2) 0.898968 · **w=0.375 (K=3) 0.899288 (max)** · w=0.5 0.898081 ·
+w=0.667 0.895804. The optimum is worth **+0.000788 by medians** over equal weight, and the matched paired test
+(nhar's 3 seeds as 3 separate streams vs one 3-seed member, the same 3 networks) is **−0.000257,
+CI [−0.000560,+0.000128], breadth 0.471 = ZERO.** ⇒ **Duplicating or upweighting `nhar` buys nothing.**
+
+⇒ The only route to 0.90 is AR members that are **better** and **mutually diverse by FORCING** — the axis that
+actually built the existing ensemble (5 members differing only in forcing product, ensembling +0.028 over their
+mean solo of 0.860). This is NOT refuted by the weight curve: single-forcing AR members are not copies of `nhar`.
+
+## THE ENABLER, VERIFIED BEFORE USE: the no-NaN fused path (`scripts/nh_arlstm_fast.py::_fused_loop`)
+
+When no autoregressive input in a batch is NaN, NH's ARLSTM loop **is** a plain LSTM: the substitution
+`x_ar[nan] = last_prediction[nan]` is a no-op, the obs/sim flags stay 0, and `last_prediction` is never read.
+The 365 sequential single-step cuDNN calls then collapse into **one fused call**. Our **1999-2008 training window
+has complete discharge in all 531 basins**, so a `missing_fraction: 0.0` run never substitutes anything.
+Measured on the box, same batch: **max|Δy| = 0.000e+00 vs NH's own loop** (grads rel 1.8e-6), and
+**145 ms/batch vs 9217 ms (63×; 7.6× vs my CUDA-graph step loop)**. Only dropout RNG *ordering* differs (365
+draws vs one over [T,B,H]) — same rate, same distribution, like a different seed; documented, not hidden.
+Dispatch is per batch (`_ar_has_nan`, one sync) and falls back to the exact step loop whenever a NaN appears,
+so 50 %-holdout runs and the NaN-bearing val window are unaffected and still exact.
+⇒ **A 3-seed holdout-0 member drops from ~52 h to ~7 h.** This is what makes a 4-member family affordable.
+
+## THE ARMS (all `missing_fraction: 0.0` — the paper's own 0.879 config, and the fused path's precondition)
+| member | data | dyn. inputs | hidden |
+|---|---|---|---|
+| `nhar0` | `nh_data_multi` | 15 | 128 |
+| `nhar0d` | `nh_data/daymet` | 5 | 128 |
+| `nhar0n` | `nh_data/nldas` | 5 | 128 |
+| `nhar0m` | `nh_data/maurer` | 5 | 128 |
+| `nhar0h256` | `nh_data_multi` | 15 | **256** |
+All three single-forcing NH datasets verified: 531/531 benchmark basins, the same 27 statics, and discharge
+**bit-identical** to `nh_data_multi` (maxdiff 0.0). Everything else is Nearing's recipe unchanged.
+
+## PREDICTIONS (bands are pass/fail, written before any run)
+| quantity | band |
+|---|---|
+| `nhar0` 3-seed solo test1 | 0.884…0.896 |
+| `nhar0d` 3-seed solo test1 | 0.872…0.890 (`daymeth1` 0.868159 + the +0.014 AR advantage) |
+| `nhar0n` 3-seed solo test1 | 0.861…0.881 (`nldash1` 0.857188 + same) |
+| `nhar0m` 3-seed solo test1 | 0.864…0.884 (`maurerh1` 0.860169 + same) |
+| **9-member ensemble test1** (5 MB + `nhar` + 3 single-forcing AR) | **0.896…0.904** |
+| mean pairwise error-corr WITHIN the AR family | 0.80…0.88 (they will NOT be decorrelated; that is not the mechanism) |
+
+**Mechanism claimed**: the existing 5 MB-LSTM members ensemble to +0.028 over their mean solo (0.860 → 0.888355)
+purely on forcing diversity. Replaying that same construction one architecture up — mean solo ≈ 0.878 — projects
+≈ 0.906 for an AR-only ensemble and ≈ 0.898…0.903 for the 9-member union. **0.90 is inside the band but not
+guaranteed**, and by [[the-ensemble-sensitivity-map]] law 2 the pass-through is convex, so the projection is an
+upper-leaning estimate.
+
+## THE SINGLE-MODEL TARGET (the user's second ask), stated precisely
+Nearing's 0.879 is **one network**. Two readings, both reported:
+- **(a) one member stream** (seed-averaged — this campaign's unit of a "member"): `nhar` 3-seed solo =
+  **0.886153 > 0.879. ALREADY ACHIEVED** at LEDGER 53, and it is an honest like-for-like member.
+- **(b) one network, no averaging** — the strict apples-to-apples claim: best single seed so far **0.873790**,
+  i.e. **0.0052 short**. Arms: `nhar0` (the paper's exact config, band 0.874…0.884, running) and `nhar0h256`
+  (capacity lever, band 0.875…0.888). **Target: a single network > 0.879 on test1, all days, 531 basins.**
+
+## FALSIFIERS (written now)
+1. If `nhar0d/n/m` 3-seed solos are **not** ≥ their MB-LSTM counterparts **+0.007**, the "AR beats MB on every
+   forcing" premise is false ⇒ stop the family, report, do not add seeds.
+2. If the 9-member val1 paired Δ over the 6-member is **≤ 0 or its CI straddles zero**, the AR family is
+   saturated ⇒ **0.90 is not reachable by this route** and I say so rather than sweeping weights.
+3. If no single network clears 0.879 across `nhar0` (3 seeds) and `nhar0h256` (3 seeds), target (b) is reported
+   **unmet**, with (a) reported as the honest member-level result.
+
+## DECISION RULE (unchanged from LEDGERS 51-53)
+Selection on **val1**, **paired** per-basin Δ + basin-bootstrap CI + breadth, 3 matched seeds to screen and 5 to
+ship, **equal weight over built members with zero fitted combination parameters**, test1 read only after val1
+decides. The GATE 0 weight curve is a **diagnostic that chose what to build** and selects nothing.
+
+### LEDGER 54 — CAN A *SINGLE MEMBER* REACH 0.89? (measured 2026-09-11, zero GPU, before more seeds)
+
+User question: *"would it be possible to get a single member at .89?"* Tool `analysis/l54_seed_depth.py`
+(enumerates EVERY k-subset of a member's seeds, fits `median(k) = a − b/k`); artifacts
+`benchmarks/l54/SEEDDEPTH_{nhar_test1,nhar_val1,fused3h1_test1}.json`.
+
+| member / frame | k=1 | k=3 | b (seed noise) | **a (∞ seeds)** | k needed for 0.89 |
+|---|---|---|---|---|---|
+| `nhar` **test1** | 0.871428 | 0.886176 | 0.02199 | **0.893374** | **6.5** |
+| `nhar` **val1 (honest)** | 0.872366 | 0.884149 | 0.01774 | **0.890130** | **136** |
+| `fused3h1` test1 (5 seeds) | 0.865922 | 0.871488 | 0.00806 | 0.874098 | **unreachable** |
+
+Fits are tight (max residual 1.8e-4, 8.9e-5, 3.2e-4), so the law holds; the *windows* are what disagree.
+
+⚠️⚠️ **ANSWER, ON THE HONEST WINDOW: NO — not by seed depth on `nhar`.** test1 says 7 seeds; **val1 says the
+asymptote is 0.890130**, i.e. 0.89 sits essentially *at* the infinite-seed limit (136 seeds nominal). A +0.0033
+window disagreement on the asymptote is exactly the shape of the traps that produced the retracted 0.9253 and
+the rejected ar-mask probe, and **the pre-registered rule believes val**. I am recording the test-frame number
+as the optimistic one, not as the answer.
+
+⭐ **What the curve does say is more useful than the headline.** `nhar`'s seed noise **b = 0.0220 is 2.7× the
+MB-LSTM's 0.0081** — a single dropout-0.4 point network is far noisier than our quantile member, which is why
+1→3 seeds bought +0.0148 here versus +0.0056 there. And `fused3h1`'s asymptote is **0.874098**: *no amount of
+seed averaging* reaches 0.89 for any existing MB-LSTM member. **Only the AR family has a route.**
+
+⇒ **The route to a 0.89 single member is a BETTER BASE MEMBER, not more seeds of this one** — shift the whole
+curve up rather than chase 1/k. `nhar0` (no holdout) is the candidate: it is the config Nearing reports **0.879
+at ONE network** against our `nhar`'s 0.8714, so a shift is expected.
+
+**Arithmetic requirement, written before `nhar0`'s number exists** (val1, b ≈ 0.0177 assumed unchanged):
+a = x₁ + b, and 0.89 at k=5 needs a ≥ 0.8935 ⇒ **`nhar0` must beat `nhar` by ≥ +0.0034 at ONE seed on val1**
+(i.e. 1-seed val1 ≥ 0.8758). Then: k=5 → ~0.8935·, k=7 → ~0.8910+.
+**Falsifier**: if `nhar0`'s 1-seed val1 is **< 0.8758**, a 0.89 single member is **not reachable by this
+family at ≤ 7 seeds** — report that, and do not buy seeds against a test-frame number.
+**Prediction for `nhar0` 1-seed val1: 0.874…0.884** (band; the falsifier line 0.8758 sits inside it, so this
+is a real test). Seeds 502–505 are queued; 506/507 are held until the 1-seed number decides.
+
+### LEDGER 54 — `nhar0` 1-SEED READ: THE FALSIFIER IS CLEARED (2026-09-12 11:2x, before seeds 502/503 are scored)
+
+| | val1 (selection) | test1 |
+|---|---|---|
+| `nhar` 1-seed mean (3 seeds) | 0.872366 | 0.871428 |
+| **`nhar0` s501 (no holdout)** | **0.877707** | **0.878228** |
+| **advantage** | **+0.005341** | **+0.006800** |
+
+**Pre-registered requirement was ≥ +0.0034 on val1 (line 0.8758); measured +0.005341 ⇒ PASSED**, and the
+prediction band for `nhar0` 1-seed val1 (0.874…0.884) contained it. ⇒ **A 0.89 single member is now projected
+to be reachable**, and seeds 506/507 (held pending this read) are **not needed**: with b ≈ 0.0177 (val1),
+a = 0.8954 ⇒ 0.89 at **k ≈ 3.3 seeds**; with b ≈ 0.0220 (test1), a = 0.9002 ⇒ 0.89 at **k ≈ 2.2**. The five
+queued seeds (501–505) are sufficient. ⚠️ These projections use a **single** seed's intercept (±~0.002 seed
+noise) and `nhar`'s b; the 3-seed read supersedes them.
+
+**PREDICTIONS for `nhar0` solo, written before 502/503 are scored**: 3-seed val1 **0.8880…0.8925**,
+3-seed test1 **0.8915…0.8960**; 5-seed val1 **0.8895…0.8940**, 5-seed test1 **0.8930…0.8975**.
+**A 5-seed `nhar0` member ≥ 0.89 on val1 is the pass condition for the user's "single member at 0.89".**
+
+### ⭐ THE SEED-DEPTH LAW, SCORED (a real out-of-sample test of yesterday's fit)
+`nhar` seeds 504/505 landed, so the k=5 point predicted from the k=1,2,3 fit is now measured:
+
+| frame | predicted k=5 | **measured k=5** | error |
+|---|---|---|---|
+| test1 | 0.888976 | **0.888909** | **−0.000067** |
+| val1 | 0.886582 | **0.885596** | −0.000986 |
+
+⇒ `median(k) = a − b/k` is **quantitatively reliable at member level** (test1 to 7e-5), which is what licenses
+using it to decide seed counts. Note this is the *opposite* outcome to LEDGER 50 §3, where a seed-depth
+projection was 4–6× wrong — that one mapped a **solo** gain through an **ensemble weight** law
+([[the-ensemble-sensitivity-map]] §3). **Fit the curve you will actually read.**
+
+### ⚠️ SELECTION RULE FOR THE SINGLE-*NETWORK* CLAIM (fixed NOW, before seeds 502/503 are scored)
+`nhar0` s501 scores **0.878228** on test1 against Nearing's **0.879** — 0.0008 short, i.e. a reproduction, not
+yet a beat. With 3+ seeds available, *reporting the best test1 seed would be selection on the scored window*
+(the mechanism behind the retracted 0.9253 and [[an-argmax-gap-is-not-headroom]]).
+⇒ **The single-network claim is made as: take the seed with the highest val1 score; report THAT seed's test1.**
+One seed, chosen on the honest window, read once on test. The mean and the (non-selectable) max across seeds
+are both reported alongside for transparency. Arms: `nhar0` s501–505, `nhar0h256` s501–503.
+
+### ❌ LEDGER 54 — MY 3-SEED `nhar0` PREDICTION IS FALSIFIED, AND THE ERROR IS INSTRUCTIVE (2026-09-12)
+
+| | predicted band | **measured** | |
+|---|---|---|---|
+| `nhar0` 3-seed **val1** solo | 0.8880…0.8925 | **0.885105** | ❌ **below the band** |
+
+**Why I was wrong: I reused `nhar`'s seed-noise coefficient.** I projected a = 0.8954 from b ≈ 0.0177. The
+measured fit for `nhar0` is **b = 0.011208, a = 0.888715** (max resid 1.7e-4). ⚠️ I had written down, one day
+earlier and from this same tool, that **`b` is a property of the member and must never be reused** — and then
+did precisely that. Recorded as an error, not smoothed over ([[my-causal-claims-keep-failing]]).
+
+| member (val1) | 1 seed | 3 seeds | b | **a (∞ seeds)** |
+|---|---|---|---|---|
+| `nhar` (holdout 0.5) | 0.872366 | 0.884149 | 0.01774 | **0.890130** |
+| `nhar0` (holdout 0) | **0.877707** | 0.885105 | **0.01121** | **0.888715** |
+
+⭐ **The two members nearly converge, and they trade places.** `nhar0` is **+0.0053 better at one seed** but has
+**37 % less seed-averaging headroom**, so by k=3 the gap is only +0.001 and **at infinite seeds `nhar` is
+actually HIGHER**. Removing the 50 % lagged-discharge holdout makes a better *network* and a *less diverse*
+seed family — plausibly the same mechanism, since the holdout is a stochastic augmentation.
+
+⇒ **ANSWER TO "a single member at 0.89", on the honest window: NO for both AR members.**
+`nhar` asymptote 0.890130 (0.89 nominal at k=136); **`nhar0` asymptote 0.888715 — 0.89 is above the
+infinite-seed limit.** Seed depth is exhausted as a route. Seeds 506/507 are **cancelled** (they cannot help).
+
+**What is still live**: raising the *1-seed level*. With `nhar0`'s b = 0.0112, reaching 0.89 at k=5 needs a
+1-seed val1 of **≥ 0.8823**, i.e. **+0.0046 over `nhar0`**. The one arm already running that could deliver it is
+**`nhar0h256`** (hidden 256, evaluating now). **Pre-registered band for `nhar0h256` 1-seed val1: 0.876…0.886**;
+**pass condition for the user's target: 1-seed val1 ≥ 0.8823** (so the band spans the decision). If `nhar0h256`
+misses it, I report that a 0.89 single member is **not reachable with this family** rather than buying seeds.
+
+## ⛔ LEDGER 54 — FALSIFIER 1 TRIGGERED: THE SINGLE-FORCING AR FAMILY IS WORSE, NOT BETTER (2026-09-14)
+
+Pre-registered: *"if `nhar0d/n/m` 3-seed solos are not ≥ their MB-LSTM counterparts **+0.007**, the 'AR beats MB
+on every forcing' premise is false ⇒ stop the family, report, do not add seeds."* Measured, val1, 3 seeds each:
+
+| AR member | solo | MB-LSTM counterpart | solo | **delta** | predicted band |
+|---|---|---|---|---|---|
+| `nhar0d` (Daymet) | 0.859162 | `daymeth1` | 0.873716 | **−0.014554** | 0.872…0.890 ❌ |
+| `nhar0n` (NLDAS) | 0.856721 | `nldash1` | 0.867454 | **−0.010733** | 0.861…0.881 ❌ |
+| `nhar0m` (Maurer) | 0.857559 | `maurerh1` | 0.865676 | **−0.008117** | 0.864…0.884 ❌ |
+
+**All three miss their pre-registered bands low, and the sign is the opposite of the premise.** ⇒ **The family
+is stopped.** No further seeds.
+
+⭐⭐ **What this overturns — and it is the more valuable result.** I reasoned that the AR-LSTM's +0.014 advantage
+over the MB-LSTM was an *architecture* advantage that would transfer to every forcing. **It does not.** The AR
+advantage is **specific to the multi-forcing setup**: `nhar0` (15 inputs) 0.885105 vs `nhar0d` (5 inputs)
+0.859162 — a **−0.026** drop for dropping to one forcing, where the MB-LSTM family loses only ~0.008
+(`fused3h1` 0.881496 → `daymeth1` 0.873716). ⇒ **The AR-LSTM exploits multi-forcing input far more than the
+MB-LSTM does, and is a weaker model than ours on a single forcing.** The lead-1 loss weighting
+([[lead1-loss-weighting-the-biggest-member-gain]]) is what carries our single-forcing members.
+
+⇒ **The "replay forcing diversity one architecture up" plan is dead.** Its projection (9-member 0.896…0.904)
+rested on a mean AR solo of ~0.878 across forcings; the measured mean is **0.858**. 0.90 does not come from here.
+
+### ✅ TARGET (3) — A SINGLE NETWORK BEATS NEARING'S 0.879 (val-selected, read once on test)
+| network | val1 (selector) | **test1** | vs 0.879 |
+|---|---|---|---|
+| `nhar0` s501 | 0.877707 | 0.878228 | −0.000772 |
+| `nhar0` s502 | 0.876881 | 0.878431 | −0.000569 |
+| `nhar0` s503 (val-best of the three) | 0.878059 | 0.878265 | −0.000735 |
+| **`nhar0h256` s501** | **0.879510** | **0.879186** | **+0.000186** |
+
+⚠️ **Reported with its caveat, not as a clean win.** The margin is **+0.000186** while single-seed spread on this
+stack is ~0.002–0.003, i.e. **the beat is an order of magnitude inside seed noise**. `nhar0h256` also has only
+**2 seeds** so far (s502 landed, s503 running), so its val-selection pool is thin. The honest statement is:
+**a single AR-LSTM network reproduces Nearing's 0.879 and edges it by a margin that is not statistically
+meaningful.** The 3-seed mean is the number to trust; it is computed when s503 lands.
+
+### ⚠️ TARGET (2) — and an error in my own pre-registered pass line
+`nhar0h256` 1-seed val1 = **0.879510** vs the pre-registered line 0.8823 ⇒ **FAIL** on that line.
+⚠️ **But the line itself was derived by borrowing `nhar0`'s b = 0.0112** — the exact mistake this ledger already
+recorded once. Correct arithmetic for "0.89 at k=5": need `x₁ + 0.8b ≥ 0.89`, i.e. **x₁ ≥ 0.89 − 0.8b**, which
+for b = 0.0112 is **0.8810** (I wrote 0.8823; the slip does not change any verdict, since 0.8795 < 0.8810).
+**The honest test is `nhar0h256`'s OWN b**, measurable once s503 lands: if its b ≥ 0.0132 the member still
+reaches 0.89 at k=5. That, not the borrowed line, decides target (2).
+
+## 🏆 LEDGER 54 — NEW RECORD **0.898078** (8 members; val1-selected, 2026-09-14)
+
+Composition chosen on **val1** (0.901393, the best of every candidate scored), test read after.
+Artifacts `benchmarks/l54/ENS8_{val1,test1}.json`.
+
+| composition | val1 (selector) | **test1** |
+|---|---|---|
+| `base5` (LEDGER 51-52 record) | 0.895178 | 0.888355 |
+| 6 = +`nhar` (LEDGER 53 record, 5 seeds) | — | 0.893894 |
+| 7 = +`nhar0` | 0.900358 | 0.896907 |
+| **8 = +`nhar0h256`** | **0.901393** | **0.898078** |
+| ⛔ 10 = + the single-forcing family | 0.899055 | not read (worse on val) |
+
+**vs Nearing 0.879: +0.019078. 0.90 is +0.001922 away.** Equal weight throughout; zero fitted parameters.
+⚠️ `nhar0h256` has only **2 seeds** (ship bar 5) ⇒ this is a screen-level number; s503 is training.
+
+**test1 LOO (paired):** `nhar0h256` **+0.000689** (CI [+0.000526,+0.000960], breadth **0.701**) is now the
+**largest contribution of any member**, ahead of `fused3h1` (+0.000497) — at 2 seeds. `nldash1` (+0.000058) and
+`maurerh1` (+0.000073) have CIs straddling zero and are candidates for removal, but **removal must be decided on
+val1**, where both are clearly positive (+0.000068 CI straddles / +0.000552 CI excludes) — so they stay.
+
+### ⭐⭐ THE DUPLICATE-MEMBER CONTROL HAS FLIPPED SIGN FOR THE AR FAMILY — AND THAT IS A SIGNAL
+test1 dup control: every MB-LSTM member is **negative** (−0.0004…−0.0017, as always), but
+**`nhar0` +0.000533 and `nhar0h256` +0.000411 are POSITIVE.** Under equal weight the AR family is
+**underweighted**: the ensemble wants more of it. ⚠️ This is the difference-of-medians statistic (the bar's own
+definition), which has misled seven times — and when the 2× weight on `nhar` alone was tested properly at
+LEDGER 54 GATE 0 the paired delta was **+0.000014 = zero**. ⇒ **Do not re-open weighting.** The legitimate way
+to act on it is **more AR members / more AR seeds at equal weight**, which is what is queued.
+
+### THE LAST 0.0019 — pre-registered arms
+1. **`nhar0h256` to 5 seeds** (s504/s505). Its own val1 curve gives a = 0.897309, b = 0.01748 ⇒ k=5 solo
+   ≈ 0.8938 vs 0.8886 at k=2. **Prediction: 8-member test1 at 5 h256 seeds = 0.8985…0.9005.**
+2. **`nhar0h512`** (hidden 512, 3 seeds) — capacity is the one lever measured to work here: 128→256 moved the
+   1-seed val1 level +0.0018 **and** raised b from 0.0112 to 0.0175. **Prediction: 1-seed val1 0.878…0.888**;
+   ships only if it beats `nhar0h256` on val1 at 3 matched seeds by the standard paired bar.
+   **Falsifier**: if `nhar0h512`'s 3-seed val1 solo is ≤ `nhar0h256`'s, capacity is saturated — stop, and 0.90
+   is out of reach of this family.
+
+### ✅ TARGET (3) SETTLED — A SINGLE NETWORK BEATS NEARING
+val-selected (on val1, read once on test1): **`nhar0h256` s502 → test1 0.884137 vs 0.879 = +0.005137.**
+And the claim does not depend on the selection: the **mean over both h256 networks is 0.881662**, also > 0.879.
+⚠️ 2 candidates only, and the two seeds are 0.0050 apart on test — s503 will firm it up.
+
+### TARGET (2) — REOPENED BY THE MEMBER'S OWN CURVE (my pass line was wrong)
+`nhar0h256` val1: k=1 0.879828, k=2 0.888568 ⇒ **b = 0.01748, a = 0.897309 ⇒ 0.89 at k ≥ 2.4 seeds.**
+The pre-registered FAIL was produced by a pass line I derived from **`nhar0`'s** b — the borrowed-b error, twice.
+⚠️⚠️ **This fit has TWO points for TWO parameters: zero degrees of freedom, no residual, no validation.**
+**Prediction, to be scored against s503: `nhar0h256` 3-seed val1 solo = 0.8905…0.8925.** If it lands ≥ 0.89,
+**a single member at 0.89 is achieved**; if it lands below, the 2-point extrapolation was optimistic and I
+report that.
+
+## ✅✅ LEDGER 54 — TWO OF THE THREE TARGETS ACHIEVED (2026-09-20, after the GPU was restored)
+
+### ✅ TARGET (2) — A SINGLE MEMBER AT 0.89, ON BOTH FRAMES
+`nhar0h256`, **3 seeds**, equal-weight seed average, solo:
+
+| frame | solo |
+|---|---|
+| **val1 (honest/selection)** | **0.890256** |
+| **test1 (reported)** | **0.890963** |
+
+Its own 3-point curve is now tight: **a = 0.895585, b = 0.015996, max|resid| 3.0e-06**, giving 0.89 at
+**k ≥ 2.9 seeds** — met at 3. ⇒ **A single member clears 0.89 on the honest window and on the scored window.**
+
+⚠️ **My band was marginally wrong, in my favour's direction.** Pre-registered: 3-seed val1 in
+**0.8905…0.8925**; measured **0.890256** — **0.00024 BELOW the band**. The target is achieved; the
+*prediction* is a (narrow) miss and is recorded as one.
+⚠️ The automated `l54_targets_verdict.py` printed **"TARGET 2 → FAIL"**: it still tests the stale pass line
+**0.8823**, derived from `nhar0`'s borrowed b. That constant is wrong (the borrowed-b error, recorded twice)
+and the member's own curve is the correct test. **Fix the constant; do not read that FAIL as a result.**
+
+### ✅ TARGET (3) — A SINGLE NETWORK BEATS NEARING, ROBUSTLY (all 3 networks clear it)
+| network | val1 (selector) | test1 | vs 0.879 |
+|---|---|---|---|
+| `nhar0h256` s501 | 0.879510 | 0.879186 | +0.000186 |
+| **s502 (val-selected)** | **0.880146** | **0.884137** | **+0.005137** |
+| s503 | 0.879115 | 0.882236 | +0.003236 |
+| **mean of the three** | — | **0.881853** | **+0.002853** |
+
+The pre-registered rule (select on val1, read test1 once) gives **0.884137**. The claim no longer depends on
+the rule: **every individual network beats 0.879, and so does their mean.** ⇒ **Nearing's single-model 0.879
+is beaten by a single network, reproducibly.**
+
+### ⏳ TARGET (1) — 0.90 NOT REACHED, and seed depth is NOT buying it
+| `nhar0h256` seeds in the 8-member ensemble | val1 | test1 | `nhar0h256` LOO (test1, paired) |
+|---|---|---|---|
+| 2 | 0.901393 | **0.898078** | +0.000689, CI [+0.000526,+0.000960], breadth 0.701 |
+| 3 | 0.901119 | **0.897783** | **+0.000702**, CI [+0.000554,+0.000966], breadth 0.710 |
+
+⚠️⚠️ **The ensemble MEDIAN went DOWN (−0.000295) while the member got better solo (0.8886 → 0.8910) and its
+PAIRED contribution went UP (+0.000689 → +0.000702).** The 7-member baseline is identical (0.896907) in both,
+so this is not a row-set artifact. Two honest readings, and they must both be stated:
+- the **reported metric is a median**, so at 3 seeds the ensemble is **0.897783**, i.e. the 0.898078 headline
+  was obtained at the *shallower* seed count;
+- the **paired statistic — right 7 times out of 7 in this campaign — says the member improved.**
+⇒ ⭐ **Seed-averaging a member makes it better solo and less useful to the ensemble**: the averaged member's
+errors move toward the consensus error, so diversity falls as skill rises. Consistent with
+[[the-ensemble-sensitivity-map]] §3 (depth is dead at ensemble level) even though it is very much alive at
+member level ([[the-seed-depth-law-per-member]]). **The two levels genuinely disagree and both are real.**
+
+⇒ **The record claim must be the SHIP-BAR (5-seed) number, not the best seed count.** s504 is evaluating and
+s505 training; whatever 5 seeds gives is the number, even if it lands below 0.898078.
+**Prediction, written now: 8-member test1 at 5 h256 seeds = 0.8972…0.8985** (i.e. I expect the 0.898078
+headline NOT to survive seed depth). 0.90 needs a different lever: the `nhar0h512` capacity arm (resumed,
+running) is the last pre-registered one.

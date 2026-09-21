@@ -1,0 +1,18 @@
+{
+ "frame": "val1",
+ "readout": "mid",
+ "members": [
+  "nhar"
+ ],
+ "seeds": [
+  503
+ ],
+ "rows": 1697607,
+ "basins": 531,
+ "weights": null,
+ "ensemble_median_nse": 0.8743724513240185,
+ "n_scored": 528,
+ "member_median_nse": {
+  "nhar": 0.8743724513240185
+ }
+}

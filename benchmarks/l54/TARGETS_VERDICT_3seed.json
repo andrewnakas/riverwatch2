@@ -1,0 +1,31 @@
+{
+ "nearing_single_model": 0.879,
+ "pass_line_1seed_val1": 0.8823,
+ "members": {
+  "nhar0h256": {
+   "per_seed_val1": {
+    "501": 0.879510034682714,
+    "502": 0.880145632242627,
+    "503": 0.879115081767011
+   },
+   "per_seed_test1": {
+    "501": 0.8791861005664067,
+    "502": 0.8841372521078318,
+    "503": 0.8822358235863786
+   },
+   "target2_best_1seed_val1": {
+    "seed": 502,
+    "val1": 0.880145632242627,
+    "passes_line": false
+   },
+   "target3": {
+    "selected_seed": 502,
+    "selected_val1": 0.880145632242627,
+    "selected_test1": 0.8841372521078318,
+    "beats_nearing": true,
+    "mean_test1": 0.881853058753539,
+    "max_test1_NOT_SELECTABLE": 0.8841372521078318
+   }
+  }
+ }
+}

@@ -1,0 +1,31 @@
+{
+ "test1_3seed_A": 0.8936522483284982,
+ "test1_5seed_A": 0.8938948840821024,
+ "seed_depth_gain": 0.0002426357536041701,
+ "test1_5seed_base5": 0.8883553642192582,
+ "solo_nhar_5seed_test1": 0.8888352119618874,
+ "val1_5seed_A_vs_base5": {
+  "paired_delta": 0.000850766961128846,
+  "ci": [
+   0.0005476655993048585,
+   0.0012769679155226754
+  ],
+  "breadth": 0.6489563567362429,
+  "median_delta": 0.002672656549736141,
+  "significant": true,
+  "n_basins": 527
+ },
+ "test1_5seed_A_vs_base5": {
+  "paired_delta": 0.0019530795941776757,
+  "ci": [
+   0.0014134013070219442,
+   0.0023618665438763786
+  ],
+  "breadth": 0.7627118644067796,
+  "median_delta": 0.005539519862844178,
+  "significant": true,
+  "n_basins": 531
+ },
+ "ship_bar_pass": true,
+ "reaches_0.90": false
+}
