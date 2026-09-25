@@ -7300,3 +7300,22 @@ GHCN analysis vs PRISM). The choice is **reversible with a single `--assemble-on
 NLDAS if that product ever completes, and it should be revisited then.
 ⇒ A cross-product borrow is a hidden dependency edge. Draw the dependency graph before claiming
 independence.
+
+### 📤 PUBLISHED — `nakas/rw2-camels671-modern-corpus` (2026-09-25)
+
+The three **complete** MODERN-1 products are on the Hugging Face Hub, public, CC-BY-4.0:
+`gridmet/`, `nclimgrid/`, `discharge/` (671 basins each, **1980-01-01 … 2026-09-22,
+17,067 rows/basin**), plus `cohort/m1_cohort.json` and a `provenance/` tree carrying the Gate 1
+screen results, the shift-control experiments, the discharge-revision calibration and the
+build sidecars.
+
+**Deliberately excluded**: Daymet (242/671) and NLDAS-2 (9/408). The uploader carries a
+**preflight that refuses to publish any product below 671/671** — a partial corpus on a public
+hub is the artifact that gets used by accident, and the hub is effectively permanent.
+
+The card states the limitations rather than burying them: that nClimGrid's radiation and
+humidity are **carried over from gridMET** (so it is independent in 4 of 6 channels, not 6);
+that the forcing screen measures single-product coupling and **not** ensemble value, with
+Maurer as the worked counterexample; that the cohort is **490, not 531**, because 24 gauges are
+dead in the test window; and that discharge is a fresh USGS pull and therefore **not
+bit-identical** to CAMELS' archived values, with the measured agreement quoted.
