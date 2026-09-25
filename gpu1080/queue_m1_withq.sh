@@ -83,7 +83,9 @@ assert cfg["val_range"] == [vs, ve], f"val {cfg['val_range']} != {[vs, ve]}"
 assert cfg["no_q_input"] is False, "this is the WITH-Q arm"
 assert abs(cfg.get("h1_weight", -1) - 0.5) < 1e-9, cfg.get("h1_weight")
 ndec = len(cfg["dec_vars"])
-w = sd["model"]["decoder.weight_ih_l0"].shape[1]
+# the checkpoint stores weights under "state_dict", not "model" -- caught by
+# the proxy-corpus smoke before the real corpus existed
+w = sd["state_dict"]["decoder.weight_ih_l0"].shape[1]
 exp = ndec + 2 + 1 + len(cfg["static_feats"])
 assert w == exp, f"decoder width {w} != {exp} (dec={ndec})"
 prods = {v.rsplit("_", 1)[1] for v in cfg["enc_vars"] if "_" in v}
