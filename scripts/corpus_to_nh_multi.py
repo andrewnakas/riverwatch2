@@ -45,9 +45,20 @@ FORCING_MAP = {
     "vapor_pressure": "vp",
     "shortwave_radiation_sum": "srad",
 }
+# MODERN-1: the product list is now set at runtime (--products), because the
+# modern corpus cannot contain maurer -- CAMELS maurer ends 2008-12-31. The
+# default below is unchanged so every existing LEDGER 51/53/54/56 NH build
+# reproduces byte-for-byte.
 FORCINGS = ["daymet", "nldas", "maurer"]
-# 15 dynamic inputs = 5 vars x 3 forcings, suffixed
+# dynamic inputs = 5 vars x N forcings, suffixed
 DYNAMIC_INPUTS = [f"{v}_{f}" for f in FORCINGS for v in FORCING_MAP.values()]
+
+
+def set_forcings(names: list[str]) -> None:
+    """Rebind the module-level forcing list and its derived input names."""
+    global FORCINGS, DYNAMIC_INPUTS
+    FORCINGS = list(names)
+    DYNAMIC_INPUTS = [f"{v}_{f}" for f in FORCINGS for v in FORCING_MAP.values()]
 
 CFS_TO_MMDAY_PER_KM2 = 0.0283168 * 86400 / 1e6 * 1000  # = 2.446...
 TARGET = "q_mm"
@@ -116,17 +127,47 @@ def build_basin(bid: str, corpora: dict[str, Path], area_km2: float,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--daymet", required=True)
-    ap.add_argument("--nldas", required=True)
-    ap.add_argument("--maurer", required=True)
+    ap.add_argument("--daymet", default="")
+    ap.add_argument("--nldas", default="")
+    ap.add_argument("--maurer", default="")
+    ap.add_argument("--products", default="",
+                    help="MODERN-1: name=dir,name=dir,... in the order the "
+                         "suffixed inputs should appear. Overrides the three "
+                         "legacy flags; those stay for reproducing LEDGER 51-56.")
+    ap.add_argument("--basin-list", default="",
+                    help="JSON with a 'cohort' list (e.g. data/m1_cohort.json); "
+                         "default is the 531 Kratzert subset")
     ap.add_argument("--out", required=True, help="NH data_dir to create")
     ap.add_argument("--limit", type=int, default=0, help="cap basins (smoke)")
     args = ap.parse_args()
 
-    corpora = {"daymet": Path(args.daymet), "nldas": Path(args.nldas),
-               "maurer": Path(args.maurer)}
+    if args.products:
+        corpora = {}
+        for item in args.products.split(","):
+            if "=" not in item:
+                print(f"--products entry {item!r} is not name=dir", file=sys.stderr)
+                return 1
+            k, v = item.split("=", 1)
+            corpora[k] = Path(v)
+        set_forcings(list(corpora))
+    else:
+        for f in ("daymet", "nldas", "maurer"):
+            if not getattr(args, f):
+                print(f"--{f} is required unless --products is given", file=sys.stderr)
+                return 1
+        corpora = {"daymet": Path(args.daymet), "nldas": Path(args.nldas),
+                   "maurer": Path(args.maurer)}
+    for k, v in corpora.items():
+        if not v.exists():
+            print(f"corpus for {k} does not exist: {v}", file=sys.stderr)
+            return 1
     out = Path(args.out)
-    ids_531 = load_camels_531(ROOT)
+    if args.basin_list:
+        d = json.loads(Path(args.basin_list).read_text())
+        ids_531 = [str(x).zfill(8) for x in (d.get("cohort") or d["531"])]
+        print(f"basin list: {args.basin_list} -> {len(ids_531)} basins")
+    else:
+        ids_531 = load_camels_531(ROOT)
     attrs = json.loads((ROOT / "data" / "camels_attrs.json").read_text())
     if args.limit:
         ids_531 = ids_531[: args.limit]

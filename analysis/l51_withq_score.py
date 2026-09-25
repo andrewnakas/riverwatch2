@@ -32,8 +32,18 @@ DD = "data/mblstm/l51_dumps"
 IDS = set(str(x).zfill(8) for x in json.load(open("data/camels_gauge_ids.json"))["531"])
 MIN_ROWS = 20
 
+# MODERN-1: the guard below is what makes a dump scoreable, and its absence is
+# what produced the retracted 0.9253 (a model trained on its own test decade).
+# So it is WIDENED, never removed: a protocol is named, and a dump is refused
+# unless its sidecar matches that protocol's window exactly.
+PROTOCOLS = {
+    "nearing2022": ("1999-10-01", "2008-09-30"),   # the frozen record's window
+    "modern-v3": ("1980-10-01", "2014-09-30"),     # MODERN-1 P-MODERN
+}
 
-def load_member(member, frame, readout="mid", require_guard=True, seeds=None):
+
+def load_member(member, frame, readout="mid", require_guard=True, seeds=None,
+                protocol="nearing2022"):
     """One member = the seed-average of its per-seed dumps. Returns a frame of
     (station_id, t0, truth, <member>)."""
     files = sorted(glob.glob(f"{DD}/camels531_l51_{member}_s*_{frame}.csv.gz"))
@@ -49,10 +59,13 @@ def load_member(member, frame, readout="mid", require_guard=True, seeds=None):
         if not os.path.exists(side):
             sys.exit(f"{f}: no sidecar — provenance unknown, refusing to score")
         s = json.load(open(side))
-        if require_guard and (s.get("train_start") != "1999-10-01"
-                              or s.get("train_end") != "2008-09-30"):
+        if protocol not in PROTOCOLS:
+            sys.exit(f"unknown protocol {protocol!r}; known: {sorted(PROTOCOLS)}")
+        _ts, _te = PROTOCOLS[protocol]
+        if require_guard and (s.get("train_start") != _ts
+                              or s.get("train_end") != _te):
             sys.exit(f"{f}: sidecar says train {s.get('train_start')}..{s.get('train_end')}"
-                     " — NOT the guarded window, refusing to score")
+                     f" — NOT the {protocol} window ({_ts}..{_te}), refusing to score")
         d = pd.read_csv(f, dtype={"station_id": str})
         d["station_id"] = d.station_id.str.zfill(8)
         d = d[(d.h == 1) & d.station_id.isin(IDS)].sort_values(["station_id", "t0"])
@@ -142,13 +155,15 @@ def main():
     ap.add_argument("--weights", default="", help="json file of {member: weight}")
     ap.add_argument("--out", default="")
     ap.add_argument("--allow-unguarded", action="store_true")
+    ap.add_argument("--protocol", choices=sorted(PROTOCOLS), default="nearing2022",
+                    help="which training window the dumps must declare")
     a = ap.parse_args()
 
     members = [x for x in a.members.split(",") if x]
     seeds = set(int(x) for x in a.seeds.split(",") if x) or None
     print(f"LEDGER 51 — frame={a.frame} readout={a.readout}")
     m = join(members, a.frame, readout=a.readout,
-             require_guard=not a.allow_unguarded, seeds=seeds)
+             require_guard=not a.allow_unguarded, seeds=seeds, protocol=a.protocol)
     print(f"joined rows {len(m):,}  basins {m.station_id.nunique()}\n")
 
     W = json.load(open(a.weights)) if a.weights else None

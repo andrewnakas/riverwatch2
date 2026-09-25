@@ -104,6 +104,64 @@ CAMELS3FV2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # _daymet decoder, 6
 CAMELS4FV2_VARS = [f"{v}_{p}" for p in ("daymet", "maurer", "nldas", "aorc")
                    for v in CAMELS1F_VARS]                 # fused, 24
 CAMELS4FV2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # _daymet decoder, 6
+# LEDGER 56 (2026-09-22): the CAMELS benchmark is PERFECT-forcing, so the
+# single-source forecast-archive constraint behind the _daymet decoder does not
+# apply there. The target-day forcing enters this model ONLY through the decoder,
+# so with a _daymet decoder the fused member never sees NLDAS/Maurer for the day
+# it is scored on -- the most important input of a day-1 flow. Measured symptom:
+# the MB family gains +0.004 from 3 forcings (daymeth1 -> fused3h1) while the NH
+# AR-LSTM, which feeds all 15 at every step, gains +0.026 (nhar0d -> nhar0).
+# d3/d4: decoder == encoder, every product on every lead.
+CAMELS3FV2_D3_DEC = list(CAMELS3FV2_VARS)                  # decoder == encoder, 18
+CAMELS4FV2_D4_DEC = list(CAMELS4FV2_VARS)                  # decoder == encoder, 24
+# LEDGER 56b: single-product ENCODER (keeps the block's forcing diversity in the
+# state estimate) with an all-product DECODER (every product on the scored day).
+# The corpus loads the union of both sets; encoder/decoder columns are indexed
+# separately (Corpus.enc_cols / dec_cols), so dec need not be a subset of enc.
+HYBRID_SETS = {
+    f"camels1f_{p}_d3": ([f"{v}_{p}" for v in CAMELS1F_VARS], list(CAMELS3FV2_VARS))
+    for p in ("daymet", "maurer", "nldas")}
+HYBRID_SETS["camels1f_aorc_d4"] = ([f"{v}_aorc" for v in CAMELS1F_VARS], list(CAMELS4FV2_VARS))
+# LEDGER 56d (contingency): the mirror image — full multi-forcing ENCODER, a
+# SINGLE-product DECODER, varying which product. `fused3h1` is already the
+# daymet cell of this family and carries the LARGEST LOO in the 9-member
+# ensemble despite the weakest solo, i.e. it is paid for distinctness in exactly
+# this channel. Siblings differing by TARGET-DAY product are therefore a
+# forcing-diversity block of the kind that gave the original MB ensemble +0.028
+# over its mean solo ([[LEDGER-55-three-zero-gpu-closures]] law 3).
+for _p in ("daymet", "maurer", "nldas"):
+    HYBRID_SETS[f"camels3fv2_dec_{_p}"] = (list(CAMELS3FV2_VARS),
+                                           [f"{v}_{_p}" for v in CAMELS1F_VARS])
+
+# MODERN-1 (2026-09-23): the products that still exist. CAMELS maurer ends
+# 2008-12-31 and its daymet/nldas copies end 2014-12-31, so NOTHING above can be
+# built for a modern window. AORC was withdrawn on feasibility (its zarr chunking
+# forces ~11 TB for 1980-2025) and its cost is measured at zero anyway (LEDGER 51
+# LOO -0.000008, breadth 0.495). The modern four are therefore:
+#   daymet   Daymet V4R1 areal      GHCN interpolation
+#   nldas    NLDAS-2 areal          CPC gauge analysis   (reproduces CAMELS r=1.000)
+#   gridmet  gridMET areal          PRISM-anchored
+#   nclimgrid nClimGrid-Daily areal NOAA/NCEI GHCN analysis
+# -- four independent gauge-anchoring routes. Forcing diversity is the only
+# diversity this campaign has ever been paid for.
+# NOTE the honest asymmetry: nclimgrid ships no radiation or humidity, so those
+# two of its six channels are carried over from nldas. It is independent in 4 of
+# 6, and that is stated wherever its LOO is quoted.
+MODERN_PRODUCTS = ("daymet", "nldas", "gridmet", "nclimgrid")
+CAMELSM4V2_VARS = [f"{v}_{p}" for p in MODERN_PRODUCTS
+                   for v in CAMELS1F_VARS]                 # fused, 24
+CAMELSM4V2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # OPERATIONAL shape, 6
+CAMELSM4V2_D4_DEC = list(CAMELSM4V2_VARS)                  # BENCHMARK-max, 24
+# The 3-product subset whose every channel is genuinely independent (no borrowed
+# radiation/humidity), for the like-for-like against the frozen fused3h1.
+MODERN3_PRODUCTS = ("daymet", "nldas", "gridmet")
+CAMELSM3V2_VARS = [f"{v}_{p}" for p in MODERN3_PRODUCTS
+                   for v in CAMELS1F_VARS]                 # fused, 18
+CAMELSM3V2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # 6
+CAMELSM3V2_D3_DEC = list(CAMELSM3V2_VARS)                  # 18
+for _p in MODERN_PRODUCTS:
+    HYBRID_SETS[f"camelsm4v2_dec_{_p}"] = (list(CAMELSM4V2_VARS),
+                                           [f"{v}_{_p}" for v in CAMELS1F_VARS])
 
 # Snow-state variant: the 120 basins that control the CAMELS-531 median are the
 # SNOWIEST group (frac_snow 0.123 vs 0.025 in the hard tail), and snowmelt
@@ -117,6 +175,7 @@ CAMELS1F_SWE_VARS = CAMELS1F_VARS + ["swe", "swe_delta"]   # 8
 # ---------------------------------------------------------------- corpus ----
 
 def load_station(path: Path, enc_vars: list[str]) -> dict | None:
+    # `enc_vars` here is the LOAD set (encoder ∪ decoder columns); see Corpus.load_vars.
     df = pd.read_csv(path)
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date")
@@ -163,8 +222,17 @@ class Corpus:
     def __init__(self, stations: list[dict], attrs_by_id: dict, train_end: pd.Timestamp,
                  enc_vars: list[str], dec_vars: list[str], stats: dict | None = None,
                  q_transform: str = "asinh", static_feats: list[str] = STATIC_FEATS,
-                 head: str = "quantile"):
+                 head: str = "quantile", load_vars: list[str] | None = None,
+                 dec_q: bool = False):
+        # LEDGER 56c: feed the decoder the LAST OBSERVED discharge directly.
+        self.dec_q = bool(dec_q)
         self.enc_vars, self.dec_vars = enc_vars, dec_vars
+        # LEDGER 56b: st["wx"] columns are `load_vars` (encoder ∪ decoder, in that
+        # order). Legacy checkpoints have dec ⊆ enc, so load_vars == enc_vars and
+        # every index below is the identity — byte-identical behaviour.
+        self.load_vars = list(load_vars) if load_vars is not None else list(enc_vars)
+        assert set(enc_vars) <= set(self.load_vars) and set(dec_vars) <= set(self.load_vars)
+        lv = self.load_vars
         self.static_feats = static_feats
         self.q_transform = q_transform
         self.head = head  # "dhbv" precomputes raw physical forcings + PET + area
@@ -172,8 +240,8 @@ class Corpus:
         if stats is not None:
             # Fine-tune: inherit the base checkpoint's normalization verbatim so
             # the weights see identically-scaled inputs.
-            self.wx_mean = np.asarray([stats["wx_mean"][c] for c in enc_vars], dtype=np.float64)
-            self.wx_std = np.asarray([max(stats["wx_std"][c], 1e-6) for c in enc_vars], dtype=np.float64)
+            self.wx_mean = np.asarray([stats["wx_mean"][c] for c in lv], dtype=np.float64)
+            self.wx_std = np.asarray([max(stats["wx_std"][c], 1e-6) for c in lv], dtype=np.float64)
             self.static_median = np.asarray(stats["static_median"], dtype=np.float64)
             self.static_mean = np.asarray(stats["static_mean"], dtype=np.float64)
             self.static_std = np.maximum(np.asarray(stats["static_std"], dtype=np.float64), 1e-9)
@@ -181,7 +249,7 @@ class Corpus:
             filled = np.where(np.isfinite(sv), sv, self.static_median)
         else:
             # Global weather stats from train-period rows only.
-            s = np.zeros(len(enc_vars)); ss = np.zeros(len(enc_vars)); n = np.zeros(len(enc_vars))
+            s = np.zeros(len(lv)); ss = np.zeros(len(lv)); n = np.zeros(len(lv))
             for st in stations:
                 m = st["dates"] <= train_end
                 w = st["wx"][m].astype(np.float64)
@@ -228,7 +296,10 @@ class Corpus:
             if self.head == "dhbv":
                 rec.update(self._dhbv_forcings(st, attrs_by_id.get(st["id"], {})))
             self.stations.append(rec)
-        self.dec_cols = np.asarray([enc_vars.index(c) for c in dec_vars])
+        self.dec_cols = np.asarray([lv.index(c) for c in dec_vars])
+        self.enc_cols = np.asarray([lv.index(c) for c in enc_vars])
+        # identity slice ⇒ no copy, no behaviour change for every legacy member
+        self.enc_is_all = bool(len(enc_vars) == len(lv) and (self.enc_cols == np.arange(len(lv))).all())
 
     def _dhbv_forcings(self, st: dict, attrs: dict) -> dict:
         """Raw physical precip(mm/day)/tmean(°C) + Hargreaves PET + area/lat for
@@ -236,7 +307,7 @@ class Corpus:
         names are the corpus enc_vars (camels1f: single-forcing, unsuffixed;
         camels3fv2: use the _daymet product to drive HBV with one consistent
         forcing)."""
-        cols = self.enc_vars
+        cols = self.load_vars
         def col(name):  # find a var, tolerating the _daymet suffix (fused corpus)
             for cand in (name, name + "_daymet"):
                 if cand in cols:
@@ -305,8 +376,11 @@ class Corpus:
                 q_n[drop] = 0.0
                 q_mask[drop] = 0.0
         sv = st["static"]
+        wx_enc = st["wx_n"][a: t0 + 1]
+        if not self.enc_is_all:
+            wx_enc = wx_enc[:, self.enc_cols]
         x_enc = np.concatenate([
-            st["wx_n"][a: t0 + 1],
+            wx_enc,
             q_n[:, None], q_mask[:, None],
             st["doy"][a: t0 + 1],
             np.repeat(sv[None, :], CONTEXT_DAYS, axis=0),
@@ -327,12 +401,21 @@ class Corpus:
                 # robustness for windows with no archived forecast.
                 sig = self.forcing_noise * lead
                 dec_wx = dec_wx + (rng.normal(0.0, 1.0, dec_wx.shape) * sig).astype(np.float32)
-        x_dec = np.concatenate([
-            dec_wx,
-            st["doy"][t0 + 1: t0 + 1 + HORIZON],
-            lead,
-            np.repeat(sv[None, :], HORIZON, axis=0),
-        ], axis=1)
+        dec_parts = [dec_wx, st["doy"][t0 + 1: t0 + 1 + HORIZON], lead]
+        if self.dec_q:
+            # LEDGER 56c — THE SECOND DECODER DEFECT. The assimilated discharge
+            # reaches the decoder only through the encoder's final hidden state,
+            # while Nearing's AR-LSTM gets q_shift1 as a DIRECT INPUT at the very
+            # step it predicts. At lead 1 that is the single most predictive
+            # input. Feed the last observed (already-augmented) q and its mask,
+            # constant across leads: it is known at forecast time for every lead,
+            # so this is assimilation, not leakage. q_n/q_mask here are the
+            # post-ar_mask arrays, so a stale-gauge sample stays consistent
+            # between encoder and decoder.
+            dec_parts += [np.full((HORIZON, 1), q_n[-1], dtype=np.float32),
+                          np.full((HORIZON, 1), q_mask[-1], dtype=np.float32)]
+        dec_parts.append(np.repeat(sv[None, :], HORIZON, axis=0))
+        x_dec = np.concatenate(dec_parts, axis=1)
         y = st["q_n"][t0 + 1: t0 + 1 + HORIZON]
         m = st["q_mask"][t0 + 1: t0 + 1 + HORIZON]
         if self.head == "dhbv":
@@ -509,7 +592,15 @@ def main() -> int:
                     help="train on the Daymet/Open-Meteo shared variable set")
     ap.add_argument("--enc-vars",
                     choices=["full", "compat", "camels3f", "camels1f", "camels3fv2",
-                             "camels4fv2", "camels1f_swe"],
+                             "camels4fv2", "camels1f_swe", "camels3fv2d3", "camels4fv2d4",
+                             "camels1f_daymet_d3", "camels1f_maurer_d3", "camels1f_nldas_d3",
+                             "camels1f_aorc_d4", "camels3fv2_dec_daymet",
+                             "camels3fv2_dec_maurer", "camels3fv2_dec_nldas",
+                             # MODERN-1: the products that still exist
+                             "camelsm3v2", "camelsm3v2d3",
+                             "camelsm4v2", "camelsm4v2d4",
+                             "camelsm4v2_dec_daymet", "camelsm4v2_dec_nldas",
+                             "camelsm4v2_dec_gridmet", "camelsm4v2_dec_nclimgrid"],
                     default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
                          "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "
@@ -530,6 +621,12 @@ def main() -> int:
                          "samples draw from windows with an archived init; "
                          "perfect samples draw from all windows. Validation "
                          "runs under real GFS forcing. Subsumes --gfs-finetune.")
+    ap.add_argument("--dec-q", action="store_true",
+                    help="LEDGER 56c: give the DECODER the last observed discharge "
+                         "(+ its mask) as two extra inputs, constant across leads. "
+                         "Today the decoder sees it only through the encoder hidden "
+                         "state, while the AR-LSTM baseline receives it directly at "
+                         "the predicted step. Known at forecast time => not a leak.")
     ap.add_argument("--forcing-noise", type=float, default=0.0,
                     help="with --forcing-mix: z-space sigma at lead 14 for "
                          "lead-scaled Gaussian noise on perfect-forcing "
@@ -605,6 +702,7 @@ def main() -> int:
         base_payload = torch.load(args.init_ckpt, map_location="cpu", weights_only=False)
         base_cfg = base_payload["cfg"]
         enc_vars, dec_vars = base_cfg["enc_vars"], base_cfg["dec_vars"]
+        load_vars = list(base_cfg.get("load_vars") or dict.fromkeys(list(enc_vars) + list(dec_vars)))
         if args.gfs_finetune and not set(dec_vars) <= set(COMPAT_VARS):
             print(f"GFS archive only carries {COMPAT_VARS}; checkpoint decoder "
                   f"wants {dec_vars} — fine-tune only supports compat-vars checkpoints")
@@ -620,9 +718,18 @@ def main() -> int:
         # (forecast archives are single-source), so --dec-vars is ignored there.
         _fused = {"camels3f": (CAMELS3F_VARS, CAMELS3F_DEC),
                   "camels3fv2": (CAMELS3FV2_VARS, CAMELS3FV2_DEC),
-                  "camels4fv2": (CAMELS4FV2_VARS, CAMELS4FV2_DEC)}
+                  "camels4fv2": (CAMELS4FV2_VARS, CAMELS4FV2_DEC),
+                  # LEDGER 56: perfect-forcing decoders that see every product
+                  "camels3fv2d3": (CAMELS3FV2_VARS, CAMELS3FV2_D3_DEC),
+                  "camels4fv2d4": (CAMELS4FV2_VARS, CAMELS4FV2_D4_DEC),
+              "camelsm3v2": (CAMELSM3V2_VARS, CAMELSM3V2_DEC),
+              "camelsm3v2d3": (CAMELSM3V2_VARS, CAMELSM3V2_D3_DEC),
+              "camelsm4v2": (CAMELSM4V2_VARS, CAMELSM4V2_DEC),
+              "camelsm4v2d4": (CAMELSM4V2_VARS, CAMELSM4V2_D4_DEC)}
         if args.enc_vars in _fused:
             enc_vars, dec_vars = _fused[args.enc_vars]
+        elif args.enc_vars in HYBRID_SETS:
+            enc_vars, dec_vars = HYBRID_SETS[args.enc_vars]
         elif args.enc_vars == "camels1f_swe":
             # 6 base vars + snow state; decoder keeps the 6 (subset check holds)
             enc_vars, dec_vars = CAMELS1F_SWE_VARS, CAMELS1F_VARS
@@ -631,12 +738,14 @@ def main() -> int:
             enc_vars = dec_vars = CAMELS1F_VARS
         elif args.enc_vars:
             enc_vars = ENC_VARS if args.enc_vars == "full" else COMPAT_VARS
-        if args.enc_vars not in _fused and args.enc_vars != "camels1f" and args.dec_vars:
+        if args.enc_vars not in _fused and args.enc_vars not in HYBRID_SETS \
+                and args.enc_vars != "camels1f" and args.dec_vars:
             dec_vars = DEC_VARS if args.dec_vars == "full" else COMPAT_VARS
-        if not set(dec_vars) <= set(enc_vars):
-            print("--dec-vars must be a subset of --enc-vars (decoder columns "
-                  "are indexed out of the encoder array)")
+        if not set(dec_vars) <= set(enc_vars) and args.enc_vars not in HYBRID_SETS:
+            print("--dec-vars must be a subset of --enc-vars (only the LEDGER 56b hybrid "
+                  "sets load a decoder superset)")
             return 1
+        load_vars = list(dict.fromkeys(list(enc_vars) + list(dec_vars)))
 
     corpus_dir = Path(args.corpus_dir) if args.corpus_dir else CORPUS_DIR
     if not corpus_dir.is_absolute():
@@ -649,7 +758,7 @@ def main() -> int:
     # else a full-13-var train against a 5-var corpus would silently train on
     # all-NaN→0 channels. Check the first file's columns up front.
     have_cols = set(pd.read_csv(files[0], nrows=1).columns)
-    missing = [v for v in enc_vars if v not in have_cols]
+    missing = [v for v in load_vars if v not in have_cols]
     if missing:
         print(f"corpus {corpus_dir.name} is missing requested vars {missing}; "
               f"available={sorted(have_cols - {'date','q_cfs'})}. Use --compat-vars "
@@ -657,8 +766,9 @@ def main() -> int:
         return 1
     if args.limit_stations:
         files = files[: args.limit_stations]
-    print(f"loading {len(files)} stations from {corpus_dir} (enc_vars={len(enc_vars)}) ...")
-    stations = [s for s in (load_station(p, enc_vars) for p in files) if s is not None]
+    print(f"loading {len(files)} stations from {corpus_dir} (enc_vars={len(enc_vars)} "
+          f"dec_vars={len(dec_vars)} load_vars={len(load_vars)}) ...")
+    stations = [s for s in (load_station(p, load_vars) for p in files) if s is not None]
 
     registry = {st["id"]: st for st in json.loads(STATIONS_PATH.read_text())["stations"]}
     # Fallback-merge the supplemental CAMELS metadata so benchmark basins get
@@ -697,7 +807,8 @@ def main() -> int:
     corpus = Corpus(stations, attrs_by_id, train_end, enc_vars, dec_vars,
                     stats=base_payload["cfg"] if base_payload else None,
                     q_transform=q_transform, static_feats=static_feats,
-                    head=args.head)
+                    head=args.head, load_vars=load_vars,
+                    dec_q=bool(base_cfg.get("dec_q", False)) if base_payload else bool(args.dec_q))
     corpus.no_q_input = bool(args.no_q_input)
     corpus.ar_mask_p = float(args.ar_mask_p)
     print(f"ar_mask_p={corpus.ar_mask_p}", flush=True)
@@ -834,8 +945,9 @@ def main() -> int:
             "quantiles": list(QUANTILES), "hidden": args.hidden,
             "head": args.head,
             "horizon": HORIZON, "context": CONTEXT_DAYS,
-            "wx_mean": {c: float(v) for c, v in zip(enc_vars, corpus.wx_mean)},
-            "wx_std": {c: float(v) for c, v in zip(enc_vars, corpus.wx_std)},
+            "wx_mean": {c: float(v) for c, v in zip(corpus.load_vars, corpus.wx_mean)},
+            "wx_std": {c: float(v) for c, v in zip(corpus.load_vars, corpus.wx_std)},
+            "load_vars": list(corpus.load_vars), "dec_q": bool(corpus.dec_q),
             "static_median": [float(v) for v in corpus.static_median],
             "static_mean": [float(v) for v in corpus.static_mean],
             "static_std": [float(v) for v in corpus.static_std],

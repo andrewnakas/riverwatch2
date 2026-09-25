@@ -3184,3 +3184,472 @@ s505 training; whatever 5 seeds gives is the number, even if it lands below 0.89
 **Prediction, written now: 8-member test1 at 5 h256 seeds = 0.8972…0.8985** (i.e. I expect the 0.898078
 headline NOT to survive seed depth). 0.90 needs a different lever: the `nhar0h512` capacity arm (resumed,
 running) is the last pre-registered one.
+
+---
+
+# LEDGER 55 — THE 0.90 PUSH (opened 2026-09-21)
+
+Record entering: **0.898364** test1 (8 members, equal weight, 5-seed ship bar),
+`benchmarks/l54_FINAL_8member_test1.json`, git `3bfb244`. **0.90 needs +0.001636.**
+Plan of record: `LEDGER55_TECHNIQUE_MENU.md` + the approved LEDGER 55 plan.
+
+## THE DIAGNOSIS THAT SELECTS THE ARMS (zero GPU, 2026-09-21)
+
+1. **The 1/8 rule.** Equal-weight mean of 8 ⇒ a single member's gain is divided by 8. Two independent
+   routes — 1/N leverage, and the ledger-50 sensitivity map rescaled to w=0.125 — both price a *single*
+   member at **+0.012…+0.013 solo** to buy +0.001636. A recipe change lifting **all** members by
+   **+0.005** buys +0.0025…+0.0050.
+2. **The ladder asymptote.** Member increments on record: +0.005539, +0.003013, +0.001457
+   (ratios 0.544, 0.484). At r=0.514 the sum of all remaining same-class members is **+0.00154**
+   ⇒ asymptote **0.899904**. The 0.90 threshold sits at **r = 0.529 — between the two observed ratios**.
+   ⇒ more members of the same class is a coin flip at infinite cost.
+3. **The redundancy is inside the AR block.** From the frozen artifact: MB-block LOO is **not** ordered
+   by solo skill (val1 sum +0.001931); AR-block LOO **is** strictly ordered by solo skill on **both**
+   frames (val1 sum +0.000311, with `nhar` −0.000055 and `nhar0` −0.000009). The MB members differ by
+   forcing and carry distinctness; the AR members differ by hyperparameter and carry only skill.
+
+## CLOSED WITHOUT GPU, THIS SESSION (recorded so they are not re-proposed)
+- **Global variance inflation k=1.04** — NSE-neutral by construction (`dNSE/dα = 2r−2α`); buys KGE/FHV.
+- **NSE-loss eps 0.1→0.5** — already run: member +0.0018, **ensemble −0.0006 seed-matched**.
+- **4th forcing / AORC** — `fused4h1` fails the ship bar on **both** windows (val1 +0.000198 CI
+  [−0.000143,+0.000683]; test1 +0.000290 CI straddling); AORC switches precip source at **2002, inside
+  the training window**.
+- **h256 + holdout 0.5 (the missing 2×2 cell)** — demoted: holdout≠0 forfeits the 63× fused path.
+- **xLSTM / new architecture** — one member ⇒ needs +0.013 solo; package absent, 1080 is sm_61.
+
+## ⭐ GATE 0 (Track 0.2) — THE BEST-EPOCH GATE. THRESHOLD FIXED BEFORE EXECUTION.
+**Question**: are the five MB-LSTM members — 5/8 of the ensemble weight — still improving when their
+training budget runs out? `train_mblstm.py:499` defaults `--windows-per-station 300` and no launcher
+overrides it, giving **18,660 optimizer steps and 2.74 presentations per training day**, versus
+**204,510 / 30.0** for the NH AR members. Checkpoint selection is `--select-by loss` on val1, so the
+selected epoch is a direct readout of whether the budget wall was reached.
+
+**Statistic**: for each of the 25 shipped runs (`fused3h1,daymeth1,nldash1,maurerh1,aorch1` ×
+`s501..s505`), `best_epoch` = the last epoch line carrying `*saved*` in `logs/l51_train_{M}_s{S}.log`
+(under `--select-by loss`, `best` is monotone). Also `val_pin[30] − min(val_pin)` and
+`Δtail = val_pin[27] − val_pin[30]` against `sd(Δ)` over epochs 20–30.
+Rows refused if the log warm-started (`init-ckpt val_`), has ≠30 `^epoch` lines, or `select_by != loss`.
+
+**PASS (⇒ Track 1 runs)**: **≥ 60 % of admitted runs at `best_epoch == 30`**, OR **≥ 80 % at
+`best_epoch ≥ 27` with mean Δtail > 2·sd(Δ)**.
+**FAIL (⇒ Track 1 dies here, zero GPU)**: best-epoch mass centred well below 30 with a flat tail.
+
+**Prediction, written before the run**: PASS, with **≥ 20 of 25 runs at best_epoch == 30**.
+Basis: on this Mac, four matched with-q MB runs at the identical wps-300 budget (`steps=623`) saved at
+the **final** epoch **4/4**, while eight no-q runs at the same budget peaked strictly inside
+(7,8,9,10,11,12,13,15 of 16) — the with-q task is the budget-starved one.
+**Falsifier**: if fewer than 15 of 25 are at `best_epoch == 30`, my prediction is wrong and is recorded
+as such even if the gate still passes on the Δtail clause.
+
+## GATE 0b (Track 0.3) — THE SYMMETRIC COMPOSITION CHECK
+The protocol says removal is decided on val1; it was applied to `nldash1`/`maurerh1` (both passed) and
+never to the AR pair, whose val1 LOO is −0.000055 / −0.000009. Score the 6-member composition on val1.
+If it wins on val1 it becomes the composition and test1 is read once.
+**Recorded in advance**: on test1 those two contribute +0.000201 and +0.000393, so acting on val1 may
+LOWER the headline. The rule decides, not the headline.
+
+## ARMS (pre-registered; falsifiers binding)
+- **Track 1 — `fused3h1wps3275`** (windows-per-station 300 → 3275 = a complete pass = NH parity,
+  epochs held at 30 so the cosine schedule shape is unchanged), 3 seeds 501–503.
+  **Prediction**: 3-seed val1 solo ≥ `fused3h1`'s +0.004.
+  **Falsifier**: if the paired val1 delta CI includes zero, the budget axis is closed for this family
+  and the 290 GPU-h roll-out is never spent.
+- **Track 2 — `nhar0h256fd30` / `fd15`** (forcing dropout p=0.30 / 0.15: mask one of the three forcing
+  products' 5 channels to zero per sample), 3 seeds each.
+  **Prediction**: solo val1 within −0.002 of `nhar0h256`, error correlation against the other members
+  down ≥ 0.02.
+  **Falsifier**: either condition missed ⇒ drop the arm. Forcing diversity does not transfer to the AR
+  class and the AR block's redundancy is structural.
+
+## OPS (2026-09-21 15:24) — ⛔ RETRACTED 16:30, see below
+⚠️ **The box is in a power-fault reboot loop**: three boots at 15:17:58, 15:20:50, 15:23:46, each
+~2–3 min after the previous — i.e. at GPU spin-up. The previous boot's journal ends at 15:22:20 with no
+shutdown sequence ⇒ abrupt power loss, not a reboot. `@reboot l54_boot_resume.sh` relaunches the three
+`nhar0h512` lanes each time, so per-epoch checkpointing is the only reason progress survives.
+**No multi-hour GPU arm can be launched until this is fixed physically.** Zero-GPU gates are unaffected.
+
+### ⭐ TRACK 2 — THE COMPOSITION QUESTION, PRE-REGISTERED BEFORE ANY RESULT
+The diagnosis says the **existing** AR block is redundant (`nhar` −0.000055, `nhar0` −0.000009 on val1),
+not that the ensemble is short a member. So a forcing-dropout member has two possible uses, and the
+choice must be fixed now rather than after seeing which scores better:
+
+- **A — ADD** as a 9th member. Subject to the 1/8 rule: needs ~+0.013 solo, which no single member has
+  ever delivered here. Its realistic route is decorrelation, priced by the ledger-50 exchange rate at
+  ~+0.00175 per 0.03 of error correlation removed.
+- **B — REPLACE** `nhar` and/or `nhar0`, whose val1 LOO is indistinguishable from zero. This converts
+  dead weight into distinctness at constant composition size, and is the construction the diagnosis
+  actually implies.
+
+**Decision rule**: both A and B are scored on **val1**, paired, 3 seeds, on one fixed join. The larger
+paired val1 delta wins, ties (overlapping CIs) go to **B** as the smaller composition. test1 is read
+once afterwards. `analysis/l53_composition.py` already computes add/replace/2x-weight on identical rows.
+**Prediction**: B ≥ A, because A pays the 1/8 dilution on a member whose solo will be at best equal to
+`nhar0h256`'s while B removes a member contributing zero.
+**Falsifier**: if A > B with non-overlapping CIs, the "redundant AR block" reading is wrong — the block's
+val1 zeros would then be a property of the 8-member combination, not of the members.
+
+### ⚠️ WHAT TRACK 2 CANNOT DO ALONE, STATED IN ADVANCE
+At the pre-registered falsifier (error correlation down ≥ 0.02) the ledger-50 exchange rate implies
+roughly **+0.0012**, against a gap of **+0.001636**. ⇒ **Even a passing Track 2 is unlikely to reach 0.90
+by itself.** It is necessary, not sufficient, and the plan's Track 3 (diversity-regularised training;
+dense supervision as the throughput lever that pays for it) is not optional if 0.90 is the target.
+
+### ✅ TRACK 2 MECHANICS VERIFIED 2026-09-21 — the arm is launch-ready
+Probe ok · rate 0.30155 vs p=0.30 · per-product 0.3296/0.3392/0.3311 · end-of-run asserts PASSED ·
+**fused 40 > step 0**. Artifact `gpu1080/nh_runs/l55mech_fdmech_s999_2109_162224/FAST_LOOP.json`.
+⇒ The only thing between here and the 3-seed screen is the box's power fault.
+
+## ⚠️ OPS CORRECTION (2026-09-21 16:30)
+The "power-fault reboot loop" above is **withdrawn**. Boots: 8 between 15:07:56 and 15:29:40, then
+**stable for 57 min with GPU jobs running throughout**. The Track-2 smoke failures were
+**`torch.OutOfMemoryError`** — I invoked `queue_l55_fdrop.sh` directly instead of through
+`l55_fdrop_start_when_free.sh`, so a 4th job landed on an 8 GB card already holding 5.6 GB of
+`nhar0h512`. Sustained GPU draw 184-202 W at 75-76 C. **The GPU is available; Track 2 launches through
+its gate.** The 15:07-15:29 boot burst is unexplained and has not recurred — logged, not diagnosed.
+
+### ⛔ INTERIM STOP — `nhar0h512` HALTED AT ONE SEED (2026-09-21 23:50, user decision)
+`benchmarks/l55/H512_val1_1seed.json`. Matched seed 501, val1, 1,697,607 rows / 531 basins:
+
+| member | 1-seed val1 solo |
+|---|---|
+| `nhar0h256` s501 | 0.879510 |
+| `nhar0h512` s501 | **0.879498** |
+| **Δ** | **−0.000012** |
+
+For scale, 128→256 moved the same statistic **+0.0018**. ⇒ **Capacity is saturated between 256 and 512.**
+⚠️ **This is ONE seed and does not prove equality** — single-seed sd on this family is ~0.003
+(`nhar0h256` b = 0.01748), so −0.000012 is far inside noise. The honest statement is **"no evidence of a
+capacity gain, with a dead-flat point estimate"**, not "h512 = h256".
+⚠️ **My pre-registered prediction (1-seed val1 0.878…0.888) HIT** — at the very bottom of the band.
+⚠️ **The pre-registered falsifier was on the 3-SEED read and is NOT satisfied.** This is an **interim
+stop on cost**, not a falsification. Precedent: `multiL` (ledger 50) was abandoned at its interim stop.
+**Recorded as such: the capacity axis is closed on a 1-seed read, and that is weaker evidence than the
+protocol asked for.** Reopening needs s502/s503, whose epoch-10 checkpoints are preserved on disk.
+
+**The cost that drove it**: s501's val1 eval took **19,272 s (5.35 h)**; its test1 eval was 47 % done
+after 2:48 at 40.9 s/basin; training runs 46 min/epoch and s502/s503 sat at 10/30. ⇒ **~40 GPU-h
+remaining** on an axis reading zero, while it held the third CUDA slot and blocked LEDGER 55 Track 2 —
+the only live arm — at its admission gate for 7 hours.
+
+### ⛔ TRACK 2 VERDICT (2026-09-22) — FALSIFIER TRIGGERED, ARM DROPPED
+`nhar0h256fd30`, 3 seeds, seed-matched val1: solo **0.889524** vs control **0.891969** (**−0.002445**,
+bar was −0.002) and error correlation **−0.0110** vs `nhar`, **0.0000** vs the MB block (bar ≥ 0.02).
+Paired LOO **+0.000798** vs the control's **+0.001030**. **Both conditions fail; the arm is dropped and
+the add-vs-replace question is moot.** `fd15` closed by the same measurement without GPU.
+⭐ Carried forward to Track 3: the decorrelation exchange rate prices distance from the **ensemble**,
+not from a neighbour — an NCL penalty must target the ensemble error vector.
+
+# LEDGER 56 — THE FUSED MEMBER'S DECODER NEVER SAW TWO OF ITS THREE FORCINGS (opened 2026-09-22 22:30)
+
+Record entering: **0.898364** test1 (8 members, equal weight, 5-seed ship bar), git `3bfb244`.
+**0.90 needs +0.001636.** Every LEDGER 55 arm closed; the three laws (1/8 rule, ensemble-not-neighbour
+decorrelation, forcing-diversity carries LOO) govern. Written BEFORE any run.
+
+## THE DEFECT (read from the code, zero GPU)
+`scripts/train_mblstm.py`: `CAMELS3FV2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]` — the fused MB-LSTM
+member `fused3h1` (18 encoder vars = 6 × {daymet, maurer, nldas}) is trained with a **Daymet-only 6-var
+decoder**. In this encoder–decoder the target-day forcing enters ONLY through the decoder
+(`dec_wx = st["wx_n"][t0+1 : t0+1+HORIZON][:, self.dec_cols]`). ⇒ **at lead 1 the member never sees NLDAS
+or Maurer precipitation for the day it is scored on.** The comment gives the reason — "forecast archives
+are single-source" — an operational constraint that does not exist in the perfect-forcing CAMELS benchmark.
+Measured symptom already on the ledger: the MB family gains **+0.004** from three forcings (`daymeth1`
+0.868 → `fused3h1` 0.872) while the NH AR-LSTM, which feeds all 15 inputs at every timestep, gains
+**+0.026** (`nhar0d` 0.863 → `nhar0` 0.889). Same shape as LEDGER 51's lead-1 weighting: a structural
+train/eval mismatch, not new information. `fused3h1` holds 1/8 of the weight and is the MB block's anchor
+(LOO +0.001604 at L51).
+
+## ARM 1 — `fused3h1d3` (decoder == encoder, all 18 fused vars), seeds 501–505
+Same corpus (`camels_corpus_fused_v2_531`), same recipe (`--h1-weight 0.5 --hidden 256 --q-transform
+linear --static-set camels`, 30 epochs, cosine), one change: `--enc-vars camels3fv2d3`.
+GUARD 1 asserts from the CHECKPOINT that `dec_vars == enc_vars`, three products, and
+`decoder.weight_ih_l0` width = 18+3+27 (the weights, not just the cfg).
+**Prediction (solo)**: 3-seed seed-matched val1 paired Δ vs `fused3h1` (s501–503) in **+0.004 … +0.020**;
+point estimate **+0.010**.
+**Prediction (ensemble)**: REPLACE `fused3h1` with `fused3h1d3` at 5 seeds (same composition size, the
+replacement rule of L55 Track 2): val1 paired Δ vs the frozen 8 in **+0.0008 … +0.0030**, CI excluding
+zero, breadth ≥ 0.5. If val1 passes the ship bar, test1 is read ONCE. Reaching 0.90 needs +0.001636.
+**Falsifier**: 3-seed paired val1 solo Δ < +0.002 or CI including zero ⇒ the decoder hypothesis is wrong,
+the arm dies, no test1 read, and I record that the +0.004-vs-+0.026 asymmetry has another cause.
+**Recorded in advance**: the fixed member shares the every-product day-of input with the AR block, so its
+error correlation with `nhar*` may RISE; the paired ensemble delta decides, not the solo, and the 1/8 rule
+says +0.010 solo on one member is worth roughly +0.0010…+0.0017 — i.e. this arm alone is at the edge of
+the gap, not comfortably past it.
+
+## ARM 2 — `fused4h1d4` (the AORC-inclusive 24-var decoder), seeds 501–503, queued after Arm 1
+`fused4h1` failed the ship bar on both windows as a 6th member — but it carried the same Daymet-only
+decoder. **Prediction**: 3-seed val1 solo ≥ `fused3h1d3`'s 3-seed −0.002. **Falsifier**: below that ⇒ AORC
+adds nothing once the decoder is fixed; not pursued (AORC also switches precip source in 2002).
+Use if it passes: candidate replacement for `fused3h1d3` or `aorch1`, decided on val1 by the paired rule.
+
+## PROTOCOL (unchanged)
+Select on val1; paired per-basin Δ + basin-bootstrap 95 % CI + breadth; seed-match BOTH sides
+(`l55_fd_verdict.py` shape); 3 seeds screen, 5 ship; equal weight, zero fitted parameters; test1 read once
+after val1 decides; `l54_freeze_record.py` refuses a record below the 5-seed bar. Launch only through
+`gpu1080/l56_start_when_free.sh`.
+
+## SIDE READ (zero GPU, 2026-09-22 22:20) — ZERO-PARAMETER COMBINERS, and the rule for using one
+`analysis/l56_combiner.py val1` → `benchmarks/l56/COMBINER_val1.json`, frozen 8 at 5 seeds, one join:
+| combiner (no fitted parameter) | val1 median | paired vs mean | CI95 | breadth |
+|---|---|---|---|---|
+| mean (the record's rule) | 0.900879 | — | — | — |
+| per-row median of 8 | 0.900119 | −0.000204 | [−0.000426, −0.000047] | 0.444 |
+| **trimmed mean (drop row max & min)** | 0.901514 | **+0.000192** | **[+0.000070, +0.000293]** | 0.571 |
+| mean in √ space | 0.900784 | −0.000305 | [−0.000489, −0.000194] | 0.321 |
+**Rule fixed now**: the trimmed mean is a candidate ONLY as a 1-bit selection on val1 of the FINAL
+composition (`l56_freeze_record.py --combiner`), never chosen on test1; if its val1 paired CI on that
+composition includes zero it is not used. Expected value ≈ +0.0002 — one eighth of the gap, stackable.
+
+## ARM 3 (CONDITIONAL, pre-registered 2026-09-22 23:05, before Arm 1 has read) — THE HYBRIDS
+**Runs only if Arm 1 clears its falsifier.** Same defect, applied to the four single-forcing MB members
+(4/8 of the weight): `daymeth1d3`, `maurerh1d3`, `nldash1d3` (fused corpus), `aorch1d4` (fused4 corpus):
+**encoder = the member's own 6-var product, decoder = every product** (18 / 24 vars). Mechanism: each
+single-forcing member does see its own product on the scored day, so the gain here is only the OTHER
+products' target-day information — expected smaller than Arm 1's. Trainer patch (`load_vars`, separate
+`enc_cols`/`dec_cols`) proven **byte-identical** on the shipped `fused3h1` s501 dump before it touched
+the box. Launcher `gpu1080/queue_l56b_withq.sh` asserts encoder 6 vars of ONE product, decoder 18/24,
+`encoder.weight_ih_l0` = 37 and `decoder.weight_ih_l0` = 48/54 wide, from the checkpoint weights.
+**Prediction (solo, each)**: 3-seed seed-matched val1 paired Δ vs its own counterpart **+0.002 … +0.012**.
+**Prediction (ensemble)**: this is the diversity-risk arm — the block's LOO comes from members differing
+by forcing (LEDGER 55 law 3), and a shared all-product decoder homogenises the target-day input.
+Point prediction for replacing all four jointly (with Arm 1's `fused3h1d3` in place): val1 paired
+**+0.0003 … +0.0020**, i.e. positive but well below the sum of the solo gains.
+**Falsifier (ensemble)**: the joint 4-replacement paired val1 Δ CI includes zero ⇒ the hybrids are NOT
+shipped even if every solo rises — skill bought at the price of the block's distinctness is worth
+nothing here. Partial shipping (a subset of the four) is decided by the same paired rule on val1 with
+the subset fixed by solo-Δ rank, never by trying subsets on test1.
+**Falsifier (solo)**: any hybrid with 3-seed paired Δ ≤ 0 vs its counterpart is dropped.
+
+## ⚠️ ARM 1 SCORED (2026-09-23 00:15) — SOLO PREDICTION HIT, ENSEMBLE PREDICTION FALSIFIED
+Solo: paired **+0.005604** CI [+0.003808,+0.007069] breadth 0.706 — inside my +0.004…+0.020 band, low end.
+Ensemble REPLACE: **−0.000080** CI [−0.000216,+0.000039] — **my +0.0008…+0.0030 prediction is FALSIFIED**,
+and with it the LEDGER 55 Track 2 prediction that replace ≥ add. ADD (9 members) is **+0.000391**
+CI [+0.000297,+0.000524] breadth 0.717 ⇒ by the pre-registered add-vs-replace rule (larger paired val1
+delta; both computed in one tool before the run) the composition becomes **9 members**.
+Cause, recorded in advance as this arm's risk: the fixed member's mean error correlation with the other
+eight is **0.8905, the highest of any member** (vs `fused3h1`'s 0.8467), because it now shares the
+every-product target-day input with the AR block.
+**Ship bar for the 9-member record**: `fused3h1d3` at 5 seeds (s504/s505 training), val1 paired vs the
+frozen 8 positive with CI excluding zero and breadth ≥ 0.5 — already met at 3 seeds — then test1 read
+ONCE via `analysis/l56_freeze_record.py`. The combiner (mean vs trimmed) is a 1-bit val1 selection fixed
+by the rule recorded above: trimmed is **+0.000243** CI [+0.000130,+0.000386] on this very composition,
+so **trimmed is selected**, and both numbers will be reported.
+
+## ⭐ AMENDED DECISION RULE FOR EVERY REMAINING LEDGER 56 ARM (written 2026-09-23 00:40, before any of them reads)
+Arm 1 measured that a decoder-fixed member is **better and markedly more redundant**, so ADD beat REPLACE.
+That lesson is now applied in advance to Arm 2 (`fused4h1d4`) and Arm 3 (the hybrids), replacing the
+"replace" language in their original entries:
+1. **Every candidate is scored BOTH ways on val1, in one join, paired, seed-matched** — ADD to the current
+   composition, and REPLACE its natural counterpart. The larger paired delta wins; a tie (overlapping CIs)
+   goes to REPLACE as the smaller composition. Nothing is admitted whose better branch has a CI including
+   zero.
+2. **Candidates are admitted ONE AT A TIME, in descending order of their own paired val1 delta**, each
+   re-scored against the composition as it stands after the previous admission. This is a greedy forward
+   selection on val1 with a CI gate at every step, not an argmax over subsets
+   ([[an-argmax-gap-is-not-headroom]]) — the order is fixed by the data before the first admission and the
+   sequence stops at the first candidate whose CI includes zero.
+3. **The combiner is chosen once, on val1, on the FINAL composition** (mean vs trimmed mean), and both are
+   reported.
+4. **test1 is read exactly once**, on the final composition and combiner, through
+   `analysis/l56_freeze_record.py`, with `fused3h1d3` at its 5 ship-bar seeds.
+**Prediction for the hybrids, written now**: the three share an identical all-product decoder and differ
+only in the encoder product, so they will be **mutually more correlated than the single-forcing members
+they derive from** (mean pairwise err-corr ≥ 0.90 vs those members' ~0.79), and their admitted total will
+be **well under the sum of their individual deltas** — point prediction **+0.0003…+0.0010** for all three
+admitted, against ~+0.0012 if they were independent.
+**Falsifier**: if each hybrid's individual ADD delta is ≥ +0.0003 and the three together still admit for
+less than +0.0003, the redundancy reading is confirmed; if all three admit near their individual sum, the
+"shared decoder homogenises" prediction is wrong and is recorded as falsified.
+
+## ARM 4 — LEDGER 56c: THE DECODER NEVER RECEIVES THE ASSIMILATED DISCHARGE (pre-registered 2026-09-23 01:10, before any run)
+**The defect, found by reading `Corpus.sample`.** `x_dec = [dec_wx, doy, lead, static]` — the discharge the
+whole with-q track is built on appears **only in the encoder** (`q_n`, `q_mask` over the 365-day context).
+It reaches the prediction step solely through the encoder's final hidden state. Nearing's AR-LSTM, by
+contrast, receives `q_mm_shift1` as a **direct input at every timestep including the one it predicts**, and
+at lead 1 yesterday's flow is the single most predictive input available. Same class as the LEDGER 56
+decoder defect: an input the model is entitled to, withheld at the step that is scored.
+**The arm**: `--dec-q` appends the last observed (post-`ar_mask`) `q_n` and `q_mask`, constant across the
+14 leads, to the decoder input. Known at forecast time for every lead ⇒ **assimilation, not leakage**;
+the `ar_mask` augmentation is applied before it is read, so a stale-gauge training sample stays consistent
+between encoder and decoder. `fused3h1d3q` = LEDGER 56's all-product decoder **plus** this, 3 seeds.
+**Verified before launch**: patched trainer vs git HEAD, same checkpoint, same device — **byte-identical**
+dumps on the shipped `fused3h1` s501 artifact (the 1e-3 difference against the shipped dump is CPU-vs-CUDA
+float32, max relative 4.4e-6, and is present in the unpatched code too). `cfg["dec_q"]` is absent on every
+legacy checkpoint ⇒ `dec_in` unchanged for them. GUARD 1 asserts `cfg["dec_q"] is True` and
+`decoder.weight_ih_l0` width = 18+2+1+**2**+27 = 50 from the checkpoint weights.
+**Prediction (solo)**: 3-seed seed-matched val1 paired Δ vs `fused3h1d3` in **+0.001 … +0.008**, point
+**+0.003**.
+**Prediction (ensemble)**: it will be **highly correlated with `fused3h1d3`** (err-corr ≥ 0.95, they differ
+by two input channels), so its admitted value is more likely to come from REPLACING `fused3h1d3` than from
+adding to it — the first candidate this ledger where I expect replace > add. Point **+0.0002 … +0.0008**.
+**Falsifier**: 3-seed paired solo Δ ≤ 0 or CI including zero ⇒ the encoder's hidden state already carries
+the discharge adequately, the arm dies, and I record that "direct beats latent" is false for this
+architecture.
+**Priority note, stated now**: this arm is scheduled AHEAD of the three LEDGER 56b hybrids because its
+mechanism is independent of everything already measured, while the hybrids are predicted (above) to be
+mutually redundant. If GPU time runs short, the hybrids are the ones that get dropped.
+
+## ARM 5 — LEDGER 56d: TARGET-DAY FORCING DIVERSITY (pre-registered 2026-09-23 01:35, CONTINGENT, before any run)
+**The observation that motivates it, from Arm 1's own LOO table.** In the 9-member ensemble `fused3h1`
+has the **weakest solo of the fused pair (0.881 vs 0.898) and the LARGEST LOO (+0.000416)**. It is paid
+for distinctness, and the channel it is distinct in is precisely the one Arm 1 identified: **which product
+the model sees on the day it is scored.** `fused3h1` is the *daymet cell* of a family — verified, not
+assumed: `--enc-vars camels3fv2_dec_daymet` reproduces it **byte-for-byte** on the shipped s501 checkpoint.
+**The arm**: its two missing siblings, `fused3h1decm` (decoder = maurer) and `fused3h1decn` (decoder =
+nldas) — full 18-var multi-forcing encoder, single-product decoder — 3 seeds each. This is the
+construction that gave the original MB ensemble **+0.028 over its mean solo** (five members differing by
+forcing), applied to the channel that the ledger has now measured to matter most, and it is the one shape
+LEDGER 55 law 3 endorses: **members that differ by FORCING carry distinctness.**
+**Prediction (solo)**: each lands within **±0.004 of `fused3h1`'s 0.881496** — they are *not* expected to
+be better, and a solo gain is not the point.
+**Prediction (ensemble)**: admitted greedily by the Arm-1 rule, the two together give val1 paired
+**+0.0004 … +0.0015** over the composition as it stands when they are scored — i.e. **more than the three
+LEDGER 56b hybrids**, despite worse solo scores, because they differ in the high-information channel
+instead of sharing it.
+**Falsifier**: if their mean error correlation with `fused3h1` is ≥ 0.93 (i.e. the decoder product does not
+actually diversify) or their joint admitted delta's CI includes zero, the arm dies and I record that
+target-day forcing diversity does not transfer — which would also undercut the reading of `fused3h1`'s LOO
+above.
+**Status**: launcher `gpu1080/queue_l56d_withq.sh` written and verified (GUARD 1 asserts an 18-var
+three-product encoder, a 6-var single-product decoder, `prod != daymet`, `dec_q` off, and the decoder
+weight width, all from the checkpoint). **Not launched** — it runs only if the queued arms leave the gap
+open, and the GPU order stays: ship-bar seeds → `fused4h1d4` → `fused3h1d3q` → hybrids → this.
+
+## ⚠️ DEVIATION RECORDED (2026-09-23 01:50) — ARM 5 MOVED AHEAD OF THE ARM 3 HYBRIDS
+I wrote the GPU order as "... → `fused3h1d3q` → hybrids → Arm 5" and have now swapped the last two.
+**No result motivated this** — nothing has read since Arm 1. The reason is ship-bar arithmetic: a 3-seed
+screen cannot ship, so every candidate needs 5 seeds before it can enter a record, and overnight capacity
+is ~26 runs at 3-way concurrency. Running the arm I predicted to be *worth more* (Arm 5, target-day
+forcing diversity, +0.0004…+0.0015) before the one I predicted to be *mutually redundant* (Arm 3 hybrids,
++0.0003…+0.0010 for all three) maximises the chance that whatever passes can also reach 5 seeds.
+Both arms stay pre-registered with their original predictions and falsifiers, and the hybrids are still
+queued behind Arm 5 rather than dropped. Queue as launched: `fused3h1d3q` ×3 → `fused3h1decm`/`decn` ×3
+each → the three hybrids ×3 each, each arm preceded by its own synchronous smoke gate (the batch
+controller now drains to any `*smoke*` job, runs it alone, and aborts the whole batch if its guard fails).
+
+# MODERN-1 — BOTH ARMS TO THE MODERN DAY (opened 2026-09-23 08:40)
+
+Plan: `~/.claude/plans/immutable-leaping-wozniak.md`. User decisions on record: day-1 headline **plus**
+an all-leads table; **four** forcing products; perfect forcing for the retrain with the real-forecast
+decay measured once at the end; LEDGER 56 finishes on the GPU first.
+Everything below is written **before any modern corpus year is built and before any modern run**.
+
+## THE BLOCKER, MEASURED (zero GPU, read from the corpora themselves)
+
+| corpus | measured span |
+|---|---|
+| `camels_corpus_daymet_v2`, `..._nldas_v2` | 1980-01-01 … **2014-12-31** |
+| `camels_corpus_maurer_v2` | 1980-01-01 … **2008-12-31** |
+| `camels_corpus_fused_v2` (18-var) | 1980-01-01 … **2008-12-31** (truncated by maurer's inner join) |
+| `camels_corpus_fused4_v2` (24-var) | 1980-10-01 … **2008-12-31** |
+| Livneh soil moisture | 1980 … 2010 |
+
+Maurer is discontinued; Livneh's release does not reach 2015. Maurer is baked into `CAMELS3FV2_VARS`
+(`scripts/train_mblstm.py:98-104`), both fused corpora, `scripts/corpus_to_nh_multi.py:47` and all three
+NH AR members' `dynamic_inputs` ⇒ **5 of the record's 8 members cannot be built past 2008, none past
+2014.** This is not a fetch gap effort can close. Both records are unservable on modern data.
+
+## THE FOUR MODERN PRODUCTS (all verified reachable 2026-09-23 08:20)
+
+`daymet` (V4R1 areal, GHCN-interpolated) · `nldas` (NLDAS-2 areal, CPC-gauge-anchored) ·
+`aorc` (AORC v1.1 1 km, Stage IV/gauge; `s3://noaa-nws-aorc-v1-1-1km` holds **1979.zarr…2025.zarr**) ·
+`gridmet` (PRISM-anchored, `thredds.northwestknowledge.net`, 1979→present).
+Four independent gauge-anchoring routes. Forcing diversity is the only diversity this campaign has ever
+been paid for; the architecture and hyperparameter axes both closed negative.
+
+## PROTOCOLS — FIXED HERE, BEFORE ANY DATA EXISTS
+
+| | train | val (selects everything) | test (read once) |
+|---|---|---|---|
+| **P-MODERN** (headline) | 1980-10-01 … 2014-09-30 | 2014-10-01 … 2018-09-30 | **2018-10-01 … 2025-09-30** |
+| **P-NEARING** (control) | 1999-10-01 … 2008-09-30 | 1980-10-01 … 1989-09-30 | 1989-10-01 … 1999-09-30 |
+
+Frames: `val1`/`test1` = stride 1, every daily observation, h==1 (the headline) and a stride-1
+all-leads dump for the 1–14 table. Metric: per-basin NSE, **median across basins**, paired per-basin
+bootstrap for every delta. Readout `(ylo+yhi)/2`. Equal weight, zero fitted combination parameters.
+
+## THE COHORT IS NOT THE 531, AND THE RULE IS FIXED NOW
+
+Measured over the 671 on the built modern corpus: 2019-2025 daily-obs fraction median 0.9992, but
+**28 basins have zero observations** and 38 are under 50%. Rule, fixed before the cohort is computed:
+a basin enters `data/m1_cohort.json` iff it is in `camels_gauge_ids.json["531"]` **and** has ≥90% daily
+discharge observations over the P-MODERN test window **and** ≥20 scoreable rows. N is whatever it is;
+it is reported, asserted by every launcher, and never adjusted after a score is seen.
+
+## GATE 1 — PRODUCT SCREEN (zero GPU, before any product is built out)
+
+Per product, one pilot year × 60 basins: (a) lag scan vs the frozen CAMELS corpus per variable;
+(b) streamflow referee `peak_k corr(precip[t], relative dQ[t+k])`, k ∈ −2…+2, peak-over-lag so it is
+registration-invariant.
+- **Registration**: the integer offset the referee finds is applied **at build time** so every product
+  lands on the k=0 convention all three frozen CAMELS products share, and is recorded in a build
+  sidecar. ⛔ No product is built out with an unresolved offset. This test is the one that caught a
+  one-day Daymet label error worth **+0.229 NSE** — ~100× the effect sizes this campaign chases, and
+  invisible to every mean/bias check because those are shift-invariant.
+- **Signal bar**: fund if median peak r ≥ (CAMELS-Daymet − 0.005); build-but-flag between −0.02 and
+  −0.005; **abandon below −0.02**.
+- ⚠️ Daymet V4R1 already measured **−0.0244** on this exact screen. It is built anyway — it is the only
+  modern route to GHCN-interpolated precip — and that deficit is hereby recorded as a **known, stated
+  cost of modernity**, not something to be discovered at scoring time.
+
+## GATE A — THE PIPELINE CONTROL (the STOP gate; ~6 GPU-h)
+
+`fused4m h1` on **P-NEARING**, 3 seeds, against the frozen `fused3h1` solo **0.872162** on the same
+test1 frame. Isolates *pipeline + product change* from *window change*.
+**Prediction**: **−0.015 … +0.005** solo. Maurer is gone and Daymet V4R1 carries less signal, so a
+modest loss is the expectation, not a failure.
+**Falsifier / STOP**: below **−0.03** ⇒ halt all GPU, re-run Gate 1 on the built corpus, and diagnose
+registration or extraction before anything else runs.
+
+## GATE B — THE TRAINING-WINDOW PROBE (~6 GPU-h)
+
+The record trains on **9 years** because Nearing 2022 did, purely for comparability. P-MODERN offers
+**34**, and this campaign has never tested whether the extra 25 buy skill — the answer sets the recipe
+for all ~70 runs that follow, so it is measured first. `fused4m h1` on P-MODERN, 9-year vs 34-year
+training window, 3 seeds each, **adjudicated on val**.
+**Prediction**: **+0.005 … +0.025** for 34 years.
+**Counter-hypothesis on record**: LEDGER 55 measured that the cosine LR schedule, not the window count,
+decides the MB training budget ⇒ this may read **null**, in which case the 9-year window is kept and
+that is recorded as the answer. The losing branch is not re-litigated later.
+
+## ARMS
+
+**With-q (P-MODERN, 8 members, equal weight, seeds 501-505, ship bar 5, 3 seeds is a screen)**:
+`daymetm h1` · `nldasm h1` · `aorcm h1` · `gridmetm h1` (single-product, `camels1f`) ·
+`fused4m h1` (24-var encoder, single-product decoder — the **operationally honest** shape) ·
+`fused4m h1 d4` (24-var encoder **and** decoder — the LEDGER 56 fix, best member class measured here at
++0.005604 solo, but **not servable**: the retrospective products have months of latency) ·
+`nhar0m h256` (NH `arlstm`, holdout 0.0, hidden 256) · `nharm` (holdout 0.5, Nearing-exact).
+Admission: greedy forward selection in descending order of own paired val delta, re-scored after each
+admission, nothing admitted whose CI includes zero. **Not** an argmax over subsets.
+
+**No-q (P-MODERN)**: `lstm_{daymetm,nldasm,aorcm,gridmetm}` ×3 seeds · `lstm_multim` (24-var) ×5 seeds ·
+`dhbv_{daymetm,nldasm,aorcm}` ×3 seeds. Two recorded departures from the 0.836289 record:
+**equal weight** (inverse-MSE θ=4.0/λ=0.25 lost to equal weight on held-out data after that record was
+frozen; inverse-MSE reported as a secondary, fit on val only), and **stride 1 all days** rather than the
+record's stride-14 h==1 frame, so both arms sit on one honest frame — that frame flatters by **+0.036**.
+
+## EXPECTED RESULTS — REGISTERED BEFORE THE RUNS
+
+- The modern test number **will be below 0.898364**, and that is correct, not a regression: a different
+  decade, a smaller cohort, Maurer gone, Daymet V4R1 measurably carrying less signal.
+- **With-q modern ensemble: 0.86 – 0.90.** **No-q modern ensemble: 0.79 – 0.84.**
+- Direction has been asserted and then measured wrong 20+ times in this campaign. Every number above is
+  a **band**, every gate has a falsifier, **val decides**, and test is read **once**, at the end,
+  selecting nothing.
+
+## ⚠️ DEVIATION RECORDED (2026-09-23 09:05) — AORC REPLACED BY nClimGrid-Daily
+
+The four products were pre-registered as daymet/nldas/**aorc**/gridmet. AORC is **withdrawn on
+feasibility, measured before any of it was built**: its zarr is chunked [144 h, 128, 256], the 671 basins
+touch 311 of 1,089 spatial chunks at ×5.5 redundancy, giving **~240 GB/yr and ~11 TB for 1980-2025** —
+untransferable here, and contending with the Daymet/NLDAS back-extensions for the same link.
+**No result motivated this**; nothing has been trained. Supporting evidence that the cost of dropping it
+is zero: LEDGER 51 measured `aorch1` at LOO **−0.000008**, CI [−0.000182,+0.000164], **breadth 0.495**.
+
+**Replacement: nClimGrid-Daily** (NOAA NCEI, 5 km, 1951→present, `s3://noaa-nclimgrid-daily-pds`,
+~60 MiB/month ⇒ ~33 GB for the span). It carries `prcp/tmax/tmin` natively — the channels that carry
+signal, from NOAA's own GHCN gauge analysis, an interpolation independent of both Daymet's and PRISM's.
+⚠️ **Recorded honestly**: it does **not** ship shortwave radiation or humidity, so those 2 of 6 channels
+are carried over from NLDAS. The `nclimgrid` member is therefore **independent in 4 of 6 channels, not
+6 of 6**, and that is stated wherever its LOO is quoted rather than left for a reader to infer.
+The Gate 1 screen and its bars apply to it unchanged.

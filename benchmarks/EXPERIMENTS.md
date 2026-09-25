@@ -6320,3 +6320,983 @@ linux-modules-nvidia-580-$(uname -r)` (19 upgrades, **0 removals**) → `modprob
 Driver now 580.178.04, torch CUDA verified. All work relaunched: `nhar0h256` s503 eval (training was already
 complete), `nhar0h512` s501 **resumed from epoch 20**, `nhar0h256` s505 training, predictions watcher re-armed.
 Nothing trained was lost. Record unchanged at **0.898078**.
+
+## ⭐⭐ LEDGER 55 OPENS (2026-09-21) — THREE ZERO-GPU READS, TWO NEGATIVE, ~290 GPU-h SAVED
+
+Record entering: **0.898364** test1. Target +0.001636. Pre-registration: `PREREG_v2.md` §LEDGER 55
+(predictions and falsifiers written **before** each read). Plan: `LEDGER55_TECHNIQUE_MENU.md`.
+
+### THE DIAGNOSIS — the 1/8 rule and where the redundancy actually is
+The record is an equal-weight mean of 8, so a single member's gain is divided by 8. 1/N leverage and
+the ledger-50 sensitivity map (rescaled to w=0.125) independently price a **single** member at
+**+0.012…+0.013 solo** to buy the gap, versus **+0.005 on all members**. ⇒ recipe-level work dominates
+member-level work, and the architecture axis (xLSTM included) is demoted below both.
+
+⭐ And the frozen artifact already says where the redundancy is. Per-member LOO **within each block**:
+
+| block | LOO ordered strictly by solo skill? | val1 LOO sum | test1 LOO sum |
+|---|---|---|---|
+| MB-LSTM ×5 — differ by **FORCING** | **NO** | +0.001931 | +0.000845 |
+| AR-LSTM ×3 — differ by **HYPERPARAMETER** | **YES, on both frames** | +0.000311 | +0.001354 |
+
+The MB members' value is partly distinctness; the AR members' value is **only skill** — on val1 `nhar`
+is **−0.000055** and `nhar0` is **−0.000009**. ⇒ the AR block is internally redundant, and the fix is
+to make its members differ by forcing (LEDGER 55 Track 2), not to add a fourth of the same kind.
+
+### ⛔ GATE 0 — THE MB TRAINING-BUDGET ARM DIES AT ZERO GPU, AND MY PREDICTION WAS FALSIFIED
+`analysis/l55_best_epoch.py` → `benchmarks/l55/GATE0_best_epoch.json`.
+The five MB members hold 5/8 of the ensemble weight and are trained at the **default**
+`--windows-per-station 300` (`train_mblstm.py:499`; no launcher overrides it) = **18,660 optimizer
+steps and 2.74 presentations per training day**, against **204,510 / 30.0** for the AR members. At
+matched single forcing the MB architecture still *beats* the AR one by +0.008…+0.015 — so the
+hypothesis was a better model, starved.
+
+**Pre-registered**: PASS if ≥60 % of the 25 shipped runs have `best_epoch == 30`; my prediction was
+**≥ 20 of 25**, on the strength of four matched with-q runs at the identical budget that saved at the
+final epoch **4/4** while eight no-q runs peaked strictly inside.
+
+| measured | |
+|---|---|
+| `best_epoch == 30` | **6 / 25 = 0.24** (clause A needs 0.60) |
+| `best_epoch ≥ 27` | 16 / 25 = 0.64 (clause B needs 0.80) |
+| mean Δtail vs 2·sd | 0.000060 vs 0.000292 |
+| **GATE 0** | **FAIL ⇒ Track 1 dies here** |
+| **my prediction** | **FALSIFIED** (6 vs ≥20; the <15 falsifier triggered) |
+
+⚠️ **Robust to the log's 4-decimal print precision**: `best_epoch` comes from the `*saved*` marker,
+which the trainer computed on full-precision floats, and 19/25 runs selected an epoch **before** 30
+(argmin as early as 22). `fused3h1` s501's tail is flat from epoch 23 (`val_pinball` 0.0357–0.0358,
+`*saved*` only at 23 and 26). The cosine schedule anneals the LR to zero by 30, so the model converges
+inside the budget regardless of how many windows an epoch contains — and the *other* way of buying
+steps (more epochs, later decay) is already measured at **−0.0073 held-out** (`multiL`, ledger 50).
+⇒ **The budget axis is closed. ~290 GPU-h of roll-out never spent.**
+
+### ⛔ GATE 0b — THE SYMMETRIC COMPOSITION CHECK IS A NULL; THE COMPOSITION STAYS AT 8
+`analysis/l55_composition.py --frame val1` → `benchmarks/l55/GATE0b_composition_val1.json`.
+All 8 members loaded on **one** join (1,458,982 rows / 527 basins) so every composition is scored on
+identical rows.
+
+| composition | n | val1 median | paired vs ALL8 | CI95 | breadth |
+|---|---|---|---|---|---|
+| ALL8 | 8 | 0.900879 | — | — | — |
+| drop `nhar` | 7 | 0.899883 | +0.000055 | [−0.000044,+0.000153] | 0.535 |
+| drop `nhar0` | 7 | 0.900554 | +0.000009 | [−0.000111,+0.000125] | 0.501 |
+| **drop both AR** | 6 | 0.898975 | **−0.000103** | [−0.000315,+0.000126] | 0.482 |
+| drop `maurerh1` | 7 | 0.899767 | −0.000547 | [−0.000763,−0.000341] | 0.359 |
+
+⇒ **Every AR removal straddles zero. No composition change is justified; the 8-member record stands.**
+The check had to be run for consistency (the same rule was applied to `nldash1`/`maurerh1`), and it
+returns a null rather than a gain. ⭐ Note `drop_nhar`'s *median* falls 0.000996 while its *paired*
+delta is +0.000055 — the difference-of-medians/paired disagreement again, now **8 for 8**.
+
+### ⛔ THE LADDER ASYMPTOTE IS RETRACTED — r IS NOT STABLE ACROSS FRAMES
+I opened LEDGER 55 with the claim that "more members of the same class" converges to **0.899904**,
+from the test1 ladder increments +0.005539/+0.003013/+0.001457 (ratios 0.544, 0.484 ⇒ r = 0.514,
+threshold at r = 0.529). Recomputing the ladder on **val1**, on one fixed join, gives increments
+**+0.002673 / +0.002508 / +0.000521 — ratios 0.938 and 0.208.**
+⇒ **The decay ratio is not a stable quantity at this precision, and the asymptote argument does not
+survive.** Withdrawn as a quantitative claim; it was flagged at birth as a two-ratio fit with zero
+degrees of freedom, and that caveat is now the finding. **No test-window read was spent to rescue it.**
+⭐ What survives needs no fit and is directly measured: the AR block's LOO ordering above.
+
+### ⛔ FOUR MORE AXES CLOSED WITHOUT GPU
+| candidate | verdict |
+|---|---|
+| Global variance inflation k=1.04 | **NSE-neutral by construction** (`dNSE/dα = 2r−2α`): squared-error training under-disperses *optimally* for NSE. Buys KGE/FHV, not the record. |
+| NSE-loss `eps` 0.1→0.5 | **Already run**: member +0.0018 (arid +0.0321), ensemble **−0.0006 seed-matched**, worse on the arid cohort it fixed. |
+| 4th forcing / AORC as an AR member | `fused4h1` already fails the ship bar on **both** windows (val1 +0.000198 CI [−0.000143,+0.000683]; test1 +0.000290 CI straddling). AORC also switches precip source at **2002, inside the training window** (peer agreement −0.0429 across it). |
+| h256 + holdout 0.5 (the 2×2's missing cell) | Demoted: `holdout ≠ 0` forfeits the 63× fused path — ~52 h per 3 seeds, not ~7 h. |
+
+### ⏳ TRACK 2 BUILT — FORCING DROPOUT (the one live arm)
+`scripts/nh_forcing_dropout.py` + `scripts/nh_arlstm_train_fd.py` + the lane trio
+`gpu1080/queue_l55_fdrop.sh` / `run_l55_fdrop_lane.sh` / `l55_fdrop_start_when_free.sh` (copies, never
+edits — L54 lanes are executing the originals). With probability *p* one forcing product's 5 channels
+are set to **exactly zero** on the raw `data["x_d"]` before `embedding_net`, with the group map derived
+**by name** from `cfg.dynamic_inputs`. `torch.where`, never `x*m` — a multiply propagates `0*NaN` and
+would flip the AR dispatch. Masking is gated on `self.training`, and the fused fast path is provably
+untouched (dispatch inspects only the trailing AR column). Three assertion layers: a first-batch
+structural probe, a per-epoch rate counter (must land within ±0.002 of *p*), and end-of-run hard
+asserts mirrored into GUARD 1 reading `FAST_LOOP.json` **from the run dir**, so a silently-unmasked run
+cannot produce a dump. Dedicated `torch.Generator(0x5D0000 + seed)` so masks differ across seeds while
+the **global** RNG stream stays identical to the control.
+Pre-registered falsifier: solo val1 within −0.002 of `nhar0h256` **and** error correlation down ≥ 0.02.
+
+### ⚠️⚠️ OPS — THE BOX IS IN A POWER-FAULT REBOOT LOOP  ⛔ **RETRACTED — see the correction below**
+Boots at 15:17:58, 15:20:50, 15:23:46 — each ~2–3 min after the last, i.e. at GPU spin-up. The previous
+boot's journal ends at 15:22:20 with **no shutdown sequence** ⇒ abrupt power loss, not a reboot.
+`@reboot l54_boot_resume.sh` relaunches the three `nhar0h512` lanes every time; per-epoch checkpointing
+is the only reason anything survives, and `nhar0h512` s501 has reached epoch 30 (eval pending).
+**No multi-hour GPU arm can be launched until this is fixed physically** (PSU / outlet / thermal).
+Zero-GPU gates are unaffected — all three reads above completed by retrying across the reboots.
+
+### ✅ TRACK 2 VERIFIED END TO END (2026-09-21, CPU, zero GPU-risk)
+`gpu1080/nh_runs/l55mech_fdmech_s999_2109_162224/FAST_LOOP.json`. A deliberately tiny mechanics run
+(3 basins, seq 30, hidden 16, 2 epochs, CPU) — not a scored run; it exists to exercise every assertion
+layer. The box survives CPU runs indefinitely, which independently confirms the fault triggers on **GPU
+spin-up**.
+
+| layer | result |
+|---|---|
+| structural probe | **ok** — `group=daymet` → `pre|max|=2.973 post|max|=0`, `changed=` exactly those 5 features, `nan 0→0` |
+| per-epoch rate counter | **0.30155** vs target 0.30 (tolerance ±0.005) |
+| per-product balance | **0.3296 / 0.3392 / 0.3311** vs 1/3 (tolerance ±0.02) |
+| end-of-run hard asserts | **PASSED** |
+| ⭐ **fused fast path** | **fused 40 > step 0 — not one batch fell to the step loop** |
+
+⭐⭐ **The fused-path claim is now measured, not argued.** It was the arm's load-bearing risk: had the
+mask introduced a NaN, `_ar_has_nan` would have diverted every batch to the ~63× slower step loop and
+silently turned a 7 h member into 52 h. `torch.where` (never `x*m`, which propagates `0*NaN`) plus
+masking **by feature name** makes it structurally impossible to touch `q_mm_shift1`.
+(`step_batches 0` here only because `validate_every` was disabled; a real run validates on the 1980-89
+window where discharge is ~5.5 % missing, which is why the guard is `fused > step`, not `step == 0`.)
+
+⚠️⚠️ **THE DESIGN ERROR THE ASSERT CAUGHT.** I wrote the mask against `data["x_d"]` assuming a single
+`[B,T,n_dyn+n_ar]` tensor with the AR column last — inferred from `nh_arlstm_fast.py`'s
+`x_d[:, :, -n_ar:]`, which operates on the **post-embedding** tensor. NH actually keeps the **pre**-
+embedding `data["x_d"]` as a **dict keyed by feature name** (`inputlayer.py:234` concatenates
+`data["x_d"][k]` over the feature list). The run died immediately on my own
+`assert torch.is_tensor(x)` rather than masking the wrong columns for 30 epochs and producing a
+plausible, wrong member. ⭐ **Rewriting it to select tensors BY NAME made the design strictly safer than
+the original plan**: it cannot touch the autoregressive input by construction, not by an index
+assumption. **Write the assert for the thing you inferred but did not read.**
+
+### ⚠️⚠️ CORRECTION (2026-09-21 16:30) — THE "POWER FAULT" DIAGNOSIS WAS WRONG
+I recorded above that the box was in a power-fault reboot loop and that "no multi-hour GPU arm can be
+launched until this is fixed physically." **Both halves are false.**
+
+| what I claimed | what is measured |
+|---|---|
+| a continuing reboot loop | `journalctl --list-boots`: **8 boots between 15:07:56 and 15:29:40, then stable** — up 57 min with GPU jobs running throughout |
+| crashes at GPU spin-up | the h512 lanes have trained **continuously for ~1 h** at 95 % utilisation |
+| the Track-2 smoke died of the fault | `torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 410.00 MiB. GPU 0 has 7.92 GiB of which 381.75 MiB is free. Process 2034 has 2.82 GiB, Process 2035 has 2.82 GiB` |
+| thermal/PSU stress (268 W vs a 240 W limit) | that was **one instantaneous sample**; sustained draw is **184-202 W at 75-76 C**, normal for a 1080 at 95 % |
+
+⭐ **THE REAL CAUSE, AND IT WAS MINE**: I ran `gpu1080/queue_l55_fdrop.sh` **directly**, bypassing
+`gpu1080/l55_fdrop_start_when_free.sh` — the wrapper whose only job is to block until fewer than N real
+CUDA processes are resident. Two `nhar0h512` lanes were holding 5.6 GB of an 8 GB card. The gate existed,
+was written for exactly this, and I stepped around it because the smoke was "only a few minutes".
+
+⚠️⚠️ **THE TRANSFERABLE LESSON.** I had four failures whose tail I sampled without finding a traceback,
+an independently real reboot burst in the logs, and I fused them into one story. The **user** falsified
+it from the room — "everything feels warm but not that warm, it's pretty cool in the room" — which is
+exactly what 75 C and a working outlet look like. **A log truncated at the point I stopped reading is
+not evidence of a cause, and two real observations do not make one mechanism.** The actual error text sat
+in the same file ~900 bytes further on the whole time. Same family as
+[[silent-data-corruption-checks]]: I read the symptom I expected and stopped reading.
+
+⇒ The boot burst 15:07-15:29 is **unexplained and has not recurred**; it is logged, not diagnosed, and
+must not be attributed without evidence. The GPU is available. Track 2 launches through its gate.
+
+### ⛔ CAPACITY IS SATURATED — `nhar0h512` STOPPED AT ONE SEED (2026-09-21 23:50)
+`benchmarks/l55/H512_val1_1seed.json`. Matched seed 501, val1, 1,697,607 rows / 531 basins:
+
+| step on the capacity ladder | 1-seed val1 |
+|---|---|
+| h128 (`nhar0`) → h256 | **+0.0018** |
+| **h256 0.879510 → h512 0.879498** | **−0.000012** |
+
+⇒ **The one lever measured to work on this family stops working between 256 and 512.** Capacity was the
+last pre-registered LEDGER 54 arm; with it flat, the AR family has no remaining scale axis.
+⚠️ **One seed, and that is weaker than the protocol asked for.** Single-seed sd here is ~0.003
+(`nhar0h256` b = 0.01748), so −0.000012 is deep inside noise: the honest claim is **"no evidence of a
+gain, point estimate dead flat"**, not "h512 = h256". My pre-registered 1-seed band (0.878…0.888) **HIT**,
+at its bottom. The pre-registered falsifier was on the **3-seed** read and is **not** satisfied — this is
+an **interim stop on cost**, with the `multiL` precedent, and it is recorded as such.
+
+**The cost**: s501 val1 eval **19,272 s (5.35 h)**; s501 test1 eval 47 % after 2:48 at **40.9 s/basin**;
+training **46 min/epoch** with s502/s503 at 10/30 ⇒ **~40 GPU-h remaining**. It also held the third CUDA
+slot continuously, which blocked LEDGER 55 Track 2 — the only live arm — at its admission gate for 7 h.
+
+**Stopped cleanly, nothing destroyed**: `l54_boot_resume.sh` disarmed by a sentinel
+(`gpu1080/L55_STOP_H512`; delete it to re-arm), six supervising shells killed by PID before their
+children so nothing relaunched, then the CUDA processes and their orphaned DataLoader workers by PID
+(never `pkill -f`, which self-matches the ssh command line). **s501's val1 dump is kept; s502/s503 keep
+their epoch-10 checkpoints**, so the 3-seed read is resumable. GPU released to 6 MiB / 8100 MiB free,
+/dev/shm clean.
+
+### ▶ LEDGER 55 TRACK 2 LAUNCHED — `nhar0h256fd30`, 3 seeds (2026-09-22 00:05)
+GPU smoke passed through the admission gate in 82 s:
+`GUARD OK: arlstm hidden=256 holdout=0.0 dyn=15 basins=8 **fused=103 step=0** fdrop p=0.3
+rate=0.30296 by_group=[0.3281,0.3369,0.3349]`, both dumps written and `gzip -t` clean.
+⭐ **`fused=103 step=0` on CUDA** — the 63× fused path is intact on the GPU, not just on CPU. That was
+the arm's load-bearing risk and it is now measured on the real device.
+
+Seeds 501/502/503 launched as three lanes, each through `l55_fdrop_start_when_free.sh 3`, running
+concurrently at **1,582 MiB each (4,754 / 8,192 MiB), 88 % util, 61 °C, 184 W** — 3.3 GB headroom.
+Scorer-glob check: `camels531_l51_nhar0h256fd30_s*` matches **0** stray files, so the 8-basin smoke
+dumps cannot alias into the scored pool (they were deleted; the remaining `*smoke*` files are LEDGER
+53's `nharsmoke`).
+Self-healing: `gpu1080/l55_boot_resume.sh` added to `@reboot` (disarm with `gpu1080/L55_STOP_FDROP`);
+the L54 h512 hook stays disarmed by `gpu1080/L55_STOP_H512`.
+Pre-registered falsifier: solo val1 within −0.002 of `nhar0h256`'s 3-seed **and** val1 error correlation
+against the other members down ≥ 0.02. Both, or the arm drops.
+
+## ⛔ LEDGER 55 TRACK 2 — FORCING DROPOUT REJECTED BY ITS OWN FALSIFIER (2026-09-22)
+`benchmarks/l55/PAIR_fd30_val1.json`, `FD30_seeddepth_val1.json`, `analysis/l55_fd_verdict.py`.
+`nhar0h256fd30` (p = 0.30), 3 seeds, 30/30 epochs each, masking rate **0.30002 / 0.30012 / 0.30000**
+over ~15.7 M samples per seed — the treatment applied exactly as designed.
+
+### THE SEED-MATCHED VERDICT (3 seeds each, val1, 1,458,982 rows / 527 basins)
+| | fd30 | control `nhar0h256` | Δ |
+|---|---|---|---|
+| solo | 0.889524 | 0.891969 | **−0.002445** |
+| err-corr vs `nhar` | 0.9082 | 0.9192 | **−0.0110** |
+| **err-corr vs the MB block** | **0.8088** | **0.8088** | **0.0000** |
+| 7-member median | 0.898471 | 0.898503 | −0.000032 |
+| **paired LOO** | **+0.000798** | **+0.001030** | **−0.000232** |
+
+Pre-registered falsifier: *solo within −0.002 of the control **and** error correlation down ≥ 0.02.*
+**Both fail** (−0.002445; −0.0110 at best). ⇒ **ARM DROPPED.**
+
+### ⚠️⚠️ THE SEED MISMATCH FLATTERED IT, AND NEARLY HID THE ANSWER
+`analysis/l54_member_pair.py` takes **all** of the control's seeds but only the candidate's:
+5 vs 3 here. A deeper seed average sits closer to the consensus error, so it reads **more**
+correlated — biasing the comparison **toward** the candidate on both axes:
+
+| | unmatched (5 vs 3) | **seed-matched (3 vs 3)** |
+|---|---|---|
+| err-corr fall vs `nhar` | −0.0187 (looks like it nearly clears 0.02) | **−0.0110** |
+| paired LOO vs control | +0.000790 vs +0.000788 — *identical* | **+0.000798 vs +0.001030 — clearly worse** |
+
+⇒ **A member comparison must be seed-matched on BOTH sides.** Same family as the eps=0.5 arm, where a
+1-seed-vs-5-seed swap read −0.0003 and the seed-matched test was the real answer.
+
+### ⭐⭐ THE MECHANISM, AND IT REFINES THE SENSITIVITY MAP
+Forcing dropout decorrelated the member from its **AR sibling** (−0.0110) and from the **MB block by
+exactly 0.0000**. The MB block holds **5 of 8** weights. ⇒ **Decorrelating from one member of a block
+buys nothing while the rest are untouched.**
+This is why [[the-ensemble-sensitivity-map]] §4 over-predicts here: its 0.0584-per-unit rate was
+measured by rotating a member's error toward the orthogonal complement of **all eight members
+simultaneously**. Priced naively, this arm looks *profitable* (0.0218 solo lost per 0.10 of correlation
+removed, against a 0.311 break-even); measured, its LOO is **worse** than the control's.
+⇒ ⭐ **The exchange rate applies to decorrelation from the ENSEMBLE, not from a neighbour.** Any
+diversity-regularised arm (Track 3 / NCL) must penalise correlation with the **ensemble error vector**,
+not with one member — `l51_withq_score.py:107-109` already computes exactly that vector.
+
+### ⛔ `fd15` KILLED WITHOUT GPU, BY THE SAME MEASUREMENT
+p = 0.30 bought −0.0110 of correlation against a ≥0.02 bar. p = 0.15 is a strictly weaker treatment and
+cannot clear a bar that twice the dose missed by half. **The p arm closes; ~1 day of GPU not spent.**
+
+## 🎯 LEDGER 56 — THE FUSED MEMBER'S DECODER NEVER SAW TWO OF ITS THREE FORCINGS (opened 2026-09-22)
+Record entering **0.898364** test1; 0.90 needs +0.001636. LEDGER 55 closed every planned arm.
+Pre-registration with predictions and falsifiers: `PREREG_v2.md` §LEDGER 56 (written before any run).
+
+### THE READ (zero GPU)
+`train_mblstm.py` trains the fused MB-LSTM member with `CAMELS3FV2_DEC = [v_daymet …]` — a **Daymet-only
+6-variable decoder** on an 18-variable encoder, because "forecast archives are single-source". The
+target-day forcing reaches this encoder–decoder ONLY through the decoder, so `fused3h1` — the anchor of
+the block that holds 5/8 of the record's weight — has **never seen NLDAS or Maurer for the day it is scored
+on**. The benchmark is perfect-forcing; the constraint is operational, not scientific.
+The ledger already carried the symptom: three forcings buy the MB family **+0.004** (`daymeth1` 0.868 →
+`fused3h1` 0.872) and the NH AR-LSTM **+0.026** (`nhar0d` 0.863 → `nhar0` 0.889). Same family as LEDGER 51's
+lead-1 weighting (+0.0143): a structural mismatch, one line, no new data.
+
+### ARMS
+- **`fused3h1d3`** — `--enc-vars camels3fv2d3` (decoder == encoder, 18 vars), seeds 501–505, ~2.3 h/seed.
+  Prediction: 3-seed val1 solo **+0.004…+0.020** vs `fused3h1` (point +0.010); as a REPLACEMENT at 5
+  seeds, val1 paired **+0.0008…+0.0030**. Falsifier: 3-seed paired solo < +0.002 or CI incl. zero.
+- **`fused4h1d4`** — the 24-var AORC-inclusive decoder, 3 seeds, queued behind Arm 1.
+Tooling (new files, nothing running was edited): `gpu1080/queue_l56_withq.sh` (GUARD 1 asserts
+`dec_vars == enc_vars` AND `decoder.weight_ih_l0` width from the checkpoint weights; dumps val1 + test1 at
+stride 1), `run_l56_lane.sh`, `l56_start_when_free.sh` (nvidia-smi admission gate).
+
+### SIDE READ — a zero-parameter combiner is worth +0.0002 on val1 (2026-09-22, zero GPU)
+Trimmed mean (drop each row's max and min of the 8) vs the record's plain mean: **+0.000192 paired,
+CI [+0.000070, +0.000293], breadth 0.571** on val1 at 5 seeds. Per-row median −0.000204 and √-space
+mean −0.000305 both lose. Recorded as a stackable 1-bit val1 selection for the final composition
+(`analysis/l56_freeze_record.py --combiner trimmed`); not a record on its own.
+Launched 22:06: `fused3h1d3` s501–505 and `fused4h1d4` s501–503 in three lanes through
+`l56_start_when_free.sh` (3 CUDA procs at 1,562 MiB, 87 % util). Smoke through the same gate:
+`GUARD OK … enc=18 dec=18 products=['daymet','maurer','nldas'] dec_in=48`.
+
+### ⭐⭐ ARM 1 READ (2026-09-23 00:15) — THE DECODER FIX IS THE LARGEST MEMBER GAIN SINCE LEDGER 51, AND MY ENSEMBLE PREDICTION WAS FALSIFIED
+`analysis/l56_d3_verdict.py` → `benchmarks/l56/D3_val1_3seed.json`; `analysis/l56_composition.py` →
+`benchmarks/l56/COMP9_val1.json`. Seed-matched 3-vs-3 on ONE join (1,458,982 rows / 527 basins).
+
+| | `fused3h1d3` | `fused3h1` | Δ |
+|---|---|---|---|
+| **solo val1** | **0.898119** | 0.878520 | **paired +0.005604**, CI [+0.003808,+0.007069], breadth **0.706** |
+| err-corr vs the 4 single-forcing MB members | 0.8718 | 0.8258 | **+0.046** |
+| err-corr vs the 3 AR members | **0.9046** | 0.8358 | **+0.069** |
+| mean err-corr vs the other 8 | **0.8905 — the highest of any member** | 0.8467 | +0.044 |
+
+**The pre-registered solo prediction (+0.004…+0.020, point +0.010) HIT** at the low end; the falsifier
+(Δ < +0.002 or CI including zero) is **not triggered**. ⭐ `fused3h1d3`'s solo **0.898119 is the highest
+single-member val1 score of this campaign** — above `nhar0h256`'s 0.894113 on the same join.
+⚠️ Difference-of-medians reads **+0.019599** against the paired **+0.005604**: the 9th disagreement, and
+the paired statistic is the pre-registered one (right 8/8). The gap means the fix repairs a left tail —
+70.6 % of basins improve, and the worst ones improve most.
+
+### ⛔ THE REPLACEMENT IS A NULL; THE ADDITION PASSES. PREDICTION FALSIFIED.
+| composition (val1, one join) | median | paired vs the frozen 8 | CI95 | breadth |
+|---|---|---|---|---|
+| frozen 8 (mean) | 0.900879 | — | — | — |
+| **REPLACE** `fused3h1` → `fused3h1d3` | 0.900631 | **−0.000080** | [−0.000216,+0.000039] | 0.472 |
+| **ADD as a 9th member** (mean) | 0.901590 | **+0.000391** | [+0.000297,+0.000524] | **0.717** |
+| **ADD + trimmed-mean combiner** | **0.901617** | **+0.000704** | [+0.000475,+0.000929] | 0.689 |
+
+⚠️⚠️ **My pre-registered ensemble prediction was REPLACE at +0.0008…+0.0030 — FALSIFIED** (−0.000080,
+CI straddling). The LEDGER 55 Track 2 prediction that "replace ≥ add" is falsified with it: here
+**add > replace**, and the add/replace decision rule pre-registered there (larger paired val1 delta wins,
+both computed in one tool before the run) selects **ADD**. Selection is on val1, which is the protocol.
+⭐⭐ **THE MECHANISM, AND IT IS THE CAMPAIGN'S OWN LAW AGAIN.** The fixed member is better *and* markedly
+more redundant — it now shares the every-product target-day input with the AR block, exactly the risk
+recorded in advance in `PREREG_v2.md` §LEDGER 56. Replacing spends `fused3h1`'s distinctness to buy
+skill and nets zero; keeping both buys the skill and keeps the distinctness. Its ensemble-to-solo
+conversion is **0.000391 / 0.005604 = 1/14**, not the 1/9 that pure leverage would give — the 1/8 rule's
+optimistic end, discounted by exactly the correlation it bought.
+
+### THE 9-MEMBER LOO TABLE — NOTHING IS DROPPED BY THE RULE
+`fused3h1` **+0.000416** · `fused3h1d3` +0.000391 · `maurerh1` +0.000402 · `daymeth1` +0.000374 ·
+`nhar0h256` +0.000276 · `aorch1` +0.000092 · `nldash1` −0.000019 · `nhar0` −0.000024 · `nhar` −0.000098.
+**No member's CI lies entirely below zero**, so the pre-registered removal rule drops none — including
+the three whose point estimates are negative. ⭐ The incumbent `fused3h1` keeps the **largest** LOO in the
+ensemble even though the new member beats it by +0.0056 solo: proof that it is being paid for
+distinctness, not skill, and the direct reason the replacement failed.
+
+### ⛔ THE REMOVAL CHECK IS A NULL AGAIN — THE 9-MEMBER COMPOSITION STANDS (zero GPU)
+`analysis/l56_removal9.py` → `benchmarks/l56/REMOVAL9_val1.json`, val1, one join, the pre-registered
+removal rule (drop only if the paired gain's CI excludes zero), re-run because the composition changed:
+`drop nhar` +0.000098 [−0.000013,+0.000183] · `drop nhar0` +0.000024 [−0.000097,+0.000099] ·
+`drop BOTH` −0.000052 [−0.000217,+0.000187] · `drop nldash1` +0.000019 [−0.000075,+0.000216] ·
+`drop nhar+nhar0+nldash1` +0.000226 [−0.000073,+0.000538] · `drop aorch1` −0.000092 [−0.000201,−0.000000].
+**Every CI straddles zero except `aorch1`'s, which says KEEP it.** No removal is justified. ⭐ Note the
+temptation refused: dropping the three negative-LOO members reads +0.000226 by point estimate — 14 % of
+the gap — and its CI includes zero, so it is not taken. That is the same discipline that killed the
+argmax-gap "headroom" in LEDGER 52.
+
+### 🎯 LEDGER 56c OPENS — THE SECOND DECODER DEFECT, FOUND THE SAME WAY (2026-09-23 01:10)
+`Corpus.sample`: `x_dec = [dec_wx, doy, lead, static]`. **The assimilated discharge is not there.** It
+exists only in the encoder (`q_n`, `q_mask` over 365 days) and reaches the predicted step only through the
+encoder's final hidden state — while Nearing's AR-LSTM takes `q_mm_shift1` as a **direct input at the step
+it predicts**. At lead 1 yesterday's flow is the most predictive input in the problem. `--dec-q` appends
+the last observed q and its mask to the decoder, constant across leads: known at forecast time for every
+lead, so it is assimilation, not leakage, and the `ar_mask` augmentation is applied before it is read so a
+stale-gauge sample stays consistent across encoder and decoder.
+**Proven inert on legacy configs before the box saw it**: patched trainer vs git HEAD, same checkpoint,
+same device ⇒ **byte-identical** dumps; `cfg["dec_q"]` is absent on every existing checkpoint so `dec_in`
+is unchanged. ⚠️ The first comparison read a 1.2e-3 mismatch and it was **CPU vs CUDA float32** (max
+relative 4.4e-6), present in the unpatched code too — the control has to hold the device fixed, not just
+the code.
+Arm `fused3h1d3q` (all-product decoder **+** direct q), 3 seeds, pre-registered in `PREREG_v2.md` with
+predicted solo +0.001…+0.008 and the expectation that it REPLACES `fused3h1d3` rather than adding.
+Scheduled ahead of the LEDGER 56b hybrids, which are predicted to be mutually redundant.
+Tooling: `gpu1080/queue_l56c_withq.sh`, `gpu1080/l56_dispatch.sh` (routes a member to its owning launcher
+so one controller schedules all three sub-ledgers), `gpu1080/run_l56b_batch.sh` (counts its own children —
+the `start_when_free` lane gate can let two waiting lanes claim one free slot, because a job needs minutes
+to load its corpus before it appears in `nvidia-smi`).
+
+### LEDGER 56d QUEUED — TARGET-DAY FORCING DIVERSITY, FROM ARM 1's OWN LOO TABLE (2026-09-23 01:50)
+In the 9-member ensemble `fused3h1` has the **weakest solo of the fused pair (0.881496 vs 0.898119) and
+the LARGEST LOO (+0.000416)**. It is paid for distinctness, and the channel it is distinct in is the one
+Arm 1 just identified: **which product the model sees on the day it is scored.** ⭐ Verified rather than
+assumed — `--enc-vars camels3fv2_dec_daymet` reproduces the shipped `fused3h1` s501 dump **byte-for-byte**,
+so the incumbent *is* the daymet cell of a family whose maurer and nldas cells were never built.
+`fused3h1decm` / `fused3h1decn` (18-var multi-forcing encoder, 6-var single-product decoder), 3 seeds each,
+pre-registered at +0.0004…+0.0015 joint admitted, with a falsifier on their error correlation with
+`fused3h1` (≥ 0.93 kills it). Moved ahead of the LEDGER 56b hybrids on ship-bar arithmetic; the deviation
+and its reason are recorded in `PREREG_v2.md`, and **no result motivated the reorder**.
+
+## MODERN-1 (opened 2026-09-23) — BOTH ARMS TO THE MODERN DAY
+
+Pre-registration: `PREREG_v2.md` §MODERN-1 (protocols, gates, falsifiers and predicted bands, all
+written before any modern corpus year was built). Plan: `~/.claude/plans/immutable-leaping-wozniak.md`.
+
+**Why**: measured from the corpora, not assumed — CAMELS maurer ends **2008-12-31**, the CAMELS copies
+of daymet/nldas end **2014-12-31**, Livneh SM ends 2010. maurer is baked into `CAMELS3FV2_VARS`, both
+fused corpora, `corpus_to_nh_multi.py:47` and all three NH AR members ⇒ **5 of the record's 8 members
+cannot be built past 2008, none past 2014.** Neither record is servable on modern data.
+
+### COHORT FROZEN (2026-09-23 08:50, zero GPU) — `data/m1_cohort.json`, `analysis/m1_cohort.py`
+
+Rule fixed in the pre-registration before any number was seen: in `camels_gauge_ids.json["531"]`, ≥90%
+daily discharge observations over the P-MODERN test window **2018-10-01…2025-09-30**, ≥20 rows,
+non-degenerate variance.
+
+| | |
+|---|---|
+| candidates | 531 |
+| **MODERN-1 COHORT** | **490** |
+| dropped | 41, every one for coverage |
+
+Breakdown of the 41: **24 gauges are entirely dead in the window** (0 observations), 2 under 0.25,
+5 in 0.25-0.50, 6 in 0.50-0.75, 4 in 0.75-0.85, and ⭐ **none between 0.85 and 0.90** — the threshold
+does not cut through a dense region, so the cohort is insensitive to its exact value. Intersection with
+the modern NLDAS corpus is also 490, so no product loses a basin at this stage.
+
+⇒ The modern headline is a **490-basin** number and is **not** comparable to the 531-basin record
+0.898364 by construction. A 490-basin re-score of the frozen record's existing dumps on its own legacy
+window is the apples-to-apples axis and costs zero GPU.
+
+### ⛔ AORC CLOSED ON FEASIBILITY (2026-09-23 08:55, zero GPU) — and the discharge defect it uncovered
+
+**AORC v1.1 cannot be built over the modern span.** Measured from the store's own metadata, not assumed:
+`s3://noaa-nws-aorc-v1-1-1km/{year}.zarr` is chunked **[144 h, 128, 256]** at int16/zstd, i.e. a 9.44 MiB
+uncompressed block per chunk. The 671 CAMELS basins touch **311 of the 1,089 spatial chunks**, and pull
+**10.2 M cells per time slice to use 1.84 M — a ×5.5 spatial redundancy** that the chunking makes
+unavoidable. Per year, 5 variables need `311 × 61 × 5 = 94,855` chunks ⇒ **~240 GB/yr, ~11 TB for
+1980-2025**. That is not transferable on this link, and it would contend with the Daymet/NLDAS
+back-extensions for the same bandwidth.
+
+⭐ The cost of dropping it is **already measured and it is zero**: in LEDGER 51 `aorch1` was the weakest
+member (solo 0.842964) with LOO paired **−0.000008**, CI [−0.000182,+0.000164], **breadth 0.495 — a coin
+flip**. It contributed nothing to the with-q ensemble and was kept only because 5 members were the
+pre-registered composition. AORC is also the one product with a documented internal inhomogeneity (the
+2002 Stage II/CMORPH → Stage IV precip-source break, `homogenize_aorc.py:6`).
+⇒ The most expensive product to build is the one member measured to be worth nothing. Closed.
+
+### ⭐⭐ THE DEFECT THIS WORK UNCOVERED — THE MODERN CORPUS HAS NO TARGETS BEFORE 2015
+
+`build_daymet_areal_modern.py:102` (`load_q`) reads discharge from `camels_corpus_daymet_modern`, the old
+POINT corpus, which **begins in 2015**. `build_nldas2_areal.py:232` then copies q from the Daymet areal
+corpus. Measured consequence, present in the shipped artifact: the **2014 prefix of
+`camels_corpus_daymet_modern_areal` carries forcings and ZERO discharge on every basin sampled (40/40)**
+— its targets start 2015-01-01. The 2014 prefix was added specifically so 2015 would be evaluable after
+NH's 365-day warmup, and for that purpose it is harmless; but re-running that builder for 1980-2013 would
+have produced **34 years of forcings with no targets at all, and exited 0.**
+
+Fixed by `scripts_modern/build_q_store.py`: one authoritative USGS DV store, 1980-01-01 → today, read by
+every builder. Source decision measured first (30 cohort basins × 2010-2014, **53,356 day-pairs**) —
+fresh USGS DV vs the frozen CAMELS `q_cfs`: `frozen == round(usgs,0)` **73.90%**, **median ratio
+1.000000**, **log-space r 0.998481**; 3,848 pairs differ by >5% but **3,780 of them sit in 4 basins**
+(08195000, 03463300, 08164600, 07346045), all low-flow/ephemeral. So the gap is CAMELS' integer rounding
+plus genuine USGS record revisions, with **no systematic level shift** ⇒ a single fresh series over the
+whole span is safe and avoids a seam at 2015-01-01, exactly where the modern training window ends.
+
+Both builders now carry `assert_q_store_covers()`, and **all three of its branches were verified**
+(incomplete store → abort; subset build → pass; uncovered span → abort) rather than only the happy one.
+
+### GATE 1, PART A — REGISTRATION LAG SCAN (2026-09-23 09:20, zero GPU)
+
+Median per-basin correlation vs the frozen CAMELS corpus, overlap year 2010, by lag. A negative best-lag
+means the product labels an event EARLIER than the CAMELS convention. Precipitation is the discriminating
+variable; temperature correlates highly at several lags because the seasonal cycle swamps it.
+
+| product | prcp @ −1 | prcp @ 0 | prcp @ +1 | best | verdict |
+|---|---|---|---|---|---|
+| **gridMET** | **0.835** | 0.542 | 0.039 | **−1 on ALL six variables** | ⛔ **this read was WRONG — see the Part B correction below; gridMET ships UNSHIFTED** |
+| **nClimGrid** | 0.150 | **0.820** | 0.610 | **0 on ALL six variables** | ✅ correctly registered, no shift |
+| Daymet V4R1 | — | 0.07–0.32 | 0.94–0.99 | +1 (prcp, tmax only) | ⚠️ +1 day shift, already known |
+| NLDAS-2 | — | **1.000** | — | 0 | ✅ reproduces CAMELS exactly |
+
+⭐ gridMET's offset is **uniform across all six variables**, unlike Daymet's, where prcp and tmax shift
+while tmin and vp stay at lag 0. A uniform offset is a **time-axis labelling difference**, not a
+per-variable observation convention, and is corrected by shifting the whole series — which is also
+self-consistent in a way a per-variable patch would not be.
+
+Unit checks passed on both new products (gridMET mean prcp 2.639 vs frozen 2.779 mm/d, srad 16.599 vs
+15.459 MJ/m²/d, vp 828 vs 918 Pa; nClimGrid prcp 2.448 vs 2.652, temps within 0.4 °C).
+
+⚠️ The shift value is **not** committed from this test alone. Part B — the streamflow referee, which
+arbitrates against USGS discharge dates, which are unambiguous — sets it, exactly as it did for Daymet.
+
+### GATE 1, PART B — THE STREAMFLOW REFEREE, AND A CONTROL THAT RECALIBRATES THE BAR
+
+`scripts_modern/screen_products_referee.py` — same arithmetic as the Daymet V4 screen
+(`peak_k corr(precip[t], relative dQ[t+k])`, k ∈ −2..+2, `rel = dQ/Q`, ≥400 finite pairs), generalised to
+N products, discharge and the day set taken from the frozen corpus so only the precipitation series
+varies. 60 cohort basins, seed 0, 2000-2009.
+
+**Control on the three frozen products** (`benchmarks/m1_gate1_frozen_control.json`):
+
+| product | median peak r | delta vs camels-daymet | modal peak lag |
+|---|---|---|---|
+| camels daymet (reference) | 0.3554 | +0.0000 | **0 (93%)** |
+| camels nldas | 0.3987 | +0.0433 | **0 (92%)** |
+| camels maurer | 0.3263 | −0.0292 | **0 (72%)** |
+
+✅ The referee independently reproduces the known result that **all three CAMELS products put rain on the
+same day as the rise**, and it even recovers Maurer's known heterogeneity — its 72% modal share is
+visibly lower than daymet's 93%, consistent with the measured finding that CAMELS' Maurer precip is
+offset ~1 day from its Daymet in most basins.
+
+⚠️⭐ **BUT THE CONTROL ALSO BREAKS THE BAR, AND THIS MATTERS MORE THAN THE PASS.** Maurer scores
+**−0.0292**, which the pre-registered bar calls **ABANDON** — yet `maurerh1` is a shipped member of the
+0.898364 record with **positive LOO +0.000362, CI [+0.000116,+0.000885]**. So a product can fail this
+screen outright and still earn its place in the ensemble.
+
+⇒ **The referee measures single-product same-day precip-flow coupling, not ensemble contribution**, and
+those are demonstrably different things. The bar was calibrated for the question it was written for —
+*is it worth 39 h to REPLACE a forcing with a better version of itself* — and it is **not** valid as a
+disqualifier for an ADDITIONAL, differently-sourced member. Recorded now, before the gridMET and
+nClimGrid numbers are read, so the interpretation cannot be chosen after seeing them:
+
+- the **peak-lag** output stays fully binding — it sets each product's build-time shift;
+- the **signal delta** is demoted to **advisory** for the two new products. A result worse than −0.02 is
+  a reason to state the cost plainly, not to drop a member whose value can only be measured by LOO.
+
+### ⚠️⭐ GATE 1 PART B RESULT — MY PART-A READ WAS WRONG IN DIRECTION. gridMET SHIPS UNSHIFTED.
+
+The Part A lag scan (gridMET vs the frozen corpus) read "−1 on all six variables" and I recorded that it
+"needs a +1 day shift". **The streamflow referee falsifies that.** 60 cohort basins, 2000-2009, with both
+shift directions built as explicit controls (`benchmarks/m1_gate1_gridmet_shifts.json`):
+
+| gridMET build | median peak r | delta vs camels | modal peak lag |
+|---|---|---|---|
+| **shift 0 (as built)** | **0.3732** | **+0.0177** | **0 (67%)** ✅ |
+| shift −1 | 0.3732 | +0.0177 | +1 (67%) |
+| shift +1 | 0.3722 | +0.0167 | −1 (67%) |
+
+⇒ **gridMET as-built is already on the CAMELS k=0 convention. `--shift-days 0` is the shipped value.**
+Applying my Part-A conclusion would have introduced a one-day misregistration — the exact error class
+that was worth **+0.229 NSE** on the Daymet corpus, and I would have introduced it while believing I was
+removing one.
+
+✅ Two internal controls confirm the machinery rather than a lucky read: the ±1 builds move the peak to
+∓1 exactly as they must, and **shift 0 and shift −1 return an identical peak r of 0.3732** — which is the
+signature of a genuinely registration-invariant statistic (a whole-series shift moves *where* the peak
+sits, never *how high* it is; only the +1 build differs, by 0.0010, from series-edge effects).
+
+⭐ **This is exactly why Gate 1 mandates the physics arbiter and does not let a corpus-vs-corpus lag scan
+decide.** A cross-corpus scan tells you two products disagree; only an external referee with unambiguous
+dates tells you *which one is wrong*. Part A is hereby demoted to a detector of disagreement; **Part B
+alone sets the shift**, and the ± controls are mandatory for every remaining product.
+
+Signal: gridMET **+0.0177 vs camels-daymet** — it carries *more* same-day precip-flow coupling than the
+reference. **FUND**, on the advisory reading established by the Maurer control above.
+
+### ⭐ TARGET-REVISION CALIBRATION (2026-09-23, zero GPU) — `analysis/m1_target_delta.py`
+
+The modern corpus takes discharge from one fresh USGS pull rather than splicing frozen-to-2014 and
+fresh-after (which would put a seam at 2015-01-01, exactly where the modern training window ends). That
+makes Gate A confound two changes — forcings and targets — unless the target part is measured. It is
+measurable with **zero GPU**: re-score the frozen record's own dumps against the refreshed targets. Same
+predictions, same rows; only the truth differs. Rows lacking a refreshed target are dropped from **both**
+sides, never one.
+
+✅ **Control first**: with the frozen targets this reproduces the record at **0.898363862431** vs the
+published **0.8983638624313959** — so the whole join/seed-average/readout path is exact before anything
+is varied.
+
+| | |
+|---|---|
+| rows with both targets | 1,928,055 of 1,931,646 (99.81%) |
+| targets bit-identical | 70.22% (574,238 rows differ, max 48,300 cfs) |
+| basins whose NSE changed | **531 of 531** |
+| worst single-basin \|delta\| | **0.606941** |
+| **MEAN across-basin delta** | **−0.005048** |
+| **PAIRED MEDIAN delta** | **−1.357e-11**, CI [−3.1e-10, +2.9e-10], breadth 0.499 |
+
+⭐ **The median does not move; the mean moves by −0.005.** Every basin's score changes and the worst moves
+by 0.6, yet the headline is a **median across basins** — a rank statistic — and the revisions land
+balanced around it (breadth 0.499) while biting hardest in the tail. This is the campaign's
+"median is a rank statistic" law appearing on the target axis rather than the model axis.
+
+⇒ **For the day-1 median headline, target revision contributes ~0 and a Gate A delta is attributable to
+the pipeline with no correction.** Any mean-based or per-basin claim must carry the −0.005 explicitly.
+
+⚠️ The delta printed at 6 dp as "−0.000000" on the first pass, which is the known **"exactly zero" tell**
+of an arm accidentally scoring itself. It was checked rather than believed: the truth arrays differ on
+574,238 rows and all 531 basins move, so the near-zero is a real property of the median, not a bug.
+
+### ⭐ AND THE SECOND NLDAS FAULT: A COOKIE-JAR RACE THAT MIMICS THE DEAD ENDPOINT
+
+After repointing to cloud OPeNDAP the preflight passed, yet the pool still logged **150 `size=3725`
+failures in 4 minutes** — the *same* signature as the retired endpoint. Diagnosed instead of assumed:
+one of the failing hours (`1980-02-05 23Z`) **fetched perfectly when requested alone** (200, 867 KB of
+HDF5), so the endpoint was fine and the pool was not.
+
+**Cause**: `fetch_hour` selected its Earthdata cookie jar as `.c_{h % 8}` while the pool ran 10+ workers,
+so two concurrent `curl` processes could share a jar and race on writing it. A clobbered session cookie
+returns an **HTML error page with curl rc=0** — indistinguishable, to the size check, from the 410.
+
+**Fix**: one jar per thread (`.c_t{threading.get_ident()}`).
+
+| | before | after |
+|---|---|---|
+| retryable failures | **150 in 4 min** | **0** |
+| throughput | — | 1,041 hours in ~3 min ⇒ **~2.1 min/month, ~14 h for 408 months** |
+
+⇒ Two different faults produced a byte-identical symptom (`rc=0 size=3725`), and only one of them was the
+one I first diagnosed. The tell that separated them was **fetching a failing unit in isolation** — if it
+succeeds alone, the fault is in the harness, not the service.
+
+### ⛔⭐ NLDAS-2's ROUTE DIED UNDER US — GES DISC RETIRED ON-PREM OPeNDAP (2026-09-23)
+
+The NLDAS back-extension logged **959 "retryable" failures** with `rc=0 size=3725`. Diagnosed rather
+than retried: the endpoint returns **HTTP 410, "Service Permanently Retired"** — GES DISC has retired its
+on-premises OPeNDAP and moved the data to Earthdata Cloud OPeNDAP.
+
+⚠️ **This is not a 1980 problem.** A 2014 granule — a year this very pipeline built successfully in
+August — returns the same 410. **The route that produced `camels_corpus_nldas_modern_areal` no longer
+exists.** That corpus is still valid (it is built), but it could not be reproduced or extended by the
+recipe recorded for it, and the recorded recipe is now wrong.
+
+**New route**, taken from CMR's own `USE SERVICE API` RelatedUrl rather than constructed by guesswork
+(a constructed URL 404'd first):
+```
+https://opendap.earthdata.nasa.gov/collections/C2033151148-GES_DISC/granules/
+NLDAS_FORA0125_H.2.0%3ANLDAS_FORA0125_H.A{YYYYMMDD}.{HH}00.020.nc.dap.nc4?dap4.ce=...
+```
+⚠️ The collection prefix is joined to the granule name by a **colon that must stay percent-encoded as
+`%3A`** — the un-encoded form 404s. Verified: 200, 742 KB of real HDF5 in 5.8 s (the variable subset;
+the full granule is 1.66 MB, so subsetting still halves transfer).
+
+⭐ **The lesson is the retry loop, not the URL.** curl returned **rc=0** for a 3,725-byte HTML error page,
+so the size check classified a permanently-dead service as "retryable" and the build ground on for
+hundreds of attempts looking exactly like a slow network. Fixed with a **`preflight()`** that fetches one
+granule and asserts the **HDF5 magic bytes** before the run starts; **both branches verified** (dead
+endpoint → abort in seconds; live endpoint → PREFLIGHT OK).
+⇒ An external route can be retired between one build and the next. Probe it at startup and assert the
+*content type*, never the exit code.
+
+### ⚠️⚠️ AND THE THIRD FAULT: I LEFT A DUPLICATE BUILD RUNNING FOR 10 MINUTES
+
+After the cookie fix the pool reported **0 retryable failures** and 1,041 hours fetched — then stopped
+advancing. It looked like a stall; it was **two builds running at once**.
+
+`kill $(ps ... | awk '/build_nldas2_areal/ {print $1; exit}')` took the **first** matching line, which was
+the `/bin/bash -c ... nohup setsid ...` **wrapper**, not the `setsid`-detached Python child. The wrapper
+died, the build did not, and the relaunch added a second one. The tell was in the cookie paths: the live
+curls showed **both** `.c_6` (the old `h % 8` scheme) and `.c_t126200743708352` (the new per-thread
+scheme) — two different code versions running simultaneously. 27 concurrent curls against an endpoint
+sized for 14, which is why throughput collapsed.
+
+Resolved by listing `pid,ppid,lstart,cmd` and killing the **explicit PIDs** of the older build
+(start 11:49:47), keeping the post-fix one (11:59:20). ✅ No data was corrupted: zero 19xx month
+checkpoints had been written, so the two never raced on the same output file.
+
+⇒ Adds to the standing ops rules: **`kill` by a PID you have actually identified, from a listing that
+shows `ppid` and `lstart`** — never the first line of a `ps | grep`, which matches the launcher as
+readily as the job. And note the second-order damage: both processes held the same log open after `>`
+truncation, so the log became sparse and `grep` reported "binary file matches" — a corrupted log is a
+*symptom* of a duplicate writer, not a curiosity.
+
+### ✅ GATE 1 COMPLETE (2026-09-23) — `benchmarks/m1_gate1_FINAL.json`
+
+60 cohort basins, seed 0, 2000-2009, discharge and day set from the frozen corpus so only precipitation
+varies. Bars fixed in `PREREG_v2.md` §MODERN-1 before any of it was built.
+
+| product | median peak r | delta vs camels-daymet | modal peak lag | verdict |
+|---|---|---|---|---|
+| camels daymet (reference) | 0.3554 | +0.0000 | 0 (93%) | reference |
+| **gridMET** | **0.3732** | **+0.0177** | **0 (67%)** | **FUND, no shift** |
+| **nClimGrid** | **0.3507** | **−0.0048** | **0 (75%)** | **FUND, no shift** |
+| camels nldas | 0.3987 | +0.0433 | 0 (92%) | FUND |
+| camels maurer | 0.3263 | −0.0292 | 0 (72%) | ABANDON (the control that recalibrated the bar) |
+
+⭐ **Both new products are already on the CAMELS k=0 convention and need no build-time shift.** gridMET
+carries *more* same-day precip-flow coupling than the reference; nClimGrid is −0.0048, inside the ±0.005
+fund band. Neither result was available from the corpus-vs-corpus scan, which pointed the wrong way for
+gridMET entirely.
+
+⚠️ **Still outstanding for Daymet V4R1**: its +1-day precip offset is measured and known, but the *modern*
+Daymet corpus has never been put through this referee because the built 2014-2025 window does not overlap
+the frozen corpus (which ends 2014-12-31). The 1980-2013 back-extension now running creates that overlap,
+so the shift will be set by the referee rather than inherited — the same discipline that just reversed my
+gridMET conclusion.
+
+### ⭐⭐ MODERN DAYMET THROUGH THE REFEREE — AND WHY THE SHIFT IS A LEAKAGE FIX, NOT A CONVENTION FIX
+
+73 cohort basins of the 1980-2013 back-extension were built, enough to run the arbiter
+(`benchmarks/m1_gate1_daymet_modern.json`, 2000-2009):
+
+| product | median peak r | delta vs camels | modal peak lag |
+|---|---|---|---|
+| camels daymet (reference) | 0.4791 | +0.0000 | 0 (95%) |
+| **daymet V4R1 modern, native** | **0.4551** | **−0.0240** | **+1 (77%)** |
+
+✅ **Independent replication**: −0.0240 here against **−0.0244** measured in August on a different basin
+sample and a different build. The V4R1 signal deficit is real and reproducible.
+✅ The **+1 modal lag** confirms the one-day precipitation offset on the modern build, from streamflow,
+with no reference to the frozen corpus.
+
+⭐⭐ **THE POINT THAT DECIDES IT.** The tempting conclusion is that no shift is needed at all: if the
+training corpus is rebuilt through the *same* V4R1 pipeline, train and serve share one convention by
+construction, so the model can simply learn V4R1's labelling. **That reasoning is wrong, and dangerously
+so.** V4R1 stores at date *t* the rain that physically falls on *t+1*. A decoder asked to predict day *D*
+is handed the forcing row labelled *D* — which holds the rain of **D+1**. Training natively therefore
+hands the model **one day of genuine look-ahead at the exact step it is scored on**, and the resulting
+number would be inflated by information no forecast could have.
+
+⇒ **`precipitation_sum` is shifted +1 day at build time in the m3 corpus.** This is a *leakage* fix, not
+a stylistic alignment with CAMELS, and it would be required even if CAMELS had never existed.
+⚠️ Shift **precip only**: `tmin` and `vp` align at r=0.999-1.000 (so the file's time axis is *not*
+uniformly offset — this is a per-variable day-definition), and precip-only is the variant measured at
+**+0.229 NSE**. `tmax` shows a moderate offset and is recorded as an open question, not silently shifted.
+
+### ⚠️ A SAMPLING CAUTION, RECORDED BEFORE IT COULD BE USED AS A FORKING PATH
+
+On this same 73-basin set gridMET reads **−0.0647**, against **+0.0177** on the pre-registered seed-0
+random 60. The 73 are not a random sample — the builder orders the 531 eval basins by gauge id, so the
+first-built are almost all eastern (the reference itself reads 0.4791 here vs 0.3554 on the random draw,
+i.e. a visibly easier, wetter cohort).
+
+⇒ **The pre-registered seed-0 sample of 60 decides gridMET, and it is unchanged: +0.0177, FUND.** The
+−0.0647 is recorded as evidence that this screen is **geographically sensitive**, not as a re-read of the
+verdict — re-reading it on a sample chosen after the fact is exactly the forking path this campaign
+forbids. The lag verdict is unaffected: lag is robust to the sample, which is why lag is the binding
+output and the signal delta is advisory.
+
+### ✅ THE SHIFT, VALIDATED END-TO-END — `benchmarks/m1_daymet_shift_validation.json`
+
+`scripts_modern/assemble_m3.py` merges the build parts, applies the shift, refreshes discharge from the
+authoritative store, and verifies the artifact. Run on the 78 back-extension basins merged with the
+2014-2025 areal build, then put through the referee:
+
+| | median peak r | modal peak lag |
+|---|---|---|
+| daymet modern, NATIVE | 0.4548 | **+1 (77%)** |
+| **daymet m3, precip shifted +1d** | **0.4548** | **0 (77%)** |
+
+⭐ The peak **r is identical to four decimals and the modal share is identical** — the shift moved *where*
+the peak sits without changing *how high* it is, which is precisely what a registration correction must
+do and what a data-mangling bug would not. The one day of decoder look-ahead is gone; the −0.023 V4R1
+signal deficit remains, as expected and already accepted.
+
+**Registration is now settled for all four modern products**: daymet **+1 d on `precipitation_sum`**;
+nldas, gridMET and nClimGrid **unshifted**. Every one of these was set by the streamflow arbiter, and one
+of them (gridMET) contradicted the corpus-vs-corpus scan.
+
+⚠️ Two build-integrity traps caught in `assemble_m3.py` before they could produce a corrupt corpus:
+the parts do **not** share a schema (the 2014-2025 build carries 10 columns after its `swe` pass, the
+back-extension 8), so the merge is **column-keyed, not positional** — positional would have written
+ragged rows that still parse; and `overlap_rows=0` is asserted and reported rather than assumed.
+
+### ⛔⭐⭐ LEDGER 56 HAD BEEN STALLED 12 HOURS ON A GATE THAT FAILS ONLY WHEN IT SHOULD PASS
+
+Found 2026-09-23 13:00 while checking GPU availability for MODERN-1. The card read **6 MiB / 0%** and
+the lane logs had not been written since **04:24** — yet `run_l56b_batch.sh` was alive, 12 h into its
+"WAITING for the GPU to drain" loop, sitting in `sleep 120` **with zero children**. Not one of its 20
+queued jobs had ever started.
+
+The wait loop:
+```bash
+N=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | grep -c . || echo 0)
+if [ "$N" -eq 0 ]; then QUIET=$((QUIET + 1)); else QUIET=0; fi
+[ "$QUIET" -ge 2 ] && break
+```
+⭐ **`grep -c` exits 1 when it counts zero.** So on an empty GPU the `|| echo 0` fires *as well*, `N`
+becomes the two-line string `"0\n0"`, and `[ "$N" -eq 0 ]` dies with *"integer expression expected"* —
+which the `if` reads as false, resetting `QUIET` on every poll. Reproduced directly on the box:
+
+```
+N as printed : [0
+0]
+integer test : FALSE/ERROR (never counts as quiet)
+raw error    : /bin/bash: line 6: [: 0
+grep -c exit status: 1
+```
+
+⇒ **The gate blocks forever precisely when the GPU is free.** Its busy branch works perfectly, which is
+why it survived every previous use — the failure needs an *idle* card to appear at all. This is the
+campaign's own **"verify every branch of an automated gate"** rule, violated by the very script written
+to fix the previous gate's race ([[the-gate-i-bypassed-and-the-hardware-fault-that-wasnt]]): the
+concurrency hazard was fixed, and an availability hazard was introduced in the same line.
+
+**Fix**: `| wc -l`, which always exits 0 and always prints a count. Shipped as a **new file**
+`gpu1080/run_l56b_batch2.sh` (never edit a running shell script — bash reads by byte offset), with both
+branches tested (empty → quiet; two simulated apps → busy) and the executable line asserted changed
+rather than the grep matching its own comment. The stuck controller was killed by explicit PID and the
+identical 20-job list relaunched.
+
+⚠️ Cost: **~9 hours of idle GPU**. The resource watcher that found it was polling for MODERN-1, not L56 —
+L56's own watchers all wait on output files, which is the failure mode
+[[a-watcher-must-check-the-resource-not-the-file]] already records.
+
+### ⛔ EARTHDATA CLOUD OPeNDAP WENT DOWN SERVICE-WIDE MID-BUILD (2026-09-23 ~14:5x)
+
+Daymet ran 83 basins clean, then **every** basin failed from 14:59 with xarray's
+`unopenable: did not find a match`. Calling the builder's own `fetch()` showed why: a **162-byte
+`503 Service Temporarily Unavailable`** page.
+
+Isolated rather than guessed — three probes:
+
+| probe | result |
+|---|---|
+| A. NLDAS collection, cloud OPeNDAP | **503** |
+| B. Daymet collection, bare `.dmr` metadata, cloud OPeNDAP | **503** |
+| C. plain HTTPS data download (`data.gesdisc.earthdata.nasa.gov`) | **200, 1.55 MB** |
+
+⇒ **The whole OPeNDAP service is down; plain data distribution is fine.** My first hypothesis — that I
+had caused it by repointing NLDAS onto the same host, putting 8 + 14 = 22 workers on one service — was
+**falsified** by stopping NLDAS entirely and re-probing: still 503. Worth recording, because the
+hypothesis was plausible and acting on it alone would have produced a wrong lesson.
+
+**The outage splits the two builds by how each uses OPeNDAP:**
+- **NLDAS** used it only for *variable* subsetting (742 KB vs 1.66 MB). Added a direct-download
+  fallback, so a 503 now costs 2.2× the bytes rather than the build. Preflight passes through the
+  fallback with OPeNDAP still down; NLDAS is running.
+- **Daymet** needs *spatial* subsetting — the alternative is pulling whole 1 km CONUS annual grids — so
+  it cannot fall back. Stopped at 83/671 (its 83 completed basins are kept; the builder skips any basin
+  whose output already has the right row count) and `gpu1080/watch_opendap_resume_daymet.sh` polls the
+  **resource** every 10 min, requires **two** consecutive 200s so it will not restart into a flapping
+  service, and carries a **48 h deadline** after which it reports failure instead of waiting silently.
+
+### AND A SEPARATE BRITTLENESS, ON A DIFFERENT HOST
+
+gridMET died at **year 15 of 47** on `srad_1985.nc` — nothing to do with Earthdata. The file was
+provably fine seconds later (HEAD 200; a range GET returned valid HDF5), so it was a transient network
+failure on a ~37 GB pull over a home connection. Two faults compounded: `fetch()` gave up after 4 short
+tries **and deleted the partial**, and the caller let the exception abort the whole run.
+
+Fixed: exponential backoff to 6 tries, `curl -C -` so partials **resume** (the server serves 206), and a
+`try/except` per year so **one bad year cannot kill the other 46** — failed years are listed and filled
+by re-running. Restarted; it resumed at year 15 with no refetching.
+
+⇒ Standing lesson for every long external pull here: **a multi-day build must treat transient failure as
+normal.** Both builders aborted an entire run on a single hiccup, and in both cases the resource was
+healthy moments later.
+
+⚠️ **Fallback probe, and a caution about what the 503 means.** The obvious alternative subsetting route
+for Daymet — ORNL DAAC's THREDDS/NCSS (`thredds.daac.ornl.gov`) — returns the **same 162-byte nginx 503
+page** as `opendap.earthdata.nasa.gov`. Two independent services, byte-identical error, while
+`data.gesdisc.earthdata.nasa.gov` keeps returning 200. That is consistent either with a shared
+edge/gateway outage **or with this IP being rate-limited** after ~11 h of 8-worker Daymet plus 14-worker
+NLDAS traffic. The two are not distinguishable from here, and the response to both is the same: **back
+off**. Daymet is stopped, probing is limited to one gentle request per 10 min, and NLDAS runs on the
+direct-download route that is demonstrably unaffected.
+⇒ Do not add probes or retries while a 503 is standing — if it is a throttle, more requests extend it.
+
+### ⚠️ THE PROVIDER, NOT THE PIPELINE: BOTH NASA-HOSTED PRODUCTS ARE BLOCKED (2026-09-23 17:30)
+
+The OPeNDAP outage did not resolve cleanly, and the recovery exposed a flaw in my own watcher.
+
+**The watcher declared victory too early.** It polled the collection's `.dmr` *metadata*, which returned
+200 at 16:56 and again at 16:58, so it relaunched Daymet — and the very next basin failed with curl
+**rc=35 (SSL connect error)**. Metadata recovering is not data recovering. Replaced with
+`scripts_modern/probe_daymet_route.py`, which runs **the builder's own `fetch()`** against a real basin
+bbox and asserts HDF5 magic bytes, and a watcher that requires **three consecutive successes 10 min
+apart** (48 h deadline). ⇒ **Probe the path you actually need, not a cheaper one near it.**
+
+**And the distribution side is degraded too.** NLDAS's fallback route — plain HTTPS, the one that was
+serving 200 in 8 s during the outage — now takes **213 s for 1.66 MB (~8 KB/s)**, while its OPeNDAP
+subset route returns 404 after 22 s. At that rate NLDAS needs months, not hours, so it is **paused**;
+its 9 month-checkpoints are kept and resumption is free.
+
+| product | host | state |
+|---|---|---|
+| Daymet | opendap.earthdata.nasa.gov | **paused**, data-path watcher armed |
+| NLDAS-2 | GES DISC / Earthdata | **paused**, provider ~8 KB/s |
+| gridMET | northwestknowledge.net | ✅ 24/47 years, unaffected |
+| nClimGrid | AWS (noaa-nclimgrid-daily-pds) | ✅ 328/564 months, unaffected |
+
+⭐ The two products on non-NASA infrastructure are progressing normally, which is itself the diagnosis:
+this is one provider having a bad day, not a fault in the builders. It is also an argument the
+four-product choice made by accident — sourcing across **four independent providers** means a single
+provider outage costs half the corpus rather than all of it.
+
+### PHASE 3 LAUNCHER — VALIDATED AS FAR AS IS HONEST WITHOUT THE CORPUS
+
+`gpu1080/queue_m1_withq.sh` was exercised end-to-end against a **synthetic proxy corpus**
+(`scripts_modern/make_m1_smoke_corpus.py`: the frozen fused4 corpus with product suffixes renamed
+maurer→gridmet, aorc→nclimgrid and dates shifted so the span overlaps P-MODERN). ⛔ Real CAMELS numbers
+under fake labels on fake dates — the directory is named `SMOKE_*`, carries a README saying so, and the
+builder's docstring says so twice, because that is exactly the artifact that gets quoted by accident.
+
+**Confirmed working**: modern var-set resolution (`camelsm4v2d4` → 24 enc / 24 dec), corpus load with
+modern product suffixes, GUARD 0's cohort assertion (and its abort branch), the unknown-member branch,
+P-MODERN's dates producing non-zero windows (`train=49568 val=1159`), and the lead reweighting
+(`h1=7.0000 h2-14=0.5385`).
+
+**Deferred**: GUARD 1's checkpoint reads and the dump/sidecar path. The smoke ran on **CPU** deliberately
+— the 8 GB card was already at the L56 batch's MAX=3, and adding an uncounted 4th job is how this box
+previously took a CUDA OOM that was first misdiagnosed as a hardware fault — but at ~15 min without
+completing one epoch it was competing for the cores Daymet needs for netCDF decode, and Daymet is the
+critical path. Stopped. The deferral is cheap: GUARD 1 runs *after* training against a saved checkpoint,
+so a bug there costs a re-run of the guard, not of the model.
+
+⚠️ **The fixture had the bug, not the code under test.** The first proxy shifted dates **+17 years**,
+which maps 29 Feb onto 28 Feb and produced **duplicate dates**; the trainer rejected it outright
+("cannot reindex on an axis with duplicate labels"). Fixed with a leap-preserving **+16** (1980-2008 →
+1996-2024; 2000 is a leap year) and the silent 28-Feb fallback was **removed rather than kept**, since a
+fallback that hides a duplicate-key error is worse than the error.
+
+### ⚠️⭐ A RESILIENT LOOP MADE A SILENTLY GAPPED CORPUS — AND EXITED 0
+
+The per-year `try/except` added to gridMET this morning did exactly what it was asked: 2017 and 2018
+failed to download, it logged `YEARS FAILED, re-run to fill: [2017, 2018]`, and completed the other 45.
+**Then the assemble wrote the corpus anyway** — 671 basins spanning **1980-01-01..2026-09-22 with ZERO
+rows in 2017 and 2018** — and reported `ASSEMBLE ok=671 bad=0` / `FINISHED`, exit 0.
+
+⭐ **The hole sat inside P-MODERN's validation window (2014-10-01..2018-09-30)** — i.e. precisely the
+window every selection decision is made on. Verified on a real file: `2016 rows: 366`, `2017 rows: 0`,
+`2018 rows: 0`, `2019 rows: 365`.
+
+⇒ **Making the loop resilient made the artifact untrustworthy.** Tolerating a partial failure is only
+safe if something downstream refuses the partial result; otherwise resilience converts a loud failure
+into a silent one, which is strictly worse. This is the "verify the artifact, not the exit code" rule
+appearing from the opposite direction: the exit code was 0 *because* the failure had been handled.
+
+**Fix**: a **contiguity gate** in both the gridMET and nClimGrid assemble steps. It reconstructs the
+expected daily calendar between the first and last day, reports the count and the affected years, and
+**refuses to write at all** (`--allow-gaps` exists for a deliberate partial and says "DO NOT TRAIN ON
+THIS"). Verified on the real gapped state: `CONTIGUITY FAIL: 730 of 17067 days missing
+(1980-01-01..2026-09-22), years affected: [2017, 2018]`, **0 files written, rc=1**.
+
+The gapped corpus was deleted rather than left on disk, and gridMET relaunched to fill 2017-2018 and
+re-assemble under the gate.
+
+### ⭐ DAYMET UNDER A DEGRADED PROVIDER — AND THE 203-DISCARDED-FETCHES BUG
+
+After the route came back, Daymet ran but barely moved: **83 → 87 basins in five hours** (~0.8/h, against
+~10/h before the outage). Measured rather than guessed:
+
+- **14 FAIL to 4 OK** since the relaunch, on transport errors — `rc=56` (recv failure), `rc=35` (SSL
+  connect), `rc=6` (could not resolve host) — i.e. intermittent, not a hard outage.
+- one var-year fetch now takes **50.6 s**, against ~8 s before ⇒ **172 min of serial work per basin**
+  (34 years × 6 vars = 204 fetches).
+
+⭐ **And a structural waste the outage exposed**: `fetch()` did not skip an already-downloaded var-year,
+and the `.nc4` was unlinked immediately after being read into the series. So a basin failing at fetch
+150 of 204 **discarded the 149 that had succeeded and re-downloaded them next time** — and `workdir` was
+a per-run `mkdtemp`, so every relaunch threw the whole cache away too. At a 78% basin failure rate,
+almost all work was being redone.
+
+**Fix**: a **persistent resume cache** (`--cache-dir`, default `data/modern_corpus/_daymet_cache`).
+`fetch()` now returns immediately if the file exists and decodes with the right shape; the `.nc4` is
+released only once the basin's CSV is written; retries are 5 with backoff. Measured: **cold fetch 26.4 s
+→ warm 0.03 s, an 857× speedup**. Failed basins now accumulate progress across attempts instead of
+restarting.
+
+⇒ Same lesson as gridMET's `curl -C -`: **on a multi-day external pull, partial progress must be
+durable.** Both builders were written as though a fetch either works or the run is lost.
+
+⚠️ **Open**: even with the cache, throughput depends on a provider currently at ~6× its normal latency
+with a high intermittent failure rate. If it does not recover, the alternative is a Daymet copy on
+**different infrastructure** (Microsoft Planetary Computer hosts Daymet; ORNL's own THREDDS was 503 at
+the same time as Earthdata, so it is not independent). That is a route change, not a tuning change, and
+should be an explicit decision rather than a silent substitution.
+
+### ✅ FIRST MODERN PRODUCT COMPLETE — `camels_corpus_gridmet_m3`
+
+| | |
+|---|---|
+| basins | **671 / 671** |
+| span | **1980-01-01 … 2026-09-22** |
+| rows per basin | **17,067** — exactly the full daily calendar, matching the q_store day-for-day |
+| 2017 / 2018 | **365 / 365** — the two failed years filled and verified present |
+| registration | `shift_days: 0`, set by the streamflow referee (Gate 1), recorded in `_BUILD_SIDECAR.json` |
+| contiguity | passed the gate that refused the earlier gapped build |
+
+This is the first product for which train and serve share one pipeline by construction, over the whole
+1980→present span, on an areal (not point-sampled) basis, with registration decided by physics rather
+than inherited. It is also, usefully, the product the Gate 1 referee scored **+0.0177 above
+CAMELS-daymet** — more same-day precip-flow coupling than the reference the campaign has always used.
+
+### ✅ SECOND PRODUCT COMPLETE — `camels_corpus_nclimgrid_m3` (and a dependency I had built in)
+
+671 basins, **1980-01-01 … 2026-09-22, 17,067 rows** — identical span and row count to gridMET and to the
+discharge store. Only 2026-10/11/12 are absent, and those are in the future.
+
+⚠️ **A gap that was not in the future.** The fetch loop finished at 560/564 months and the four missing
+were *not* all future months: **2016-09** had failed silently in the middle of the training window. It was
+found only by listing expected-versus-present months rather than trusting the count, refetched, and
+verified present (30 days). ⇒ `560/564` looked like "three unpublished future months plus one", and a
+count alone cannot tell those apart.
+
+⚠️⚠️ **And a dependency I created and then praised my way past.** nClimGrid ships no radiation or
+humidity, so those two channels are borrowed — and I had pointed the borrow at **NLDAS**, which is
+paused on the degraded provider. The assemble therefore produced **`ok=0, skipped_no_borrow=671`**.
+Earlier I had written that sourcing across four independent providers meant one outage costs half the
+corpus; that was **wrong as built**, because nClimGrid's borrow chained it to the same provider as
+Daymet and NLDAS. Three of four products, not two, were exposed to one outage.
+
+**Resolved** by borrowing srad/vp from the completed **gridMET** instead. The honest trade-off, recorded
+rather than glossed: nClimGrid and gridMET now share 2 of 6 channels, so they are less mutually
+independent than nClimGrid-plus-NLDAS would have been. What is preserved is the part that matters —
+**precipitation and temperature, the channels that carry the signal, remain fully independent** (NOAA/NCEI
+GHCN analysis vs PRISM). The choice is **reversible with a single `--assemble-only` re-run** against
+NLDAS if that product ever completes, and it should be revisited then.
+⇒ A cross-product borrow is a hidden dependency edge. Draw the dependency graph before claiming
+independence.

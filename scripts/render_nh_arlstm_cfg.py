@@ -13,6 +13,19 @@ import argparse
 from pathlib import Path
 
 VARS = ["prcp", "tmax", "tmin", "vp", "srad"]
+# MODERN-1: the split was hard-coded to Nearing 2022. It is now named, because a
+# modern arm trains on 1980-2014 and validates/tests on years CAMELS never
+# reached. NH wants dd/mm/YYYY. nearing2022 is byte-identical to what LEDGERS
+# 51-56 rendered, so every existing NH member still reproduces.
+_SPLITS = {
+    "nearing2022": ("01/10/1999", "30/09/2008",
+                    "01/10/1980", "30/09/1989",
+                    "01/10/1989", "30/09/1999"),
+    "modern-v3": ("01/10/1980", "30/09/2014",
+                  "01/10/2014", "30/09/2018",
+                  "01/10/2018", "30/09/2025"),
+}
+
 STATICS = ["p_mean", "pet_mean", "aridity", "p_seasonality", "frac_snow", "high_prec_freq",
            "high_prec_dur", "low_prec_freq", "low_prec_dur", "elev_mean", "slope_mean",
            "area_gages2", "soil_depth_pelletier", "soil_depth_statsgo", "soil_porosity",
@@ -29,6 +42,11 @@ def main() -> int:
     ap.add_argument("--hidden", type=int, required=True)
     ap.add_argument("--holdout", type=float, required=True)
     ap.add_argument("--epochs", type=int, default=30)
+    ap.add_argument("--protocol", choices=sorted(_SPLITS), default="nearing2022",
+                    help="which train/val/test split to render (NH dd/mm/YYYY)")
+    ap.add_argument("--exp-prefix", default="l54",
+                    help="experiment_name prefix; NH derives the run dir from it, and the "
+                         "caller globs that dir. Default l54 keeps LEDGER 54 output identical.")
     a = ap.parse_args()
 
     fs = [f.strip() for f in a.forcings.split(",") if f.strip()]
@@ -41,17 +59,20 @@ def main() -> int:
         "# batch 256, 30 epochs, lr 1e-3 -> 5e-4 @10 -> 1e-4 @25, lagged discharge",
         "# as an autoregressive input with a binary obs/sim flag.",
         f"# variant={a.variant} forcings={','.join(fs)} hidden={a.hidden} holdout={a.holdout}",
-        f"experiment_name: l54_{a.variant}_s{a.seed}",
+        f"experiment_name: {a.exp_prefix}_{a.variant}_s{a.seed}",
         f"run_dir: {B}/nh_runs",
         f"train_basin_file: {B}/{a.basin_file}",
         f"validation_basin_file: {B}/{a.basin_file}",
         f"test_basin_file: {B}/{a.basin_file}",
         f"data_dir: {B}/{a.data_dir}",
         "dataset: generic",
-        '# Nearing 2022 split, identical to LEDGERS 51-53',
-        'train_start_date: "01/10/1999"', 'train_end_date: "30/09/2008"',
-        'validation_start_date: "01/10/1980"', 'validation_end_date: "30/09/1989"',
-        'test_start_date: "01/10/1989"', 'test_end_date: "30/09/1999"',
+        f'# {a.protocol} split',
+        f'train_start_date: "{_SPLITS[a.protocol][0]}"',
+        f'train_end_date: "{_SPLITS[a.protocol][1]}"',
+        f'validation_start_date: "{_SPLITS[a.protocol][2]}"',
+        f'validation_end_date: "{_SPLITS[a.protocol][3]}"',
+        f'test_start_date: "{_SPLITS[a.protocol][4]}"',
+        f'test_end_date: "{_SPLITS[a.protocol][5]}"',
         f"seed: {a.seed}", "device: cuda:0", "model: arlstm",
         f"hidden_size: {a.hidden}", "initial_forget_bias: 3", "output_dropout: 0.4",
         "head: regression", "output_activation: linear", "optimizer: Adam", "loss: NSE",
