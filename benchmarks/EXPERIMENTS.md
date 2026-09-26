@@ -7378,3 +7378,29 @@ one. Three things differ at once: the **frame sparsity** (stride 10 vs 1), the *
 ⇒ Every MODERN-1 number that enters the ledger comes from the **stride-1 `val1`/`test1` dumps** through
 `analysis/l51_withq_score.py --protocol`. The in-training figure is for detecting divergence only, which
 is the same role [[campaign-lessons-that-transfer-to-the-benchmark]] §10 already assigns to training loss.
+
+### ⛔ THE 2026-09-26 "OUTAGE" WAS A NETWORK PARTITION, AND I MISDIAGNOSED IT THREE TIMES
+
+`nakas-1080` stopped answering ssh and ICMP at 00:15 and returned at 06:19 reporting
+**`up 4 days, 14 hours`** — it **never rebooted**. Nothing on it was interrupted: the Gate B pilot
+finished at 22:05:50 with all four dumps, `gridmetm s501` completed rc=0 **during** the blackout, and the
+Daymet build advanced 361 → 382 basins. **The outage cost visibility, not work.**
+
+Three successive diagnoses, all asserted, all wrong:
+1. *"the box is down"* — refuted by the uptime on return.
+2. *"Tailscale is down locally"* — refuted by `tailscale status`; the claim came from a `grep -A2` window
+   too small to reach the `inet` line, i.e. I concluded "no tailnet address" from output that could not
+   have shown one.
+3. *"tailscale now flags it offline ⇒ the host went down, check power and boot"* — **wrong, and acted on**:
+   the user was told to go inspect a machine that was working perfectly. Tailscale's `offline` flag is its
+   control plane's **reachability** view, not peer liveness; a partitioned-but-healthy host is
+   indistinguishable from a dead one by that flag.
+
+⭐⭐ **`uptime` is the only cheap discriminator and it is only readable after the partition heals.** While
+partitioned, nothing observable from this side separates "dead host" from "healthy host, broken path". The
+correct behaviour is therefore to **report the partition and stop there** — not to name a cause, and not to
+frame the in-flight work as at risk, because `setsid`-detached jobs survive a partition intact.
+
+⇒ Adds to [[my-causal-claims-keep-failing]]: three wrong causal claims in one incident, and the third
+generated a false instruction to the user. The measured facts available at the time (ssh times out;
+tailscale reports X) supported **no** conclusion about the host, and I should have said so.
