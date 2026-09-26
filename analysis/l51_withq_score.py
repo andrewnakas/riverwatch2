@@ -27,7 +27,13 @@ import sys
 import numpy as np
 import pandas as pd
 
-os.chdir(os.path.expanduser("~/riverwatch2"))
+# Box layout when present, otherwise the repo root inferred from this file. The
+# hard-coded "~/riverwatch2" made every analysis module here unimportable on the
+# Mac (which is the git root), so scorer arithmetic could only be unit-tested on
+# the GPU box -- exactly when the box is unreachable is when you want to test it.
+_BOX = os.path.expanduser("~/riverwatch2")
+os.chdir(_BOX if os.path.isdir(_BOX)
+         else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DD = "data/mblstm/l51_dumps"
 IDS = set(str(x).zfill(8) for x in json.load(open("data/camels_gauge_ids.json"))["531"])
 MIN_ROWS = 20
