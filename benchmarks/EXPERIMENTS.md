@@ -7483,3 +7483,46 @@ a text marker in a shared file can.
 **Fixed** by giving each batch its own log (`M1_LOG`), so a DONE line is unambiguous. And the sibling arm
 is now launched **manually** after confirming the predecessor drained, rather than chained at all — one
 manual step beats a clever gate with a stale-match failure mode.
+
+## ⚠️ DEC-Q ON A SINGLE-PRODUCT MEMBER: REAL BUT ~10× SMALLER — THE FIX IS NOT GENERAL
+
+`analysis/m1_composition.py --members gridmetmq --against gridmetm9`, val1, 3 seeds each, one join,
+490 basins (`benchmarks/m1_decq_gridmet.json`).
+
+| | val1 median NSE |
+|---|---|
+| `gridmetmq` (single-product encoder **+ `--dec-q`**) | 0.866220 |
+| `gridmetm9` (identical, no `--dec-q`) | 0.864333 |
+| **paired delta** | **+0.000608** |
+| 95% CI | [+0.000163, +0.001275] |
+| breadth | 0.565 |
+
+**Registered prediction was +0.003 … +0.008. Measured +0.000608 — 5× below band**, and about **10×
+smaller than the +0.006384 the same flag gave on the fused member** (`fused3h1d3q`).
+
+⇒ **My hypothesis that the decoder-discharge defect is "orthogonal to the forcing set" is not supported.**
+The effect is real (CI excludes zero) but an order of magnitude weaker without a multi-product encoder.
+⚠️ I will **not** assert a mechanism — the campaign's standing failure mode is exactly that
+([[my-causal-claims-keep-failing]]). Candidate explanations, untested: the fused decoder already receives
+18-24 forcing vars so discharge completes a nearly-full picture, whereas a 6-var decoder cannot exploit it;
+or the fused encoder's discharge signal is more diluted and so the decoder path matters more there.
+
+⭐ **And the difference-of-medians trap appeared again.** The two medians differ by **0.001887**
+(0.866220 − 0.864333) while the **paired** delta is **+0.000608** — a 3× overstatement if the wrong
+statistic is quoted. Trust paired ([[paired-median-vs-difference-of-medians]]).
+
+### FALSIFIER STATUS: TRACKING TOWARD DEATH, NOT YET CLOSED
+The registered falsifier is *"mean solo lift across the four < +0.002 ⇒ the arm dies and the fix is
+recorded as specific to a multi-product encoder"*. One of four is in at **+0.000608**. `nclimgridmq` is
+running; Daymet and NLDAS members cannot run until those corpora exist. **The arm is not closed on n=1** —
+but if `nclimgridmq` lands near this value the mean cannot reach +0.002 and the arm dies as registered.
+
+### ⇒ WHAT THIS CHANGES, AND WHAT IT DOES NOT
+- ✅ **Keep `--dec-q` on the FUSED members**, where it is measured at +0.006384. `fused4md4q` stays.
+- ⛔ **Do not spend seeds on dec-q variants of single-product members** beyond the registered screen; at
+  +0.0006 they are not worth 3 seeds each.
+- ⚖️ **The Gate B window decision still stands, but for a narrower reason than I gave.** I justified the
+  9-year window partly on dec-q's *predicted* +0.003…+0.008, which has now shrunk for these members. The
+  decision survives on its own arithmetic — the 34-year window buys **+0.001370 for ~3.75× the compute**,
+  which is poor value independently of what dec-q turns out to be worth. ⚠️ But the margin is thinner than
+  I claimed, and I should not have leaned on an unmeasured prediction to justify a measured trade-off.
