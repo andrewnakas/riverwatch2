@@ -7404,3 +7404,57 @@ frame the in-flight work as at risk, because `setsid`-detached jobs survive a pa
 ⇒ Adds to [[my-causal-claims-keep-failing]]: three wrong causal claims in one incident, and the third
 generated a false instruction to the user. The measured facts available at the time (ssh times out;
 tailscale reports X) supported **no** conclusion about the host, and I should have said so.
+
+## ⭐ GATE B READ (2026-09-26 08:05) — MORE DATA IS REAL BUT SHALLOW, AND MY TEST WAS COMPUTE-UNMATCHED
+
+`analysis/m1_gateb_verdict.py`, val1, 3 seeds per arm, one join, 708,266 rows / 490 basins.
+
+| | val1 median NSE |
+|---|---|
+| **34-year window** (`gridmetm`, train 1980-10-01…2014-09-30) | **0.864590** |
+| **9-year window** (`gridmetm9`, train 2005-10-01…2014-09-30) | **0.864333** |
+| **paired delta (34yr − 9yr)** | **+0.001370** |
+| 95% CI | [+0.000419, +0.003865] |
+| breadth | 0.563 |
+
+**Registered band was +0.005 … +0.025. Measured +0.001370 ⇒ BELOW BAND.** The effect is *real* (CI
+excludes zero) but roughly **4× smaller** than predicted. Sign right, magnitude wrong — logged with the
+other directional misses.
+
+### ⚠️⚠️ THE FLAW IN MY OWN DESIGN: THE COMPARISON WAS COMPUTE-UNMATCHED
+Both arms ran **30 epochs**. But the 34-year window has ~6.0M training windows against ~1.6M, so 30 epochs
+there costs **~3.75× the compute**. What Gate B actually measured is therefore:
+
+> *"is more data better if you ALSO spend 3.75× the compute?"* → yes, by +0.001370
+
+and **not** the decision-relevant question:
+
+> *"is more data better AT EQUAL COMPUTE?"* → **unanswered**
+
+A compute-matched test would be ~8 epochs at 34 years against 30 at 9 years. ⚠️ That is not a free re-run:
+the LR schedule is cosine over 30 epochs and LEDGER 55 measured that **the schedule, not the window count,
+decides the MB training budget** ([[LEDGER-55-three-zero-gpu-closures]]) — so truncating epochs leaves the
+schedule unfinished and confounds the answer. A proper compute-matched arm needs the cosine period rescaled.
+
+### ⇒ DECISION: ADOPT THE 9-YEAR WINDOW, AND SPEND THE 3.75× ELSEWHERE
+The gradient is **~+0.00005 per extra training year** — shallow enough that this axis is not where the
+number comes from. Against that, the saved compute is large and has a better-evidenced use:
+
+| use of the same GPU time | expected effect |
+|---|---|
+| 34-year window on every member | **+0.00137** (measured) |
+| `--dec-q` on every member | **+0.003…+0.008 per member** (registered; +0.006384 measured on the one member tried) |
+
+A uniform per-member lift passes through to the equal-weight ensemble roughly 1:1, so the dec-q arm's
+expected value is **2-6× Gate B's**, for less compute. ⇒ the roster trains at **9 years**, and the freed
+~3.5 days goes to the dec-q sweep and to roster width.
+
+⚠️ Recorded as a judgement, not a rule: the registered decision rule for a below-band-but-CI-positive
+result said explicitly *"real but small; weigh against 3.5× the GPU cost"*, i.e. it left this to judgement
+rather than deciding it. The losing branch is not re-litigated, and **the compute-matched question stays
+open and is worth one arm later**, because if 34 years at equal compute beat 9, the ordering here flips.
+
+⭐ Side note, the first honest modern val1 numbers: a **single-product** modern member scores **0.8645**
+val1 on the 490-basin cohort. Not comparable to the frozen `fused3h1`'s 0.878520 — different window,
+different cohort — but it establishes the scale, and it is a long way below what the fused + decoder-fixed
++ dec-q members should reach.
