@@ -9,7 +9,13 @@
 # exactly when the GPU is free. That cost ~9 h of idle card in LEDGER 56.
 set -u
 cd ~/riverwatch2
-LOG="logs/m1_batch.log"
+# ⚠️ PER-BATCH LOG. Every batch used to append to one shared logs/m1_batch.log,
+# so a "M1 BATCH DONE" line from an EARLIER batch was indistinguishable from this
+# one's. On 2026-09-26 a chain keyed on that string matched Gate B's stale DONE
+# (written 08:03) while the dec-q batch was still running, fired immediately, and
+# would have put 6 jobs on an 8 GB card -- the very race the chain was written to
+# avoid. A gate must key on something that cannot be stale.
+LOG="logs/${M1_LOG:-m1_batch}.log"
 MAX=${M1_MAX:-3}
 echo "=== M1 BATCH WAITING for the GPU to drain $(date +%F_%T) : $* ===" >> "$LOG"
 QUIET=0

@@ -7458,3 +7458,28 @@ open and is worth one arm later**, because if 34 years at equal compute beat 9, 
 val1 on the 490-basin cohort. Not comparable to the frozen `fused3h1`'s 0.878520 — different window,
 different cohort — but it establishes the scale, and it is a long way below what the fused + decoder-fixed
 + dec-q members should reach.
+
+### ⚠️ A GATE KEYED ON A SHARED MUTABLE LOG MATCHED A STALE ENTRY AND FIRED IMMEDIATELY
+
+Two `run_m1_batch.sh` controllers both waiting on "2 consecutive quiet `nvidia-smi` polls" can both
+start, because a job needs **minutes** to load its corpus before it appears as a CUDA process — the
+documented race that once put 5 trainers on this 8 GB card. To avoid it I chained the second batch on the
+first's **`M1 BATCH DONE` log line**, reasoning that a predecessor's own completion marker cannot race.
+
+⛔ **It fired instantly.** Every batch appended to one shared `logs/m1_batch.log`, and **Gate B had already
+written `M1 BATCH DONE` at 08:03**. The chain matched that stale line, declared its predecessor finished
+after **one poll**, and was 120 s from launching 3 more jobs on top of the 3 already training — i.e. the
+"fix" reintroduced the same hazard by a different route, and would have been harder to diagnose because the
+log would have looked orderly.
+
+Caught only because the chain logs before its `sleep 120`, and the GPU was checked (3 apps, 4,634 of
+8,192 MiB) rather than assumed. Killed with ~2 min to spare.
+
+⭐ **The lesson is narrower and more useful than "be careful":** a gate must key on state that **cannot be
+stale**. A shared append-only log fails this, because "has the marker appeared?" is not the same question
+as "has *my* predecessor finished?" The resource itself (a live process, a GPU slot) cannot be stale;
+a text marker in a shared file can.
+
+**Fixed** by giving each batch its own log (`M1_LOG`), so a DONE line is unambiguous. And the sibling arm
+is now launched **manually** after confirming the predecessor drained, rather than chained at all — one
+manual step beats a clever gate with a stale-match failure mode.
