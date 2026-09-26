@@ -43,6 +43,15 @@ case "$M" in
   # [+0.004554,+0.008198] -- the best single member class this campaign has
   # produced, ahead of the all-product decoder alone (+0.005604).
   fused4md4q|fused4md4qsmoke)CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm4v2d4"; EXTRA="--dec-q" ;;
+  # ⭐ --dec-q on the SINGLE-product members. Pre-registered in PREREG_v2.md: the
+  # decoder-discharge defect is orthogonal to the forcing set, and by the 1/N rule
+  # a uniform per-member lift beats any new member by ~an order of magnitude.
+  # Judged on the COMPOSITION, with pairwise error correlation reported, because
+  # the analogous d3 fix bought skill and spent distinctness (0.8358 -> 0.9046).
+  daymetmq)                  CORP="$V3/camels_corpus_daymet_m3_cohort";    ENC="camels1f"; EXTRA="--dec-q" ;;
+  nldasmq)                   CORP="$V3/camels_corpus_nldas_m3_cohort";     ENC="camels1f"; EXTRA="--dec-q" ;;
+  gridmetmq)                 CORP="$V3/camels_corpus_gridmet_m3_cohort";   ENC="camels1f"; EXTRA="--dec-q" ;;
+  nclimgridmq)               CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f"; EXTRA="--dec-q" ;;
   # single-product ENCODER + all-product DECODER. Measured ADMITTING on the CAMELS
   # analogue (daymeth1d3 +0.000261, nldash1d3 +0.000209, both CI-positive), unlike
   # the mirror shape (all-product encoder / single-product decoder), which read NULL.

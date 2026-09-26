@@ -3679,3 +3679,45 @@ window is kept and that is the answer. The losing branch is not re-litigated.
 ⚠️ One honest limitation of the substitution: it cannot detect an interaction between window length and
 multi-forcing input. If Gate B reads null on `gridmetm` the 9-year window is adopted for single-product
 members with confidence, and re-checked **once** on `fused4m` when the fused corpus exists.
+
+## ⭐⭐ MODERN-1 ARM: `--dec-q` ON **EVERY** MEMBER (pre-registered 2026-09-26 00:35, before any run)
+
+`--dec-q` has been tested on exactly **one** member — `fused3h1d3q`, where it was worth **+0.006384**
+solo on top of the all-product decoder. But the defect it fixes is **orthogonal to the forcing set**: the
+assimilated discharge lives only in the encoder and must survive 365 LSTM steps, while the decoder — the
+only path by which target-day information reaches the prediction — never receives it at all. Nothing
+about that is specific to a fused encoder.
+
+⭐ **Why this outranks adding members.** By the campaign's own 1/N arithmetic
+([[the-one-over-N-rule-picks-the-technique]]): in an equal-weight mean of 8, a **9th member must be
++0.013 solo** to be worth what a **recipe change lifting all 8 by +0.005** is worth. The measured ADD
+values for whole new members are +0.0002…+0.0005. A uniform per-member lift is therefore the
+higher-leverage move by roughly an order of magnitude, and `--dec-q` is the only candidate in hand with a
+measured single-member effect that large.
+
+**Arms**: `daymetmq`, `nldasmq`, `gridmetmq`, `nclimgridmq` — each identical to its non-q sibling except
+for `--dec-q`. Screened at 3 seeds, seed-matched against the sibling, on **val1**.
+
+**Prediction (solo, per member)**: **+0.003 … +0.008**, i.e. of the same order as the fused member's
++0.006384. Rationale: the mechanism is the same and does not depend on how many products the encoder sees.
+
+**Prediction (ensemble)**: if all four single-product members lift by ≳+0.004, the composition gains
+**more** than any single added member has ever produced here (+0.000451 is the record ADD).
+
+**⚠️ Falsifiers, both binding:**
+1. If the mean solo lift across the four is **< +0.002**, or any CI includes zero, the arm dies and I
+   record that the decoder-discharge fix is **specific to a multi-product encoder** rather than general —
+   which would itself be informative about why it works.
+2. ⚠️ **The diversity risk, registered in advance so it cannot be explained away afterwards.** The
+   analogous d3 fix *raised* the fixed member's error correlation with the AR block from 0.8358 to
+   **0.9046** — it bought skill and **spent** distinctness
+   ([[the-fused-member-decoder-never-saw-two-forcings]]). If giving every member the same new input
+   collapses them toward each other, the per-member gains may not survive ensembling. So the arm is
+   judged on the **composition's** paired delta, not on the solo lifts, and **mean pairwise error
+   correlation among the four is reported alongside** — if it rises above **0.93** the solo gains are
+   presumed diluted and the non-q siblings are retained.
+3. ⛔ On a **null or a correlation collapse**, `--dec-q` stays confined to the fused member, where it is
+   already measured, and the non-q single-product members ship. The losing branch is not re-litigated.
+
+**Cost**: 12 runs (4 members × 3 seeds). At the 9-year window this is cheap; at 34 years it is not, so
+this arm is sequenced **after Gate B**, whose answer sets the window for it.
