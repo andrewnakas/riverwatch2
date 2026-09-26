@@ -68,12 +68,26 @@ def main() -> int:
     ap.add_argument("--greedy", action="store_true", help="greedy forward selection with a CI gate")
     ap.add_argument("--corr", action="store_true", help="pairwise per-basin error correlation")
     ap.add_argument("--dup-control", action="store_true")
+    ap.add_argument("--against", default="",
+                    help="comma-separated members forming a SECOND composition; the "
+                         "two are scored on ONE join and reported as a paired delta. "
+                         "This is what the --dec-q arm's falsifier requires: it is "
+                         "judged on the COMPOSITION delta, not the solo lifts, because "
+                         "a uniform new input can lift every member and still collapse "
+                         "them toward each other.")
     ap.add_argument("--out", default="")
     a = ap.parse_args()
 
     members = [m for m in a.members.split(",") if m]
+    against = [x for x in a.against.split(",") if x]
     seeds = set(int(s) for s in a.seeds.split(","))
-    m = l51.join(members, a.frame, seeds=seeds, protocol=a.protocol)
+    # ONE join over BOTH compositions, so the two are compared on identical rows.
+    # ⚠️ DEDUPLICATE: the two lists legitimately overlap when asking "is a superset
+    # better than its subset?" -- the most natural width question there is. Passing
+    # a duplicated name to join() produced duplicate columns and then
+    # KeyError: "['gridmetm9', ...] not in index".
+    _load = list(dict.fromkeys(members + against))
+    m = l51.join(_load, a.frame, seeds=seeds, protocol=a.protocol)
     print(f"\njoined {len(m):,} rows  {m.station_id.nunique()} basins  "
           f"seeds={sorted(seeds)}  protocol={a.protocol}")
     P = m[members].to_numpy(float)
@@ -178,6 +192,35 @@ def main() -> int:
         print(f"\n  GREEDY COMPOSITION ({len(chosen)}): {','.join(chosen)}")
         print(f"    mean {finals['mean']:.6f}   trimmed {finals['trimmed']:.6f}")
         res["greedy"] = {"chosen": chosen, "final": finals}
+
+    # ---- composition-vs-composition, on the same join ----------------------
+    if against:
+        Q = m[against].to_numpy(float)
+        other = basin_nse(m, combine(Q, a.combiner))
+        common = sorted(set(base) & set(other))
+        d, lo, hi, br, n = l51.paired_ci(series(base).loc[common], series(other).loc[common])
+        print("\n" + "=" * 76)
+        print(f"{'A: ' + ','.join(members):56s} {np.median(list(base.values())):.6f}")
+        print(f"{'B: ' + ','.join(against):56s} {np.median(list(other.values())):.6f}")
+        print(f"{'PAIRED delta (A - B)':56s} {d:+.6f}")
+        print(f"{'   95% CI':56s} [{lo:+.6f}, {hi:+.6f}]")
+        print(f"{'   breadth (basins favouring A)':56s} {br:.3f}")
+        print(f"{'   basins':56s} {len(common)}")
+        print("=" * 76)
+        if lo <= 0 <= hi:
+            print("VERDICT: NULL - the CI includes zero. Composition A is not better.")
+        elif d > 0:
+            print("VERDICT: A WINS, CI excludes zero.")
+        else:
+            print("VERDICT: A LOSES, CI excludes zero.")
+        if "mean_err_corr" in res and res["mean_err_corr"] > 0.93:
+            print(f"⚠️ mean pairwise error correlation {res['mean_err_corr']:.4f} > 0.93 — "
+                  "per the registered rule the solo gains are presumed DILUTED.")
+        res["comparison"] = {"A": members, "B": against,
+                             "median_A": float(np.median(list(base.values()))),
+                             "median_B": float(np.median(list(other.values()))),
+                             "paired_delta": float(d), "ci95": [float(lo), float(hi)],
+                             "breadth": float(br), "basins": len(common)}
 
     if a.out:
         json.dump(res, open(a.out, "w"), indent=1)

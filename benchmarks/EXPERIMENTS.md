@@ -7595,3 +7595,51 @@ ship-bar seeds are few and are what the reported number rests on, so they get th
 better than either pure option and costs ~1 extra day rather than ~29 h.
 ⚠️ Still caveated by Gate B's own limitation: it was **compute-unmatched**, so "more data at equal
 compute" remains unanswered.
+
+## ⭐⭐ THE TRIMMED MEAN IS A DUPLICATE-SUPPRESSOR, AND IT BEATS GREEDY SELECTION HERE
+
+An exploratory **val** read (val decides compositions, so this is legitimate; test untouched) on the four
+members already dumped — the two plain single-product members and their two `--dec-q` siblings.
+`benchmarks/m1_width4.json`, 3 seeds each, one join, 490 basins.
+
+**Pairwise per-basin error correlation is the whole story:**
+
+| pair | corr |
+|---|---|
+| `nclimgridm9` \| `nclimgridmq` | **0.9866** |
+| `gridmetm9` \| `gridmetmq` | **0.9809** |
+| `gridmetmq` \| `nclimgridmq` | 0.6442 |
+| `nclimgridm9` \| `gridmetmq` | 0.6438 |
+| `gridmetm9` \| `nclimgridm9` | 0.6360 |
+| `gridmetm9` \| `nclimgridmq` | 0.6220 |
+
+⇒ **A `--dec-q` variant is a NEAR-DUPLICATE of its plain sibling (0.98), while cross-product pairs sit at
+0.62-0.64.** Forcing is what creates distinctness; this recipe flag does not. That one number explains the
+entire dead arm.
+
+**And the compositions:**
+
+| composition | val1 median NSE |
+|---|---|
+| best solo (`gridmetmq`) | 0.866220 |
+| 2 plain members, mean | 0.880829 |
+| 4 members, **mean** | 0.881089 |
+| greedy pick — one per product (`gridmetmq`+`nclimgridm9`) | 0.881403 |
+| **4 members, TRIMMED mean** | **0.882717** |
+
+⭐ **The trimmed mean wins**, beating the 4-member plain mean by **+0.001628** and the greedy 2-member
+selection by **+0.001314** — with **zero fitted parameters**. Greedy correctly refused the second member
+of each product (`gridmetm9` +0.000202 CI straddling zero; `nclimgridmq` −0.005626), i.e. it de-duplicated
+by *exclusion*. The trimmed mean de-duplicates by *construction*, dropping each row's extremes, and keeps
+more information than throwing two members away.
+
+⚠️ **Do not over-generalise.** At n=4 with two duplicate pairs, "trimmed" is the mean of the middle two —
+a heavy trim, which is why `trimmed == median` here. On the frozen record's **9 diverse** members the
+trimmed mean was worth only **+0.000192**. So its value is a function of **roster structure**: it pays
+in proportion to how much duplication the roster contains. Re-measure at the final roster size.
+
+⇒ **Actionable for the final composition**: report pairwise error correlation for every roster, treat any
+pair above ~0.95 as one member for counting purposes, and choose the combiner *after* seeing that
+structure rather than assuming the record's +0.000192 carries over.
+⭐ And the ensembling headline holds: **+0.0165 from one extra product**, against +0.0006 for the best
+recipe flag. Width across forcings, not recipe tuning, is where this number comes from.
