@@ -7552,3 +7552,46 @@ can be "on different hosts" and still fight over the one thing that matters.
 ⚠️ **When NLDAS resumes, do NOT set `M1_NLDAS_PREFER_DIRECT`.** That flag exists only to dodge host
 contention with Daymet; once Daymet is done the subset route is strictly better — **219 GB instead of
 490 GB**, i.e. it halves the remaining transfer. Its month checkpoints make the switch free.
+
+## ⛔ THE `--dec-q`-EVERYWHERE ARM DIES AS REGISTERED — AND NOT BY DILUTION
+
+| read (val1, 3 seeds, one join, 490 basins) | value | verdict |
+|---|---|---|
+| gridMET solo (`gridmetmq` − `gridmetm9`) | +0.000608 [+0.000163,+0.001275] | real but 5× below band |
+| nClimGrid solo (`nclimgridmq` − `nclimgridm9`) | **−0.000291** [−0.000928,+0.000122] | **NULL**, negative point estimate |
+| **COMPOSITION: both dec-q vs both plain** | **+0.000126** [−0.000230,+0.000506] | ⛔ **NULL** |
+| mean pairwise per-basin error correlation | **0.6442** | far below the 0.93 dilution bar |
+
+**Mean solo lift +0.000159 against a registered falsifier of +0.002. The arm is dead**, and both of my
+predictions were falsified: +0.003…+0.008 per member (measured +0.0006 and −0.0003), and "the composition
+gains more than any added member ever has" (measured null).
+
+⭐ **The correlation reading is what makes this a clean kill rather than an ambiguous one.** The falsifier
+deliberately allowed for the gains being real but *diluted* by collapsing diversity — the analogous d3 fix
+raised error correlation 0.8358 → 0.9046. Here correlation is **0.6442**: the members stayed thoroughly
+diverse and the gains simply were not there. So the null is a statement about the **effect**, not about
+dilution. Registering that distinction in advance is what allows the result to be read unambiguously.
+
+⇒ **`--dec-q` is specific to a multi-product encoder.** It stays on the fused members, where it is measured
+at **+0.006384**, and is dropped from single-product members. Three of the four registered arms
+(`daymetmq`, `nldasmq`) will not be run at all — the falsifier fired at n=2 and running the rest would be
+spending GPU to confirm a closed result.
+
+### ⭐⭐ AND AN ENSEMBLING DATUM WORTH MORE THAN THE ARM ITSELF
+The 2-member plain composition scores **0.880829** against solos of ~0.8643 (gridMET) and ~0.8370
+(nClimGrid) — **+0.0165 over the better solo, from two members.** That is consistent with the frozen
+record's measured +0.0224 for ensembling over its best member, and it confirms the ensembling gain
+survives transfer to the modern corpus. **Ensembling, not per-member tuning, is still where the number
+comes from.**
+
+### ⇒ REOPENING THE WINDOW DECISION, HONESTLY
+I justified the 9-year window partly on dec-q's *predicted* value, which is now zero for these members.
+The window's own arithmetic is unchanged (+0.001370 for ~3.75× the compute) but the competing use of that
+compute has evaporated, so the trade-off deserves restating rather than silently standing:
+
+⭐ **Screen at 9 years, ship at 34.** Admission decisions are *comparative* — every candidate faces the
+same window, so it largely cancels — and screening is where most of the ~40 runs live. The final
+ship-bar seeds are few and are what the reported number rests on, so they get the +0.001370. This is
+better than either pure option and costs ~1 extra day rather than ~29 h.
+⚠️ Still caveated by Gate B's own limitation: it was **compute-unmatched**, so "more data at equal
+compute" remains unanswered.
