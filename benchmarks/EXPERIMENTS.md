@@ -7526,3 +7526,29 @@ but if `nclimgridmq` lands near this value the mean cannot reach +0.002 and the 
   decision survives on its own arithmetic — the 34-year window buys **+0.001370 for ~3.75× the compute**,
   which is poor value independently of what dec-q turns out to be worth. ⚠️ But the margin is thinner than
   I claimed, and I should not have leaned on an unmeasured prediction to justify a measured trade-off.
+
+### ⭐ THE TWO REMAINING BUILDS CONTEND FOR DIFFERENT RESOURCES — SIZE THEM IN BYTES, THEN SERIALISE
+
+Daymet's basin-completion rate had fallen ~6× (from ~6/h to ~2/h) while NLDAS ran. I first blamed shared
+*host* contention (both used `opendap.earthdata.nasa.gov`) and moved NLDAS to the direct host. That was
+only half the story. Sizing the remaining work in **bytes** rather than requests:
+
+| build remaining | fetches | bytes | bound by |
+|---|---|---|---|
+| **Daymet** 255 basins × 204 var-years | 52,020 | **4.5 GB** | **latency** (many tiny DAP4 subsets) |
+| **NLDAS** 397 months × 744 hours | 295,368 | **490 GB** direct / **219 GB** subset | **bandwidth** |
+
+⇒ **NLDAS is ~108× Daymet's bytes.** Moving it to a different host removed host contention but not the
+real conflict: it saturates the link and starves Daymet's many small latency-bound requests. Two builds
+can be "on different hosts" and still fight over the one thing that matters.
+
+**Serialised, Daymet first**, for two reasons:
+1. Daymet needs only **4.5 GB** more — it is far closer to done.
+2. ⭐⭐ **Finishing Daymet yields THREE complete products** (daymet + gridmet + nclimgrid) and therefore a
+   **`fused3m`** corpus. The fused + decoder-fixed + `--dec-q` members are where the measured value is
+   (+0.005774 and +0.006384 solo on the CAMELS analogue), so **the critical path never required all four
+   products.** NLDAS becomes a 4th product added later, not a blocker.
+
+⚠️ **When NLDAS resumes, do NOT set `M1_NLDAS_PREFER_DIRECT`.** That flag exists only to dodge host
+contention with Daymet; once Daymet is done the subset route is strictly better — **219 GB instead of
+490 GB**, i.e. it halves the remaining transfer. Its month checkpoints make the switch free.
