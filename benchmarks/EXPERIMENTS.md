@@ -7643,3 +7643,27 @@ pair above ~0.95 as one member for counting purposes, and choose the combiner *a
 structure rather than assuming the record's +0.000192 carries over.
 ⭐ And the ensembling headline holds: **+0.0165 from one extra product**, against +0.0006 for the best
 recipe flag. Width across forcings, not recipe tuning, is where this number comes from.
+
+### ⏸️ A FIFTH PRODUCT (CPC gauge precip) — CONSIDERED AND DEFERRED, WITH THE REASONING
+
+The measured hierarchy is stark: **+0.0165 from one extra product** against **+0.0006 from the best recipe
+flag**. That makes "add another product" the largest remaining lever on paper, and CPC Unified gauge-based
+daily precipitation is the cheapest candidate — 1948-present, ~100 MB for the whole span, and a **pure
+gauge analysis**, which is the single property that has ever predicted member skill here.
+
+⛔ **Deferred, for two reasons.**
+
+1. **A known, structural weakness.** CPC is **0.25° (~625 km² per cell)**, while the median CAMELS basin is
+   ~336 km². Most basins are therefore **smaller than one grid cell**, so an areal mean reduces to that
+   cell's value and neighbouring basins share numbers outright. That is a poor substrate for the spatial
+   discrimination this task needs, and it is not fixable by better extraction.
+2. **It is not the critical path, and pursuing it was scope creep.** The *third* product (Daymet) is ~20 h
+   from completion and the entire `fused3m` family — including the best-measured member class
+   (`fused3md3q`) — is already staged to exploit exactly the per-product gain that motivated this idea. The
+   fourth (NLDAS) is paused only on bandwidth. Chasing a fifth while the third and fourth are unfinished
+   spends effort on the interesting rather than the binding constraint.
+
+⇒ **Recorded as a live candidate, not a closed one.** If the 4-product roster's pairwise error correlations
+show the products clustering (all pairs ≳0.8), a coarse-but-independent gauge product becomes worth the
+screen despite its resolution, because by then decorrelation would be the binding constraint rather than
+resolution. Screen it with the streamflow referee first, as every other product was.
