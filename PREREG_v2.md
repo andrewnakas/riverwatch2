@@ -3653,3 +3653,29 @@ signal, from NOAA's own GHCN gauge analysis, an interpolation independent of bot
 are carried over from NLDAS. The `nclimgrid` member is therefore **independent in 4 of 6 channels, not
 6 of 6**, and that is stated wherever its LOO is quoted rather than left for a reader to infer.
 The Gate 1 screen and its bars apply to it unchanged.
+
+## ⚠️ DEVIATION RECORDED (2026-09-25 21:00) — GATE B RUNS ON A SINGLE-PRODUCT MEMBER
+
+Gate B (34-year vs 9-year training window) was pre-registered on **`fused4m h1`**. It is being run on
+**`gridmetm h1`** instead, with `gridmetm9` as the 9-year arm (train 2005-10-01..2014-09-30, identical
+val and test).
+
+**Reason, and no result motivated it:** `fused4m` needs all four products, and Daymet (~360/671) and
+NLDAS (9/408, paused on a degraded provider) do not exist yet. The question Gate B asks — *do 25 extra
+years of training data buy skill?* — is a property of the **training window**, not of which forcing is in
+the encoder, so a single-product member answers it.
+
+⭐ And the answer is now **also a budget decision**, which is why it cannot wait: measured on the pilot,
+the 34-year window gives **~6.0M training windows against ~1.6M** for 9 years, i.e. **~3.5× the GPU cost
+per seed**. Across the ~50 runs the full roster needs, that is the difference between roughly 1.5 and 5
+days of card time. Deciding it on the cheapest available member, first, is strictly better than
+discovering it after committing the budget.
+
+**Predictions unchanged** from the original registration: **+0.005 … +0.025** for 34 years, adjudicated on
+**val**, 3 seeds each. Counter-hypothesis on record (LEDGER 55: the cosine LR schedule, not the window
+count, decides the MB training budget) so a **null** is a live outcome, and if it reads null the 9-year
+window is kept and that is the answer. The losing branch is not re-litigated.
+
+⚠️ One honest limitation of the substitution: it cannot detect an interaction between window length and
+multi-forcing input. If Gate B reads null on `gridmetm` the 9-year window is adopted for single-product
+members with confidence, and re-checked **once** on `fused4m` when the fused corpus exists.
