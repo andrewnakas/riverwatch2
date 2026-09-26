@@ -159,6 +159,23 @@ CAMELSM3V2_VARS = [f"{v}_{p}" for p in MODERN3_PRODUCTS
                    for v in CAMELS1F_VARS]                 # fused, 18
 CAMELSM3V2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # 6
 CAMELSM3V2_D3_DEC = list(CAMELSM3V2_VARS)                  # 18
+# ⭐ MEASURED 2026-09-25 on the LEDGER 56 arms, which decides which of the two
+# hybrid shapes is worth building for the modern arm:
+#   single-product ENCODER + all-product DECODER  (camels1f_<p>_d3)
+#       daymeth1d3 ADD +0.000261 CI [+0.000175,+0.000387] breadth 0.632  ✅
+#       nldash1d3  ADD +0.000209 CI [+0.000099,+0.000317] breadth 0.594  ✅
+#   all-product ENCODER + single-product DECODER  (camels3fv2_dec_<p>)
+#       fused3h1decm ADD -0.000004 CI [-0.000108,+0.000113] breadth 0.497 ⛔ NULL
+#       fused3h1decn ADD +0.000010 CI [-0.000069,+0.000108] breadth 0.510 ⛔ NULL
+# ⇒ The ADMITTING family is single-product-encoder / all-product-decoder. The
+# target-day-forcing-diversity family is DEAD, and note it died while being
+# genuinely decorrelated (err-corr 0.858-0.874 vs fused3h1, far below the 0.93
+# falsifier) -- another refutation of decorrelation as a value predictor.
+# So the modern arm builds the admitting shape and NOT the dead one.
+for _p in MODERN_PRODUCTS:
+    HYBRID_SETS[f"camelsm1f_{_p}_d4"] = ([f"{v}_{_p}" for v in CAMELS1F_VARS],
+                                         list(CAMELSM4V2_VARS))
+# Kept for completeness/ablation only -- measured null in its CAMELS analogue.
 for _p in MODERN_PRODUCTS:
     HYBRID_SETS[f"camelsm4v2_dec_{_p}"] = (list(CAMELSM4V2_VARS),
                                            [f"{v}_{_p}" for v in CAMELS1F_VARS])
@@ -600,7 +617,10 @@ def main() -> int:
                              "camelsm3v2", "camelsm3v2d3",
                              "camelsm4v2", "camelsm4v2d4",
                              "camelsm4v2_dec_daymet", "camelsm4v2_dec_nldas",
-                             "camelsm4v2_dec_gridmet", "camelsm4v2_dec_nclimgrid"],
+                             "camelsm4v2_dec_gridmet", "camelsm4v2_dec_nclimgrid",
+                             # the ADMITTING hybrid shape (see the note above)
+                             "camelsm1f_daymet_d4", "camelsm1f_nldas_d4",
+                             "camelsm1f_gridmet_d4", "camelsm1f_nclimgrid_d4"],
                     default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
                          "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "

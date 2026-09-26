@@ -21,16 +21,35 @@ SMOKE=0
 case "$M" in *smoke*) SMOKE=1 ;; esac
 LIMIT=""; [ "$SMOKE" = "1" ] && LIMIT="--limit-stations 8"
 
+EXTRA=""
 case "$M" in
   daymetm|daymetmsmoke)      CORP="$V3/camels_corpus_daymet_m3_cohort";    ENC="camels1f" ;;
   nldasm|nldasmsmoke)        CORP="$V3/camels_corpus_nldas_m3_cohort";     ENC="camels1f" ;;
   gridmetm|gridmetmsmoke)    CORP="$V3/camels_corpus_gridmet_m3_cohort";   ENC="camels1f" ;;
   nclimgridm|nclimgridmsmoke)CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f" ;;
+  # ---- GATE B: identical recipe, 9-year training window instead of 34 ----------
+  # P-MODERN offers 34 years; the record used 9 only for comparability with
+  # Nearing 2022. Nothing here has ever tested whether the extra 25 buy skill, and
+  # the answer is also a BUDGET decision: 34 years is ~6.0M train windows against
+  # ~1.6M, i.e. ~3.5x the GPU cost per seed, across ~50 runs.
+  gridmetm9)                 CORP="$V3/camels_corpus_gridmet_m3_cohort";   ENC="camels1f"; TRS=2005-10-01 ;;
+  nclimgridm9)               CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f"; TRS=2005-10-01 ;;
   # 24-var encoder, single-product (daymet) decoder -- the OPERATIONALLY servable shape
   fused4m|fused4msmoke)      CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm4v2" ;;
-  # 24-var encoder AND decoder -- the LEDGER 56 fix; best member class under
-  # perfect forcing, but NOT servable (the products have months of latency)
+  # 24-var encoder AND decoder -- the LEDGER 56 fix
   fused4md4|fused4md4smoke)  CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm4v2d4" ;;
+  # ⭐ + --dec-q: the assimilated discharge reaches the DECODER too. Measured on
+  # the CAMELS analogue 2026-09-25: fused3h1d3q solo +0.006384 CI
+  # [+0.004554,+0.008198] -- the best single member class this campaign has
+  # produced, ahead of the all-product decoder alone (+0.005604).
+  fused4md4q|fused4md4qsmoke)CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm4v2d4"; EXTRA="--dec-q" ;;
+  # single-product ENCODER + all-product DECODER. Measured ADMITTING on the CAMELS
+  # analogue (daymeth1d3 +0.000261, nldash1d3 +0.000209, both CI-positive), unlike
+  # the mirror shape (all-product encoder / single-product decoder), which read NULL.
+  daymetmd4)                 CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_daymet_d4" ;;
+  nldasmd4)                  CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_nldas_d4" ;;
+  gridmetmd4)                CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_gridmet_d4" ;;
+  nclimgridmd4)              CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_nclimgrid_d4" ;;
   *) echo "unknown member $M"; exit 2 ;;
 esac
 
@@ -67,7 +86,7 @@ if [ ! -f "$CKPT" ]; then
     --static-set camels --hidden 256 --corpus-dir "$CORP" \
     --train-start "$TRS" --train-end "$TRE" \
     --val-start "$VS" --val-end "$VE" \
-    --h1-weight 0.5 $LIMIT $DEV
+    --h1-weight 0.5 $EXTRA $LIMIT $DEV
   echo "=== trained rc=$? $(date +%T) ==="
 fi
 
@@ -110,7 +129,7 @@ dump () {  # <tag> <start> <end> <stride> <allleads 0|1>
     --head quantile --enc-vars "$ENC" --q-transform linear \
     --static-set camels --hidden 256 --corpus-dir "$CORP" \
     --val-start "$A" --val-end "$B" --val-stride "$ST" \
-    --dump-day1 "$OUT" $FLAG $LIMIT $DEV >> "logs/m1_dump_${M}_s${S}_${TAG}.log" 2>&1
+    --dump-day1 "$OUT" $FLAG $EXTRA $LIMIT $DEV >> "logs/m1_dump_${M}_s${S}_${TAG}.log" 2>&1
   rm -f "$CKPT.dumpsink_$TAG"
   gzip -t "$OUT" || { echo "ABORT: $TAG dump failed gzip -t"; return 1; }
   $PY - "$OUT" "$CKPT" "$TAG" "$M" "$S" "$SMOKE" "$A" "$B" "$AL" "$TRS" "$TRE" <<'PYS'
