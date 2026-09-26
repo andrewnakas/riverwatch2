@@ -27,7 +27,7 @@ Daily aggregation (matching the corpus schema):
 Checkpoints per MONTH so a failure costs at most one month of fetching.
 """
 from __future__ import annotations
-import argparse, calendar, datetime as dt, gzip, json, math, pickle, subprocess
+import argparse, calendar, os, datetime as dt, gzip, json, math, pickle, subprocess
 import sys, tempfile, threading, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -129,8 +129,18 @@ def preflight(workdir: Path) -> None:
 
 def fetch_hour(y, m, d, h, out, cookies, tries=3):
     doy = dt.date(y, m, d).timetuple().tm_yday
-    urls = [BASE.format(y=y, doy=doy, m=m, d=d, h=h) + CE,      # subset (cheap)
-            DIRECT.format(y=y, doy=doy, m=m, d=d, h=h)]          # full granule
+    _subset = BASE.format(y=y, doy=doy, m=m, d=d, h=h) + CE     # 742 KB, opendap host
+    _direct = DIRECT.format(y=y, doy=doy, m=m, d=d, h=h)        # 1.66 MB, data host
+    # ⭐ HOST CONTENTION. The subset route lives on opendap.earthdata.nasa.gov --
+    # the SAME host the Daymet builder hammers with 6 workers. With both running,
+    # a month took 1.26 h (~61 s per effective fetch) against ~3.1 s for a single
+    # uncontended request. The direct route is a DIFFERENT host
+    # (data.gesdisc.earthdata.nasa.gov) at a measured 277 KB/s, so preferring it
+    # trades 2.2x the bytes for the removal of all contention with Daymet.
+    if os.environ.get("M1_NLDAS_PREFER_DIRECT"):
+        urls = [_direct, _subset]
+    else:
+        urls = [_subset, _direct]
     last = ""
     for k in range(tries):
         for url in urls:

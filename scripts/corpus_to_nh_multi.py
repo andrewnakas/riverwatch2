@@ -106,7 +106,11 @@ def build_basin(bid: str, corpora: dict[str, Path], area_km2: float,
             return False
         frames[f] = d
     # common daily index across all three (they share the CAMELS 1980-2014 span)
-    common = frames["daymet"].index
+    # ⚠️ Was frames["daymet"], which made the whole adapter unusable for any product
+    # set lacking daymet -- KeyError: 'daymet'. My earlier "both branches verified"
+    # test happened to include daymet in the product list, so it never exercised
+    # this. Use the FIRST configured product as the reference index instead.
+    common = frames[FORCINGS[0]].index
     for f in FORCINGS[1:]:
         common = common.intersection(frames[f].index)
     if len(common) < 3650:  # need ~a decade minimum
@@ -117,7 +121,8 @@ def build_basin(bid: str, corpora: dict[str, Path], area_km2: float,
         for src, dst in FORCING_MAP.items():
             ds[f"{dst}_{f}"] = ("date", df[src].to_numpy(dtype="float32"))
     # discharge: identical gauge across forcings -> take daymet's, convert to mm/day
-    q_cfs = frames["daymet"].reindex(common)["q_cfs"].to_numpy(dtype="float64")
+    # discharge is identical across products (all copied from one store)
+    q_cfs = frames[FORCINGS[0]].reindex(common)["q_cfs"].to_numpy(dtype="float64")
     q_mm = q_cfs * CFS_TO_MMDAY_PER_KM2 / area_km2
     ds[TARGET] = ("date", q_mm.astype("float32"))
     out_nc.parent.mkdir(parents=True, exist_ok=True)
