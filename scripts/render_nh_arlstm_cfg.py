@@ -24,6 +24,12 @@ _SPLITS = {
     "modern-v3": ("01/10/1980", "30/09/2014",
                   "01/10/2014", "30/09/2018",
                   "01/10/2018", "30/09/2025"),
+    # GATE B adopted the 9-year training window: 34 years measured only +0.001370
+    # for ~3.75x the compute. NH members must share it or a comparison against the
+    # MB members confounds window with model family.
+    "modern-v3-9yr": ("01/10/2005", "30/09/2014",
+                      "01/10/2014", "30/09/2018",
+                      "01/10/2018", "30/09/2025"),
 }
 
 STATICS = ["p_mean", "pet_mean", "aridity", "p_seasonality", "frac_snow", "high_prec_freq",
