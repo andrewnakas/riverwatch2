@@ -151,7 +151,11 @@ hdr = gzip.open(out, "rt").readline().strip()
 assert hdr == "station_id,t0,h,truth,ylo,ymed,yhi", hdr
 json.dump({"member": member, "seed": int(seed), "frame": tag, "rows": n,
            "ckpt": ck, "ckpt_md5": hashlib.md5(open(ck, "rb").read()).hexdigest(),
-           "train_start": trs, "train_end": tre, "protocol": "modern-v3",
+           # the LABEL must match the window actually trained: Gate B's short arm
+           # has train_start 2005-10-01, and calling it "modern-v3" would make the
+           # scorer refuse the dump against its own protocol table
+           "train_start": trs, "train_end": tre,
+           "protocol": "modern-v3" if trs == "1980-10-01" else "modern-v3-9yr",
            "all_leads": al == "1", "bytes": os.path.getsize(out), "ledger": "MODERN-1"},
           open(out.replace(".csv.gz", ".json"), "w"), indent=1)
 print(f"DUMP OK {tag}: {n} rows -> {out}")

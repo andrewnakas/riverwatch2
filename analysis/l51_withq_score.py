@@ -36,9 +36,17 @@ MIN_ROWS = 20
 # what produced the retracted 0.9253 (a model trained on its own test decade).
 # So it is WIDENED, never removed: a protocol is named, and a dump is refused
 # unless its sidecar matches that protocol's window exactly.
+# (train_start, train_end, dump_prefix). The prefix belongs here because the
+# modern arm writes `m1_<member>_s<seed>_<frame>.csv.gz` while the legacy arm
+# writes `camels531_l51_...`; a single hard-coded glob silently finds NOTHING for
+# the other arm, which looks like "no dumps yet" rather than a bug.
 PROTOCOLS = {
-    "nearing2022": ("1999-10-01", "2008-09-30"),   # the frozen record's window
-    "modern-v3": ("1980-10-01", "2014-09-30"),     # MODERN-1 P-MODERN
+    "nearing2022": ("1999-10-01", "2008-09-30", "camels531_l51_"),
+    "modern-v3": ("1980-10-01", "2014-09-30", "m1_"),      # P-MODERN, 34 years
+    # GATE B's short arm. It needs its OWN entry: the guard compares the sidecar's
+    # train_start to the named protocol, so a 9-year member labelled "modern-v3"
+    # would be refused by its own guard.
+    "modern-v3-9yr": ("2005-10-01", "2014-09-30", "m1_"),
 }
 
 
@@ -46,7 +54,8 @@ def load_member(member, frame, readout="mid", require_guard=True, seeds=None,
                 protocol="nearing2022"):
     """One member = the seed-average of its per-seed dumps. Returns a frame of
     (station_id, t0, truth, <member>)."""
-    files = sorted(glob.glob(f"{DD}/camels531_l51_{member}_s*_{frame}.csv.gz"))
+    _pref = PROTOCOLS[protocol][2]
+    files = sorted(glob.glob(f"{DD}/{_pref}{member}_s*_{frame}.csv.gz"))
     if seeds is not None:
         files = [f for f in files if int(f.split("_s")[-1].split("_")[0]) in seeds]
     if not files:
@@ -61,7 +70,7 @@ def load_member(member, frame, readout="mid", require_guard=True, seeds=None,
         s = json.load(open(side))
         if protocol not in PROTOCOLS:
             sys.exit(f"unknown protocol {protocol!r}; known: {sorted(PROTOCOLS)}")
-        _ts, _te = PROTOCOLS[protocol]
+        _ts, _te = PROTOCOLS[protocol][0], PROTOCOLS[protocol][1]
         if require_guard and (s.get("train_start") != _ts
                               or s.get("train_end") != _te):
             sys.exit(f"{f}: sidecar says train {s.get('train_start')}..{s.get('train_end')}"
