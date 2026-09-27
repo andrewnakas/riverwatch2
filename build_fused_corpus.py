@@ -45,6 +45,9 @@ def main():
     ap.add_argument("--src", default="gpu1080/corpora671")
     ap.add_argument("--out", default="gpu1080/corpora671/camels_corpus_fused_v2")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--suffix", default="_v2",
+                    help="corpus directory suffix: _v2 for the frozen CAMELS "
+                         "corpora, _m3 for the MODERN-1 rebuilds")
     ap.add_argument("--products", default=",".join(PRODUCTS),
                     help="comma-separated forcing products to fuse")
     args = ap.parse_args()
@@ -55,7 +58,9 @@ def main():
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    dirs = {p: src / f"camels_corpus_{p}_v2" for p in PRODUCTS}
+    # MODERN-1: the suffix was hard-coded "_v2", so the modern corpora
+    # (camels_corpus_<p>_m3) were unreachable by this builder.
+    dirs = {p: src / f"camels_corpus_{p}{args.suffix}" for p in PRODUCTS}
     for p, d in dirs.items():
         if not d.exists():
             sys.exit(f"missing source corpus: {d}")
