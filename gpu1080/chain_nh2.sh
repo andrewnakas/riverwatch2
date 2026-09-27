@@ -34,7 +34,12 @@ nice -n 5 $PY scripts/nh_arlstm_train.py --config-file "$CFG" > logs/m1_nhtrain_
 RC=$?
 echo "[$(date +%T)] reported rc=$RC -- now VERIFYING THE ARTIFACT, which is what counts"
 
-RUN=$(ls -dt gpu1080/runs/m1_nhar0m_s501_* 2>/dev/null | head -1)
+# ⚠️ NH writes to gpu1080/nh_runs/, NOT gpu1080/runs/. My first glob looked in the
+# wrong place, so a SUCCESSFUL train would have reported "ARTIFACT FAIL: no run
+# directory" -- a false negative, which is the mirror of the rc=0 false positive it
+# was written to catch. Search all three.
+RUN=$(ls -dt gpu1080/nh_runs/m1_nhar0m_s501_* 2>/dev/null | head -1)
+[ -z "$RUN" ] && RUN=$(ls -dt gpu1080/runs/m1_nhar0m_s501_* 2>/dev/null | head -1)
 [ -z "$RUN" ] && RUN=$(ls -dt runs/m1_nhar0m_s501_* 2>/dev/null | head -1)
 if [ -z "$RUN" ]; then
   echo "ARTIFACT FAIL: no run directory for m1_nhar0m_s501. Last log lines:"
