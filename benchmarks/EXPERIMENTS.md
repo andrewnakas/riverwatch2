@@ -7667,3 +7667,26 @@ gauge analysis**, which is the single property that has ever predicted member sk
 show the products clustering (all pairs ≳0.8), a coarse-but-independent gauge product becomes worth the
 screen despite its resolution, because by then decorrelation would be the binding constraint rather than
 resolution. Screen it with the streamflow referee first, as every other product was.
+
+### 🔧 NH AR-LSTM ON THE MODERN CORPUS — CUDA GRAPH CAPTURE FAILS, THE FUSED PATH DOES NOT
+
+The first modern NH AR-LSTM run died inside `torch.cuda.make_graphed_callables`:
+`RuntimeError: CUDA error: operation failed due to a previous error during capture`.
+
+⭐ **Graph capture is optional; the speedup is not.** The 63× that makes this family affordable comes from
+the **fused cuDNN path**, not from CUDA graphs: with `holdout 0.0` there are no missing lagged inputs, so
+ARLSTM's step loop degenerates to a plain LSTM and becomes **one cuDNN call** (145 ms vs 9217 ms measured,
+`max|Δy| = 0`). `nh_arlstm_train.py --no-graph` keeps the fused path and drops the fragile capture.
+Relaunched with `--no-graph`: epoch-1 checkpoint written, training normally.
+
+⚠️ Three distinct failures in this one member's path today, each caught at the right boundary and each
+costing minutes rather than hours:
+1. `--basin-file basins.txt` where the renderer joins it to the base ⇒ `FileNotFoundError` in 24 s.
+   Fixed, and a **path pre-flight** added so a bad path fails in the shell, not inside torch.
+2. The chain logged **`rc=0`** for that dead run — so an artifact check was added. ⭐ Note it then worked
+   correctly here, reporting `ARTIFACT FAIL: no run directory` for a run that genuinely died.
+3. CUDA graph capture, above.
+⚠️ A fourth was found by reading rather than by failing: the artifact check globbed `gpu1080/runs/` while NH
+writes to **`gpu1080/nh_runs/`**, so it would have reported a false failure on a *successful* run — the
+mirror of the `rc=0` false positive it was written to catch. A verifier that looks in the wrong place is
+worse than none, because it trains you to distrust real successes.

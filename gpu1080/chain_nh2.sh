@@ -30,7 +30,14 @@ A=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
 [ "${A:-0}" -lt 3000 ] && { echo "[$(date +%T)] only ${A}MiB RAM - NOT launching"; exit 3; }
 
 echo "[$(date +%T)] training m1_nhar0m s501 (${A}MiB RAM available)"
-nice -n 5 $PY scripts/nh_arlstm_train.py --config-file "$CFG" > logs/m1_nhtrain_nhar0m_s501.log 2>&1
+# ⚠️ --no-graph: the first attempt died inside torch.cuda.make_graphed_callables
+# ("CUDA error: operation failed due to a previous error during capture") on this
+# Pascal card. The 63x speedup this family relies on comes from the FUSED cuDNN
+# path, not from CUDA graphs: with holdout 0.0 there are no missing lagged inputs,
+# so ARLSTM's step loop degenerates to a plain LSTM = one cuDNN call (145 ms vs
+# 9217 ms measured). Graph capture is an extra optimisation on top and is optional.
+nice -n 5 $PY scripts/nh_arlstm_train.py --config-file "$CFG" --no-graph \
+  > logs/m1_nhtrain_nhar0m_s501.log 2>&1
 RC=$?
 echo "[$(date +%T)] reported rc=$RC -- now VERIFYING THE ARTIFACT, which is what counts"
 
