@@ -32,6 +32,17 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 CFS_TO_MMDAY_PER_KM2 = 0.0283168 * 86400 / 1e6 * 1000   # = 2.446576
+# MODERN-1: the split guard is WIDENED, never removed -- its absence is what
+# produced the retracted 0.9253 (a model trained on its own test decade). NH dates
+# are dd/mm/YYYY; the sidecar records ISO.
+PROTOCOLS = {
+    "nearing2022": {"train_start_date": "01/10/1999", "train_end_date": "30/09/2008",
+                    "iso": ("1999-10-01", "2008-09-30"), "prefix": "camels531_l51_"},
+    "modern-v3": {"train_start_date": "01/10/1980", "train_end_date": "30/09/2014",
+                  "iso": ("1980-10-01", "2014-09-30"), "prefix": "m1_"},
+    "modern-v3-9yr": {"train_start_date": "01/10/2005", "train_end_date": "30/09/2014",
+                      "iso": ("2005-10-01", "2014-09-30"), "prefix": "m1_"},
+}
 GUARD = {"train_start_date": "01/10/1999", "train_end_date": "30/09/2008",
          "validation_start_date": "01/10/1980", "validation_end_date": "30/09/1989",
          "test_start_date": "01/10/1989", "test_end_date": "30/09/1999"}
@@ -47,12 +58,19 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--epoch", type=int, default=30)
     ap.add_argument("--allow-partial", action="store_true", help="SMOKE ONLY: skip the 531-basin assert")
+    ap.add_argument("--protocol", default="nearing2022", choices=sorted(PROTOCOLS),
+                    help="which training window the run must declare")
+    ap.add_argument("--basin-list", default="",
+                    help="JSON with a 'cohort' list (e.g. data/m1_cohort.json); "
+                         "default is the 531 Kratzert subset")
     args = ap.parse_args()
 
     cfg = yaml.safe_load(open(Path(args.run_dir) / "config.yml"))
-    for k, v in GUARD.items():
-        got = str(cfg.get(k))
-        assert got == v, f"config {k}={got!r} != {v!r} — not the Nearing split, refusing"
+    _P = PROTOCOLS[args.protocol]
+    for k in ("train_start_date", "train_end_date"):
+        got, want = str(cfg.get(k)), _P[k]
+        assert got == want, (f"config {k}={got!r} != {want!r} — not the "
+                            f"{args.protocol} split, refusing")
     assert cfg["model"] == "arlstm", cfg["model"]
     assert int(cfg["seed"]) == args.seed, (cfg["seed"], args.seed)
     assert cfg["autoregressive_inputs"] == ["q_mm_shift1"], cfg["autoregressive_inputs"]
@@ -61,7 +79,13 @@ def main() -> int:
     exp_end = cfg[f"{period}_end_date"]
 
     attrs = json.loads((ROOT / "data" / "camels_attrs.json").read_text())
-    ids = set(str(x).zfill(8) for x in json.load(open(ROOT / "data" / "camels_gauge_ids.json"))["531"])
+    if args.basin_list:
+        _d = json.load(open(args.basin_list))
+        ids = set(str(x).zfill(8) for x in (_d.get("cohort") or _d["531"]))
+    else:
+        ids = set(str(x).zfill(8) for x in
+                  json.load(open(ROOT / "data" / "camels_gauge_ids.json"))["531"])
+    print(f"basin filter: {len(ids)} basins ({args.basin_list or 'camels_gauge_ids[531]'})")
     res = pickle.load(open(args.results, "rb"))
 
     parts, n_basins = [], 0
@@ -104,7 +128,7 @@ def main() -> int:
     side = {
         "member": args.member, "seed": args.seed, "frame": args.frame, "rows": int(len(df)),
         "ckpt": str(ckpt), "ckpt_md5": hashlib.md5(ckpt.read_bytes()).hexdigest(),
-        "train_start": "1999-10-01", "train_end": "2008-09-30", "protocol": "nearing2022",
+        "train_start": _P["iso"][0], "train_end": _P["iso"][1], "protocol": args.protocol,
         "bytes": os.path.getsize(out), "engine": "neuralhydrology", "nh_run_dir": str(Path(args.run_dir).resolve()),
         "model": cfg["model"], "hidden_size": cfg["hidden_size"], "epoch": args.epoch,
         "train_holdout": cfg.get("random_holdout_from_dynamic_features"),

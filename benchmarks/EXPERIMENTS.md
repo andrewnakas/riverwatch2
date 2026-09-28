@@ -7690,3 +7690,34 @@ costing minutes rather than hours:
 writes to **`gpu1080/nh_runs/`**, so it would have reported a false failure on a *successful* run — the
 mirror of the `rc=0` false positive it was written to catch. A verifier that looks in the wrong place is
 worse than none, because it trains you to distrust real successes.
+
+## ⛔⭐⭐ THE REBOOT CAME, AND MY BOOT-RESUME WAS A NO-OP THE WHOLE TIME
+
+`nakas-1080` returned reporting **`up 8 minutes`** — against **4-5 days** on the four partitions that were
+network-only. So this outage (~20 h) was a **genuine reboot**, the first of the session, and it is exactly
+the case `gpu1080/m1_boot_resume.sh` existed to cover.
+
+**It did not run.** No log, no Daymet build, every chain dead. Diagnosed by executing the literal cron
+command in a cron-like environment:
+```
+env -i HOME=$HOME PATH=/usr/bin:/bin sh -c 'bash $HOME/riverwatch2/gpu1080/m1_boot_resume.sh'
+bash: /home/nakas/riverwatch2/gpu1080/m1_boot_resume.sh: No such file or directory
+```
+⇒ **I wrote the script on the Mac, `chmod +x`'d it, syntax-checked it, committed it, and installed the
+crontab entry — but never `rsync`'d it to the box.** The cron entry had pointed at a nonexistent file since
+"installation". `crontab -l | grep -c` returned 1, which is why I believed it was armed.
+
+⭐ **The failure mode, named precisely: I verified the COMPONENTS and never the COMPOSITION.** Script syntax
+OK ✓, crontab entry present ✓, and the one question that mattered — *does that entry point at a file that
+exists?* — was never asked. "Installed" meant "I ran `crontab`", not "the thing runs". This is the same
+shape as trusting an exit code instead of an artifact, and it is the third time this session that checking
+a proxy instead of the real thing has cost something.
+
+**Fixed**: pushed, `chmod +x`, and verified by running the literal cron command, which logged correctly,
+declined to duplicate the already-running Daymet build, and re-issued the one member missing its final
+dump. ⚠️ The only branch still untested is `@reboot` itself, which cannot be tested without a reboot — so
+that remains an assumption, and is now labelled as one.
+
+**Cost**: ~20 h of idle GPU and a stalled Daymet build. **Not lost**: NH AR-LSTM had finished all
+**30 epochs** before the box went down, Daymet's 453 basins and 1,031 cached var-years survived, and every
+result was already committed and published.
