@@ -7721,3 +7721,45 @@ that remains an assumption, and is now labelled as one.
 **Cost**: ~20 h of idle GPU and a stalled Daymet build. **Not lost**: NH AR-LSTM had finished all
 **30 epochs** before the box went down, Daymet's 453 basins and 1,031 cached var-years survived, and every
 result was already committed and published.
+
+## ⭐⭐⭐ MODEL-FAMILY DIVERSITY IS WORTH AS MUCH AS PRODUCT DIVERSITY — AND THE SOLO SAYS NOTHING
+
+First modern read on the NH AR-LSTM family, `m1_nhar0m_s501`, 30 epochs, 490 basins, val1, seed-matched
+at 1 seed (`benchmarks/m1_nh_vs_mb.json`, `m1_nh_ensemble.json`).
+
+**Solo: the legacy advantage did NOT transfer.**
+
+| | val1 (1 seed, same rows) |
+|---|---|
+| `nhar0m` | 0.854871 |
+| `gridmetm9` (single-product MB-LSTM) | 0.855554 |
+| paired | **−0.000939** [−0.002491,+0.000593] — **NULL** |
+
+In the frozen record this family led by a wide margin — `nhar0h256` 0.89366 against `fused3h1`'s 0.872162,
+i.e. **+0.021**. None of that reproduced.
+
+**⭐ But its ENSEMBLE contribution is the largest single-member ADD this campaign has measured:**
+
+| composition | val1 |
+|---|---|
+| `gridmetm9` + `nclimgridm9` | 0.879082 |
+| **+ `nhar0m`** | **0.883586** |
+| **paired delta** | **+0.002085** [+0.001297,+0.003135] breadth 0.647 |
+
+⇒ **+0.002085 from a member whose solo is null** — **3.4×** the best ADD in the frozen record (+0.000451)
+and **3.4×** the best recipe flag (+0.000608). Mean pairwise error correlation **0.6874**, i.e. comparable
+to the *cross-product* 0.62-0.64 and nothing like the 0.98 of a same-product recipe variant.
+
+⭐⭐ **A different MODEL FAMILY buys distinctness comparable to a different FORCING PRODUCT.** The two
+things that have paid on this corpus are both forms of genuine diversity; per-member recipe tuning has
+paid ~nothing. And **a solo score is not a proxy for ensemble value** — acting on the solo alone would
+have discarded the most valuable member found so far.
+
+⚠️ **Decision reversed on evidence.** I had declined to spend 24 h on seeds 502/503 because the solo read
+null. Having measured the ensemble contribution, I launched them — that is the reversal the evidence
+demands, and it is why the cheap 1-seed read was worth doing first rather than skipping to 3 seeds.
+
+⚠️ **And the trimmed mean is NOT universally better.** At n=3 it scores 0.881070 against the plain mean's
+0.883586, because trimming 3 members leaves the single middle value and discards two thirds of the
+information. Its n=4 win (+0.001628) came from suppressing a *duplicate pair*. ⇒ the combiner must be
+chosen **after** seeing the roster's correlation structure, exactly as flagged; there is no default.

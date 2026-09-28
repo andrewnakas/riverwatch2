@@ -117,8 +117,13 @@ def main() -> int:
     tgt = pd.to_datetime(df.t0) + pd.Timedelta(days=1)
     lo, hi = pd.to_datetime(exp_start, dayfirst=True), pd.to_datetime(exp_end, dayfirst=True)
     assert tgt.min() >= lo and tgt.max() <= hi, (tgt.min(), tgt.max(), lo, hi)
+    # Assert against the FILTER, not a literal 531: the modern cohort is 490. The
+    # filter above was parameterised and this assertion was left hard-coded, so it
+    # rejected a correct 490-basin dump -- a guard contradicting the very list it
+    # was meant to be enforcing.
     if not args.allow_partial:
-        assert n_basins == 531, f"{n_basins} basins in results, expected 531"
+        assert n_basins == len(ids), \
+            f"{n_basins} basins in results, expected {len(ids)}"
     assert len(df) > 1000, len(df)
 
     out = Path(args.out)
