@@ -3759,3 +3759,39 @@ has been measured for this member family. Recorded in `benchmarks/EXPERIMENTS.md
 ⇒ Standing rule added: **a 1-seed read may justify spending more seeds; it may never source a mechanism
 claim.** Seed-depth `b` is a member property (here 2.1× spread), so a 1-seed comparison between members
 with different `b` is not a comparison of the members.
+
+## §MODERN-1 PHASE 5 — THE NO-Q ARM (registered 2026-09-29, before any run)
+
+`gpu1080/queue_m1_noq.sh`. `--no-q-input` **zeroes** the encoder discharge and mask channels rather than
+removing them (`train_mblstm.py:389-396`), so every tensor width matches the with-q arm and GUARD 1's
+decoder-width formula carries over unchanged. The arm is identified by `cfg["no_q_input"] is True`, read
+back from the checkpoint — a member *name* is not evidence, and a with-q checkpoint dumped under a no-q
+name would be a silent ~0.06-NSE gift.
+
+**⛔ `--dec-q` is forbidden here and asserted absent.** It exists to put the assimilated discharge in the
+decoder; combined with a "no-q" label it would be a leak wearing the name of its own control.
+
+Dump sidecars carry **`"arm": "noq"`**. Both arms share a protocol and a frame, so that field is the only
+thing preventing a no-q dump from being silently joined into the with-q roster.
+
+**Members** (3 seeds = screen, 5 = ship bar): `lstm_{daymetm,gridmetm,nclimgridm,nldasm}` single-product ·
+`lstm_fused3m` multi-forcing (the strongest no-q class in the frozen record — multi/multi5/multi6 took 62%
+of its fitted weight) · `lstm_fused3md3` all-product decoder.
+
+⭐ **Registered prediction, and why `lstm_fused3md3` is in this arm**: the LEDGER 56 decoder fix is about
+**target-day forcing** reaching the decoder and has nothing to do with discharge, so it should transfer to
+no-q — where forcings are the *only* input, possibly more strongly than the +0.005604 it bought with-q.
+**Prediction +0.004 … +0.012 solo**; falsifier: a null or negative closes the "the fix is about forcing,
+not q" reading and means the with-q gain was partly about q after all.
+
+### NO-Q GATE B — 34 vs 9 years, measured rather than assumed
+Gate B (34-year window worth only **+0.001370** for ~3.75× compute ⇒ 9 years kept) was measured on the
+**with-q** arm. A no-q model lives entirely on its forcings, so the result may not transfer.
+`lstm_gridmetm34` vs `lstm_gridmetm`, 3 seeds each, **adjudicated on val**.
+**Prediction**: larger than with-q's, **+0.002 … +0.010**, because removing the discharge input removes the
+single most informative channel and leaves the model more dependent on seeing more weather.
+**Falsifier**: a null ⇒ the 9-year window is kept for both arms and the cosine-schedule explanation stands
+for no-q too. The losing branch is not re-litigated.
+⚠️ Registered BEFORE the with-q family's results are known, so it cannot be tuned to them.
+
+**Expected no-q modern ensemble: 0.79 – 0.84** (unchanged from the original registration).
