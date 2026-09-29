@@ -3721,3 +3721,41 @@ for `--dec-q`. Screened at 3 seeds, seed-matched against the sibling, on **val1*
 
 **Cost**: 12 runs (4 members × 3 seeds). At the 9-year window this is cheap; at 34 years it is not, so
 this arm is sequenced **after Gate B**, whose answer sets the window for it.
+
+## §MODERN-1 GATE A — REGISTERED DEVIATIONS AND SCORING RULE (written 2026-09-29, before the run)
+
+Gate A as registered above says `fused4m` (four products). It will run as **`fused3mN`** — the same
+deviation already registered for Gate B, and for the same reason: NLDAS's remaining transfer was ~490 GB
+against Daymet's 4.5 GB, so the **three** products that completed first (areal Daymet V4R1 + gridMET +
+nClimGrid) define the fused corpus, and NLDAS is being backfilled as a fourth afterwards. Three vs three
+is in fact the **cleaner** like-for-like against frozen `fused3h1` (CAMELS Daymet + Maurer + NLDAS) than
+four vs three would have been. **The band and the STOP line are unchanged: −0.015 … +0.005, halt below
+−0.03.**
+
+**Scoring rule, fixed now because it is the part most easily fudged after seeing a number**
+(`analysis/m1_gate_a.py`):
+1. Both arms load under the **same** protocol guard (`nearing2022`), with different dump prefixes
+   (`m1_` vs `camels531_l51_`). `load_member` gained a `prefix` override; the sidecar window guard is
+   untouched, so a wrong-window dump is still refused. Regression-checked: the frozen 8-member record
+   still reproduces **test1 0.898364** (`+0.019364` vs Nearing) after the change.
+2. The verdict is the **paired per-basin delta on the cohort join** (~490 basins), with a bootstrap CI and
+   breadth — *not* the difference of medians against the published 0.872162, which is over all 531. Those
+   are different samples; difference-of-medians has disagreed with paired nine times and lost every time.
+   The 531 figure is printed as **context only** and labelled as such in the artifact.
+3. Gate A runs **before** the P-MODERN family and gates it on exit code. The chain it replaces launched
+   nine P-MODERN runs first, which put ~8 GPU-hours at risk of exactly the broken extraction this gate
+   exists to catch. A STOP gate that runs after the spend it protects is not a gate.
+4. Frame: P-NEARING's **test1** (1989-10-01…1999-09-30). This is the legacy window, already read many
+   times, and it is **not** the P-MODERN headline frame — so reading it here selects nothing about the
+   modern result. P-MODERN's test window remains unread.
+
+## §MODERN-1 — NH 3-SEED SCREEN: RESULT AND A RETRACTION
+
+The registered 3-seed screen confirms the ADD (**+0.001592** [+0.000878,+0.002467], breadth 0.639, val1
+0.883810) and **refutes the mechanism I published from the 1-seed read**. At depth `nhar0m` has the *best*
+solo (0.873176), the *smallest* LOO (+0.001592) and is the *least* decorrelated member (mean err-corr
+0.787 vs the gridMET|nClimGrid pair's 0.636). It wins on **skill, not decorrelation** — the 6th time that
+has been measured for this member family. Recorded in `benchmarks/EXPERIMENTS.md`.
+⇒ Standing rule added: **a 1-seed read may justify spending more seeds; it may never source a mechanism
+claim.** Seed-depth `b` is a member property (here 2.1× spread), so a 1-seed comparison between members
+with different `b` is not a comparison of the members.

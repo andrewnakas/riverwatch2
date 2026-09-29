@@ -7763,3 +7763,46 @@ demands, and it is why the cheap 1-seed read was worth doing first rather than s
 0.883586, because trimming 3 members leaves the single middle value and discards two thirds of the
 information. Its n=4 win (+0.001628) came from suppressing a *duplicate pair*. ⇒ the combiner must be
 chosen **after** seeing the roster's correlation structure, exactly as flagged; there is no default.
+
+### ⚠️⭐⭐⭐ The 3-seed screen CONFIRMS the ensemble value and REFUTES my mechanism (2026-09-29)
+
+`analysis/m1_composition.py --frame val1 --protocol modern-v3-9yr --seeds 501,502,503`,
+490 basins, 708,266 rows → `benchmarks/m1_nh_ensemble_3seed.json`.
+
+**The ADD holds at registered depth**, slightly smaller than the 1-seed read:
+
+| | 1 seed | **3 seeds (registered)** |
+|---|---|---|
+| `gridmetm9`+`nclimgridm9` | 0.879082 | 0.880829 |
+| **+ `nhar0m`** | 0.883586 | **0.883810** |
+| paired delta | +0.002085 | **+0.001592** [+0.000878,+0.002467] breadth 0.639 |
+
+**⛔ But the MECHANISM I asserted is measured false.** At 3 seeds:
+
+| member | solo val1 | LOO | mean err-corr with the others |
+|---|---|---|---|
+| `nhar0m` | **0.873176** (best) | **+0.001592** (smallest) | **0.787** (least decorrelated) |
+| `gridmetm9` | 0.864333 | **+0.010987** (largest) | 0.715 |
+| `nclimgridm9` | 0.837041 | +0.002294 | 0.708 |
+
+The most decorrelated *pair* is `gridmetm9|nclimgridm9` at **0.6360** — two forcing products, not two model
+families. NH sits at 0.7940/0.7795 against them.
+
+I wrote, from the 1-seed read: *"a member with a null solo contributed +0.002085 … NH's value is entirely
+as a decorrelated member; a different MODEL FAMILY buys distinctness comparable to a different FORCING
+PRODUCT."* **Both halves are wrong at registered depth.** NH's solo is not null — it is the *best* of the
+three — and it is the *least* decorrelated member, carrying the *smallest* LOO. It wins on **skill**.
+
+⇒ This reproduces the legacy finding exactly (`nhar` won on skill, err-corr 0.8079 vs the block's own
+0.8072 — the 5th refutation of NH-as-decorrelator). **The modern corpus makes it the 6th.** Forcing
+diversity remains the only diversity measurably paid for; my claim had briefly contradicted a
+well-established result on one seed.
+
+**⭐ Why the 1-seed read misled: seed depth is a MEMBER property.** 1→3 seeds moved `nhar0m` **+0.018305**
+(0.854871 → 0.873176) against `gridmetm9`'s **+0.008779** (0.855554 → 0.864333) — a 2.1× spread in `b` of
+the `a − b/k` seed law, consistent with the recorded 2.7× spread. A 1-seed comparison between members with
+different `b` is not a comparison of the members. ⇒ **A 1-seed read may justify SPENDING more seeds; it may
+never source a mechanism claim.** The decision it drove (run 502/503) was right; the story it told was not.
+
+⚠️ Combiner: trimmed 0.883224 **below** mean 0.883810 at n=3, as flagged — trimming 3 leaves the middle
+value alone. Combiner choice still waits on the full roster.

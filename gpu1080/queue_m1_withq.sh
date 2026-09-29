@@ -34,6 +34,19 @@ case "$M" in
   # ~1.6M, i.e. ~3.5x the GPU cost per seed, across ~50 runs.
   gridmetm9)                 CORP="$V3/camels_corpus_gridmet_m3_cohort";   ENC="camels1f"; TRS=2005-10-01 ;;
   nclimgridm9)               CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f"; TRS=2005-10-01 ;;
+  # ---- the 3-PRODUCT family: daymet+gridmet+nclimgrid, available FIRST ---------
+  # NLDAS was deferred because its remaining transfer is ~490 GB against Daymet's
+  # 4.5 GB. The fused + decoder-fixed + dec-q members are where the measured value
+  # is, so the critical path never needed all four products.
+  fused3m|fused3msmoke)      CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm3v2";   TRS=2005-10-01 ;;
+  fused3md3|fused3md3smoke)  CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm3v2d3"; TRS=2005-10-01 ;;
+  # ⭐ the best member class measured on the CAMELS analogue: all-product decoder
+  # PLUS --dec-q, solo +0.006384 CI [+0.004554,+0.008198]
+  fused3md3q|fused3md3qsmoke) CORP="$V3/camels_corpus_fused3m_m3_cohort";  ENC="camelsm3v2d3"; EXTRA="--dec-q"; TRS=2005-10-01 ;;
+  # the ADMITTING hybrid shape (1-product encoder / all-product decoder)
+  daymetmd3)                 CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm1f_daymet_d3";    TRS=2005-10-01 ;;
+  gridmetmd3)                CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm1f_gridmet_d3";   TRS=2005-10-01 ;;
+  nclimgridmd3)              CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm1f_nclimgrid_d3"; TRS=2005-10-01 ;;
   # 24-var encoder, single-product (daymet) decoder -- the OPERATIONALLY servable shape
   fused4m|fused4msmoke)      CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm4v2" ;;
   # 24-var encoder AND decoder -- the LEDGER 56 fix
@@ -48,10 +61,15 @@ case "$M" in
   # a uniform per-member lift beats any new member by ~an order of magnitude.
   # Judged on the COMPOSITION, with pairwise error correlation reported, because
   # the analogous d3 fix bought skill and spent distinctness (0.8358 -> 0.9046).
-  daymetmq)                  CORP="$V3/camels_corpus_daymet_m3_cohort";    ENC="camels1f"; EXTRA="--dec-q" ;;
-  nldasmq)                   CORP="$V3/camels_corpus_nldas_m3_cohort";     ENC="camels1f"; EXTRA="--dec-q" ;;
-  gridmetmq)                 CORP="$V3/camels_corpus_gridmet_m3_cohort";   ENC="camels1f"; EXTRA="--dec-q" ;;
-  nclimgridmq)               CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f"; EXTRA="--dec-q" ;;
+  # GATE B adopted the 9-year window (TRS=2005-10-01): 34 years measured only
+  # +0.001370 for ~3.75x the compute, and --dec-q is registered at +0.003..+0.008.
+  # These are seed-matched against gridmetm9/nclimgridm9, so they MUST share that
+  # window -- comparing a dec-q member on 34 years against a plain one on 9 would
+  # confound the two changes.
+  daymetmq)                  CORP="$V3/camels_corpus_daymet_m3_cohort";    ENC="camels1f"; EXTRA="--dec-q"; TRS=2005-10-01 ;;
+  nldasmq)                   CORP="$V3/camels_corpus_nldas_m3_cohort";     ENC="camels1f"; EXTRA="--dec-q"; TRS=2005-10-01 ;;
+  gridmetmq)                 CORP="$V3/camels_corpus_gridmet_m3_cohort";   ENC="camels1f"; EXTRA="--dec-q"; TRS=2005-10-01 ;;
+  nclimgridmq)               CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f"; EXTRA="--dec-q"; TRS=2005-10-01 ;;
   # single-product ENCODER + all-product DECODER. Measured ADMITTING on the CAMELS
   # analogue (daymeth1d3 +0.000261, nldash1d3 +0.000209, both CI-positive), unlike
   # the mirror shape (all-product encoder / single-product decoder), which read NULL.
@@ -59,6 +77,16 @@ case "$M" in
   nldasmd4)                  CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_nldas_d4" ;;
   gridmetmd4)                CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_gridmet_d4" ;;
   nclimgridmd4)              CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_nclimgrid_d4" ;;
+  # ---- GATE A: the registered pipeline control (PREREG_v2.md MODERN-1) --------
+  # Identical corpus and recipe to fused3m, but on P-NEARING -- the FROZEN
+  # record's own window -- so the comparison against frozen fused3h1 isolates
+  # PIPELINE + PRODUCT change from WINDOW change. It is the registered STOP gate
+  # and therefore runs BEFORE the P-MODERN family, not after.
+  # Band -0.015..+0.005 solo; halt below -0.03. Scored by analysis/m1_gate_a.py.
+  fused3mN|fused3mNsmoke)    CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm3v2"
+                             TRS=1999-10-01; TRE=2008-09-30
+                             VS=1980-10-01;  VE=1989-09-30
+                             TS=1989-10-01;  TE=1999-09-30 ;;
   *) echo "unknown member $M"; exit 2 ;;
 esac
 
@@ -100,8 +128,8 @@ if [ ! -f "$CKPT" ]; then
 fi
 
 # ---- GUARD 1: read the protocol back out of the CHECKPOINT, never argv -----
-$PY - "$CKPT" "$LOG" "$ENC" "$TRS" "$TRE" "$VS" "$VE" <<'PYG'
-import re, sys, torch
+M1_EXTRA="$EXTRA" $PY - "$CKPT" "$LOG" "$ENC" "$TRS" "$TRE" "$VS" "$VE" <<'PYG'
+import os, re, sys, torch
 ck, log, enc, trs, tre, vs, ve = sys.argv[1:8]
 sd = torch.load(ck, map_location="cpu")
 cfg = sd["cfg"]
@@ -114,8 +142,17 @@ ndec = len(cfg["dec_vars"])
 # the checkpoint stores weights under "state_dict", not "model" -- caught by
 # the proxy-corpus smoke before the real corpus existed
 w = sd["state_dict"]["decoder.weight_ih_l0"].shape[1]
-exp = ndec + 2 + 1 + len(cfg["static_feats"])
-assert w == exp, f"decoder width {w} != {exp} (dec={ndec})"
+# --dec-q appends the last observed discharge AND its mask to the decoder input,
+# so the width grows by exactly 2. Measured: dec=6 +2 +1 +27 statics = 36 without
+# dec_q, 38 with it. Omitting this aborted GUARD 1 on every dec-q member AFTER a
+# successful 30-epoch train (checkpoints were fine; only the guard failed).
+dq = bool(cfg.get("dec_q", False))
+exp = ndec + 2 + 1 + len(cfg["static_feats"]) + (2 if dq else 0)
+assert w == exp, f"decoder width {w} != {exp} (dec={ndec} dec_q={dq})"
+# ⭐ And assert the ARM ACTUALLY APPLIED, which matters more than the width: a
+# member named *q whose cfg says dec_q=False silently trained the wrong recipe.
+if "--dec-q" in os.environ.get("M1_EXTRA", ""):
+    assert dq is True, "member expects --dec-q but the checkpoint says dec_q=False"
 prods = {v.rsplit("_", 1)[1] for v in cfg["enc_vars"] if "_" in v}
 txt = open(log, encoding="utf-8", errors="replace").read()
 assert re.search(r"^epoch 30/30 ", txt, re.M), "no 'epoch 30/30' line - partial checkpoint"
@@ -164,7 +201,8 @@ json.dump({"member": member, "seed": int(seed), "frame": tag, "rows": n,
            # has train_start 2005-10-01, and calling it "modern-v3" would make the
            # scorer refuse the dump against its own protocol table
            "train_start": trs, "train_end": tre,
-           "protocol": "modern-v3" if trs == "1980-10-01" else "modern-v3-9yr",
+           "protocol": ("modern-v3" if trs == "1980-10-01" else
+                        "nearing2022" if trs == "1999-10-01" else "modern-v3-9yr"),
            "all_leads": al == "1", "bytes": os.path.getsize(out), "ledger": "MODERN-1"},
           open(out.replace(".csv.gz", ".json"), "w"), indent=1)
 print(f"DUMP OK {tag}: {n} rows -> {out}")

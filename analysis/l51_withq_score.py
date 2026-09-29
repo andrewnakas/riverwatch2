@@ -27,13 +27,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-# Box layout when present, otherwise the repo root inferred from this file. The
-# hard-coded "~/riverwatch2" made every analysis module here unimportable on the
-# Mac (which is the git root), so scorer arithmetic could only be unit-tested on
-# the GPU box -- exactly when the box is unreachable is when you want to test it.
-_BOX = os.path.expanduser("~/riverwatch2")
-os.chdir(_BOX if os.path.isdir(_BOX)
-         else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.chdir(os.path.expanduser("~/riverwatch2"))
 DD = "data/mblstm/l51_dumps"
 IDS = set(str(x).zfill(8) for x in json.load(open("data/camels_gauge_ids.json"))["531"])
 MIN_ROWS = 20
@@ -57,10 +51,14 @@ PROTOCOLS = {
 
 
 def load_member(member, frame, readout="mid", require_guard=True, seeds=None,
-                protocol="nearing2022"):
+                protocol="nearing2022", prefix=None):
     """One member = the seed-average of its per-seed dumps. Returns a frame of
     (station_id, t0, truth, <member>)."""
-    _pref = PROTOCOLS[protocol][2]
+    # MODERN-1 Gate A compares the frozen legacy member against a NEW member on
+    # the SAME protocol (P-NEARING) -- one protocol, two dump prefixes. The
+    # override changes only WHERE dumps are found; the sidecar window guard below
+    # still runs, so a wrong-window dump is still refused.
+    _pref = PROTOCOLS[protocol][2] if prefix is None else prefix
     files = sorted(glob.glob(f"{DD}/{_pref}{member}_s*_{frame}.csv.gz"))
     if seeds is not None:
         files = [f for f in files if int(f.split("_s")[-1].split("_")[0]) in seeds]
