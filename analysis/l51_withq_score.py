@@ -50,6 +50,27 @@ PROTOCOLS = {
 }
 
 
+def check_sidecar(f, protocol, require_guard=True):
+    """The provenance gate, in ONE place.
+
+    Its absence is what produced the retracted 0.9253 (a model trained on its own
+    test decade), so it must not be reimplemented per loader -- a second copy is a
+    second thing to forget to widen. `load_member` and the all-leads loader in
+    `analysis/m1_allleads.py` both call this.
+    """
+    side = f.replace(".csv.gz", ".json")
+    if not os.path.exists(side):
+        sys.exit(f"{f}: no sidecar — provenance unknown, refusing to score")
+    s = json.load(open(side))
+    if protocol not in PROTOCOLS:
+        sys.exit(f"unknown protocol {protocol!r}; known: {sorted(PROTOCOLS)}")
+    _ts, _te = PROTOCOLS[protocol][0], PROTOCOLS[protocol][1]
+    if require_guard and (s.get("train_start") != _ts or s.get("train_end") != _te):
+        sys.exit(f"{f}: sidecar says train {s.get('train_start')}..{s.get('train_end')}"
+                 f" — NOT the {protocol} window ({_ts}..{_te}), refusing to score")
+    return s
+
+
 def load_member(member, frame, readout="mid", require_guard=True, seeds=None,
                 protocol="nearing2022", prefix=None):
     """One member = the seed-average of its per-seed dumps. Returns a frame of
@@ -68,17 +89,7 @@ def load_member(member, frame, readout="mid", require_guard=True, seeds=None,
     truth = key = None
     used = []
     for f in files:
-        side = f.replace(".csv.gz", ".json")
-        if not os.path.exists(side):
-            sys.exit(f"{f}: no sidecar — provenance unknown, refusing to score")
-        s = json.load(open(side))
-        if protocol not in PROTOCOLS:
-            sys.exit(f"unknown protocol {protocol!r}; known: {sorted(PROTOCOLS)}")
-        _ts, _te = PROTOCOLS[protocol][0], PROTOCOLS[protocol][1]
-        if require_guard and (s.get("train_start") != _ts
-                              or s.get("train_end") != _te):
-            sys.exit(f"{f}: sidecar says train {s.get('train_start')}..{s.get('train_end')}"
-                     f" — NOT the {protocol} window ({_ts}..{_te}), refusing to score")
+        s = check_sidecar(f, protocol, require_guard)
         d = pd.read_csv(f, dtype={"station_id": str})
         d["station_id"] = d.station_id.str.zfill(8)
         d = d[(d.h == 1) & d.station_id.isin(IDS)].sort_values(["station_id", "t0"])

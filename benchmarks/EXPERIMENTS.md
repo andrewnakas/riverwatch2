@@ -7806,3 +7806,46 @@ never source a mechanism claim.** The decision it drove (run 502/503) was right;
 
 ⚠️ Combiner: trimmed 0.883224 **below** mean 0.883810 at n=3, as flagged — trimming 3 leaves the middle
 value alone. Combiner choice still waits on the full roster.
+
+### ⭐⭐⭐ The all-leads table: assimilation is a LEAD-1 phenomenon (2026-09-29)
+
+`analysis/m1_allleads.py --frame val14 --protocol modern-v3-9yr --members gridmetm9,nclimgridm9
+--seeds 501,502,503 --crosscheck` → `benchmarks/m1_allleads_screen.json`. 490 basins, equal weight.
+
+| lead | ensemble | `gridmetm9` | `nclimgridm9` |
+|---|---|---|---|
+| **1** | **0.880829** | 0.864333 | 0.837041 |
+| 2 | 0.853353 | 0.833420 | 0.799346 |
+| 3 | 0.844369 | 0.825809 | 0.782894 |
+| 7 | 0.837248 | 0.814345 | 0.769117 |
+| 14 | 0.833520 | 0.803125 | 0.765712 |
+
+**⭐ 58% of the entire 14-day decay happens in ONE step.** Lead 1→2 costs **−0.027476** of a total
+**−0.047310**; leads 2→14 together cost only −0.019833, and from lead 7 the curve is nearly flat
+(−0.0037 over seven days).
+
+⇒ **The with-q edge is overwhelmingly a nowcast edge.** The assimilated discharge tells the model where
+the hydrograph *is*; by lead 3 that information has largely decayed and the member is living on its
+forcings. For context the no-q record is **0.836289** (different window and frame, so not a like-for-like)
+— i.e. **by lead 14 the with-q ensemble has fallen to roughly no-q territory.** The +0.047 that
+assimilation buys at lead 1 is spent by the end of the horizon.
+
+⚠️ Part of this is *by construction* and must not be read as a defect: `--h1-weight 0.5` puts half the
+gradient on lead 1 because the benchmark scores lead 1 and nothing else. The table quantifies the cost of
+that choice rather than hiding it. ⇒ **For an app serving a 14-day hydrograph the lead weights are the
+wrong ones**, which is exactly what was flagged as benchmark-only; this table is the first measurement of
+how much that choice is worth.
+
+**✅ The table passed its own integrity check, bit-identically.** The `h==1` slice of the `val14` dump
+reproduces the `val1` dump's median to **+0** (0.880829253 both ways). They are separate dump invocations
+of the same checkpoint, so agreement to the last digit rules out the class of defect that has cost most
+here — a grid offset or a lead mislabelling invisible to mean/bias checks. `--crosscheck` asserts it and
+refuses to report the table otherwise.
+
+⚠️ Scope: MB-LSTM members only. NH writes day-1 results, so `nhar0m` — the member with the best solo — is
+absent from the table. The headline day-1 ensemble does include it.
+
+**Tooling**: the provenance guard is now one shared `l51.check_sidecar()` called by both loaders rather
+than reimplemented per loader (a second copy is a second thing to forget to widen). Both branches
+re-verified: a 9-year dump loaded as `modern-v3` is refused by window; under `modern-v3-9yr` it loads. The
+frozen record still reproduces **test1 0.898364**.
