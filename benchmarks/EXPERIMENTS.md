@@ -7849,3 +7849,30 @@ absent from the table. The headline day-1 ensemble does include it.
 than reimplemented per loader (a second copy is a second thing to forget to widen). Both branches
 re-verified: a 9-year dump loaded as `modern-v3` is refused by window; under `modern-v3-9yr` it loads. The
 frozen record still reproduces **test1 0.898364**.
+
+### ⭐⭐ The best member in the roster is only using TWO forcing products (2026-09-29)
+
+Read from `m1_nhar0m_s501_*/config.yml`, not assumed: `nhar0m`'s `dynamic_inputs` is **10** entries —
+`prcp/tmax/tmin/vp/srad` × **gridmet, nclimgrid**. Daymet was still building when it was launched.
+
+So the member with the **best solo of the roster** (val1 **0.873176**, 3 seeds, above `gridmetm9`'s
+0.864333) is a **2-product** model, while the MB-LSTM members it is compared against are 1-product and the
+fused members will be 3-product. ⇒ Adding Daymet to it is the cheapest remaining upside on the board:
+**+1 forcing product is the largest lever measured on this corpus (~+0.0165)**, and here it applies to the
+strongest member rather than a marginal one. `nhar0m3` = 15 dynamic inputs, 3 seeds, armed as
+`gpu1080/chain_nh3.sh`, scored against `nhar0m` on one join with identical seeds.
+
+⚠️ This also means the earlier NH-vs-MB solo comparisons were **not product-matched**: `nhar0m` (2
+products) vs `gridmetm9` (1 product). That does not affect the ensemble ADD (+0.001592, which is a
+composition measurement on fixed members), but it does mean **"NH beats the MB members solo" was partly a
+forcing-count difference, not purely a model-family one** — a second way the 1-seed story was overstated.
+`nhar0m3` vs the 3-product `fused3m` will be the first product-matched model-family comparison.
+
+**Ops note on how it is armed.** An independent GPU waiter alongside `run_m1_batch.sh` is precisely how
+this 8 GB card was oversubscribed before (a job is invisible to `nvidia-smi` for minutes while it loads its
+corpus, so two pollers both claim one slot). So `chain_nh3.sh` does all CPU work immediately — NH dataset
+build, config render, path check, and an assertion that the config really has 15 inputs from the 3 expected
+products — and its GPU wait requires `gpu=0 AND no run_m1_batch.sh AND no queue_m1_withq.sh` on three
+consecutive polls, with character-class patterns so the check cannot match its own command line. ⭐ And the
+condition is **reachable in both branches**: it waits for the box to go quiet, not for chain2 to *succeed*,
+because Gate A failing would halt chain2 and a wait on its completion artifact would never fire.
