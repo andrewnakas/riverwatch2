@@ -3795,3 +3795,21 @@ for no-q too. The losing branch is not re-litigated.
 ⚠️ Registered BEFORE the with-q family's results are known, so it cannot be tuned to them.
 
 **Expected no-q modern ensemble: 0.79 – 0.84** (unchanged from the original registration).
+
+## §MODERN-1 — GATE A's FALSIFIER: SCOPE CLARIFIED (2026-09-29, before the verdict)
+
+Gate A's STOP condition reads "halt all GPU". Writing the resume script exposed that the
+implementation covered only the *members Gate A gates* — the P-MODERN fused family — while
+`chain_nh3b` (the 3-product NH member) would have seen no family running, taken the card
+immediately and trained straight through the halt. Found by a branch test of the decision
+logic, not by a failure.
+
+⇒ **Clarified, and it is a general rule: a registered halt names a RESOURCE, not a member
+list.** On a Gate A failure, *no GPU work of any kind* starts — the fused family, the NH
+member, the no-q arm, all of it. Work that does not touch the GPU continues, because it
+cannot contaminate anything the gate is protecting: the NLDAS fetch (network) and the
+4-product fuse (CPU, build-only) both proceed, so a halt costs diagnosis time rather than
+also idling the data pipeline.
+
+This is a tightening of the falsifier's implementation, not a change to its bar: the band
+(−0.015…+0.005) and the STOP line (−0.03) are untouched, and the verdict is still unread.

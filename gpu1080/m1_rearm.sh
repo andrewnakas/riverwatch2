@@ -80,7 +80,15 @@ else
 fi
 
 # ---- 4. the 3-product NH member (waits for chain_fused3m2 to be gone) ------
-if [ "$NH3" -ge 3 ]; then
+# ⛔ A Gate A failure means "halt ALL GPU and diagnose" (PREREG_v2.md MODERN-1), and
+# this is GPU work. Found by the branch test: with GAV=FAIL the family was correctly
+# withheld, but nh3b would then see no chain_fused3m2 alive, take the card at once and
+# train right through the registered halt -- the halt would have stopped the members it
+# named and nothing else. NLDAS (network) and the fuse (build-only) are unaffected and
+# continue.
+if [ "$GAV" = "FAIL" ]; then
+  echo "Gate A FAILED -- NOT starting chain_nh3b either; the registered halt covers ALL GPU work."
+elif [ "$NH3" -ge 3 ]; then
   echo "nhar0m3 complete ($NH3/3)"
 elif alive "chain_nh3[b]\.sh"; then
   echo "chain_nh3b already running"
