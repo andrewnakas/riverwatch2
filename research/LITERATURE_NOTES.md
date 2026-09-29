@@ -293,6 +293,12 @@ and a documented account of why the sophisticated methods failed.*
 
 ## 14. Is there a CEILING? What the field says, and what our data says
 
+> ⚠️ **σ here is chosen, not measured — see §17.** This section's ceiling numbers
+> rest on σ values taken from the UK literature. §17 measures σ directly on the
+> CAMELS gauges (144,914 field-gauging-vs-published-daily pairs) and finds the
+> assumed flow-gradient runs **backwards**, putting the no-q ceiling at
+> **0.73–0.95** rather than the values below. Read §17 before quoting any ceiling.
+
 ### The literature debate is explicit
 
 - **[Probing the limit of hydrologic predictability with the Transformer
@@ -609,3 +615,133 @@ input and observational rather than anything ensembling can reach.
 - **Publish the corpus** — HF push blocked on a token (`huggingface_hub` not
   installed). Reuse `scripts/sync_openmeteo_corpus.py`; cite Menne et al. 2012
   (GHCN-Daily, doi:10.7289/V5D21VHZ) and state the Daymet-circularity caveat.
+
+---
+
+## 17. [measured] σ MEASURED DIRECTLY — the ceiling stops being a scenario (2026-08-09)
+
+⚠️ **This supersedes the σ selection in §14 and in WHITEPAPER §4.2.** Everything
+we previously called a "measured" error regime was an *incidence* measurement
+(how often peaks require rating-curve extrapolation) followed by a **choice** of σ
+from UK literature. σ itself had never been measured on the gauges we score
+against. It now has, and the choice we made was wrong — in direction, not just
+magnitude.
+
+### 17.1 The method (the part worth reusing)
+
+USGS publishes the **field gaugings** behind every rating curve — direct
+current-meter/ADCP measurements, ~1,000–2,000 per station back to the 1950s.
+Compare each gauging to the **published daily value for the same day**:
+
+    σ_total² = measurement error + rating-curve error + shift error
+
+Gauge *quality ratings* capture only the first term. This comparison captures all
+three, and the third is what actually corrupts the series we score NSE against.
+
+⇒ This is a general recipe: **any benchmark scored against a rating-curve-derived
+series can have its observational ceiling measured this way.**
+
+### 17.2 The result (144,914 pairs, 523 of 531 basins — complete)
+
+| flow band | n | robust σ (MAD) | plain SD |
+|---|---|---|---|
+| p00–25 | 9,046 | 0.0542 | 0.1767 |
+| p25–50 | 9,086 | 0.0487 | 0.1924 |
+| p50–75 | 9,134 | 0.0480 | 0.1895 |
+| p75–90 | 5,477 | 0.0592 | 0.2533 |
+| **p90–99** | 3,278 | **0.1277** | 0.3710 |
+| **p99+** | 424 | **0.3354** | 0.5112 |
+
+⭐⭐ **σ RISES ~7× with flow.** Our `sigma_series` assumed the opposite (0.30 low
+→ 0.18 high, on the reasoning that peaks are well gauged). Since the corrected
+ceiling is **flow-weighted** (weights ∝ q²), the gradient's *direction* matters
+more than its level: every ceiling computed on the old shape is wrong in
+direction.
+
+**Ceiling:** measured robust **0.9493**, plain SD **0.7280** — versus the assumed
+0.9594 (central) and 0.9786 (optimistic). Formula validated against Monte Carlo
+to ≤0.001 across σ = 0.02–0.30, so the formula is not the uncertainty; σ is.
+
+⇒ **Measured no-q ceiling = 0.73–0.95, and the held-out 0.8363 sits inside it.**
+
+### 17.3 Why the band is wide — the outliers are REAL
+
+**1.4% of pairs disagree by >2×**, and they are the entire gap between the robust
+and SD readings. They are not artifacts:
+
+| flow band | >2× rate | | era | >2× rate |
+|---|---|---|---|---|
+| p00–25 | 0.72% | | 1900–1970 | 2.19% |
+| p25–75 | 0.83% | | 1970–1990 | 1.90% |
+| p75–95 | 2.38% | | 1990–2010 | 1.03% |
+| **p95+** | **9.39%** | | 2010–2030 | 0.82% |
+
+A 13× gradient with flow and a clean decline with gauging technology — the
+signature of rating-curve extrapolation failing at peaks. Example: 01031500,
+1982-02-23, gauging **4,190 cfs** vs published daily **200 cfs**, on a day the
+hydrograph did not move.
+
+Restricting to flat-hydrograph days (to suppress instantaneous-vs-daily-mean
+mismatch) moves robust σ only 0.052→0.043 (typical) and 0.124→0.094 (high flow)
+⇒ within-day variation explains a minority of the scatter.
+
+### 17.4 ❌ Correcting the observations is closed — measured, then on principle
+
+The natural follow-up ("fix the data, raise the ceiling") is arithmetically sound
+— removing half the noise lifts a σ=0.15 ceiling 0.970→0.993 — and empirically
+dead:
+
+- **between-gauge (learnable bias): 0.9% of residual variance**; within-gauge
+  noise: 99.1%. There is no systematic per-station offset to correct.
+- **persistence ρ = 0.071** between gaugings <2 months apart (n=14,538), ~0.01
+  beyond. A corrector needs **ρ ≳ 0.3** to break even; at ρ=0.07 the best case is
+  **+0.0035** and naive application **costs −0.019**.
+
+⛔ **And a working corrector would still be inadmissible**: the tempting signal
+sources are model output, ensemble means, neighbouring gauges. Any of them makes
+the target a function of the prediction ⇒ NSE stops measuring skill, the number
+is incomparable to Li/Song, Kratzert and Nearing (all scored against unmodified
+USGS series), and the claim is unfalsifiable — a better model "corrects" more and
+raises its own score.
+
+### 17.5 ⭐ But error MAGNITUDE is learnable (sign is not)
+
+| quantity | value |
+|---|---|
+| split-half corr of per-gauge σ (first vs second half of record, n=114) | **r = 0.50** |
+| corr(log σ, **log basin area**) | **−0.58** |
+| corr(log σ, p_mean / aridity / Fair+Poor fraction) | +0.33 / −0.31 / +0.30 |
+| persistence of the error itself | r = 0.07 |
+
+**Small, wet, poorly-rated catchments are gauged substantially worse.** You cannot
+predict *which way* a reading is wrong; you can predict *how wrong that gauge
+typically is*. Two admissible uses, both metric contributions rather than data
+corrections:
+
+1. **Normalised skill** — NSE against each basin's own measured ceiling (0.8363 ≈
+   **88%** of achievable).
+2. **Gauge-quality stratification** — report on the subset where observations can
+   still resolve model differences.
+
+⚠️ Both must be **pre-registered and computed independently of model output**, or
+they become the same circularity that kills data correction.
+
+### 17.6 ⚠️ API traps (verified live 2026-08-09)
+
+- Collection is **`field-measurements`** (`discharge-measurements` → 404).
+- ⚠️⚠️ **It MIXES PARAMETERS.** For 01022500, only **274 of 994** records are
+  discharge (00060); the rest are **gage height (00065)** and temperature.
+  **Filter `parameter_code`** or you compare feet to cfs and get σ=1.93 with a
+  −2.54 mean log-ratio. *The implausible number was the tell.*
+- Daily values: collection `daily`, `parameter_code=00060` **and**
+  `statistic_id=00003` (daily mean).
+- USGS quality ratings are **95% CI half-widths, not standard errors**
+  (Excellent ≤2%, Good ≤5%, Fair ≤8%, Poor >8%). Reading them as σ inflates ~2×.
+- ~40% of gaugings carry **no rating**; do not treat unrated as good.
+- σ is **not ordered by the rating label** at the series level — another reason to
+  measure σ directly rather than derive it from the rating mix.
+
+Scripts: `measure_sigma.py` (fetch + per-basin σ, cached/resumable),
+`ceiling_measured.py` (the ceiling ladder). ⚠️ The `sigma_steady` column is
+**buggy** — a single 20× outlier on a flat day dominates a small-sample SD; use
+the robust/MAD columns.

@@ -152,9 +152,16 @@ CAMELSM4V2_VARS = [f"{v}_{p}" for p in MODERN_PRODUCTS
                    for v in CAMELS1F_VARS]                 # fused, 24
 CAMELSM4V2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # OPERATIONAL shape, 6
 CAMELSM4V2_D4_DEC = list(CAMELSM4V2_VARS)                  # BENCHMARK-max, 24
-# The 3-product subset whose every channel is genuinely independent (no borrowed
-# radiation/humidity), for the like-for-like against the frozen fused3h1.
-MODERN3_PRODUCTS = ("daymet", "nldas", "gridmet")
+# ⭐ THE TRIO THAT IS ACTUALLY AVAILABLE FIRST. Sizing the remaining builds in
+# bytes showed NLDAS needs ~490 GB against Daymet's 4.5 GB, so NLDAS was deferred
+# and Daymet given the bandwidth (it went from ~2 to ~10 basins/h). That makes the
+# first complete trio **daymet + gridmet + nclimgrid**, not daymet+nldas+gridmet.
+# Changing this name is safe: nothing has trained on the old definition.
+# ⚠️ Note the honest asymmetry: nclimgrid's radiation and humidity are borrowed
+# from gridmet, so this trio is independent in 16 of its 18 channels, not 18 --
+# precipitation and temperature, which carry the signal, are independent in all
+# three.
+MODERN3_PRODUCTS = ("daymet", "gridmet", "nclimgrid")
 CAMELSM3V2_VARS = [f"{v}_{p}" for p in MODERN3_PRODUCTS
                    for v in CAMELS1F_VARS]                 # fused, 18
 CAMELSM3V2_DEC = [f"{v}_daymet" for v in CAMELS1F_VARS]    # 6
@@ -175,6 +182,11 @@ CAMELSM3V2_D3_DEC = list(CAMELSM3V2_VARS)                  # 18
 for _p in MODERN_PRODUCTS:
     HYBRID_SETS[f"camelsm1f_{_p}_d4"] = ([f"{v}_{_p}" for v in CAMELS1F_VARS],
                                          list(CAMELSM4V2_VARS))
+# the same ADMITTING shape against the 3-product corpus, which is what exists
+# first (NLDAS deferred on bytes -- see MODERN3_PRODUCTS above)
+for _p in MODERN3_PRODUCTS:
+    HYBRID_SETS[f"camelsm1f_{_p}_d3"] = ([f"{v}_{_p}" for v in CAMELS1F_VARS],
+                                         list(CAMELSM3V2_VARS))
 # Kept for completeness/ablation only -- measured null in its CAMELS analogue.
 for _p in MODERN_PRODUCTS:
     HYBRID_SETS[f"camelsm4v2_dec_{_p}"] = (list(CAMELSM4V2_VARS),
@@ -620,7 +632,9 @@ def main() -> int:
                              "camelsm4v2_dec_gridmet", "camelsm4v2_dec_nclimgrid",
                              # the ADMITTING hybrid shape (see the note above)
                              "camelsm1f_daymet_d4", "camelsm1f_nldas_d4",
-                             "camelsm1f_gridmet_d4", "camelsm1f_nclimgrid_d4"],
+                             "camelsm1f_gridmet_d4", "camelsm1f_nclimgrid_d4",
+                             "camelsm1f_daymet_d3", "camelsm1f_gridmet_d3",
+                             "camelsm1f_nclimgrid_d3"],
                     default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
                          "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "
