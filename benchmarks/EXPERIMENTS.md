@@ -7876,3 +7876,44 @@ products — and its GPU wait requires `gpu=0 AND no run_m1_batch.sh AND no queu
 consecutive polls, with character-class patterns so the check cannot match its own command line. ⭐ And the
 condition is **reachable in both branches**: it waits for the box to go quiet, not for chain2 to *succeed*,
 because Gate A failing would halt chain2 and a wait on its completion artifact would never fire.
+
+## ⚖️⭐⭐⭐⭐ GATE A — THE REGISTERED STOP GATE: PASSED, BELOW BAND (2026-09-29)
+
+`analysis/m1_gate_a.py --frame test1 --cand fused3mN --ref fused3h1 --seeds 501,502,503`
+→ `benchmarks/m1_gate_a_verdict.json`. Both arms under the **same** protocol guard (P-NEARING,
+train 1999-10-01…2008-09-30), joined on identical rows, 1,777,563 rows, 490 cohort basins.
+
+| | test1 median NSE |
+|---|---|
+| **new pipeline** `fused3mN` — areal Daymet V4R1 + gridMET + nClimGrid | **0.834831** |
+| **frozen** `fused3h1` — CAMELS Daymet + Maurer + NLDAS, on the cohort join | **0.868201** |
+| frozen, all 531 basins (context only, NOT the comparison) | 0.870453 |
+| **paired delta (new − frozen)** | **−0.017036** [−0.021665, −0.013621] |
+| breadth (basins favouring the new pipeline) | **0.227** |
+
+**Registered band −0.015 … +0.005; STOP below −0.03. Verdict: below band, well above the falsifier ⇒
+build-but-flag, proceed.** The P-MODERN family was released on this.
+
+⭐ **What the gate bought.** It separates *pipeline + product* change from *decade* change, and it says the
+modern products cost **−0.017 on a like-for-like window**. So the modern-window headline will be lower than
+0.898364 for two independent reasons, and this quantifies the first of them **before** the test window is
+read, rather than leaving it to be discovered as an unexplained shortfall. That is the entire purpose of a
+control, and it is the difference between "our modern number is 0.03 lower and we don't know why" and "0.017
+of it is the products, measured in advance."
+
+⭐ **Breadth 0.227 is the reassuring number, not the delta.** Only 23% of basins favour the new pipeline —
+the loss is **broad and consistent**, which is the signature of products that genuinely carry less signal.
+A localised extraction bug or a registration error would show a *bimodal* pattern: most basins unaffected
+and a subset destroyed. It does not. Combined with the fused-column check (9 basin-product pairs
+value-identical to source) and the +1-day precip shift validated by the streamflow referee, the deficit
+reads as real information loss, not corruption.
+
+**Why a loss was expected, and both causes were on record beforehand:** Maurer is simply **gone** (it ends
+2008-12-31), and Daymet V4R1 measured **−0.0244** against CAMELS Daymet on the precip-vs-streamflow screen.
+Losing one of three products and degrading another by −0.024 for a net −0.017 is coherent. The registered
+band was 0.002 too optimistic, which is recorded as a miss rather than reinterpreted.
+
+⚠️ **The cohort is slightly harder than the full 531**: the frozen member scores 0.868201 on the 490-basin
+join against 0.870453 on all 531. Quoting the published 0.872162 against a 490-basin candidate would have
+inflated the apparent deficit by ~0.002 — which is why the scorer prints the 531 figure labelled as context
+and computes the verdict from the paired join.

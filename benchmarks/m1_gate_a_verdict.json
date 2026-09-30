@@ -1,0 +1,29 @@
+{
+ "_note": "MODERN-1 Gate A. Band, STOP line and frame fixed in PREREG_v2.md before the run. Verdict uses the PAIRED per-basin delta on the cohort join; the 531-basin frozen median is context only.",
+ "frame": "test1",
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "candidate": "fused3mN",
+ "reference": "fused3h1",
+ "rows": 1777563,
+ "basins": 490,
+ "median_new_pipeline": 0.8348313657160386,
+ "median_frozen_on_join": 0.8682009738387378,
+ "median_frozen_all531_context": 0.8704527960387793,
+ "paired_delta": -0.017035733454780544,
+ "ci95": [
+  -0.021665163616423455,
+  -0.013621425526554098
+ ],
+ "breadth": 0.22653061224489796,
+ "registered_band": [
+  -0.015,
+  0.005
+ ],
+ "stop_line": -0.03,
+ "passed": true,
+ "verdict": "\u26a0\ufe0f BELOW BAND but above the STOP line (-0.03 < -0.017036 < -0.015). Build-but-flag: proceed, and carry this deficit as a STATED cost of modernity in the write-up rather than discovering it at scoring time."
+}

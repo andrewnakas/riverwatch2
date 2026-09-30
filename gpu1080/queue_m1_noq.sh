@@ -153,6 +153,14 @@ PYS
 
 dump val1      "$VS" "$VE" 1 0
 dump test1     "$TS" "$TE" 1 0
-dump val14     "$VS" "$VE" 1 1
-dump test14    "$TS" "$TE" 1 1
+# all-leads dumps are OPT-IN -- see the measurement in queue_m1_withq.sh: a 14-lead
+# dump is ~22M rows, >12 h at 5-6.5 GiB RSS and only ~34% GPU. A screen does not need
+# one; only members reaching the final composition do, and they can be re-dumped on
+# demand because the checkpoint is kept and `dump` skips existing frames.
+if [ "${M1_ALLLEADS:-0}" = "1" ]; then
+  dump val14   "$VS" "$VE" 1 1
+  dump test14  "$TS" "$TE" 1 1
+else
+  echo "[$(date +%T)] all-leads dumps SKIPPED (M1_ALLLEADS!=1); re-dump with M1_ALLLEADS=1"
+fi
 echo "=== M1-NOQ $M s$S ALL DONE $(date +%F_%T) ==="

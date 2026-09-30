@@ -211,6 +211,24 @@ PYS
 
 dump val1      "$VS" "$VE" 1 0   # selection frame, every day, lead 1
 dump test1     "$TS" "$TE" 1 0   # THE HEADLINE FRAME - read once, at the end
-dump val14     "$VS" "$VE" 1 1   # all-leads table (selection side)
-dump test14    "$TS" "$TE" 1 1   # all-leads table (reported with the headline)
+
+# ---- the all-leads dumps are OPT-IN, and that is a throughput decision ------
+# MEASURED 2026-09-29: a 14-lead dump is 490 basins x ~3300 days x 14 leads ~= 22M
+# rows. Each one ran >12 h at 5-6.5 GiB RSS and only ~34% GPU -- they are
+# RAM/CPU-bound, not GPU-bound. Three of them held the card for 12 h while the
+# Gate A verdict, which needs ONLY test1, had been sitting on disk since 08:00.
+# With the family at 9 runs that would have been ~108 h of dumping for a table
+# nothing had asked these members for.
+# ⇒ A SCREEN needs val1 (+ test1 at the end). Only the members that reach the FINAL
+# composition need the all-leads table, and they can be re-dumped on demand because
+# the checkpoint is kept and `dump` skips any frame whose file already exists.
+# Set M1_ALLLEADS=1 for those. Gate A never needed it at all: it is a pipeline
+# control, not a reported member.
+if [ "${M1_ALLLEADS:-0}" = "1" ]; then
+  dump val14   "$VS" "$VE" 1 1   # all-leads table (selection side)
+  dump test14  "$TS" "$TE" 1 1   # all-leads table (reported with the headline)
+else
+  echo "[$(date +%T)] all-leads dumps SKIPPED (M1_ALLLEADS!=1). Re-dump later with"
+  echo "  M1_ALLLEADS=1 bash gpu1080/queue_m1_withq.sh $M $S   # training is skipped, the ckpt is kept"
+fi
 echo "=== M1 $M s$S ALL DONE $(date +%F_%T) ==="

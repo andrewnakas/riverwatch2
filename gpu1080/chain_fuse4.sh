@@ -37,8 +37,19 @@ for i in $(seq 1 4320); do            # ceiling 144 h (fetch measured ~7 min/mon
   if full_span; then echo "[$(date +%T)] NLDAS assembled to 1980-01-01"; break; fi
   n=$(nmon)
   if [ "$n" -gt "$LAST" ]; then LAST=$n; STALL=0; else STALL=$((STALL + 1)); fi
-  if [ "$STALL" -ge 180 ]; then       # 6 h with no new month
-    echo "STALLED: 1980-2013 months stuck at $n/408 for 6 h - stopping"; exit 2
+  # ⚠️ SIZED FROM AN OBSERVED OUTAGE, not from the work rate. The 6 h window this
+  # replaces fired correctly by its own rule and was still wrong: a network partition
+  # froze the box for ~9 h (up 1d22h, so it never rebooted), NLDAS could not fetch, the
+  # month counter stopped, and this chain killed itself while the build was healthy.
+  # ⇒ A frozen counter with a LIVE producer is not a dead build -- it is a stall worth
+  # waiting through. Declare failure only when the producer is actually gone, or after
+  # a window far longer than any outage this box has shown.
+  ALIVE=$(ps -eo cmd --no-headers | grep -c "build_nldas2_area[l]")
+  if [ "$STALL" -ge 540 ] && [ "$ALIVE" -eq 0 ]; then
+    echo "STALLED: months stuck at $n/408 for 18 h AND no fetcher running - stopping"; exit 2
+  fi
+  if [ "$STALL" -ge 1080 ]; then
+    echo "STALLED: months stuck at $n/408 for 36 h even with a fetcher alive - stopping"; exit 2
   fi
   [ $((i % 60)) -eq 0 ] && echo "[$(date +%T)] waiting: months $n/408 (stall $STALL/180)"
   sleep 120
