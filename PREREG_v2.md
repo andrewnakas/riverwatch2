@@ -3859,3 +3859,33 @@ whole shortfall must be attributed to products and cohort — which would make G
 story and is a cleaner result, not a worse one.
 **Cost**: 3 extra dumps on existing checkpoints, no training. Runs only after the family batch, never
 alongside it.
+
+## §MODERN-1 — THE DECODER-PRODUCT PROBE (registered 2026-09-30, before the runs)
+
+**The claim under test.** The all-product decoder measured **+0.027060** on the modern corpus against
+**+0.005604** on the CAMELS analogue — 4.8×. My hypothesis for the difference: the gain scales with **how
+weak the decoder's sole product is.** `fused3m`'s decoder sees only **Daymet V4R1** (−0.0244 on the
+precip-vs-streamflow screen), whereas the CAMELS analogue's decoder-only product was *strong* CAMELS Daymet.
+⚠️ This is a hypothesis. 20+ asserted mechanisms have been overturned in this campaign, so it gets a
+falsifier before it gets a run.
+
+**Design.** All-product (18-var) encoder, **one**-product (6-var) decoder, swapping which product the decoder
+sees. ✅ Verified in code that `camelsm3v2_dec_daymet` is **identical** to `camelsm3v2`, so `fused3m`
+(0.866279) already *is* this family's Daymet cell and only two new members are needed:
+`fused3mgd` (gridMET decoder) and `fused3mnd` (nClimGrid decoder), 3 seeds each, 9-year window.
+
+**The independent axis** is each product's standalone strength, from the single-product members:
+`gridmetm9` **0.864333**, `nclimgridm9` **0.837041**, and Daymet V4R1 — **unmeasured**, which is why
+`daymetm9` (the window-matched 9-year twin; the existing `daymetm` inherits the 34-year default and is
+therefore not comparable) is run alongside as both a roster member and this probe's missing datum.
+
+**Prediction**: the three decoder cells **order the same way** as their products' standalone strength. In
+particular, if `daymetm9` < `gridmetm9`, then `fused3m` (Daymet decoder) < `fused3mgd` (gridMET decoder).
+Registered band for the spread across the three cells: **0.010 … 0.030**.
+
+**Falsifier**: if the decoder cells do **not** order with product strength — e.g. `fused3mgd` ≤ `fused3m`
+while `daymetm9` < `gridmetm9` — the "weak sole product" explanation is **dead**, and the +0.027 must instead
+be read as *more inputs at the scored step*, independent of their quality. That alternative is the simpler
+explanation and would be the better result, because it predicts the fix transfers to any corpus regardless
+of forcing quality.
+**Either way this is explanatory, not number-maximising**, and is queued behind the roster's ship-bar seeds.

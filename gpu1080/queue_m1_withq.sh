@@ -77,6 +77,20 @@ case "$M" in
   nldasmd4)                  CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_nldas_d4" ;;
   gridmetmd4)                CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_gridmet_d4" ;;
   nclimgridmd4)              CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm1f_nclimgrid_d4" ;;
+  # ---- the 3rd single-product member, WINDOW-MATCHED to the others -----------
+  # ⚠️ `daymetm` above inherits the default 34-year window, so it is NOT comparable to
+  # gridmetm9 / nclimgridm9 / the fused family, all of which are 9-year (Gate B: 34 years
+  # bought only +0.001370 for ~3.75x the compute). This is the 9-year twin, and it also
+  # supplies the missing datum for the decoder-product probe: the standalone strength of
+  # Daymet V4R1 on this corpus.
+  daymetm9)                  CORP="$V3/camels_corpus_daymet_m3_cohort";    ENC="camels1f"; TRS=2005-10-01 ;;
+  # ---- THE DECODER-PRODUCT PROBE ---------------------------------------------
+  # All-product encoder, ONE-product decoder, swapping which product the decoder sees.
+  # `fused3m` is already the daymet cell of this family (ENC=camelsm3v2), so only the
+  # other two need building. Tests whether the +0.027060 all-product-decoder gain scales
+  # with how weak the decoder's sole product is.
+  fused3mgd)                 CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm3v2_dec_gridmet";   TRS=2005-10-01 ;;
+  fused3mnd)                 CORP="$V3/camels_corpus_fused3m_m3_cohort";   ENC="camelsm3v2_dec_nclimgrid"; TRS=2005-10-01 ;;
   # ---- GATE A: the registered pipeline control (PREREG_v2.md MODERN-1) --------
   # Identical corpus and recipe to fused3m, but on P-NEARING -- the FROZEN
   # record's own window -- so the comparison against frozen fused3h1 isolates

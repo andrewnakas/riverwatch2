@@ -187,6 +187,16 @@ for _p in MODERN_PRODUCTS:
 for _p in MODERN3_PRODUCTS:
     HYBRID_SETS[f"camelsm1f_{_p}_d3"] = ([f"{v}_{_p}" for v in CAMELS1F_VARS],
                                          list(CAMELSM3V2_VARS))
+# ⭐ THE DECODER-PRODUCT PROBE (MODERN-1, 2026-09-30). All-product ENCODER, ONE-product
+# DECODER -- the same shape as `camelsm3v2` (whose decoder is Daymet) but with the decoder's
+# sole product swapped. Why: the all-product-decoder fix measured +0.027060 here against
+# +0.005604 on the CAMELS analogue, 4.8x, and the hypothesis is that it scales with how BAD
+# the decoder's only product is -- `fused3m`'s decoder sees only Daymet V4R1, which measured
+# -0.0244 on the precip-vs-streamflow screen, where the CAMELS analogue's was strong CAMELS
+# Daymet. These variants order the effect against product strength instead of asserting it.
+for _p in MODERN3_PRODUCTS:
+    HYBRID_SETS[f"camelsm3v2_dec_{_p}"] = (list(CAMELSM3V2_VARS),
+                                           [f"{v}_{_p}" for v in CAMELS1F_VARS])
 # Kept for completeness/ablation only -- measured null in its CAMELS analogue.
 for _p in MODERN_PRODUCTS:
     HYBRID_SETS[f"camelsm4v2_dec_{_p}"] = (list(CAMELSM4V2_VARS),
@@ -634,7 +644,10 @@ def main() -> int:
                              "camelsm1f_daymet_d4", "camelsm1f_nldas_d4",
                              "camelsm1f_gridmet_d4", "camelsm1f_nclimgrid_d4",
                              "camelsm1f_daymet_d3", "camelsm1f_gridmet_d3",
-                             "camelsm1f_nclimgrid_d3"],
+                             "camelsm1f_nclimgrid_d3",
+                             # the decoder-product probe
+                             "camelsm3v2_dec_daymet", "camelsm3v2_dec_gridmet",
+                             "camelsm3v2_dec_nclimgrid"],
                     default="",
                     help="encoder weather set (full = 13-var Open-Meteo, compat "
                          "= 5-var, camels3f = 15-var Daymet+Maurer+NLDAS merged "
