@@ -66,20 +66,37 @@ N=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | wc -
 C2=$(ps -eo cmd --no-headers | grep -c "chain_fused3m[2]\.sh")
 { [ "$N" -ne 0 ] || [ "$C2" -ne 0 ]; } && { echo "no exclusive slot after 72 h (gpu=$N chain2=$C2)"; exit 5; }
 
-# ---- 2. train one seed at a time, ARTIFACT-verified ------------------------
+# ---- 2. train, up to MAX concurrent, ARTIFACT-verified ---------------------
+# ⚠️ MEASURED 2026-09-30: nhar0m3 runs ~24 min/epoch => ~12 h/seed. Training the three
+# seeds SEQUENTIALLY (the original loop) is 36 h of wall-clock for work the card can
+# overlap: one NH run holds ~1986 MiB of 8192, and the earlier 2-product member was
+# proven at 2 concurrent on this same card. So train 2 at a time -- ~24 h -> ~12 h for
+# the two remaining seeds.
+# ⛔ NOT 3 concurrent: 2 is what has actually been observed to work here, and this box
+# has a recorded CUDA OOM from putting one more job on the card than was verified.
+NHMAX=${NH_MAX:-2}
+PIDS=""
 for S in 501 502 503; do
   RUN=$(ls -dt gpu1080/nh_runs/m1_nhar0m3_s${S}_* 2>/dev/null | head -1)
   if [ -n "$RUN" ] && [ "$(ls "$RUN"/model_epoch*.pt 2>/dev/null | wc -l)" -ge 30 ]; then
     echo "[$(date +%T)] s$S already trained"; continue
   fi
+  while [ "$(jobs -rp | wc -l)" -ge "$NHMAX" ]; do wait -n; done
   A=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
-  echo "[$(date +%T)] training nhar0m3 s$S (${A}MiB RAM)"
-  nice -n 5 $PY scripts/nh_arlstm_train.py --config-file "gpu1080/cfg_nhar0m3_s${S}.yml" \
-    --no-graph > "logs/m1_nhtrain_nhar0m3_s${S}.log" 2>&1
-  RC=$?                    # ⭐ own line: `echo "[$(date)] rc=$?"` reports date's status, not this one
-  echo "[$(date +%T)] s$S reported rc=$RC -- the ARTIFACT is what decides"
+  echo "[$(date +%T)] training nhar0m3 s$S (${A}MiB RAM, max $NHMAX concurrent)"
+  ( nice -n 5 $PY scripts/nh_arlstm_train.py --config-file "gpu1080/cfg_nhar0m3_s${S}.yml" \
+      --no-graph > "logs/m1_nhtrain_nhar0m3_s${S}.log" 2>&1
+    echo "[$(date +%F_%T)] s$S train exited rc=$?" >> "$LOG" ) &
+  sleep 120   # let it load its dataset before the next starts (a job is invisible to
+              # nvidia-smi for minutes while loading -- see the oversubscription note)
+done
+while [ "$(jobs -rp | wc -l)" -gt 0 ]; do wait -n; done
+echo "[$(date +%T)] all training finished -- now evaluating and dumping"
+
+# ---- 2b. eval + dump each seed whose checkpoints are complete --------------
+for S in 501 502 503; do
   RUN=$(ls -dt gpu1080/nh_runs/m1_nhar0m3_s${S}_* 2>/dev/null | head -1)
-  [ -z "$RUN" ] && { echo "ARTIFACT FAIL s$S: no run dir"; tail -6 "logs/m1_nhtrain_nhar0m3_s${S}.log"; continue; }
+  [ -z "$RUN" ] && { echo "ARTIFACT FAIL s$S: no run dir"; tail -6 "logs/m1_nhtrain_nhar0m3_s${S}.log" 2>/dev/null; continue; }
   NCK=$(ls "$RUN"/model_epoch*.pt 2>/dev/null | wc -l)
   echo "[$(date +%T)] s$S run=$RUN ckpts=$NCK/30"
   [ "$NCK" -lt 30 ] && { echo "ARTIFACT FAIL s$S: $NCK/30"; continue; }
@@ -98,9 +115,29 @@ for S in 501 502 503; do
   done
 done
 
-# ---- 3. does the 3rd product lift the strongest member? -------------------
-echo "[$(date +%T)] scoring nhar0m3 vs nhar0m, same seeds, one join"
+# ---- 3. two questions, both against the CURRENT roster ---------------------
+# ⚠️ The original comparison here was written when the roster was the
+# gridmetm9+nclimgridm9+nhar0m trio. That roster is obsolete: the fix factorial landed
+# (fused3md3 solo 0.893339) and nclimgridm9 was DROPPED by the standing removal rule
+# (LOO -0.000874, CI excluding zero). Comparing against a stale baseline would answer a
+# question nobody is asking.
+#
+# Q1. THE SWAP, at matched everything-else: does a 3-product NH beat the 2-product one
+#     inside the 5-member roster? This is the first PRODUCT-MATCHED test of the
+#     model-family axis -- nhar0m's earlier failure to add was measured at TWO products
+#     against three-product members, which confounded family with forcing count.
+echo "[$(date +%T)] Q1: swap nhar0m -> nhar0m3 inside the 5-member roster"
 $PY analysis/m1_composition.py --frame val1 --protocol modern-v3-9yr \
-    --members gridmetm9,nclimgridm9,nhar0m3 --against gridmetm9,nclimgridm9,nhar0m \
-    --seeds 501,502,503 --corr --out benchmarks/m1_nhar0m3_verdict.json
+    --members fused3m,fused3md3,fused3md3q,nhar0m3,gridmetm9 \
+    --against fused3m,fused3md3,fused3md3q,nhar0m,gridmetm9 \
+    --seeds 501,502,503 --corr --out benchmarks/m1_nhar0m3_swap.json
+
+# Q2. THE ADD: is the 3-product NH worth keeping ALONGSIDE the 2-product one, or does it
+#     replace it? Both are reported; the registered rule admits on the larger paired
+#     delta whose CI excludes zero.
+echo "[$(date +%T)] Q2: add nhar0m3 to the 5-member roster (keep nhar0m too)"
+$PY analysis/m1_composition.py --frame val1 --protocol modern-v3-9yr \
+    --members fused3m,fused3md3,fused3md3q,nhar0m,nhar0m3,gridmetm9 \
+    --against fused3m,fused3md3,fused3md3q,nhar0m,gridmetm9 \
+    --seeds 501,502,503 --corr --out benchmarks/m1_nhar0m3_add.json
 echo "=== NH3B CHAIN DONE $(date +%F_%T) ==="
