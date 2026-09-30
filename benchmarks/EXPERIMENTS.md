@@ -7917,3 +7917,57 @@ band was 0.002 too optimistic, which is recorded as a miss rather than reinterpr
 join against 0.870453 on all 531. Quoting the published 0.872162 against a 490-basin candidate would have
 inflated the apparent deficit by ~0.002 — which is why the scorer prints the 531 figure labelled as context
 and computes the verdict from the paired join.
+
+## 🏆⭐⭐⭐⭐⭐ `fused3md3q` — AND THE ENSEMBLE STOPS PAYING (2026-09-29)
+
+The LEDGER 56 member class (all-product encoder **and** decoder, plus `--dec-q`) transfers to the modern
+corpus, and it transfers hard. 3 seeds, val1, 490 basins.
+
+| member | solo val1 |
+|---|---|
+| **`fused3md3q`** | **0.891710** |
+| `nhar0m` (NH AR-LSTM, 2 products) | 0.873176 |
+| `gridmetm9` | 0.864333 |
+| `nclimgridm9` | 0.837041 |
+
+**⛔ And the equal-weight ensemble is now WORSE than its best member.** Greedy forward selection started
+from the best solo — the registered rule — admits **nothing**:
+
+| composition | val1 | paired vs `fused3md3q` alone |
+|---|---|---|
+| **`fused3md3q` alone** | **0.891710** | — |
+| + `nhar0m` | 0.890192 | **−0.000596** [−0.001541,−0.000090] |
+| + `gridmetm9` | 0.889164 | **−0.002118** [−0.003178,−0.001042] |
+| + `nclimgridm9` | 0.881877 | **−0.007327** [−0.009854,−0.005615] |
+| all 4, equal weight | 0.889600 | −0.002110 |
+| all 4, trimmed mean | 0.890967 | −0.000743 |
+
+⚠️ **I reported "new best val1 0.889600" and that was wrong** — it was the 4-member ensemble, and the best
+number on the board is the **single member at 0.891710**. I had run the comparison backwards: added
+`fused3md3q` to an existing trio (+0.003627, CI-positive, breadth 0.853, all true) and called the result the
+best, without asking the prior question of whether the trio belonged there at all.
+
+⭐ **The duplicate-member control diagnosed it before the greedy did.** Adding a *copy* of `fused3md3q`
+scored **+0.001264** [+0.000995,+0.001565] — positive, where the control demands ≤ 0. The standing reading
+of a positive dup-control is "the gain is member count, not information", but here it means something
+sharper: **equal weight is underweighting this member**, and the limit of upweighting it is using it alone.
+Every other member's dup-control is correctly negative (`nclimgridm9` −0.002741, `nhar0m` −0.000883,
+`gridmetm9` −0.000123).
+
+⭐⭐ **Why equal weight broke, and why this does NOT reopen fitted weights.** Equal weight won across
+LEDGERs 51-56 because those 8 members were all within ~0.02 of each other (0.87-0.89). Here the spread is
+**0.055** (0.8917 vs 0.8370). Averaging a strong member with much weaker ones trades a little variance for
+a lot of bias. The answer is **composition, not weights** — fitted combination is closed in both directions
+on held-out data (84 rules, none positive), and nothing here reopens it. Drop the weak members instead.
+
+⇒ **The roster structure has changed from the legacy campaign.** `fused3md3q` sees all three products in
+both encoder and decoder *and* the assimilated discharge at the scored step; the single-product members are
+strictly less informed. They are not peers, so they cannot be averaged as peers.
+
+**What could still add**, and all three are in flight: `fused3m` and `fused3md3` (same corpus, comparable
+skill expected), **`nhar0m3`** (3-product NH — `nhar0m`'s failure to add was at **2** products, so the
+model-family axis is NOT yet closed at matched forcings), and later `fused4md4q` once NLDAS lands. An
+ensemble of *comparable* members may still beat the solo; an ensemble of unequal ones does not.
+
+⚠️ 3 seeds is a screen. The ship bar is 5, and `--dec-q`'s own registered band was +0.003…+0.008 solo —
+`fused3md3q` vs the best previous member class is well inside it.
