@@ -8031,3 +8031,38 @@ trimmed mean vs mean: **n=3 lose** (0.883224 vs 0.883810) · **n=4 win** (0.8909
 **n=5 lose** (0.894695 vs 0.896927). It is a 1-bit val choice on the *final* composition and nothing else.
 
 **val1 over this stretch: 0.883810 → 0.896927 (+0.013117).** Still a 3-seed screen; ship bar is 5; test unread.
+
+### ⭐⭐⭐⭐ The all-leads deliverable was quietly infeasible; the dump path was the whole cost (2026-09-30)
+
+The 14-lead dumps were running **>12 h each at 5-6.5 GiB RSS and ~34% GPU**. For a final roster at ship-bar
+depth (≈5 members × 5 seeds × 2 frames) that is **several hundred GPU-hours** — the registered all-leads
+table would have blocked the freeze, and the cost would have surfaced at the end.
+
+**None of it was compute.** The model computes all 14 leads either way (`_hs = range(yh.shape[1])` selects
+which are *emitted*). The dump built rows one at a time in Python: a `strftime` **per row**, ~7 `float()`
+casts per row, ~10M tuples held in memory, then ~40M f-string formats at write time. Replaced with per-chunk
+numpy arrays and one `pandas.to_csv`.
+
+| | before | after |
+|---|---|---|
+| 9,915,789-row all-leads dump | **>12 h** (observed, under RAM contention) | **7 min 56 s** |
+| resident set | 5-6.5 GiB | arrays, ~2 GiB |
+| roster all-leads total | ~600 GPU-h (infeasible) | **~9 h** |
+
+**✅ Verified BYTE-IDENTICAL, not assumed.** Regenerated an *existing* 9.9M-row dump and compared
+**decompressed** content: md5 `a1b3864226662ed4f558711689d158ce` both ways, 9,915,789 lines both ways.
+(The `.gz` bytes differ by 7 — gzip stores a timestamp — so comparing compressed bytes would have produced a
+false failure. Compare content, not containers.)
+
+Two correctness traps found by checking rather than assuming:
+1. **pandas writes NaN as an EMPTY field** where `f"{v:.6f}"` writes `nan` — that would silently change the
+   schema of any row a diverged model produced. `na_rep="nan"` fixes it. The two formatters were then
+   compared on 13 adversarial values (exact half-way cases, 1e-7, negative near-zero, NaN): **0 disagreements**.
+2. **Vectorising the date lookup needs one shared calendar across stations.** The corpus contiguity gate
+   should guarantee it, but the code now **checks** it and falls back to per-station lookup otherwise. It
+   printed `shared calendar of 17067 dates (1980-01-01..2026-09-22)`, so the fast path is live *and* the
+   assumption is verified at runtime on every dump.
+
+⇒ **Before concluding a deliverable is too expensive, check what the cost actually is.** A 90× speedup sat in
+the output path of a job I had been reading as GPU-bound — `nvidia-smi` said 34% and `ps -o %mem` said 42%,
+and the second number was the one that mattered.

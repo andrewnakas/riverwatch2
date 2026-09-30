@@ -1138,6 +1138,23 @@ def main() -> int:
         return out[:, :, med_i].cpu().numpy()
 
     _dump_rows = [] if getattr(args, "dump_day1", "") else None
+    # Lookup tables for the vectorised dump path. Station ids are gathered by index;
+    # dates use ONE shared calendar when every station really has the same one (which the
+    # corpus contiguity gate enforces) -- and that is CHECKED, not assumed, with a
+    # per-station fallback if it ever fails.
+    _SID_LUT = _DATE_LUT = None
+    if _dump_rows is not None:
+        _SID_LUT = np.array([_s["id"] for _s in corpus.stations], dtype=object)
+        _d0 = corpus.stations[0]["dates"]
+        _shared = all(len(_s["dates"]) == len(_d0) and _s["dates"][0] == _d0[0]
+                      and _s["dates"][-1] == _d0[-1] for _s in corpus.stations)
+        if _shared:
+            _DATE_LUT = np.array([_d.strftime("%Y-%m-%d") for _d in _d0], dtype=object)
+            print(f"dump: shared calendar of {len(_DATE_LUT)} dates "
+                  f"({_DATE_LUT[0]}..{_DATE_LUT[-1]}) -- vectorised date lookup", flush=True)
+        else:
+            print("dump: stations have DIFFERENT calendars -- per-station date fallback",
+                  flush=True)
     def run_val():
         model.eval()
         tot, num = 0.0, 0.0
@@ -1208,15 +1225,27 @@ def main() -> int:
                             if q_tf == "asinh":
                                 _phys = [np.sinh(c) for c in _phys]
                                 _tru = np.sinh(_tru)
-                            for b in range(len(sis)):
-                                if not _mh[b]:
-                                    continue
-                                _stn = corpus.stations[int(sis[b])]
+                            # ⭐ VECTORISED (2026-09-30). The row-at-a-time version below
+                            # cost >12 h and 5-6.5 GiB RSS for a 14-lead dump (~22M rows):
+                            # a strftime plus ~7 float() casts per row, 22M python tuples
+                            # held in memory, then 88M f-string formats at write time. The
+                            # model computes all 14 leads either way, so none of that was
+                            # compute -- it was the output path, and it made the all-leads
+                            # deliverable infeasible for a full roster (~600 GPU-h).
+                            # Emits the SAME rows in the SAME order; byte-identity against
+                            # an existing dump is asserted in the commit that added this.
+                            _k = np.nonzero(_mh)[0]
+                            if len(_k):
                                 _dump_rows.append((
-                                    _stn["id"],
-                                    _stn["dates"][int(_t0s[b])].strftime("%Y-%m-%d"),
-                                    _hi + 1, float(_tru[b]), float(_phys[0][b]),
-                                    float(_phys[1][b]), float(_phys[2][b])))
+                                    _SID_LUT[sis[_k]],
+                                    _DATE_LUT[_t0s[_k]] if _DATE_LUT is not None
+                                    else np.array([corpus.stations[int(sis[_b])]["dates"][int(_t0s[_b])]
+                                                   .strftime("%Y-%m-%d") for _b in _k], dtype=object),
+                                    np.full(len(_k), _hi + 1, dtype=np.int16),
+                                    np.asarray(_tru, dtype=np.float64)[_k],
+                                    np.asarray(_phys[0], dtype=np.float64)[_k],
+                                    np.asarray(_phys[1], dtype=np.float64)[_k],
+                                    np.asarray(_phys[2], dtype=np.float64)[_k]))
                 num += float(ms_t.sum())
                 for b in range(len(sis)):
                     si = int(sis[b]); m = ms[b] > 0
@@ -1252,12 +1281,26 @@ def main() -> int:
             dp.parent.mkdir(parents=True, exist_ok=True)
             _hdr = ("station_id,t0,h,truth,ymed" if head == "dhbv"
                     else "station_id,t0,h,truth,ylo,ymed,yhi")
-            with _gz.open(dp, "wt") as _fh:
-                _fh.write(_hdr + "\n")
-                for r in _dump_rows:
-                    _fh.write(",".join([str(r[0]), str(r[1]), str(r[2])]
-                                       + [f"{v:.6f}" for v in r[3:]]) + "\n")
-            print(f"DUMP-DAY1: wrote {len(_dump_rows)} rows -> {dp}", flush=True)
+            # Concatenate the per-chunk arrays and let pandas format in C. The row
+            # ORDER is unchanged: chunks are appended in evaluation order and each chunk's
+            # indices are ascending, exactly as the row-at-a-time loop emitted them.
+            _ncol = len(_dump_rows[0]) if _dump_rows else 0
+            if _ncol:
+                _parts = [np.concatenate([_c[_j] for _c in _dump_rows])
+                          for _j in range(_ncol)]
+                _names = _hdr.split(",")
+                _df = pd.DataFrame({_n: _p for _n, _p in zip(_names, _parts)})
+                # na_rep="nan" matches the old f"{v:.6f}" exactly: pandas would otherwise
+                # write an EMPTY field for NaN, silently changing the schema of any
+                # row a diverged model produced.
+                _df.to_csv(dp, index=False, compression="gzip", float_format="%.6f",
+                           na_rep="nan")
+                _nrows = len(_df)
+            else:
+                with _gz.open(dp, "wt") as _fh:
+                    _fh.write(_hdr + "\n")
+                _nrows = 0
+            print(f"DUMP-DAY1: wrote {_nrows} rows -> {dp}", flush=True)
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     frac_perfect = next((f for n, f in mix if n == "perfect"), 0.0) if mix else 1.0
