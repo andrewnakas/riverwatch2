@@ -7971,3 +7971,63 @@ ensemble of *comparable* members may still beat the solo; an ensemble of unequal
 
 ⚠️ 3 seeds is a screen. The ship bar is 5, and `--dec-q`'s own registered band was +0.003…+0.008 solo —
 `fused3md3q` vs the best previous member class is well inside it.
+
+## 🏆⭐⭐⭐⭐⭐ THE FIX FACTORIAL, AND THE ENSEMBLE PAYS AFTER ALL (2026-09-30)
+
+The three fused members are a clean 2-level factorial of the two LEDGER 56 fixes. 3 seeds, val1, 490 basins,
+one join.
+
+| member | decoder | `--dec-q` | solo val1 |
+|---|---|---|---|
+| `fused3m` | Daymet only | no | 0.866279 |
+| **`fused3md3`** | **all 3 products** | no | **0.893339** ← best solo |
+| `fused3md3q` | all 3 products | **yes** | 0.891710 |
+
+- **Fix #1, the all-product decoder: +0.027060 solo.** On the CAMELS analogue it was **+0.005604** — this is
+  **4.8× larger**.
+- **Fix #2, `--dec-q`: −0.001629.** It **hurts** here, having helped there.
+- Combined: **+0.025431**, against a registered band of **+0.003…+0.008**. So the registration was wrong in
+  *magnitude* for the pair (3× above the top of the band) and wrong in *direction* for the `dec-q` increment.
+  Recorded as such; neither is reinterpreted.
+
+⭐ **A hypothesis for why fix #1 is so much bigger here — flagged as a hypothesis, not asserted.**
+`fused3m`'s decoder sees **only Daymet V4R1**, and that product measured **−0.0244** against CAMELS Daymet on
+the precip-vs-streamflow screen. On the CAMELS analogue the decoder-only product was *strong* CAMELS Daymet.
+So restricting the decoder to the single weakest product should cost more here than there. Testable directly:
+build `fused3m` variants whose sole decoder product is gridMET or nClimGrid instead. This campaign has had
+20+ asserted mechanisms overturned, so it stays a hypothesis until that runs.
+
+### ⛔→✅ The ensemble reverses, and the earlier reading is superseded
+Yesterday, on a roster of one strong and three weak members, greedy selection admitted **nothing** and I
+recorded "`fused3md3q` solo beats every ensemble containing it." That was correct for that roster and I
+flagged the condition — *"an ensemble of comparable members may still beat the solo; an ensemble of unequal
+ones does not."* With three comparable members present, it does:
+
+| composition | val1 |
+|---|---|
+| best solo `fused3md3` | 0.893339 |
+| 6 members, mean | 0.896190 |
+| **5 members (drop `nclimgridm9`), mean** | **0.896927** |
+| — paired vs best solo | **+0.001471** [+0.000851,+0.002422] breadth 0.639 ✅ |
+| — paired vs 6 members | **+0.000874** [+0.000450,+0.001386] ✅ |
+
+⇒ **Equal weight is not broken; an unbalanced roster was.** The spread that killed it was 0.055; the five
+surviving members span 0.866-0.893. Fitted weights remain closed and untouched.
+
+### ⭐ The standing removal rule fires for the first time
+`nclimgridm9` LOO **−0.000874** [−0.001386,−0.000450] — negative with a CI excluding zero, so it is **dropped**
+by the rule as written. Every other member earns its place. After the drop, `gridmetm9` becomes marginal
+(+0.000230 [−0.000036,+0.000622], CI includes zero) and is therefore **kept**: the rule removes only on a
+CI-excluding gain, and it is not re-litigated per-round.
+
+### ⭐⭐ A near-duplicate can still contribute — the 0.93 heuristic needs softening
+`fused3md3|fused3md3q` error correlation is **0.9804**, far above the 0.93 that LEDGER 56 registered as a
+*falsifier* for redundancy. Yet `fused3md3q`'s LOO is **+0.000375** [+0.000164,+0.000565] — CI-positive, it
+earns its place. ⇒ **Error correlation screens candidates cheaply but does not decide admission**; the paired
+LOO does. A 0.98-correlated sibling contributed here, which no previous ledger had observed.
+
+### ⚠️ The combiner is composition-dependent, with no default
+trimmed mean vs mean: **n=3 lose** (0.883224 vs 0.883810) · **n=4 win** (0.890967 vs 0.889600) ·
+**n=5 lose** (0.894695 vs 0.896927). It is a 1-bit val choice on the *final* composition and nothing else.
+
+**val1 over this stretch: 0.883810 → 0.896927 (+0.013117).** Still a 3-seed screen; ship bar is 5; test unread.
