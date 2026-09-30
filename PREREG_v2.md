@@ -3813,3 +3813,49 @@ also idling the data pipeline.
 
 This is a tightening of the falsifier's implementation, not a change to its bar: the band
 (−0.015…+0.005) and the STOP line (−0.03) are untouched, and the verdict is still unread.
+
+## §MODERN-1 — THE DECADE DECOMPOSITION (registered 2026-09-30, before any number exists)
+
+**Why this is needed, and it was not in the original plan.** A literature check (2026-09-30) confirms that
+**no published work evaluates the CAMELS-531 lineage on a post-2014 test window** — the CAMELS forcings stop
+at 2014-09-30, and current benchmarks reuse the Kratzert 1999-2008/1989-1999 split *deliberately* for
+comparability (e.g. HESS 29:6811, 2025). The field's modern routes each drop something: Caravan is ERA5-Land
+on ~482 CAMELS-US basins (and ERA5-Land **failed this campaign's own Gate 1 screen**), and the
+operational/global line abandons CAMELS entirely.
+
+⇒ **There is no external reference for P-MODERN, so the modern number cannot be a "record" — only a first
+measurement.** It therefore needs an *internal* reference, or it is an uninterpretable level. Registered
+decomposition of the gap from the frozen 0.898364:
+
+| component | how it is isolated | status |
+|---|---|---|
+| **product** | Gate A: modern products vs CAMELS products, **same window** (P-NEARING), same 490 cohort | **MEASURED −0.017036** [−0.021665,−0.013621] |
+| **decade** | **one checkpoint, two test decades** (below) | registered here, unrun |
+| residual | what the two do not explain | reported, not explained away |
+
+### The decade probe: ONE checkpoint, TWO test windows
+Take `fused3md3q` (trained **2005-10-01…2014-09-30**) and dump it on **1989-10-01…1999-09-30** in addition
+to its own test window **2018-10-01…2025-09-30**. Same weights, same 490 basins, same corpus, same recipe —
+**only the evaluation decade changes.**
+
+⭐ **Why this shape and not `fused3mN` vs `fused3m`:** those two differ in training window *and* in
+extrapolation direction — `fused3mN` tests **backward** from its training window while `fused3m` tests
+**forward** — so their difference conflates decade with direction and with a 4-year gap. Holding the
+checkpoint fixed removes the training confound entirely. Both windows are fully outside 2005-2014, so
+**neither is in-sample**; the ledger's retracted 0.9253 came from exactly that error and the guard stays on.
+⚠️ Residual asymmetry, stated not hidden: 1989-1999 is ~6 years *before* training, 2018-2025 is ~4 years
+*after*. Comparable in magnitude, opposite in sign. This probe measures "is the modern decade harder **for
+this model**", not a clean causal decade effect, and will be reported in those words.
+
+**Statistic**: the 490 basins are shared, so pair **per-basin NSE across the two windows** and bootstrap over
+basins. It is *not* a difference of medians across different samples — that statistic has disagreed with the
+paired one nine times in this campaign and lost every time.
+
+**Prediction**: the modern decade scores **lower by 0.005…0.030**. Reasons on record: a 7-water-year test
+window against 10 (noisier per basin), the 2018-2025 period containing more record-breaking extremes, and
+the cohort filter admitting basins on *modern* coverage rather than 1990s coverage.
+**Falsifier**: if the modern decade scores **higher**, the "modern data is harder" framing is wrong and the
+whole shortfall must be attributed to products and cohort — which would make Gate A's −0.017 the entire
+story and is a cleaner result, not a worse one.
+**Cost**: 3 extra dumps on existing checkpoints, no training. Runs only after the family batch, never
+alongside it.
