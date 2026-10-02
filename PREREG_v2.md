@@ -3889,3 +3889,37 @@ be read as *more inputs at the scored step*, independent of their quality. That 
 explanation and would be the better result, because it predicts the fix transfers to any corpus regardless
 of forcing quality.
 **Either way this is explanatory, not number-maximising**, and is queued behind the roster's ship-bar seeds.
+
+## §MODERN-1 — A QUANTITATIVE PREDICTION FOR THE 4th PRODUCT (registered 2026-10-02, before the runs)
+
+The decoder result is now a *mechanism*, not just an effect: **what pays is the number of products delivering
+target-day information to the decoder.** Evidence: all-product decoder **+0.015528** paired with-q and
+**+0.020291** no-q (bigger where forcing is the only target-day source); swapping *which* single product the
+decoder sees is a **null** (−0.000484); the weakest product as sole decoder costs only −0.002918; and
+`--dec-q` (discharge, not forcing, to the decoder) is a **null**.
+
+A mechanism that only explains past numbers is cheap. So, before `fused4md4` is scored:
+
+**The ladder of decoder product count**, with-q, paired, 490 basins, 9-year window:
+| decoder products | member | paired vs 1-product |
+|---|---|---|
+| 1 (Daymet) | `fused3m` | 0 by definition |
+| 3 | `fused3md3` | **+0.015528** (measured) |
+| **4** | **`fused4md4`** | **predicted +0.019 … +0.027** |
+
+**Derivation**: +0.015528 for 2 extra products ⇒ ~+0.0078 per product if the effect is linear in count. A 4th
+product should then add **+0.008** over `fused3md3`, i.e. +0.023 over 1-product, and the band allows for
+sub-linear saturation (+0.019) or a super-linear surprise (+0.027).
+
+**Falsifiers, both informative:**
+- **`fused4md4` − `fused3md3` ≤ +0.002** (CI including zero) ⇒ **the count effect SATURATES at 3**, and the
+  mechanism is "enough target-day information", not "more products". That would also mean the 4th product's
+  ~63 h of NLDAS transfer bought nothing at the decoder, and the honest write-up says so.
+- **≥ +0.015** ⇒ super-linear, which no part of the current evidence predicts and would mean the mechanism is
+  misstated rather than merely imprecise.
+
+⚠️ Separately registered, because it is a *different* claim: the **+1-forcing-product** lever measured
+~+0.0165 earlier in this campaign was an **encoder-side** measurement on single-product members. The ladder
+above is **decoder-side**. If `fused4m` (4-product encoder, Daymet-only decoder) gains little over `fused3m`
+while `fused4md4` gains over `fused3md3`, that separates the two channels — and that comparison is in the same
+batch, so it costs nothing extra.
