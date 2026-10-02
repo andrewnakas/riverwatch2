@@ -8151,3 +8151,53 @@ entirely on val1 LOO before this was computed — and the **ensemble** test1 rem
 family with forcing count; removing that confound does not rescue it. ⇒ **A different model family is worth
 ~nothing here once forcing count is matched**, consistent with the five legacy refutations and now cleaner
 than any of them.
+
+## 🏆⭐⭐⭐⭐⭐ PHASE 5 — THE NO-Q ARM EXISTS, val1 **0.832156** (2026-10-02)
+
+The second half of the original request, unbuilt until now. Built while NLDAS was slowed ~18×
+(3.75 → ~70 min/month) and the GPU would otherwise have idled. `--no-q-input` zeroes the encoder
+discharge and mask channels, so widths match the with-q arm and GUARD 1 asserts the arm from the
+**checkpoint** (`cfg["no_q_input"] is True`); every dump's sidecar carries `arm: "noq"` and an audit
+pass checks all 15 before anything is scored.
+
+### ⭐⭐ THE DECODER FIX TRANSFERS — AND IT IS BIGGER WITHOUT DISCHARGE
+| | paired delta |
+|---|---|
+| with-q: `fused3md3` − `fused3m` | +0.015528 [+0.011777,+0.019817] |
+| **no-q: `lstm_fused3md3` − `lstm_fused3m`** | **+0.020291** [+0.015359,+0.023397] breadth 0.720 |
+
+Registered band was **+0.004…+0.012** — the prediction was right in *direction* and **too conservative in
+magnitude**. ⭐ And it is the *mechanism* confirmed from the other side: the fix delivers target-day forcing
+to the step being scored, so removing the discharge input — the only other source of target-day information
+— makes it worth **more**, not less. Together with the decoder-product probe (count dominates, identity is a
+~19% secondary effect) this reads as a single coherent result: **what matters is how much target-day
+information reaches the decoder, not which product carries it.**
+
+### THE COMPOSITION, by backward elimination under the standing rule
+| step | composition | val1 | paired gain |
+|---|---|---|---|
+| start | 5 members | 0.829681 | — |
+| drop `lstm_nclimgridm` (LOO −0.001642) | 4 | 0.831855 | +0.001642 [+0.000942,+0.002757] |
+| drop `lstm_daymetm` (LOO −0.001733) | **3** | **0.832156** | +0.001733 [+0.000305,+0.002779] |
+
+**Final: `lstm_fused3md3` + `lstm_fused3m` + `lstm_gridmetm`, equal-weight mean, 3 seeds → 0.832156.**
+All three LOO CI-positive (+0.005324, +0.008233, +0.004661). Solos: 0.826113 / 0.803388 / 0.774879 — the
+ensemble beats its best member by +0.006.
+
+⭐⭐ **Why one-at-a-time re-scoring is not a formality.** `lstm_fused3m`'s LOO was **+0.000022 (CI including
+zero)** in the 5-member set and **+0.008233** in the 3-member set. It looked worthless only because
+`lstm_daymetm` was its near-duplicate — error correlation **0.9454**, and necessarily so, since `fused3m`'s
+decoder *is* Daymet-only. Removing the duplicate restored the original's contribution 370-fold. ⇒ **A
+member's measured value is conditional on the roster, so a drop list computed in one pass would have
+discarded a genuine contributor.** Both positive dup-controls (`lstm_fused3md3` +0.001744, `lstm_gridmetm`
++0.001998) were pointing at the same crowding.
+
+⚠️ **Not comparable to the frozen no-q record 0.836289** — that is the legacy window, the stride-14 frame
+(which flatters by +0.036) and a different cohort. The registered expectation for the modern no-q ensemble
+was **0.79–0.84**; 0.832156 sits inside it.
+
+### ⚠️ My monitor raised a false alarm, the same way a gate did in LEDGER 56
+It flagged "a chain log has a FAILURE line" — matching **line 6**, the *original* fuse4 stall I had already
+diagnosed and fixed. The relaunched chain appends to the same log, so the grep matched history. ⇒ **A failure
+check must key on something that cannot be stale** (lines after the latest START, or an increase in a count),
+exactly the lesson from the stale `BATCH DONE` that nearly put 6 jobs on an 8 GB card.

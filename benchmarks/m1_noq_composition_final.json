@@ -1,0 +1,80 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "members": [
+  "lstm_fused3md3",
+  "lstm_fused3m",
+  "lstm_gridmetm"
+ ],
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "rows": 708266,
+ "basins": 490,
+ "solo": {
+  "lstm_fused3md3": 0.8261127917008904,
+  "lstm_fused3m": 0.8033879633078829,
+  "lstm_gridmetm": 0.7748790673256263
+ },
+ "composition": {
+  "mean": 0.8321558118195482,
+  "trimmed": 0.8275941474252273,
+  "median": 0.8275941474252273
+ },
+ "loo": {
+  "lstm_fused3md3": {
+   "delta": 0.005323708416469952,
+   "ci": [
+    0.004280153780239937,
+    0.006220780851277696
+   ],
+   "breadth": 0.7306122448979592
+  },
+  "lstm_fused3m": {
+   "delta": 0.008233305558763337,
+   "ci": [
+    0.0064271149868539434,
+    0.009810016614569539
+   ],
+   "breadth": 0.7020408163265306
+  },
+  "lstm_gridmetm": {
+   "delta": 0.00466117353329043,
+   "ci": [
+    0.0024542567560221773,
+    0.007878793413237762
+   ],
+   "breadth": 0.6122448979591837
+  }
+ },
+ "pairwise_err_corr": {
+  "lstm_fused3md3|lstm_fused3m": 0.8989168616271923,
+  "lstm_fused3md3|lstm_gridmetm": 0.8337867393525932,
+  "lstm_fused3m|lstm_gridmetm": 0.6885067182510631
+ },
+ "mean_err_corr": 0.8070701064102828,
+ "comparison": {
+  "A": [
+   "lstm_fused3md3",
+   "lstm_fused3m",
+   "lstm_gridmetm"
+  ],
+  "B": [
+   "lstm_fused3md3",
+   "lstm_fused3m",
+   "lstm_gridmetm",
+   "lstm_daymetm"
+  ],
+  "median_A": 0.8321558118195482,
+  "median_B": 0.8318550358732663,
+  "paired_delta": 0.0017332710643993554,
+  "ci95": [
+   0.0003045167539767468,
+   0.002779334841467751
+  ],
+  "breadth": 0.5551020408163265,
+  "basins": 490
+ }
+}

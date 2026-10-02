@@ -1,0 +1,92 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "members": [
+  "lstm_fused3md3",
+  "lstm_fused3m",
+  "lstm_gridmetm",
+  "lstm_nclimgridm",
+  "lstm_daymetm"
+ ],
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "rows": 708266,
+ "basins": 490,
+ "solo": {
+  "lstm_fused3md3": 0.8261127917008904,
+  "lstm_fused3m": 0.8033879633078829,
+  "lstm_gridmetm": 0.7748790673256263,
+  "lstm_nclimgridm": 0.7378537228162687,
+  "lstm_daymetm": 0.785625530865101
+ },
+ "composition": {
+  "mean": 0.8296813856416687,
+  "trimmed": 0.8289692962559984,
+  "median": 0.821693767970535
+ },
+ "loo": {
+  "lstm_fused3md3": {
+   "delta": 0.004039488312227668,
+   "ci": [
+    0.003474734383181133,
+    0.004814758154647825
+   ],
+   "breadth": 0.7938775510204081
+  },
+  "lstm_fused3m": {
+   "delta": 2.1746315861992382e-05,
+   "ci": [
+    -0.0010256728515785074,
+    0.0005062362456629277
+   ],
+   "breadth": 0.5020408163265306
+  },
+  "lstm_gridmetm": {
+   "delta": 0.010759282469948395,
+   "ci": [
+    0.008551059743828304,
+    0.013006339042580861
+   ],
+   "breadth": 0.7612244897959184
+  },
+  "lstm_nclimgridm": {
+   "delta": -0.0016421741110961285,
+   "ci": [
+    -0.002756562997182299,
+    -0.0009420218072857534
+   ],
+   "breadth": 0.4122448979591837
+  },
+  "lstm_daymetm": {
+   "delta": -0.0009420031420019348,
+   "ci": [
+    -0.002203588285974778,
+    -0.00010867353201026361
+   ],
+   "breadth": 0.4489795918367347
+  }
+ },
+ "dup_control": {
+  "lstm_fused3md3": 0.0017438703264000543,
+  "lstm_fused3m": -0.001322049749911347,
+  "lstm_gridmetm": 0.0019980008053631093,
+  "lstm_nclimgridm": -0.005015347803746073,
+  "lstm_daymetm": -0.0024861648497057076
+ },
+ "pairwise_err_corr": {
+  "lstm_fused3md3|lstm_fused3m": 0.8989168616271923,
+  "lstm_fused3md3|lstm_gridmetm": 0.8337867393525932,
+  "lstm_fused3md3|lstm_nclimgridm": 0.7998818678563848,
+  "lstm_fused3md3|lstm_daymetm": 0.8629346087182097,
+  "lstm_fused3m|lstm_gridmetm": 0.6885067182510631,
+  "lstm_fused3m|lstm_nclimgridm": 0.8347524979080855,
+  "lstm_fused3m|lstm_daymetm": 0.945357684162373,
+  "lstm_gridmetm|lstm_nclimgridm": 0.6139622691070477,
+  "lstm_gridmetm|lstm_daymetm": 0.6276558765519265,
+  "lstm_nclimgridm|lstm_daymetm": 0.8040955647567423
+ },
+ "mean_err_corr": 0.7909850688291619
+}
