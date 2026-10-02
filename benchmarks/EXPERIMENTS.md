@@ -8201,3 +8201,35 @@ It flagged "a chain log has a FAILURE line" — matching **line 6**, the *origin
 diagnosed and fixed. The relaunched chain appends to the same log, so the grep matched history. ⇒ **A failure
 check must key on something that cannot be stale** (lines after the latest START, or an increase in a count),
 exactly the lesson from the stale `BATCH DONE` that nearly put 6 jobs on an 8 GB card.
+
+### ⛔ NO-Q GATE B: 34 years vs 9 is a NULL here too (2026-10-02)
+
+Registered before the with-q results were known, because Gate B's "+0.001370, keep 9 years" was measured on
+the **with-q** arm and a model with no discharge input might lean harder on seeing more weather.
+
+| | val1 |
+|---|---|
+| 34-year window (`lstm_gridmetm34`) | 0.773291 |
+| 9-year window (`lstm_gridmetm`) | 0.774879 |
+| **paired (34yr − 9yr)** | **+0.004106** [−0.000531,+0.008641] breadth 0.539 |
+
+**NULL — the CI includes zero. The 9-year window is kept for BOTH arms**, and the LEDGER 55 explanation (the
+cosine LR schedule, not the window count, decides the MB training budget) now stands in the arm where more
+data had the best reason to matter.
+
+⚠️ **Honest reading of my own prediction**: the registered band was **+0.002…+0.010** and the point estimate
+**+0.004106 sits inside it**, and it *is* ~3× the with-q value, which is weakly consistent with the reasoning.
+But the CI straddles zero, so by the standing rule — nothing admitted whose CI includes zero — it is a null and
+must not be reported as a win. ⇒ **Prediction falsified by the interval even though the point estimate landed
+in the band.** Keeping 9 years also saves ~3.5× the compute per seed across the whole no-q arm.
+
+⭐ **And this is the 11th difference-of-medians disagreement — pointing the OTHER way.** Medians say the
+34-year arm is **worse** (0.773291 vs 0.774879, i.e. −0.0016); the paired statistic says it is **better**
+(+0.004106). Every previous disagreement in this campaign had medians *overstating* a gain; here they
+understate and even flip the sign. ⇒ The lesson is not "medians are optimistic" — it is **"medians are
+answering a different question"**: they compare two independent rank statistics, while the paired test compares
+the same basins to themselves. Quote paired because it is the right estimator, not because it is the
+conservative one.
+
+⚠️ Process note: the verdict needs only `val1`, which was on disk while the batch was still writing `test1`
+dumps. Scored immediately rather than waiting for the batch — applying the lesson that cost 12 h on Gate A.

@@ -1,0 +1,26 @@
+{
+ "_note": "MODERN-1 Gate B. Band and adjudication frame fixed in PREREG_v2.md before the runs.",
+ "frame": "val1",
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "long_arm": "lstm_gridmetm34",
+ "short_arm": "lstm_gridmetm",
+ "rows": 708266,
+ "basins": 490,
+ "median_34yr": 0.7732906140710479,
+ "median_9yr": 0.7748790664025851,
+ "paired_delta": 0.004106340751527104,
+ "ci95": [
+  -0.0005308925269764047,
+  0.008641008428335373
+ ],
+ "breadth": 0.5387755102040817,
+ "registered_band": [
+  0.005,
+  0.025
+ ],
+ "verdict": "NULL - CI includes zero. Keep the 9-year window; it is ~3.5x cheaper per seed and buys nothing. Prediction falsified."
+}
