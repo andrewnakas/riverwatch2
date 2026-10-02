@@ -1,0 +1,29 @@
+{
+ "_note": "MODERN-1 decade probe. ONE checkpoint, TWO evaluation decades; training window identical by construction. Measures whether the modern decade is harder FOR THIS MODEL, not a clean causal decade effect: 1989-1999 is ~6y before training, 2018-2025 ~4y after.",
+ "member": "fused3md3q",
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "protocol": "modern-v3-9yr",
+ "modern_frame": "test1",
+ "legacy_frame": "xdecade1",
+ "basins_modern": 490,
+ "basins_legacy": 490,
+ "basins_paired": 490,
+ "cohort_attrition": 0,
+ "median_modern": 0.8897003297856684,
+ "median_legacy": 0.8745417906915292,
+ "paired_delta_modern_minus_legacy": 0.010445067189002455,
+ "ci95": [
+  0.00500137257533857,
+  0.01561242438240329
+ ],
+ "breadth_modern_better": 0.6306122448979592,
+ "registered_band": [
+  -0.03,
+  -0.005
+ ],
+ "verdict": "\u26d4 FALSIFIER FIRED: the MODERN decade scores HIGHER (+0.010445). The 'modern data is harder' framing is wrong. Attribute the shortfall to products and cohort \u2014 a cleaner result, not a worse one."
+}

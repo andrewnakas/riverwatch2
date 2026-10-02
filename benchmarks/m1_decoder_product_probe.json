@@ -1,0 +1,28 @@
+{
+ "product_strength": {
+  "daymet": 0.8608984931237627,
+  "gridmet": 0.8643329313670711,
+  "nclimgrid": 0.8370408053543757
+ },
+ "decoder_cell": {
+  "daymet": 0.8662792973846147,
+  "gridmet": 0.8652241774973406,
+  "nclimgrid": 0.8562769292957664
+ },
+ "product_order": [
+  "gridmet",
+  "daymet",
+  "nclimgrid"
+ ],
+ "decoder_order": [
+  "daymet",
+  "gridmet",
+  "nclimgrid"
+ ],
+ "spread": 0.010002368088848357,
+ "orders_match": false,
+ "registered_band": [
+  0.01,
+  0.03
+ ]
+}

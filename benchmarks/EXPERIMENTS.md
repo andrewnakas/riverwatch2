@@ -8066,3 +8066,88 @@ Two correctness traps found by checking rather than assuming:
 ⇒ **Before concluding a deliverable is too expensive, check what the cost actually is.** A 90× speedup sat in
 the output path of a job I had been reading as GPU-bound — `nvidia-smi` said 34% and `ps -o %mem` said 42%,
 and the second number was the one that mattered.
+
+## ⚠️⚠️⭐⭐⭐⭐⭐ FOUR RESULTS, AND I HAD QUOTED DIFFERENCE-OF-MEDIANS AGAIN (2026-10-02)
+
+Re-measuring the last entry's headline numbers as **paired per-basin deltas** changes three of them. The
+campaign's own standing rule is *quote paired* — difference-of-medians has now overstated for the **10th** time,
+and I walked into it with the rule written down.
+
+| change | I reported (Δ of medians) | **PAIRED (correct)** |
+|---|---|---|
+| all-product decoder (`fused3md3`−`fused3m`) | +0.027060 "4.8× the analogue" | **+0.015528** [+0.011777,+0.019817] breadth 0.782 |
+| `--dec-q` (`fused3md3q`−`fused3md3`) | −0.001629 "it hurts" | **+0.000021** [−0.000416,+0.000319] — **NULL** |
+| gridMET-dec vs Daymet-dec cell | −0.001055 "orders don't match" | **−0.000484** [−0.003172,+0.000267] — **NULL** |
+| nClimGrid-dec vs Daymet-dec cell | −0.010002 | **−0.002918** [−0.005523,−0.001513] |
+
+⇒ **Corrections to the record**: the decoder fix is **+0.015528**, ~2.8× the CAMELS analogue's +0.005604, not
+4.8×. **`--dec-q` is a NULL here, not a loss** — its registered band (+0.003…+0.008) is still falsified, but
+by landing at zero, not by going negative.
+
+### ⛔ THE DECODER-PRODUCT HYPOTHESIS IS FALSIFIED — and the simpler explanation wins
+Registered claim: the fix is large because `fused3m`'s decoder sees only the *weak* Daymet V4R1.
+
+| question | answer |
+|---|---|
+| swap **which** single product the decoder sees (Daymet↔gridMET) | **NULL** (−0.000484) |
+| the **weakest** product as sole decoder (nClimGrid) | −0.002918 — real but small |
+| give the decoder **all three** | **+0.015528** |
+
+**Product COUNT dominates; product IDENTITY is a ~19% secondary effect (0.0029/0.0155) and is null between
+the top two.** ⇒ The registered alternative holds: the gain is **more inputs at the step the model is scored
+on, largely independent of their quality** — which is the better outcome, because it predicts the fix
+transfers to any corpus regardless of forcing quality. My mechanism was wrong; the falsifier did its job.
+(21st overturned causal claim.)
+
+### ⛔ THE DECADE PROBE'S FALSIFIER ALSO FIRED — the modern decade is EASIER
+One `fused3md3q` checkpoint, two evaluation decades, 490 basins paired, **zero attrition**:
+
+| | median NSE |
+|---|---|
+| modern 2018-2025 | **0.889700** |
+| legacy 1989-1999 | 0.874542 |
+| **paired (modern − legacy)** | **+0.010445** [+0.005001,+0.015612] breadth 0.631 |
+
+Registered prediction was **−0.005…−0.030** (modern harder). It is the opposite, significantly.
+
+✅ **Not a sparsity artifact** — checked rather than assumed: coverage 0.995 (modern) vs 0.996 (legacy),
+uniform across basins, and the legacy window has **more** rows per basin (3639 vs 2544), which if anything
+favours it.
+⇒ Most likely cause is the asymmetry **I pre-flagged in the registration**: the modern window is ~4 years
+*after* the training window while the legacy one is 6-16 years *before*. So this reads as **extrapolation
+distance**, not a property of the decades — exactly why the probe was registered as "is the modern decade
+harder *for this model*" rather than as a causal decade effect.
+
+### 🔓 THE GAP FROM 0.898364 NOW HAS A MEASURED ACCOUNTING
+| component | measured |
+|---|---|
+| product change (Gate A, same window) | **−0.017036** |
+| decade/window change (same checkpoint) | **+0.010445** |
+| net of the two | **≈ −0.0066** |
+
+They **partly cancel**. Observed: `fused3md3q` solo modern test1 **0.889700** against the frozen 8-member
+legacy record 0.898364 — a difference of **−0.008664**, close to the −0.0066 the two measured effects predict,
+with the remainder in cohort (531→490) and solo-vs-ensemble. ⚠️ Not a precise reconciliation — the components
+come from different members and samples — but the modern shortfall is no longer unexplained.
+
+### ⚠️ test1 HAS BEEN READ for one member, and it was not flagged in advance
+The decade probe compares against the member's **own test window**, so `fused3md3q`'s solo test1 = **0.889700**
+is now known. The design was registered; that it *constitutes a test read* was not called out, which it should
+have been. Recorded in `benchmarks/m1_test_reads.log`. **Nothing selected on it** — the roster was settled
+entirely on val1 LOO before this was computed — and the **ensemble** test1 remains unread.
+
+### ✅ THE ROSTER IS SETTLED — three candidates, no admissions
+| candidate | paired vs the 5-member roster | verdict |
+|---|---|---|
+| swap `nhar0m`→`nhar0m3` (3-product NH) | −0.000012 [−0.000151,+0.000134] | **NULL** → keep the incumbent |
+| add `nhar0m3` alongside `nhar0m` | −0.000178 [−0.000510,−0.000039] | **WORSE** → one NH member only |
+| add `daymetm9` | −0.000036 [−0.000269,+0.000135] | **NULL** → not admitted |
+
+**val1 0.896927 stands**: `fused3m,fused3md3,fused3md3q,nhar0m,gridmetm9`, equal-weight mean, 3 seeds.
+
+⭐⭐ **And the model-family axis is now closed on PRODUCT-MATCHED evidence.** `nhar0m3` has a better solo than
+`nhar0m` (0.879158 vs 0.873176) yet swapping it in is a **null**, and its LOO inside the roster is **+0.000187**
+— the smallest of the five. The earlier failure was at 2 products against 3-product members, which confounded
+family with forcing count; removing that confound does not rescue it. ⇒ **A different model family is worth
+~nothing here once forcing count is matched**, consistent with the five legacy refutations and now cleaner
+than any of them.
