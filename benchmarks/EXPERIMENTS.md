@@ -8233,3 +8233,34 @@ conservative one.
 
 ⚠️ Process note: the verdict needs only `val1`, which was on disk while the batch was still writing `test1`
 dumps. Scored immediately rather than waiting for the batch — applying the lesson that cost 12 h on Gate A.
+
+### ⚠️ TWO PHASE-6 ITEMS DELIBERATELY NOT DONE, AND WHY (2026-10-02)
+
+Recorded so they read as decisions rather than oversights.
+
+**1. External comparison against NWM — NOT valid with what exists, and NOT worth building now.**
+`benchmarks/NWM_HEADTOHEAD.md` is a real per-lead head-to-head, but on a different experiment in every
+dimension that matters: **229 USGS gauges** (not the 490 CAMELS cohort), **2026-03-09…2026-07-06 issuances**
+(not the 2018-2025 test window), **real issued forecasts** (not perfect forcing), and the **production
+cmalv2p ensemble** (not a MODERN-1 member). Quoting it beside a MODERN-1 number would be the exact error
+this campaign already recorded — *never put the "our forcings" number next to the "shared forcings" number
+without saying which is which*, after a MultiMet comparison turned out to be a tie (0.623 vs 0.624).
+A valid version needs NWM **v3 retrospective** output for 2018-2025 on the 490 basins — a multi-day
+acquisition. ⛔ Deferred: the 4th product is still finishing, and starting a new data pipeline before the
+current one lands is the same scope error already caught once this campaign (CPC as a 5th product).
+⇒ **Re-trigger**: once both arms are frozen and if an external anchor is still wanted.
+
+**2. Fraction-of-achievable against the measured ceiling — considered, and rejected as false precision.**
+The plan asks for it, and the framing is genuinely good (nobody else reports it). But the per-basin ceiling
+artifact (`benchmarks/ceiling_estimate_per_basin.csv`, `ledger45_sigma_ceiling.json`) is unusable here
+without over-claiming: it was derived on the **legacy** window for the **no-q** record, and under its own
+`MEASURED_empirical` scenario **27% of basins already exceed it** (median ceiling 0.9413, p10 0.4489).
+Dividing a modern-window score by that would produce a number far more precise-looking than its inputs
+justify, in both directions. ⇒ **Headline stays raw NSE.** The ceiling is still the right way to say "we are
+not data-limited" qualitatively, and the honest quantitative anchor for MODERN-1 is the **internal**
+decomposition already measured: Gate A's product cost **−0.017036** and the decade probe's **+0.010445**.
+
+⭐ The general point: with **no published 531-modern benchmark** to compare against (confirmed by literature
+search 2026-09-30), the temptation is to manufacture an external reference. Two were available and both
+would have been misleading. An internal decomposition that explains the gap from a number the field *does*
+recognise (0.898364 vs Nearing's 0.879) is worth more than a comparison across mismatched protocols.
