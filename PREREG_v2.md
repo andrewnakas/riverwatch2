@@ -3923,3 +3923,42 @@ sub-linear saturation (+0.019) or a super-linear surprise (+0.027).
 above is **decoder-side**. If `fused4m` (4-product encoder, Daymet-only decoder) gains little over `fused3m`
 while `fused4md4` gains over `fused3md3`, that separates the two channels — and that comparison is in the same
 batch, so it costs nothing extra.
+
+## §MODERN-1 — THE h1-WEIGHT LADDER (registered 2026-10-02, before the runs)
+
+**Why this is not "more hyperparameter tuning."** This campaign has closed the tuning axis repeatedly
+(capacity saturates, argmax-by-metric −0.000093, seed depth saturates). But `--h1-weight` is not a capacity
+knob — it is a **train/eval alignment** knob, and alignment is the one class that has actually paid here:
+lead-1 weighting itself was **+0.0143**, and the all-product decoder **+0.015528**. Both were "the model is
+being trained for a different task than it is scored on."
+
+`--h1-weight w` gives lead 1 a share `w` of the loss and splits `1−w` across the other 13 leads
+(`train_mblstm.py:1112-1114`). The benchmark scores **lead 1 and nothing else**.
+
+| h1-weight | lead-1 share of gradient | status |
+|---|---|---|
+| −1 (uniform) | 0.071 | the old default |
+| **0.5** | **0.50** | the frozen recipe — **+0.0143** over uniform |
+| **0.8** | 0.80 | **registered here** |
+| **1.0** | 1.00 (leads 2-14 get ZERO) | **registered here** |
+
+**Nothing has ever tested past 0.5.** The step 0.071 → 0.5 bought +0.0143; the question is whether the
+function is still rising.
+
+**Prediction**: **+0.001 … +0.006** for `w=0.8` over `w=0.5`, and **w=1.0 ≤ w=0.8** — because leads 2-14 are
+plausibly acting as auxiliary supervision, and at `w=1.0` they contribute literally no gradient, so the
+encoder/decoder loses a regulariser that costs nothing to keep.
+**Falsifiers:**
+- `w=0.8 ≤ w=0.5` (CI including zero) ⇒ **the alignment lever is saturated at 0.5** and the frozen recipe is
+  already optimal on this axis. Clean closure, and the cheapest possible way to learn it.
+- `w=1.0 > w=0.8` ⇒ the auxiliary-supervision reading is wrong and leads 2-14 contribute nothing at all,
+  which would be a *stronger* and more surprising result than the prediction.
+
+⚠️ **A stated cost, not a hidden one**: raising `w` necessarily degrades leads 2-14, so the **all-leads table
+will get worse**. That is the right trade for a day-1 benchmark and the wrong one for an app serving a 14-day
+hydrograph — the same tension already recorded for `--h1-weight 0.5` being benchmark-only. If `w=0.8` wins,
+both the day-1 gain **and** the all-leads loss get reported.
+
+**Scope**: probed on `fused3md3` (the champion member class) at 3 seeds, 2 values = 6 runs. ⭐ If it wins, it
+applies to **every member**, which by the 1/N rule is worth far more than any single new member — that is why
+a 3 h probe is justified where another member would not be.
