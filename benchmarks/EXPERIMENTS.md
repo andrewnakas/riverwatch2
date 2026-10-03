@@ -8312,3 +8312,53 @@ the 4-product fuse **value-identical to source in 12 basin-product pairs**; fuse
 **1980-01-02..2025-12-31** (the inner join, Daymet starting 01-02 from its +1-day precip shift); cohort
 trees **490/490 with zero broken symlinks** for both `nldas_m3` and `fused4m_m3`.
 ⇒ `fused4md4` — the registered 4th-product test — is now running.
+
+### ✅ THE h1-WEIGHT LADDER, FULLY CHARACTERISED — and the w=1.0 prediction CONFIRMED (2026-10-03)
+
+| step | paired delta | reading |
+|---|---|---|
+| uniform (0.071) → 0.5 | **+0.0143** | the historic gain |
+| 0.5 → 0.8 | **−0.000043** [−0.000600,+0.000279] | **NULL** — plateau |
+| 0.8 → **1.0** | **−0.000926** [−0.001543,−0.000382] | **worse** |
+| 0.5 → **1.0** | **−0.000537** [−0.001471,−0.000079] | **worse** |
+
+**Registered: "w=1.0 ≤ w=0.8, because leads 2-14 are plausibly acting as auxiliary supervision."
+CONFIRMED, with the CI excluding zero** — and it is the first registered prediction this stretch that
+*held* rather than being falsified.
+
+⇒ **The curve rises steeply to ~0.5, is flat from 0.5 to 0.8, and declines by 1.0.** The frozen recipe sits
+on the plateau, so the axis is closed with the recipe already at its optimum. ⭐ And the mechanism is now
+positively established, not just assumed: at `w=1.0` leads 2-14 receive **literally zero gradient**, and that
+costs **−0.000537** against the frozen recipe. **The unscored leads are doing real work as auxiliary
+supervision.** An ablation that removed them entirely to "focus on what is scored" would have lost skill.
+
+## ⚠️⭐⭐⭐⭐ THE GUARD CAUGHT A WINDOW CONFOUND IN THE 4-PRODUCT TEST (2026-10-03)
+
+Scoring `fused4md4` against `fused3md3` was **refused outright**:
+
+```
+m1_fused4md4_s501_val1.csv.gz: sidecar says train 1980-10-01..2014-09-30
+  — NOT the modern-v3-9yr window (2005-10-01..2014-09-30), refusing to score
+```
+
+`fused4m` and `fused4md4` were defined **without a `TRS` override**, so they inherited the launcher's
+**34-year** default while the whole roster — *including their comparison baseline* `fused3md3` — trains on
+**9 years**. The number would have been "a 4th forcing product **plus** a 3.75× longer training window",
+reported as the product effect.
+
+⚠️ **I had already caught this exact trap and fixed it twice** — `daymetm9` and `nldasm9` exist as 9-year
+twins precisely because `daymetm`/`nldasm` inherit the 34-year default — **and I still missed it for the
+`fused4m` family.** ⇒ The lesson is not "check the window"; it is **derive the member table from the
+protocol instead of patching members one at a time as they are noticed.** Three members, three separate
+discoveries of one defect.
+
+⭐ **And the guard earned its keep a second time, for a failure it was not built for.** It exists because its
+absence produced a model trained on its own test decade (the retracted 0.9253 — a *leakage* guard). Here it
+caught a *confound*: both windows are legitimately out-of-sample, nothing leaked, and the comparison was
+still invalid. A provenance check that refuses anything not matching a named protocol catches more than the
+one failure that motivated it.
+
+**Fix**: `fused4md49` / `fused4m9` at the matched 9-year window (`queue_m1d_withq.sh`, a separate file since
+`queue_m1_withq.sh` was mid-batch). ⭐ The 34-year runs are **not** wasted — `fused4md4` (34y) vs
+`fused4md49` (9y) is a **second, independent replication of Gate B at FOUR products**, where it had been
+measured once, on a single-product member, at +0.001370.
