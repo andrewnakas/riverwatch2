@@ -8264,3 +8264,51 @@ decomposition already measured: Gate A's product cost **−0.017036** and the de
 search 2026-09-30), the temptation is to manufacture an external reference. Two were available and both
 would have been misleading. An internal decomposition that explains the gap from a number the field *does*
 recognise (0.898364 vs Nearing's 0.879) is worth more than a comparison across mismatched protocols.
+
+## ⛔⭐⭐⭐⭐ THE h1-WEIGHT LEVER IS SATURATED AT 0.5 (2026-10-02)
+
+Registered before the run, with the falsifier written out: *"w=0.8 ≤ w=0.5 (CI including zero) ⇒ the
+alignment lever is saturated at 0.5 and the frozen recipe is already optimal on this axis."*
+
+| | val1 (3 seeds, seed-matched) | paired vs w=0.5 |
+|---|---|---|
+| `fused3md3` (w=0.5, frozen recipe) | 0.893339 | — |
+| `fused3md3h8` (w=0.8) | 0.890079 | **−0.000043** [−0.000600,+0.000279] **NULL** |
+
+**The falsifier fired. The axis closes.** Going from uniform (0.071) to 0.5 was worth **+0.0143** — the
+biggest member-level gain this campaign ever found — and going from 0.5 to 0.8 is worth **nothing**. ⇒ The
+frozen recipe sits at the flat part of the curve, and "train on what you score" is already fully exploited.
+Three GPU-hours bought a clean closure on the one lever class that had kept paying.
+
+⭐ **And a 12th median/paired divergence, the largest yet in relative terms.** Difference of medians reads
+**−0.003260** — a loss three times the registered band's lower bound — while the paired statistic reads
+**−0.000043**, a wash. Quoting medians here would have produced a confident, wrong claim that higher
+h1-weight *hurts*. It does not; it does nothing.
+
+⚠️ w=1.0 (leads 2-14 receiving **zero** gradient) is still training. Its registered prediction is
+`w=1.0 ≤ w=0.8`; if it also ties, the stronger statement follows — that leads 2-14 contribute nothing to
+lead-1 skill at all, not even as auxiliary supervision.
+
+## ✅ THE WITH-Q ROSTER AT THE 5-SEED SHIP BAR: val1 **0.897041**
+
+| | val1 |
+|---|---|
+| 3 seeds | 0.896927 |
+| **5 seeds (ship bar)** | **0.897041** |
+
+**+0.000114 for 8 extra runs (~12 GPU-h)** — consistent with the recorded finding that seed depth saturates.
+All five members carry CI-positive LOO at the bar: `fused3m` +0.000944, `fused3md3` +0.000426, `fused3md3q`
++0.000381, `gridmetm9` +0.000270, `nhar0m` +0.000199. Solos: 0.893639 / 0.893262 / 0.873176 / 0.869879 /
+0.866433.
+
+⚠️ **Stated, not hidden**: `nhar0m` contributes **3** seeds, not 5 — each NH seed costs ~12 h against ~1.4 h
+for an MB run, and its LOO is the smallest of the five, so the depth was spent on the four MB members. The
+headline is therefore "5-seed MB members + a 3-seed NH member", and that is how it will be reported.
+
+## ✅ THE 4-PRODUCT CORPUS IS BUILT AND VERIFIED
+NLDAS finished at **408/408** months and assembled to the full span. Checks that passed, all on artifacts
+rather than exit codes: per-basin span **1980-01-01..2025-12-31** (16,802 rows) on every sampled basin;
+the 4-product fuse **value-identical to source in 12 basin-product pairs**; fused span
+**1980-01-02..2025-12-31** (the inner join, Daymet starting 01-02 from its +1-day precip shift); cohort
+trees **490/490 with zero broken symlinks** for both `nldas_m3` and `fused4m_m3`.
+⇒ `fused4md4` — the registered 4th-product test — is now running.
