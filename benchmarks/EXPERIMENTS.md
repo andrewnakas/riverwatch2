@@ -8434,3 +8434,51 @@ prevent. Recorded, not selected.
 `lstm_fused3m` was removed. `fused4m9` read **+0.000007** at 8 members and **+0.001305** at 4. ⇒ A member's
 measured worth is a property of the roster, not of the member. One-at-a-time elimination is load-bearing;
 a batch drop list would have discarded contributors.
+
+## ⛔⭐⭐⭐⭐⭐ ON THE MODERN CORPUS, ENSEMBLING ADDS NOTHING DEMONSTRABLE (2026-10-05)
+
+5-seed ship bar, val1, 490 basins, paired per-basin. `analysis/m1_ens_vs_solo.py`.
+
+| arm | best SOLO | ensemble (mean) | ensemble (trimmed) |
+|---|---|---|---|
+| **with-q** | `fused4md49` **0.910369** | 0.911910 — paired **−0.000601** [−0.001369,−0.000007] **LOSES** | 0.914227 — paired **+0.000484** [−0.000106,+0.001213] **NULL** |
+| **no-q** | `lstm_fused4md4` **0.854010** | 0.848845 — paired −0.001058 **NULL** | 0.851920 — paired +0.000861 [−0.000950,+0.002432] **NULL** |
+
+⇒ **Neither arm's ensemble is demonstrably better than its own best single member.** In with-q the
+equal-weight **mean actually loses** with a CI excluding zero; the trimmed mean has the higher median but
+the paired gain's CI includes zero. In no-q the best solo has the **higher median outright.**
+
+⭐⭐ **This inverts the campaign's central technique.** Equal-weight multi-member ensembling carried the
+legacy record (8 members, +0.019 over Nearing) and every ledger from 51 to 56 treated it as the engine. On
+the modern corpus it is **worth nothing measurable**, because one member — 4 products in **both** encoder
+and decoder, with discharge assimilation — is so much better informed than any available peer that there is
+no decorrelated partner left to average with. Ensembling paid when members were comparable (legacy spread
+~0.02); it stops paying when one member dominates (modern solo spread 0.044 with-q, **0.094** no-q).
+⇒ **Ensembling is a remedy for comparable-but-different models, not a universal gain.**
+
+⚠️ **A 14th median/paired divergence, and it decided the framing.** The with-q trimmed ensemble's median is
+**+0.003858** above the solo while the paired statistic reads **+0.000484, null**. Reporting "the ensemble
+wins" on the median alone would have been a confident claim the per-basin evidence does not support.
+
+### ⚠️ A LIMITATION OF BACKWARD ELIMINATION, exposed here
+All five no-q members have **CI-positive LOO** — every single removal hurts — yet the **best solo beats the
+whole ensemble.** Backward elimination cannot reach the solo because it only takes steps that help, and it
+is four removals away. ⇒ **Run selection in BOTH directions.** Forward-from-best-solo admits nothing in
+either arm; backward elimination gives the 4- and 5-member sets. Adjudicated on the **val median** (the
+registered frame and the benchmark's own metric):
+
+| arm | selected | val1 |
+|---|---|---|
+| **with-q** | 4-member **trimmed** ensemble (higher median than solo) | **0.914227** |
+| **no-q** | **single member** `lstm_fused4md4` (higher median than any ensemble) | **0.854010** |
+
+Reported honestly in both cases: **the with-q ensemble is not demonstrably better than `fused4md49` alone**,
+so the modern with-q result is effectively a single-model result that an ensemble does not spoil.
+
+### The 5-seed ship bar, for the record
+**with-q** `gridmetm9, fused4md49, fused4m9, nldasm9` — mean 0.911910 · trimmed **0.914227**; all four LOO
+CI-positive (+0.003642 / +0.003254 / +0.001486 / +0.001140). Solos 0.910369 / 0.876335 / 0.874477 / 0.866433.
+**no-q** 5 members — mean 0.848845 · trimmed 0.851920; all five LOO CI-positive. Solos 0.854010 / 0.830517 /
+0.811356 / 0.778273 / 0.759764.
+⚠️ 3 seeds → 5 seeds moved with-q 0.913216 → 0.914227 (+0.001011) and no-q 0.850768 → 0.851920 (+0.001152):
+small, positive, consistent with seed depth saturating.
