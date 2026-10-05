@@ -8362,3 +8362,75 @@ one failure that motivated it.
 `queue_m1_withq.sh` was mid-batch). ⭐ The 34-year runs are **not** wasted — `fused4md4` (34y) vs
 `fused4md49` (9y) is a **second, independent replication of Gate B at FOUR products**, where it had been
 measured once, on a single-product member, at +0.001370.
+
+## 🏆🏆⭐⭐⭐⭐⭐ THE 4th PRODUCT IS THE BIGGEST LEVER OF THE ARM (2026-10-05)
+
+NLDAS completed and the 4-product members changed both arms decisively. 3 seeds, val1, 490 basins, paired.
+
+### The registered ladder prediction — exceeded
+| decoder products | member | paired vs `fused3md3` |
+|---|---|---|
+| 3 | `fused3md3` | — |
+| **4** | **`fused4md49`** | **+0.013106** [+0.010872,+0.014841] breadth 0.782 |
+
+Registered **+0.003…+0.011** (from ~+0.0078/product if linear). Measured **+0.013106** — **above the band**,
+so the count effect does **not** saturate at 3 and is mildly **super-linear**. It stops short of the
+**≥+0.015** falsifier that would have meant the mechanism was misstated. `fused4md49` **solo val1 = 0.910058.**
+
+### ⭐⭐ THE TWO CHANNELS, SEPARATED — this is the cleanest result of the project
+The same 4th product, added in two different places:
+
+| where the 4th product goes | paired gain |
+|---|---|
+| **encoder only** (`fused4m9` vs `fused3m`, Daymet-only decoder) | **+0.003487** [+0.001562,+0.005338] |
+| **encoder + decoder** (`fused4md49` vs `fused3md3`) | **+0.013106** [+0.010872,+0.014841] |
+
+⇒ **The decoder carries ~3.8× the value of the encoder for the same added data.** This converts the
+decoder story from "a fix that helped" into a *quantified channel decomposition*: of the ~+0.0131 a 4th
+product buys, only ~+0.0035 comes from the encoder seeing more history — the rest is **target-day
+information at the step being scored.** Consistent with every earlier measurement (all-product decoder
++0.015528 with-q / +0.020291 no-q; product identity null; `--dec-q` null).
+
+### No-q: the same, larger
+`lstm_fused4md4` vs `lstm_fused3md3` = **+0.014333** [+0.010603,+0.018530] breadth 0.706, solo **0.849939**.
+Again bigger than with-q, as the mechanism predicts: with no discharge, forcing is the only target-day input.
+
+### ✅ Gate B replicated at FOUR products — still null
+34-year 0.913835 vs 9-year 0.910058, paired **+0.000494** [−0.000101,+0.001440] ⇒ **NULL**. Gate B had been
+measured once, on a single-product member (+0.001370). It now replicates at four products: **the 9-year
+window stands for both arms**, and ~3.5× the compute per seed stays unspent. A free replication from runs
+that existed only because of the window confound.
+
+## ✅ FINAL COMPOSITIONS (backward elimination, `analysis/m1_backward_eliminate.py`)
+
+**WITH-Q — 4 members: `gridmetm9, fused4md49, fused4m9, nldasm9`**
+mean 0.910394 · **trimmed 0.913216** ← selected
+Dropped in order, each on a CI-excluding gain: `fused3m` (+0.000640) · `fused3md3q` (+0.000834) ·
+`fused3md3` (+0.000546) · `nhar0m` (+0.000346).
+⇒ **Every 3-product fused member and the NH member were eliminated.** The 4-product members are so much
+better informed that their 3-product ancestors became redundant.
+
+**NO-Q — 5 members: `lstm_fused3md3, lstm_gridmetm, lstm_fused4md4, lstm_fused4m, lstm_nldasm`**
+mean 0.846210 · **trimmed 0.850768** ← selected. Dropped `lstm_fused3m` (+0.000713).
+
+| arm | before the 4th product | after |
+|---|---|---|
+| with-q | 0.897041 | **0.913216** (+0.0162) |
+| no-q | 0.832156 | **0.850768** (+0.0186) |
+
+### ⚠️ A 13th median/paired divergence, and it forced a real decision
+Dropping `nhar0m` gave paired **+0.000346** (CI excludes zero ⇒ the rule says drop) while the **median fell**
+0.910768 → 0.910394. The removal rule is stated on the paired statistic; the **reported headline is the
+median**. Resolved by choosing on the metric the benchmark actually scores, and reporting both: the
+4-member **trimmed** (0.913216) beats the 5-member trimmed (0.913145), so the elimination's answer and the
+metric agree once the combiner is included.
+⛔ **A third combiner was NOT adopted.** "Median of members" scores **0.913506** on the 5-member set — the
+best number on the board — but the registered combiner choice is **1 bit, mean vs trimmed**. Adopting a
+third option *because it came out highest* is precisely the post-hoc selection the registration exists to
+prevent. Recorded, not selected.
+
+### ⭐ Conditional value, again — twice more
+`lstm_fused4m` read LOO **−0.000177 (CI incl 0)** in the 6-member no-q set and **+0.002413** after
+`lstm_fused3m` was removed. `fused4m9` read **+0.000007** at 8 members and **+0.001305** at 4. ⇒ A member's
+measured worth is a property of the roster, not of the member. One-at-a-time elimination is load-bearing;
+a batch drop list would have discarded contributors.
