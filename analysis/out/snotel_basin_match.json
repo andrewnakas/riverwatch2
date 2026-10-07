@@ -1,0 +1,1300 @@
+{
+ "06221400": [
+  {
+   "triplet": "405:WY:SNTL",
+   "name": "Cold Springs",
+   "distance_km": 8.17,
+   "elev_ft": 9640.0,
+   "begin_date": "1980-10-01"
+  }
+ ],
+ "06224000": [
+  {
+   "triplet": "786:WY:SNTL",
+   "name": "St. Lawrence Alt",
+   "distance_km": 16.21,
+   "elev_ft": 8610.0,
+   "begin_date": "1983-10-01"
+  },
+  {
+   "triplet": "405:WY:SNTL",
+   "name": "Cold Springs",
+   "distance_km": 22.6,
+   "elev_ft": 9640.0,
+   "begin_date": "1980-10-01"
+  }
+ ],
+ "06278300": [
+  {
+   "triplet": "751:WY:SNTL",
+   "name": "Shell Creek",
+   "distance_km": 2.23,
+   "elev_ft": 9570.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "451:WY:SNTL",
+   "name": "Dome Lake",
+   "distance_km": 11.34,
+   "elev_ft": 8890.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "358:WY:SNTL",
+   "name": "Bone Springs Div",
+   "distance_km": 23.62,
+   "elev_ft": 9340.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "798:WY:SNTL",
+   "name": "Sucker Creek",
+   "distance_km": 23.88,
+   "elev_ft": 8840.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "06311000": [
+  {
+   "triplet": "703:WY:SNTL",
+   "name": "Powder River Pass",
+   "distance_km": 15.35,
+   "elev_ft": 9480.0,
+   "begin_date": "1949-10-01"
+  },
+  {
+   "triplet": "325:WY:SNTL",
+   "name": "Bear Trap Meadow",
+   "distance_km": 15.68,
+   "elev_ft": 8200.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "06409000": [
+  {
+   "triplet": "354:SD:SNTL",
+   "name": "Blind Park",
+   "distance_km": 15.7,
+   "elev_ft": 6900.0,
+   "begin_date": "1989-10-01"
+  }
+ ],
+ "06614800": [
+  {
+   "triplet": "551:CO:SNTL",
+   "name": "Joe Wright",
+   "distance_km": 4.51,
+   "elev_ft": 10140.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "565:CO:SNTL",
+   "name": "Lake Irene",
+   "distance_km": 9.86,
+   "elev_ft": 10680.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "688:CO:SNTL",
+   "name": "Phantom Valley",
+   "distance_km": 11.02,
+   "elev_ft": 9030.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "870:CO:SNTL",
+   "name": "Willow Park",
+   "distance_km": 12.92,
+   "elev_ft": 10710.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "06622700": [
+  {
+   "triplet": "772:WY:SNTL",
+   "name": "South Brush Creek",
+   "distance_km": 4.77,
+   "elev_ft": 8480.0,
+   "begin_date": "1976-02-01"
+  },
+  {
+   "triplet": "668:WY:SNTL",
+   "name": "North French Creek",
+   "distance_km": 12.87,
+   "elev_ft": 10150.0,
+   "begin_date": "1962-09-01"
+  },
+  {
+   "triplet": "731:WY:SNTL",
+   "name": "Sand Lake",
+   "distance_km": 22.46,
+   "elev_ft": 10080.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "367:WY:SNTL",
+   "name": "Brooklyn Lake",
+   "distance_km": 24.24,
+   "elev_ft": 10250.0,
+   "begin_date": "1962-10-01"
+  }
+ ],
+ "06623800": [
+  {
+   "triplet": "859:WY:SNTL",
+   "name": "Whiskey Park",
+   "distance_km": 7.32,
+   "elev_ft": 8950.0,
+   "begin_date": "1985-10-01"
+  },
+  {
+   "triplet": "852:WY:SNTL",
+   "name": "Webber Springs",
+   "distance_km": 17.38,
+   "elev_ft": 9250.0,
+   "begin_date": "1976-02-01"
+  },
+  {
+   "triplet": "673:WY:SNTL",
+   "name": "Old Battle",
+   "distance_km": 18.92,
+   "elev_ft": 9840.0,
+   "begin_date": "1962-09-01"
+  },
+  {
+   "triplet": "467:CO:SNTL",
+   "name": "Elk River",
+   "distance_km": 23.0,
+   "elev_ft": 8710.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "06632400": [
+  {
+   "triplet": "731:WY:SNTL",
+   "name": "Sand Lake",
+   "distance_km": 14.48,
+   "elev_ft": 10080.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "06746095": [
+  {
+   "triplet": "551:CO:SNTL",
+   "name": "Joe Wright",
+   "distance_km": 0.89,
+   "elev_ft": 10140.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "565:CO:SNTL",
+   "name": "Lake Irene",
+   "distance_km": 14.95,
+   "elev_ft": 10680.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "688:CO:SNTL",
+   "name": "Phantom Valley",
+   "distance_km": 16.09,
+   "elev_ft": 9030.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "870:CO:SNTL",
+   "name": "Willow Park",
+   "distance_km": 17.13,
+   "elev_ft": 10710.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "07083000": [
+  {
+   "triplet": "369:CO:SNTL",
+   "name": "Brumley",
+   "distance_km": 16.22,
+   "elev_ft": 10570.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "542:CO:SNTL",
+   "name": "Independence Pass",
+   "distance_km": 21.99,
+   "elev_ft": 10570.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "658:CO:SNTL",
+   "name": "Nast Lake",
+   "distance_km": 23.39,
+   "elev_ft": 8710.0,
+   "begin_date": "1985-10-01"
+  }
+ ],
+ "08377900": [
+  {
+   "triplet": "854:NM:SNTL",
+   "name": "Wesner Springs",
+   "distance_km": 10.35,
+   "elev_ft": 11110.0,
+   "begin_date": "1988-10-01"
+  }
+ ],
+ "08378500": [
+  {
+   "triplet": "854:NM:SNTL",
+   "name": "Wesner Springs",
+   "distance_km": 14.63,
+   "elev_ft": 11110.0,
+   "begin_date": "1988-10-01"
+  }
+ ],
+ "08380500": [
+  {
+   "triplet": "854:NM:SNTL",
+   "name": "Wesner Springs",
+   "distance_km": 24.5,
+   "elev_ft": 11110.0,
+   "begin_date": "1988-10-01"
+  }
+ ],
+ "09035800": [
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 14.5,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "335:CO:SNTL",
+   "name": "Berthoud Summit",
+   "distance_km": 21.24,
+   "elev_ft": 11300.0,
+   "begin_date": "1963-09-01"
+  },
+  {
+   "triplet": "505:CO:SNTL",
+   "name": "Grizzly Peak",
+   "distance_km": 21.77,
+   "elev_ft": 11110.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "09035900": [
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 13.89,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "505:CO:SNTL",
+   "name": "Grizzly Peak",
+   "distance_km": 21.58,
+   "elev_ft": 11110.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "335:CO:SNTL",
+   "name": "Berthoud Summit",
+   "distance_km": 21.61,
+   "elev_ft": 11300.0,
+   "begin_date": "1963-09-01"
+  }
+ ],
+ "09047700": [
+  {
+   "triplet": "505:CO:SNTL",
+   "name": "Grizzly Peak",
+   "distance_km": 10.56,
+   "elev_ft": 11110.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "415:CO:SNTL",
+   "name": "Copper Mountain",
+   "distance_km": 20.69,
+   "elev_ft": 10500.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 20.98,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "09065500": [
+  {
+   "triplet": "842:CO:SNTL",
+   "name": "Vail Mountain",
+   "distance_km": 8.79,
+   "elev_ft": 10290.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 14.54,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "415:CO:SNTL",
+   "name": "Copper Mountain",
+   "distance_km": 17.73,
+   "elev_ft": 10500.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "09066000": [
+  {
+   "triplet": "842:CO:SNTL",
+   "name": "Vail Mountain",
+   "distance_km": 10.15,
+   "elev_ft": 10290.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "415:CO:SNTL",
+   "name": "Copper Mountain",
+   "distance_km": 14.37,
+   "elev_ft": 10500.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 16.35,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "485:CO:SNTL",
+   "name": "Fremont Pass",
+   "distance_km": 24.73,
+   "elev_ft": 11310.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "09066200": [
+  {
+   "triplet": "842:CO:SNTL",
+   "name": "Vail Mountain",
+   "distance_km": 5.96,
+   "elev_ft": 10290.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 16.14,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "415:CO:SNTL",
+   "name": "Copper Mountain",
+   "distance_km": 21.95,
+   "elev_ft": 10500.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "09066300": [
+  {
+   "triplet": "842:CO:SNTL",
+   "name": "Vail Mountain",
+   "distance_km": 3.14,
+   "elev_ft": 10290.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "802:CO:SNTL",
+   "name": "Summit Ranch",
+   "distance_km": 20.83,
+   "elev_ft": 9350.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "09081600": [
+  {
+   "triplet": "618:CO:SNTL",
+   "name": "Mc Clure Pass",
+   "distance_km": 12.63,
+   "elev_ft": 8760.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "669:CO:SNTL",
+   "name": "North Lost Trail",
+   "distance_km": 18.58,
+   "elev_ft": 9190.0,
+   "begin_date": "1984-10-01"
+  }
+ ],
+ "09107000": [
+  {
+   "triplet": "680:CO:SNTL",
+   "name": "Park Cone",
+   "distance_km": 4.92,
+   "elev_ft": 9600.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "542:CO:SNTL",
+   "name": "Independence Pass",
+   "distance_km": 24.24,
+   "elev_ft": 10570.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "09210500": [
+  {
+   "triplet": "509:WY:SNTL",
+   "name": "Hams Fork",
+   "distance_km": 22.29,
+   "elev_ft": 7860.0,
+   "begin_date": "1984-10-01"
+  }
+ ],
+ "09223000": [
+  {
+   "triplet": "509:WY:SNTL",
+   "name": "Hams Fork",
+   "distance_km": 4.72,
+   "elev_ft": 7860.0,
+   "begin_date": "1984-10-01"
+  },
+  {
+   "triplet": "554:WY:SNTL",
+   "name": "Kelley R.S.",
+   "distance_km": 18.84,
+   "elev_ft": 8240.0,
+   "begin_date": "1963-10-01"
+  },
+  {
+   "triplet": "544:WY:SNTL",
+   "name": "Indian Creek",
+   "distance_km": 21.26,
+   "elev_ft": 9400.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "09312600": [
+  {
+   "triplet": "864:UT:SNTL",
+   "name": "White River #1",
+   "distance_km": 10.71,
+   "elev_ft": 8620.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "400:UT:SNTL",
+   "name": "Clear Creek #2",
+   "distance_km": 18.37,
+   "elev_ft": 7850.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "399:UT:SNTL",
+   "name": "Clear Creek #1",
+   "distance_km": 21.04,
+   "elev_ft": 8960.0,
+   "begin_date": "1978-01-01"
+  },
+  {
+   "triplet": "543:UT:SNTL",
+   "name": "Wilbur Bench",
+   "distance_km": 24.92,
+   "elev_ft": 9170.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "09352900": [
+  {
+   "triplet": "843:CO:SNTL",
+   "name": "Vallecito",
+   "distance_km": 3.31,
+   "elev_ft": 10740.0,
+   "begin_date": "1985-10-01"
+  },
+  {
+   "triplet": "797:CO:SNTL",
+   "name": "Stump Lakes",
+   "distance_km": 7.93,
+   "elev_ft": 11230.0,
+   "begin_date": "1985-10-01"
+  }
+ ],
+ "09378170": [
+  {
+   "triplet": "383:UT:SNTL",
+   "name": "Camp Jackson",
+   "distance_km": 10.98,
+   "elev_ft": 8840.0,
+   "begin_date": "1985-10-01"
+  }
+ ],
+ "09404450": [
+  {
+   "triplet": "514:UT:SNTL",
+   "name": "Harris Flat",
+   "distance_km": 16.93,
+   "elev_ft": 7800.0,
+   "begin_date": "1979-08-04"
+  },
+  {
+   "triplet": "593:UT:SNTL",
+   "name": "Long Valley Jct",
+   "distance_km": 18.28,
+   "elev_ft": 7460.0,
+   "begin_date": "1986-06-11"
+  }
+ ],
+ "09430600": [
+  {
+   "triplet": "757:NM:SNTL",
+   "name": "Silver Creek Divide",
+   "distance_km": 23.18,
+   "elev_ft": 9080.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "09497980": [
+  {
+   "triplet": "877:AZ:SNTL",
+   "name": "Workman Creek",
+   "distance_km": 6.0,
+   "elev_ft": 7030.0,
+   "begin_date": "1938-12-01"
+  }
+ ],
+ "10234500": [
+  {
+   "triplet": "621:UT:SNTL",
+   "name": "Merchant Valley",
+   "distance_km": 11.78,
+   "elev_ft": 8710.0,
+   "begin_date": "1980-07-23"
+  },
+  {
+   "triplet": "339:UT:SNTL",
+   "name": "Big Flat",
+   "distance_km": 18.61,
+   "elev_ft": 10320.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "10244950": [
+  {
+   "triplet": "334:NV:SNTL",
+   "name": "Berry Creek",
+   "distance_km": 14.27,
+   "elev_ft": 9350.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "849:NV:SNTL",
+   "name": "Ward Mountain",
+   "distance_km": 24.23,
+   "elev_ft": 9170.0,
+   "begin_date": "1980-10-01"
+  }
+ ],
+ "10336645": [
+  {
+   "triplet": "724:CA:SNTL",
+   "name": "Rubicon #2",
+   "distance_km": 5.95,
+   "elev_ft": 7560.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "848:CA:SNTL",
+   "name": "Ward Creek #3",
+   "distance_km": 12.69,
+   "elev_ft": 6750.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "809:CA:SNTL",
+   "name": "Tahoe City Cross",
+   "distance_km": 13.66,
+   "elev_ft": 6760.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "473:CA:SNTL",
+   "name": "Fallen Leaf",
+   "distance_km": 14.22,
+   "elev_ft": 6250.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "784:CA:SNTL",
+   "name": "Palisades Tahoe",
+   "distance_km": 19.92,
+   "elev_ft": 8010.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "518:CA:SNTL",
+   "name": "Heavenly Valley",
+   "distance_km": 22.5,
+   "elev_ft": 8540.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "463:CA:SNTL",
+   "name": "Echo Peak",
+   "distance_km": 22.81,
+   "elev_ft": 7650.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "615:NV:SNTL",
+   "name": "Marlette Lake",
+   "distance_km": 22.84,
+   "elev_ft": 7860.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "10336660": [
+  {
+   "triplet": "848:CA:SNTL",
+   "name": "Ward Creek #3",
+   "distance_km": 5.79,
+   "elev_ft": 6750.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "809:CA:SNTL",
+   "name": "Tahoe City Cross",
+   "distance_km": 7.18,
+   "elev_ft": 6760.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "724:CA:SNTL",
+   "name": "Rubicon #2",
+   "distance_km": 12.31,
+   "elev_ft": 7560.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "784:CA:SNTL",
+   "name": "Palisades Tahoe",
+   "distance_km": 12.8,
+   "elev_ft": 8010.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "473:CA:SNTL",
+   "name": "Fallen Leaf",
+   "distance_km": 21.4,
+   "elev_ft": 6250.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "834:CA:SNTL",
+   "name": "Truckee #2",
+   "distance_km": 21.59,
+   "elev_ft": 6500.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "615:NV:SNTL",
+   "name": "Marlette Lake",
+   "distance_km": 23.74,
+   "elev_ft": 7860.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "10343500": [
+  {
+   "triplet": "539:CA:SNTL",
+   "name": "Independence Camp",
+   "distance_km": 5.33,
+   "elev_ft": 6970.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "541:CA:SNTL",
+   "name": "Independence Lake",
+   "distance_km": 6.49,
+   "elev_ft": 8340.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "540:CA:SNTL",
+   "name": "Independence Creek",
+   "distance_km": 7.53,
+   "elev_ft": 6440.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "834:CA:SNTL",
+   "name": "Truckee #2",
+   "distance_km": 15.25,
+   "elev_ft": 6500.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "428:CA:SNTL",
+   "name": "Css Lab",
+   "distance_km": 16.24,
+   "elev_ft": 6890.0,
+   "begin_date": "1980-10-01"
+  }
+ ],
+ "12054000": [
+  {
+   "triplet": "648:WA:SNTL",
+   "name": "Mount Crag",
+   "distance_km": 8.93,
+   "elev_ft": 3960.0,
+   "begin_date": "1989-10-01"
+  }
+ ],
+ "12114500": [
+  {
+   "triplet": "672:WA:SNTL",
+   "name": "Olallie Meadows",
+   "distance_km": 8.8,
+   "elev_ft": 4010.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "420:WA:SNTL",
+   "name": "Cougar Mountain",
+   "distance_km": 11.75,
+   "elev_ft": 3210.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "788:WA:SNTL",
+   "name": "Stampede Pass",
+   "distance_km": 17.36,
+   "elev_ft": 3850.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "12115000": [
+  {
+   "triplet": "420:WA:SNTL",
+   "name": "Cougar Mountain",
+   "distance_km": 10.96,
+   "elev_ft": 3210.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "672:WA:SNTL",
+   "name": "Olallie Meadows",
+   "distance_km": 13.79,
+   "elev_ft": 4010.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "788:WA:SNTL",
+   "name": "Stampede Pass",
+   "distance_km": 23.88,
+   "elev_ft": 3850.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "12117000": [
+  {
+   "triplet": "420:WA:SNTL",
+   "name": "Cougar Mountain",
+   "distance_km": 17.97,
+   "elev_ft": 3210.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "12143600": [
+  {
+   "triplet": "420:WA:SNTL",
+   "name": "Cougar Mountain",
+   "distance_km": 19.87,
+   "elev_ft": 3210.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "672:WA:SNTL",
+   "name": "Olallie Meadows",
+   "distance_km": 22.51,
+   "elev_ft": 4010.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "12175500": [
+  {
+   "triplet": "817:WA:SNTL",
+   "name": "Thunder Basin",
+   "distance_km": 17.26,
+   "elev_ft": 4310.0,
+   "begin_date": "1987-09-30"
+  }
+ ],
+ "12178100": [
+  {
+   "triplet": "817:WA:SNTL",
+   "name": "Thunder Basin",
+   "distance_km": 23.22,
+   "elev_ft": 4310.0,
+   "begin_date": "1987-09-30"
+  }
+ ],
+ "12375900": [
+  {
+   "triplet": "562:MT:SNTL",
+   "name": "Kraft Creek",
+   "distance_km": 20.22,
+   "elev_ft": 4770.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "346:MT:SNTL",
+   "name": "Bisson Creek",
+   "distance_km": 21.48,
+   "elev_ft": 4880.0,
+   "begin_date": "1988-10-01"
+  },
+  {
+   "triplet": "646:MT:SNTL",
+   "name": "Moss Peak",
+   "distance_km": 22.04,
+   "elev_ft": 6760.0,
+   "begin_date": "1961-04-01"
+  }
+ ],
+ "12377150": [
+  {
+   "triplet": "667:MT:SNTL",
+   "name": "North Fork Jocko",
+   "distance_km": 17.74,
+   "elev_ft": 6110.0,
+   "begin_date": "1961-04-01"
+  },
+  {
+   "triplet": "562:MT:SNTL",
+   "name": "Kraft Creek",
+   "distance_km": 19.29,
+   "elev_ft": 4770.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "12381400": [
+  {
+   "triplet": "667:MT:SNTL",
+   "name": "North Fork Jocko",
+   "distance_km": 11.15,
+   "elev_ft": 6110.0,
+   "begin_date": "1961-04-01"
+  }
+ ],
+ "12383500": [
+  {
+   "triplet": "667:MT:SNTL",
+   "name": "North Fork Jocko",
+   "distance_km": 21.56,
+   "elev_ft": 6110.0,
+   "begin_date": "1961-04-01"
+  }
+ ],
+ "12411000": [
+  {
+   "triplet": "803:ID:SNTL",
+   "name": "Sunset",
+   "distance_km": 20.38,
+   "elev_ft": 5570.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "535:ID:SNTL",
+   "name": "Humboldt Gulch",
+   "distance_km": 24.63,
+   "elev_ft": 4260.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "12451000": [
+  {
+   "triplet": "681:WA:SNTL",
+   "name": "Park Creek Ridge",
+   "distance_km": 20.91,
+   "elev_ft": 4610.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "711:WA:SNTL",
+   "name": "Rainy Pass",
+   "distance_km": 21.27,
+   "elev_ft": 4880.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "606:WA:SNTL",
+   "name": "Lyman Lake",
+   "distance_km": 22.17,
+   "elev_ft": 5990.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "12488500": [
+  {
+   "triplet": "375:WA:SNTL",
+   "name": "Bumping Ridge",
+   "distance_km": 22.33,
+   "elev_ft": 4600.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "418:WA:SNTL",
+   "name": "Corral Pass",
+   "distance_km": 22.9,
+   "elev_ft": 5810.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "13011500": [
+  {
+   "triplet": "314:WY:SNTL",
+   "name": "Base Camp",
+   "distance_km": 11.56,
+   "elev_ft": 7040.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "13011900": [
+  {
+   "triplet": "314:WY:SNTL",
+   "name": "Base Camp",
+   "distance_km": 11.36,
+   "elev_ft": 7040.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "13018300": [
+  {
+   "triplet": "689:WY:SNTL",
+   "name": "Phillips Bench",
+   "distance_km": 18.3,
+   "elev_ft": 8170.0,
+   "begin_date": "1976-03-01"
+  },
+  {
+   "triplet": "497:WY:SNTL",
+   "name": "Granite Creek",
+   "distance_km": 24.9,
+   "elev_ft": 6770.0,
+   "begin_date": "1987-10-01"
+  }
+ ],
+ "13161500": [
+  {
+   "triplet": "336:NV:SNTL",
+   "name": "Big Bend",
+   "distance_km": 19.14,
+   "elev_ft": 6890.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "321:NV:SNTL",
+   "name": "Bear Creek",
+   "distance_km": 21.42,
+   "elev_ft": 8090.0,
+   "begin_date": "1976-03-01"
+  }
+ ],
+ "13235000": [
+  {
+   "triplet": "550:ID:SNTL",
+   "name": "Jackson Peak",
+   "distance_km": 14.8,
+   "elev_ft": 7060.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "637:ID:SNTL",
+   "name": "Mores Creek Summit",
+   "distance_km": 17.4,
+   "elev_ft": 6090.0,
+   "begin_date": "1978-09-30"
+  },
+  {
+   "triplet": "423:ID:SNTL",
+   "name": "Cozy Cove",
+   "distance_km": 22.74,
+   "elev_ft": 5410.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "13240000": [
+  {
+   "triplet": "319:ID:SNTL",
+   "name": "Bear Basin",
+   "distance_km": 12.25,
+   "elev_ft": 5350.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "370:ID:SNTL",
+   "name": "Brundage Reservoir",
+   "distance_km": 17.91,
+   "elev_ft": 6280.0,
+   "begin_date": "1985-10-01"
+  }
+ ],
+ "14020000": [
+  {
+   "triplet": "523:OR:SNTL",
+   "name": "High Ridge",
+   "distance_km": 17.02,
+   "elev_ft": 4900.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "470:OR:SNTL",
+   "name": "Emigrant Springs",
+   "distance_km": 20.63,
+   "elev_ft": 3790.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14137000": [
+  {
+   "triplet": "666:OR:SNTL",
+   "name": "North Fork",
+   "distance_km": 19.79,
+   "elev_ft": 3070.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "351:OR:SNTL",
+   "name": "Blazed Alder",
+   "distance_km": 22.19,
+   "elev_ft": 3660.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14138800": [
+  {
+   "triplet": "351:OR:SNTL",
+   "name": "Blazed Alder",
+   "distance_km": 3.84,
+   "elev_ft": 3660.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "666:OR:SNTL",
+   "name": "North Fork",
+   "distance_km": 13.92,
+   "elev_ft": 3070.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "712:OR:SNTL",
+   "name": "Red Hill",
+   "distance_km": 14.66,
+   "elev_ft": 4410.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "651:OR:SNTL",
+   "name": "Mt Hood Test Site",
+   "distance_km": 20.06,
+   "elev_ft": 5380.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "504:OR:SNTL",
+   "name": "Greenpoint",
+   "distance_km": 23.86,
+   "elev_ft": 3320.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "14138870": [
+  {
+   "triplet": "666:OR:SNTL",
+   "name": "North Fork",
+   "distance_km": 8.03,
+   "elev_ft": 3070.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "351:OR:SNTL",
+   "name": "Blazed Alder",
+   "distance_km": 14.41,
+   "elev_ft": 3660.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14138900": [
+  {
+   "triplet": "666:OR:SNTL",
+   "name": "North Fork",
+   "distance_km": 6.76,
+   "elev_ft": 3070.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "351:OR:SNTL",
+   "name": "Blazed Alder",
+   "distance_km": 15.81,
+   "elev_ft": 3660.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14139800": [
+  {
+   "triplet": "666:OR:SNTL",
+   "name": "North Fork",
+   "distance_km": 14.42,
+   "elev_ft": 3070.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "351:OR:SNTL",
+   "name": "Blazed Alder",
+   "distance_km": 19.86,
+   "elev_ft": 3660.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14141500": [
+  {
+   "triplet": "666:OR:SNTL",
+   "name": "North Fork",
+   "distance_km": 19.96,
+   "elev_ft": 3070.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "351:OR:SNTL",
+   "name": "Blazed Alder",
+   "distance_km": 24.66,
+   "elev_ft": 3660.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14158790": [
+  {
+   "triplet": "552:OR:SNTL",
+   "name": "Jump Off Joe",
+   "distance_km": 11.11,
+   "elev_ft": 3530.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "733:OR:SNTL",
+   "name": "Santiam Jct.",
+   "distance_km": 13.8,
+   "elev_ft": 3740.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "526:OR:SNTL",
+   "name": "Hogg Pass",
+   "distance_km": 17.9,
+   "elev_ft": 4800.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "619:OR:SNTL",
+   "name": "Mckenzie",
+   "distance_km": 19.57,
+   "elev_ft": 4770.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "434:OR:SNTL",
+   "name": "Daly Lake",
+   "distance_km": 21.03,
+   "elev_ft": 3690.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "14185900": [
+  {
+   "triplet": "584:OR:SNTL",
+   "name": "Little Meadows",
+   "distance_km": 18.52,
+   "elev_ft": 4020.0,
+   "begin_date": "1978-10-01"
+  }
+ ],
+ "14216500": [
+  {
+   "triplet": "776:WA:SNTL",
+   "name": "Spencer Meadow",
+   "distance_km": 12.81,
+   "elev_ft": 3400.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "553:WA:SNTL",
+   "name": "June Lake",
+   "distance_km": 14.42,
+   "elev_ft": 3440.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "804:WA:SNTL",
+   "name": "Surprise Lakes",
+   "distance_km": 18.27,
+   "elev_ft": 4280.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "591:WA:SNTL",
+   "name": "Lone Pine",
+   "distance_km": 21.94,
+   "elev_ft": 3940.0,
+   "begin_date": "1978-10-01"
+  },
+  {
+   "triplet": "748:WA:SNTL",
+   "name": "Sheep Canyon",
+   "distance_km": 23.62,
+   "elev_ft": 3990.0,
+   "begin_date": "1980-10-01"
+  },
+  {
+   "triplet": "777:WA:SNTL",
+   "name": "Spirit Lake",
+   "distance_km": 24.78,
+   "elev_ft": 3520.0,
+   "begin_date": "1983-10-01"
+  }
+ ],
+ "14308990": [
+  {
+   "triplet": "558:OR:SNTL",
+   "name": "King Mountain",
+   "distance_km": 12.6,
+   "elev_ft": 4340.0,
+   "begin_date": "1979-10-01"
+  }
+ ],
+ "14362250": [
+  {
+   "triplet": "341:OR:SNTL",
+   "name": "Big Red Mountain",
+   "distance_km": 21.4,
+   "elev_ft": 6060.0,
+   "begin_date": "1979-10-01"
+  },
+  {
+   "triplet": "343:OR:SNTL",
+   "name": "Bigelow Camp",
+   "distance_km": 23.68,
+   "elev_ft": 5130.0,
+   "begin_date": "1979-10-01"
+  }
+ ]
+}

@@ -8555,3 +8555,65 @@ test read — `fused3md3q` **solo** 0.889700, consumed by the decade probe, whic
 member on its own test window. That was registered but I failed to flag at the time that it *constituted*
 a test read. Nothing was selected on it (the roster was settled on val1 LOO), and the log makes it visible
 rather than invisible, which is what it is for.
+
+# 🔍 LEAKAGE AUDIT OF THE MODERN RECORD (2026-10-07)
+
+Requested explicitly: *"audit for all data leaks in the modern training set that may make this record
+false."* Seven vectors, each checked against an artifact rather than against the code's intent.
+
+| vector | verdict | evidence |
+|---|---|---|
+| **A** normalisation scope | ✅ clean | `mu_q/sd_q` from `st["q"][dates <= train_end]`; `wx_mean/wx_std` from `st["wx"][dates <= train_end]`. No test-period statistics enter either. |
+| **B** `--dec-q` target-day discharge | ✅ clean | feeds `q_n[-1]` = q at **t0**, constant across all 14 leads; target is `q_n[t0+1 : t0+1+H]`. Assimilation, never the predicted day. |
+| **C** precip registration | ⛔ **DEFECT** | `corr(gridmet[t], daymet[t+1]) = 0.957` vs **0.103** at k=0 |
+| **D** train/val/test separation | ✅ clean | **25/25 checkpoints** read back train 2005-10-01..2014-09-30, val 2014-10-01..2018-09-30, 0 violations. Encoder reach for the first scored test day = 2017-10-01, **1,097 days after train_end**, so the 365-day window never touches training data. |
+| **E** statics period | ✅ clean | CAMELS WY1989-2009, entirely before the 2018-2025 test window |
+| **N** statics streamflow-derived | ✅ clean | `cfg["static_feats"]` = canonical **CAMELS-27**, no q-derived signature |
+| **F/G** cohort + forcing | ⚠️ **disclosures**, not leaks (below) |
+
+## ⛔ THE ONE REAL DEFECT: gridMET IS ONE DAY AHEAD
+Three products place rain(t) at row t; **gridMET places rain(t+1) at row t.** Two independent tests agree:
+- streamflow referee on the **test window**: gridMET peaks at **k=+1** (r 0.410) vs k=0 (0.253), while
+  daymet/nclimgrid/nldas peak at **k=0** (0.403/0.405/0.479) on the same basins and the same discharge;
+- direct product-to-product alignment: **`corr(gridmet[t], daymet[t+1]) = 0.957`** against **0.103** at k=0.
+
+⚠️⚠️ **And this was flagged once and dismissed by me.** Gate 1 **Part A recommended a +1 shift for
+gridMET**; the streamflow referee disagreed, I trusted the referee and demoted Part A to "a disagreement
+detector." **Part A was right.** Daymet got the shift, gridMET did not. (Re-run today, the referee also
+peaks at +1, so the two now agree and the earlier referee read was simply wrong.)
+
+**Scope**: `gridmetm9` is in the final with-q composition, and `fused4md49`/`fused4m9` plus every no-q member
+carry gridMET columns. **Only `nldasm9` is gridMET-free.** Both records touch it.
+
+**Does it make the record false?** My reading is **no — it should DEPRESS skill**: a model predicting Q_T
+reads row T, so it is handed rain(T+1) and thereby **loses** the causal driver rain(T) rather than gaining
+illicit information. But direction has been asserted and measured wrong 21 times in this campaign, so it is
+being settled empirically: `scripts_modern/fix_gridmet_registration.py` builds a corrected corpus
+(**verified to align at k=0**) and `gridmetm9fix` trains on 3 seeds, identical to `gridmetm9` but for the
+corpus.
+- corrected **higher** ⇒ the misregistration was a **cost**; both records stand and are **understated**
+- corrected **lower** ⇒ the original was exploiting future rain ⇒ **retract and rebuild**
+
+## ⚠️ MY OWN AUDIT TOOL EMITTED A FALSE CLEAN
+`analysis/m1_leak_registration.py` printed **"✅ NO FUTURE-RAIN LEAK"** for gridMET, because I had written
+`k>0` off as "a conservative lag, not a leak" — the two cases are **inverted**. Only reading the per-lag
+numbers caught it. ⇒ **An audit tool that can emit a false clean verdict is worse than no tool.** Corrected,
+with the reasoning spelled out in the docstring so the next reader cannot repeat it.
+
+## ⚠️ A NEAR-MISS ON VECTOR N, THE SAME SHAPE
+`STATIC_FEATS` — the module **default** — is a 14-feature GAGES-II list containing **`RUNAVE7100`** (mean
+annual runoff 1971-2000, derived from observed discharge) and **`BFI_AVE`** (baseflow index from the gauge's
+own hydrograph). This campaign had **already** recorded both as *inadmissible under no-q*
+(`gages2-statics-two-leakage-traps`). Reading that default, I nearly reported target leakage. The
+**checkpoints** show `--static-set camels` overrides it with the CAMELS-27, which by deliberate design
+carries no q-derived attribute. ⇒ **Read the artifact, not the default.**
+
+## ⚠️ TWO DISCLOSURES (not leaks, but they bound the claim)
+1. **The cohort was selected using test-window data availability** — ≥90% daily discharge coverage over
+   2018-2025. Discharge *values* were never inspected, but basin selection is test-informed. Unavoidable
+   (an ungauged basin cannot be scored) and registered in advance, but it means the 490 are, by
+   construction, basins that gauge well in the modern era.
+2. **Perfect forcing throughout.** Target-day forcing is observed analysis, not forecast. That is the
+   CAMELS convention and the legacy record's convention, so the comparison is internally consistent — but
+   **these numbers are not operationally achievable**, and the all-leads decay (−0.039 with-q) is the only
+   horizon evidence here, not a forecast-skill measurement.
