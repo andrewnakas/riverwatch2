@@ -1,0 +1,33 @@
+{
+  "a": "gridmetm9fix3L1",
+  "b": "gridmetm9fix3L1D1",
+  "frame": "val1",
+  "seeds": 3,
+  "classes": {
+    "PRE-STORM  rain(T+1) high, rain(T) low": {
+      "n": 19574,
+      "mean_adv": -0.04130596257376934,
+      "share": -0.029894179812760793
+    },
+    "ON-STORM   rain(T) high": {
+      "n": 70931,
+      "mean_adv": 0.2190043808662537,
+      "share": 0.5743586900174773
+    },
+    "DRY        both low": {
+      "n": 377700,
+      "mean_adv": 0.002925798592577365,
+      "share": 0.040858810844747524
+    },
+    "ALL ROWS": {
+      "n": 708266,
+      "mean_adv": 0.038186450741851855,
+      "share": 1.0
+    }
+  },
+  "pre_storm_minus_dry": -0.0442317611663467,
+  "ci95": [
+    -0.100698266732628,
+    0.020320496604602344
+  ]
+}

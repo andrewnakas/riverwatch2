@@ -1,0 +1,40 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "members": [
+  "gridmetm9fix3L1D1"
+ ],
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "rows": 708266,
+ "basins": 490,
+ "solo": {
+  "gridmetm9fix3L1D1": 0.8735033731366397
+ },
+ "composition": {
+  "mean": 0.8735033731366397,
+  "trimmed": 0.8735033731366397,
+  "median": 0.8735033731366397
+ },
+ "loo": {},
+ "comparison": {
+  "A": [
+   "gridmetm9fix3L1D1"
+  ],
+  "B": [
+   "gridmetm9fix3L1"
+  ],
+  "median_A": 0.8735033731366397,
+  "median_B": 0.8427920434085858,
+  "paired_delta": 0.021006980579656,
+  "ci95": [
+   0.0153775515803653,
+   0.027145369100830263
+  ],
+  "breadth": 0.7510204081632653,
+  "basins": 490
+ }
+}

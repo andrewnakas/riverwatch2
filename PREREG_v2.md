@@ -4208,3 +4208,37 @@ by one day and should therefore be equivalent to the misregistered corpus with n
 ⚠️ `dec_lead!=0` members remain unservable and ungradeable as records: `check_sidecar` refused the
 diagnostic dump by default in this very chain (the refusal is in `logs/m1_declead_chain.log`), and
 only the explicit diagnostic reads set `M1_ALLOW_DIAGNOSTIC=1`. This probe cannot become a record.
+
+---
+
+## §MODERN-1 — RESOLUTION of the decomposition test, and the RETRACTION
+
+**Registered bar: `gridmetm9fix3L1D1` reproduces `gridmetm9` within ±0.003. Measured +0.006159,
+CI [+0.004432, +0.007588] ⇒ NOT reproduced ⇒ by the registered branch, nothing is concluded from
+that comparison.** The design was unachievable: the lead flags shift all six forcing columns while
+the misregistration affects three. Recorded as a design error, not a result.
+
+**What IS concluded, from the controlled pair nested inside it.** `fix3+enc-lead 1` versus
+`fix3+enc-lead 1+dec-lead 1` differ in exactly one thing — decoder step 1 reading rain(T) versus
+rain(T+1) — and measure **+0.021007**, CI [+0.015378, +0.027145]. That is the value of forcing
+beyond entitlement, measured on a matched pair rather than inferred.
+
+**⛔ The attribution test is withdrawn.** Applied to that same known-positive pair it returned "NO
+LEAK SIGNATURE" (contrast −0.044232, CI including zero). A diagnostic that reports clean on a case
+engineered to be dirty has no power here, so the earlier anti-leak verdicts on `gridmetm9fix` and
+`gridmetm9fix3` are VOID. ⚠️ Standing rule added: **a leak diagnostic must be validated against a
+known-positive control before its "clean" verdict is quoted.**
+
+**The structural fact that settles it without a score:** gridMET precipitation is one day ahead
+(triangulated against discharge by the streamflow referee and against the hourly-native corpus), and
+the decoder is measurably causal, so `gridmetm9`'s decoder step 1 reads precipitation for T+1 when
+predicting T. Unentitled by construction.
+
+> ⛔ **RETRACTED: with-q test1 0.910438, no-q test1 0.843090.**
+> ✅ **RECORD: the fully-corrected roster** `fused4md49fix3, fused4m9fix3, nldasm9`, trimmed, 5-seed
+> ship bar, val1 **0.904644**. Test read pending — ONE read, selecting nothing, logged in
+> `benchmarks/m1_test_reads.log` alongside the retracted entries, which are **not** deleted.
+
+Registered for that read: the corrected roster's test1 lands **0.890 … 0.910**. Both arms of the
+no-q record also retract, and the no-q replacement must be rebuilt on `fused4mfix3` before it has a
+number — `lstm_fused4md4fix3` is staged in `queue_m1g_noq.sh` and unrun.

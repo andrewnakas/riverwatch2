@@ -8932,3 +8932,83 @@ Registered decision (c) was blocked on `/Volumes/STORAGE_SD`. It no longer is:
 instantaneous TMP; TMAX/TMIN from 6-hour bucket extrema; DSWRF as a period-average flux), and a
 one-day precip offset was once worth **+0.229 NSE** here. No number from this build is reported
 until it passes its own registration screen against the corpus's observed precipitation.
+
+---
+
+## ⛔⛔ RETRACTION — the with-q 0.910438 and no-q 0.843090 records rest on unentitled forcing
+
+### 1. The registered decomposition FAILED, and my design was the reason
+
+Registered: `gridmetm9fix3L1D1` reproduces `gridmetm9` on val1 to within ±0.003.
+Measured: **+0.006159**, CI [+0.004432, +0.007588]. **Not reproduced.**
+
+⛔ My design could never have worked. `--enc-lead`/`--dec-lead` shift **all six** forcing columns;
+the gridMET misregistration affects only **three** (precip, tmin, and the derived tmean, with tmax,
+srad and vapor_pressure correctly dated). So `L1D1` is a *uniformly* shifted corpus and the original
+is a *partially* shifted one. The ±0.003 bar was unachievable from the start. Per the registered
+branch, **nothing is concluded from that comparison.**
+
+### 2. But the comparison nested inside it is clean, and it measures the privilege directly
+
+`gridmetm9fix3L1` and `gridmetm9fix3L1D1` differ in **exactly one thing**: whether the decoder's
+first step reads rain(T) or rain(T+1). Same corpus, same encoder lead, same seeds.
+
+| config | decoder step 1 | val1 |
+|---|---|---|
+| `fix3 + enc-lead 1` — fully entitled | rain(T) | 0.842792 |
+| `fix3 + enc-lead 1 + dec-lead 1` | **rain(T+1)** | **0.873503** |
+
+**+0.021007**, CI [+0.015378, +0.027145], breadth 0.751. ⇒ Decoder-side **future** rain is worth
+~0.021 NSE once the model already has the target day's rain. That is a measurement of forcing
+beyond perfect-forcing entitlement, on a controlled pair.
+
+⭐ And the original sits **+0.021541** above the same entitled baseline — essentially the identical
+increment, which is what one expects if the operative privilege in both is the decoder reading
+future **precipitation** (the only variable with real day-to-day information).
+
+### 3. ⛔⛔ THE ATTRIBUTION TEST IS BLIND TO THIS MECHANISM — I WITHDRAW ITS VERDICTS
+
+Run on `L1` vs `L1D1`, a pair whose **only** difference is a definitional entitlement violation, the
+future-rain attribution still returned:
+
+| row class | advantage | share |
+|---|---|---|
+| PRE-STORM rain(T+1) high, rain(T) low | −0.041306 | −3.0% |
+| ON-STORM rain(T) high | +0.219004 | **57.4%** |
+| DRY | +0.002926 | 4.1% |
+
+contrast −0.044232, CI [−0.100698, +0.020320] → *"✅ NO LEAK SIGNATURE."* **On a known-positive
+case.**
+
+⇒ The test cannot detect this leak. Its partition requires rain(T+1) high **and rain(T) low**, but
+the privilege is exercised on storm days where both are high — 57% of the mass. So the earlier
+anti-leak verdicts on `gridmetm9fix` and `gridmetm9fix3` are **VOID, not merely uncertain**, and I
+had reported them twice as settled. ⚠️ This is the lesson in
+[[a-verification-must-distinguish-the-wrong-artifact]] recurring at the level of a *scientific*
+test rather than a build check: a diagnostic that returns "clean" on a case engineered to be dirty
+carries zero bits, and I should have validated it against a known-positive BEFORE trusting it.
+
+### 4. The structural fact, which needs no score at all
+
+gridMET's precipitation is one day ahead — triangulated against **discharge** by the streamflow
+referee (peak k=+1, r 0.410 vs 0.253 at k=0) and against the **hourly-native** NLDAS corpus. The
+decoder is **measurably causal**. Therefore, for target day T, `gridmetm9`'s decoder step 1 reads
+precipitation for **T+1**. That is beyond perfect-forcing entitlement *by construction*, whatever
+any score says.
+
+### 5. Verdict
+
+⛔ **RETRACTED: with-q test1 0.910438 and no-q test1 0.843090.** Both contain members that receive
+unentitled target-day+1 forcing at lead 1 — `gridmetm9` directly, and `fused4md49`/`fused4m9`/
+`lstm_fused4md4` through the misregistered `*_gridmet` columns inside `camels_corpus_fused4m_m3`.
+Only `nldasm9` was clean.
+
+✅ **The record is the fully-corrected roster**: `fused4md49fix3, fused4m9fix3, nldasm9`, trimmed,
+**5-seed ship bar**, val1 **0.904644**. Reached independently by backward elimination, which drops
+`gridmetm9fix3` (LOO −0.000733, CI excluding zero) and then finds nothing else droppable. Every
+input is correctly dated. Its test read is the single remaining step.
+
+⚠️ Note the honest arithmetic: the retracted headline was **0.910438** and the corrected roster is
+**−0.004322** behind the old val1 figure. The correction costs real skill. It is still the right
+number, for the same reason the 0.9253 retraction was: a record that scores higher because a model
+saw data it could not have at forecast time is not a record.
