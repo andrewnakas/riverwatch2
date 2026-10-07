@@ -4118,3 +4118,44 @@ Reasons, in order:
 ⚠️ This is a **new test read** for a new roster, logged in `benchmarks/m1_test_reads.log` as such.
 Selection stays on val1; test is read once for the finally-chosen roster, and the earlier 0.910438
 read stands in the log as its own record rather than being overwritten.
+
+---
+
+## §MODERN-1 — `--dec-lead 1`: the last mechanism, with a retraction trigger
+
+Registered 2026-10-07 before `gridmetm9fix3D1` exists.
+
+**The gap.** The misregistered gridMET member beats the corrected one by **+0.011438** solo. Two
+registered mechanisms are dead: de-synchronisation (−0.000298, null) and encoder placement via
+`--enc-lead` (+0.000098, null). The misregistered corpus shifts the **decoder** as well as the
+encoder; `--enc-lead` shifted only the encoder. So a deliberate decoder shift is the one
+configuration never measured, and it is the last structural difference between the two corpora.
+
+**What it does, verified** (`analysis/m1_verify_dec_lead.py`): with `--dec-lead 1` the decoder step
+for target T reads corpus row `t0+2` (= T+1) instead of `t0+1`; `x_enc` is **byte-identical** to
+`dec_lead=0`; and perturbing observed discharge at t0+1, +2 or +14 moves neither tensor. With both
+leads off the whole file is still byte-identical to the pre-`--enc-lead` snapshot (max |difference|
+= 0 over 320 arrays), and the frozen record reproduces at val1 0.913216 after the change.
+
+⛔ **This is a diagnostic, never a member.** `dec_lead=1` reads forcing beyond perfect-forcing
+entitlement and is unservable. `check_sidecar` — the single provenance gate whose absence produced
+the retracted 0.9253 — now **refuses any `dec_lead!=0` dump by default**, and the diagnostic read
+opts in with `M1_ALLOW_DIAGNOSTIC=1`. Pre-existing dumps carry no such key and default to 0, so
+every frozen artifact is unaffected. GUARD 1 asserts `cfg["dec_lead"]` matches the request in both
+directions, and the sidecar records it as read back from the **checkpoint**, not from argv.
+
+> **Registered: if the decoder-shift explanation is right, `gridmetm9fix3D1` beats `gridmetm9fix3`
+> by +0.006 … +0.014 on val1 — recovering most of the 0.011438. If it is wrong, null.**
+
+- **CONFIRMED ⇒ this is a RETRACTION TRIGGER.** It would mean the misregistered member's advantage
+  comes from decoder forcing beyond entitlement, i.e. real leakage. The attribution test's anti-leak
+  verdict would then be **wrong and must be reported as wrong**, not quietly dropped — and the
+  explanation for its failure stated: its partition (rain(T+1) high, rain(T) low) would have missed
+  a gain that rides on rain(T+1) only where rain(T) is *also* high, which is most storm days. The
+  frozen `gridmetm9`-bearing records (with-q 0.910438, no-q 0.843090) would be **retracted** and the
+  fully-corrected roster becomes the record.
+- **NULL ⇒ no placement of forcing explains the gap.** It stays **unexplained** in the ledger, the
+  corrected roster ships on correctness grounds as already registered, and the remaining candidates
+  (none yet tested) are recorded rather than guessed at.
+
+⚠️ Adjudicated on val1, 3 seeds, seed-matched. This probe cannot itself become any record.

@@ -270,6 +270,9 @@ class Corpus:
         # final step while its discharge still stops at t0, which is what the misregistered
         # gridMET corpus did accidentally and was worth +0.010 solo.
         self.enc_lead = 0
+        # ⛔ DIAGNOSTIC ONLY: forcing the decoder N days ahead of the day it predicts is
+        # BEYOND perfect-forcing entitlement and unservable. 0 = correct behaviour.
+        self.dec_lead = 0
         self.enc_vars, self.dec_vars = enc_vars, dec_vars
         # LEDGER 56b: st["wx"] columns are `load_vars` (encoder ∪ decoder, in that
         # order). Legacy checkpoints have dec ⊆ enc, so load_vars == enc_vars and
@@ -445,7 +448,18 @@ class Corpus:
         elif self.gfs is not None:
             dec_wx = self.gfs[(si, t0)]
         else:
-            dec_wx = st["wx_n"][t0 + 1: t0 + 1 + HORIZON][:, self.dec_cols]
+            _DL = getattr(self, "dec_lead", 0)
+            if _DL:
+                # ⛔ diagnostic: decoder step for target T carries forcing for T+_DL. The tail is
+                # padded by repeating the last available row, which the measured causality of the
+                # decoder confines to the final _DL leads, never lead 1.
+                _w = st["wx_n"][t0 + 1 + _DL: t0 + 1 + _DL + HORIZON]
+                if len(_w) < HORIZON:
+                    _w = np.concatenate(
+                        [_w, np.repeat(_w[-1:], HORIZON - len(_w), axis=0)], axis=0)
+                dec_wx = _w[:, self.dec_cols]
+            else:
+                dec_wx = st["wx_n"][t0 + 1: t0 + 1 + HORIZON][:, self.dec_cols]
             if rng is not None and self.forcing_noise > 0:
                 # Lead-scaled synthetic forecast error for perfect-forcing
                 # samples (z-space, sigma grows linearly with lead) — cheap
@@ -680,6 +694,10 @@ def main() -> int:
                          "samples draw from windows with an archived init; "
                          "perfect samples draw from all windows. Validation "
                          "runs under real GFS forcing. Subsumes --gfs-finetune.")
+    ap.add_argument("--dec-lead", type=int, default=0,
+                    help="DIAGNOSTIC ONLY. Run the DECODER's forcing this many days ahead of\n"
+                         "the day it predicts. Nonzero reads forcing BEYOND perfect-forcing\n"
+                         "entitlement and is unservable; never use it for a record member.")
     ap.add_argument("--enc-lead", type=int, default=0,
                     help="run the ENCODER's forcing this many days ahead of its discharge.\n"
                          "0 (default) is the historical behaviour. 1 puts the target day's\n"
@@ -875,6 +893,10 @@ def main() -> int:
                     dec_q=bool(base_cfg.get("dec_q", False)) if base_payload else bool(args.dec_q))
     corpus.no_q_input = bool(args.no_q_input)
     corpus.enc_lead = int(base_cfg.get("enc_lead", 0) if base_payload else args.enc_lead)
+    corpus.dec_lead = int(base_cfg.get("dec_lead", 0) if base_payload else args.dec_lead)
+    if corpus.dec_lead:
+        print(f"dec_lead={corpus.dec_lead} ⛔ DIAGNOSTIC: the decoder reads forcing "
+              f"{corpus.dec_lead}d BEYOND the day it predicts - unservable, never ship", flush=True)
     if corpus.enc_lead:
         print(f"enc_lead={corpus.enc_lead} (encoder forcing runs {corpus.enc_lead}d ahead of its "
               f"discharge; target-day forcing reaches the encoder, target-day q does not)", flush=True)
@@ -1014,6 +1036,7 @@ def main() -> int:
             "head": args.head,
             "horizon": HORIZON, "context": CONTEXT_DAYS,
             "enc_lead": int(getattr(corpus, "enc_lead", 0)),
+            "dec_lead": int(getattr(corpus, "dec_lead", 0)),
             "wx_mean": {c: float(v) for c, v in zip(corpus.load_vars, corpus.wx_mean)},
             "wx_std": {c: float(v) for c, v in zip(corpus.load_vars, corpus.wx_std)},
             "load_vars": list(corpus.load_vars), "dec_q": bool(corpus.dec_q),

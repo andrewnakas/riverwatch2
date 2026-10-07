@@ -68,6 +68,16 @@ def check_sidecar(f, protocol, require_guard=True):
     if require_guard and (s.get("train_start") != _ts or s.get("train_end") != _te):
         sys.exit(f"{f}: sidecar says train {s.get('train_start')}..{s.get('train_end')}"
                  f" — NOT the {protocol} window ({_ts}..{_te}), refusing to score")
+    # ⛔ A dec_lead!=0 member reads decoder forcing BEYOND perfect-forcing entitlement. It exists
+    # only as a diagnostic (why does the misregistered gridMET corpus beat the corrected one?), is
+    # unservable, and must never reach a record. Refused by DEFAULT so a freeze cannot pick it up
+    # by accident; the diagnostic comparison opts in explicitly with M1_ALLOW_DIAGNOSTIC=1.
+    # Dumps written before dec_lead existed carry no such key and default to 0, so this is
+    # backwards compatible with every frozen artifact.
+    if int(s.get("dec_lead", 0) or 0) != 0 and os.environ.get("M1_ALLOW_DIAGNOSTIC") != "1":
+        sys.exit(f"{f}: sidecar says dec_lead={s.get('dec_lead')} — this member reads decoder "
+                 f"forcing beyond the day it predicts and is NOT servable. Refusing. Set "
+                 f"M1_ALLOW_DIAGNOSTIC=1 only for the diagnostic comparison, never for a freeze.")
     return s
 
 
