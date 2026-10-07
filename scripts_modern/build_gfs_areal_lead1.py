@@ -137,37 +137,54 @@ def main():
         out = OUTDIR / f"{d.strftime('%Y-%m-%d')}.gfsraw.csv.gz"
         if out.exists():
             done += 1; continue
+        print(f"  [{day}] start", flush=True)
         acc = {}
         ok = True
         for h in HOURS:
+            print(f"    f{h:03d} index...", flush=True)
             grb, recs = idx_ranges(fs, day, h)
             if not recs:
+                print(f"    f{h:03d}: no index/records", flush=True)
                 ok = False; break
+            print(f"    f{h:03d}: {len(recs)} records, decoding...", flush=True)
             acc[h] = decode(fs, grb, recs)
+            print(f"    f{h:03d}: decoded {sorted(acc[h])}", flush=True)
         if not ok or not acc:
             print(f"  {day}: unavailable"); fail += 1; continue
         try:
             rows = {}
-            # precipitation: sum the 6-hour APCP buckets over the day
-            pr = np.zeros(len(red.basins))
-            for h in HOURS:
-                cands = acc[h].get("APCP", [])
-                if not cands: continue
-                # prefer the SHORTEST accumulation window (the 6h bucket), not the 0-h total
-                ln, arr = sorted(cands, key=lambda x: len(x[0]))[0]
-                pr = pr + red(arr)
-            rows["precipitation_sum"] = pr
-            tmps = [red(acc[h]["TMP"][0][1]) for h in HOURS if acc[h].get("TMP")]
+            # ⚠️ PRECIPITATION: take the single 24-hour accumulation record at f024
+            # ("0-1 day acc fcst"), never a sum of buckets.
+            # The first version summed "the shortest accumulation window" across f006..f024, but
+            # GFS ships BOTH a 6-hour bucket and a run-total at each step -- at f012 they are
+            # "6-12 hour acc fcst" and "0-12 hour acc fcst", whose index strings are the SAME
+            # LENGTH, so that tiebreak was arbitrary and could double-count. It produced a
+            # 300 mm/day basin maximum. One record, one window, asserted by name.
+            cands = acc[24].get("APCP", [])
+            tot = [a for ln, a in cands if "0-1 day acc" in ln]
+            if not tot:
+                tot = [a for ln, a in cands if "0-24 hour acc" in ln]
+            assert tot, f"no 24h APCP accumulation record at f024: {[l.split(':')[5] for l, _ in cands]}"
+            rows["precipitation_sum"] = red(tot[0])
+            def pick(h, var, frag=None):
+                """the record for `var` at hour h, optionally requiring `frag` in its window text"""
+                cs = acc[h].get(var, [])
+                if frag is not None:
+                    cs = [x for x in cs if frag in x[0]] or cs
+                return red(cs[0][1]) if cs else None
+            tmps = [v for h in HOURS if (v := pick(h, "TMP")) is not None]
             assert tmps, "no TMP"
             rows["temperature_2m_mean"] = np.mean(tmps, axis=0) - 273.15
-            mx = [red(acc[h]["TMAX"][0][1]) for h in HOURS if acc[h].get("TMAX")]
-            mn = [red(acc[h]["TMIN"][0][1]) for h in HOURS if acc[h].get("TMIN")]
+            mx = [v for h in HOURS if (v := pick(h, "TMAX")) is not None]
+            mn = [v for h in HOURS if (v := pick(h, "TMIN")) is not None]
             rows["temperature_2m_max"] = (np.max(mx, axis=0) - 273.15) if mx else rows["temperature_2m_mean"]
             rows["temperature_2m_min"] = (np.min(mn, axis=0) - 273.15) if mn else rows["temperature_2m_mean"]
-            sw = [red(acc[h]["DSWRF"][0][1]) for h in HOURS if acc[h].get("DSWRF")]
+            # DSWRF ships as a 6-hour AVERAGE flux per step; the mean of the four buckets is
+            # the 24-hour mean flux, which x86400/1e6 gives MJ/m2/day.
+            sw = [v for h in HOURS if (v := pick(h, "DSWRF", "hour ave")) is not None]
             rows["shortwave_radiation_sum"] = (np.mean(sw, axis=0) * 86400 / 1e6) if sw else np.full(len(red.basins), np.nan)
-            q = [red(acc[h]["SPFH"][0][1]) for h in HOURS if acc[h].get("SPFH")]
-            pp = [red(acc[h]["PRES"][0][1]) for h in HOURS if acc[h].get("PRES")]
+            q = [v for h in HOURS if (v := pick(h, "SPFH")) is not None]
+            pp = [v for h in HOURS if (v := pick(h, "PRES")) is not None]
             if q and pp:
                 qm, pm = np.mean(q, axis=0), np.mean(pp, axis=0)
                 rows["vapor_pressure"] = qm * pm / (0.622 + 0.378 * qm)
