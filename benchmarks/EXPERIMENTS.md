@@ -8873,3 +8873,62 @@ are built on `camels_corpus_fused4m_m3`, which carries the misregistered `*_grid
 `nldasm9` is gridMET-free. The corrected fused members (`fused4md49fix3`, `fused4m9fix3` on the
 verified `camels_corpus_fused4mfix3_m3`) are training; the roster read and the headline choice are
 registered in PREREG_v2.md **before** they exist.
+
+### ✅ THE FULLY-CORRECTED ROSTER — registered band CONFIRMED, −0.004322
+
+The corrected fused members (`fused4md49fix3`, `fused4m9fix3`) trained on the verified
+`camels_corpus_fused4mfix3_m3`. val1, trimmed, seeds 501-503, 490 basins:
+
+| roster | val1 | vs frozen |
+|---|---|---|
+| `gridmetm9`(misreg), fused4md49, fused4m9, nldasm9 — frozen record | 0.913216 | — |
+| **`fused4md49fix3`, `fused4m9fix3`, `nldasm9` — fully corrected** | **0.905502** | **−0.004322** |
+
+CI [−0.005959, −0.002633], breadth 0.343. ✅ **Inside the registered band (−0.001 … −0.008)** — the
+first registered prediction in this stretch that held.
+
+⭐ **Backward elimination reaches the same roster independently.** On the corrected pool it drops
+`gridmetm9fix3` (LOO −0.000723, CI [−0.001701, −0.000191]) and then finds nothing else droppable;
+adding it back reads **−0.000089, null**. So the corrected gridMET member does not belong in the
+ensemble by the campaign's own admission rule, which is consistent with its solo deficit and with
+dropping gridMET costing less (−0.001273) than swapping in the corrected member (−0.002884).
+
+Combiner stays **trimmed** (0.905502 vs mean 0.902213) — the same 1-bit val choice as the frozen
+record, so that is not a moving part.
+
+⭐ **This roster rests on no misdated data.** `nldasm9` carries no gridMET at all, and the fused
+members' `*_gridmet` columns come from the corrected corpus. That was the point of rebuilding them:
+dropping `gridmetm9` alone would have left the misregistered columns inside `fused4m_m3`.
+
+⏭️ Outstanding before it can be a record: the **5-seed ship bar** (the corrected fused members have
+3; `nldasm9` already has 5), and the `--dec-lead` diagnostic, which carries a registered retraction
+trigger for the frozen record. Both chains are armed and sequenced behind one another.
+
+### 🔧 The forecast-decay route, unblocked without the unmounted drive
+
+Registered decision (c) was blocked on `/Volumes/STORAGE_SD`. It no longer is:
+
+- **The decoder is measurably CAUSAL** (`analysis/m1_decoder_causality.py`): a decoder input at lead
+  k moves only leads ≥ k, with exact zeros below the diagonal. So a forecast file carrying real GFS
+  at lead 1 and observed values at leads 2-14 — which `_parse_forcing_file` requires, since it drops
+  any station without all 14 — isolates the day-1 number exactly.
+- **The plumbing already exists**: `--gfs-finetune` sets `corpus.gfs` and filters windows to
+  forecast-covered ones, so `--epochs 0 --init-ckpt X --gfs-finetune --dump-day1` evaluates under
+  forecast forcing with no training.
+- **GRIB byte-range subsetting makes the fetch trivial**: 4.56 MB per date for the six needed fields
+  versus 546 MB for the whole file — 1.37 GB for 300 dates instead of 164 GB. `cfgrib` installed
+  without moving torch 2.4.1+cu121, numpy, pandas or xarray (checked with a dry run first).
+- **GFS areal weights built and validated** (`scripts_modern/build_gfs_weights.py`): the grid is
+  DERIVED from a real decoded field (721×1440, **NORTH-first**, 0.25°) rather than taken from
+  documentation, because row order is one of the three things that silently corrupt an areal
+  extraction. CONUS subwindow 125×245, 671/671 basins covered, and the coverage-weighted area
+  reproduces known basin areas to **median 0.14%, p90 0.31%, max 0.43%** (the NLDAS weights read
+  0.13% on the same check).
+- ⭐ This is **better** than the blocked path, not a substitute: the archived `gfs_fcst` is
+  point-sampled at gauge coordinates, which runs ~53% dry versus the areal mean in mountain terrain,
+  while the entire modern corpus is areal.
+
+⚠️ Not yet believed: the GFS aggregation is approximate (daily mean from f006/f012/f018/f024
+instantaneous TMP; TMAX/TMIN from 6-hour bucket extrema; DSWRF as a period-average flux), and a
+one-day precip offset was once worth **+0.229 NSE** here. No number from this build is reported
+until it passes its own registration screen against the corpus's observed precipitation.

@@ -53,27 +53,47 @@ def load_all_leads(member, frame, seeds=None, protocol="modern-v3-9yr", prefix=N
             sys.exit(f"{f}: sidecar says all_leads={s.get('all_leads')} — this is not a "
                      f"14-lead dump, refusing (scoring a 1-lead dump as 14 would "
                      f"silently report lead 1 fourteen times)")
-        d = pd.read_csv(f, dtype={"station_id": str})
+        # ⚠️ MEMORY. The all-leads frame is 14x the day-1 frame: test14 is ~1.24M rows x 14
+        # leads ~= 17M rows PER DUMP. The earlier version of this loader built a concatenated
+        # "basin|t0|lead" string key and then np.array([x.split("|") for x in key]) -- 17M Python
+        # lists of three strings, several GB per member. With four members that exhausted the
+        # 15 GiB box while three trainings were running and took sshd down with it, so the job
+        # could not even be stopped. Keep the three key columns as they arrive, in compact
+        # dtypes, and never round-trip them through a joined string.
+        d = pd.read_csv(f, dtype={"station_id": str},
+                        usecols=["station_id", "t0", "h", "truth", "ylo", "ymed", "yhi"])
         d["station_id"] = d.station_id.str.zfill(8)
-        d = d.sort_values(["station_id", "t0", "h"])
-        k = (d.station_id + "|" + d.t0 + "|" + d.h.astype(str)).to_numpy()
+        d = d.sort_values(["station_id", "t0", "h"], kind="stable")
+        k_sid = d.station_id.to_numpy()
+        k_t0 = d.t0.to_numpy()
+        k_h = d.h.to_numpy(np.int8)
         if key is None:
-            key, truth = k, d.truth.to_numpy(float)
-            lo, md, hi = (np.zeros(len(d)) for _ in range(3))
-        elif not np.array_equal(key, k):
-            sys.exit(f"{f}: (basin,t0,lead) grid differs from the first seed of {member}")
-        lo = lo + d.ylo.to_numpy(float)
-        md = md + d.ymed.to_numpy(float)
-        hi = hi + d.yhi.to_numpy(float)
+            key = (k_sid, k_t0, k_h)
+            truth = d.truth.to_numpy(np.float32)
+            lo, md, hi = (np.zeros(len(d), np.float64) for _ in range(3))
+        else:
+            # compare the three columns directly rather than a fused string key
+            if not (np.array_equal(key[0], k_sid) and np.array_equal(key[1], k_t0)
+                    and np.array_equal(key[2], k_h)):
+                sys.exit(f"{f}: (basin,t0,lead) grid differs from the first seed of {member}")
+        lo += d.ylo.to_numpy(np.float64)
+        md += d.ymed.to_numpy(np.float64)
+        hi += d.yhi.to_numpy(np.float64)
         used.append(s["seed"])
+        del d
     n = len(used)
     q = np.sort(np.stack([lo, md, hi], axis=1) / n, axis=1)
     q = np.clip(q, 0.0, None)
-    pred = (q[:, 0] + q[:, 2]) / 2
-    parts = np.array([x.split("|") for x in key])
+    pred = ((q[:, 0] + q[:, 2]) / 2).astype(np.float32)
+    del q, lo, md, hi
     print(f"  {member:12s} {frame:7s} seeds={sorted(used)} rows={len(pred):,}")
-    return pd.DataFrame({"station_id": parts[:, 0], "t0": parts[:, 1],
-                         "h": parts[:, 2].astype(int), "truth": truth, member: pred})
+    return pd.DataFrame({
+        "station_id": pd.Categorical(key[0]),
+        "t0": pd.Categorical(key[1]),
+        "h": key[2],
+        "truth": truth,
+        member: pred,
+    })
 
 
 def per_basin_lead(df, cols, lead):
