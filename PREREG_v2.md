@@ -4159,3 +4159,52 @@ directions, and the sidecar records it as read back from the **checkpoint**, not
   (none yet tested) are recorded rather than guessed at.
 
 ⚠️ Adjudicated on val1, 3 seeds, seed-matched. This probe cannot itself become any record.
+
+---
+
+## §MODERN-1 — ⚠️ THE ANTI-LEAK VERDICT IS IN DOUBT. The decomposition test.
+
+Registered 2026-10-07 after the `--dec-lead` result and before `gridmetm9fix3L1D1` exists.
+
+**What `--dec-lead 1` actually measured.** Registered prediction +0.006 … +0.014; measured
+**−0.077055**, CI [−0.093481, −0.066355]. Falsified, 25th overturned claim. But the DESIGN was also
+wrong: shifting only the decoder on the corrected corpus leaves the encoder at rain(≤T−1) and the
+decoder at rain(T+1), so the model never sees rain(T) **at all**. It measured "the target day's own
+rain is worth ~0.077 NSE" — useful, but not an isolation of the decoder shift.
+
+**The four configurations, and why one comparison now matters more than the rest:**
+
+| config | encoder last | decoder step 1 | sees rain(T)? | val1 |
+|---|---|---|---|---|
+| original (misregistered) = enc-lead 1 + dec-lead 1 | rain(T) | rain(T+1) | ✓ encoder | **0.864333** |
+| fix3 | rain(T−1) | rain(T) | ✓ decoder | 0.843394 |
+| fix3 + enc-lead 1 | rain(T) | rain(T) | ✓ both | 0.842792 |
+| fix3 + dec-lead 1 | rain(T−1) | rain(T+1) | ✗ | 0.706345 |
+
+⚠️ The decoder is **measurably causal**, so the lead-1 prediction depends only on the encoder plus
+decoder step 1. In the original that step is **rain(T+1)** — BEYOND perfect-forcing entitlement. Its
+entitled counterpart is `enc-lead 1 + dec-lead 0` = 0.842792. The original is **+0.021541** above it.
+
+⛔ **That is a leak signature, and it means my anti-leak attribution verdict may be WRONG.** The
+attribution partitioned on rain(T+1) high **and rain(T) low**; if the gain rides on storm days where
+both are high — which is most of the wet mass — that partition would miss it entirely while still
+reporting a flat profile. I am flagging this rather than waiting for a clean result, because the
+earlier verdict is already written into the ledger and two commits.
+
+**The decomposition test.** `--enc-lead 1 --dec-lead 1` on the CORRECTED corpus shifts every column
+by one day and should therefore be equivalent to the misregistered corpus with no flags.
+
+> **Registered: `gridmetm9fix3L1D1` reproduces `gridmetm9` on val1 to within ±0.003.**
+
+- **Reproduced** ⇒ the decomposition is sound and the original's advantage is exactly
+  (led encoder) + (decoder reading rain(T+1)). The second term, **+0.021541**, is forcing beyond
+  entitlement ⇒ **the attribution test was wrong, I report it as wrong**, and the frozen
+  `gridmetm9`-bearing records (with-q **0.910438**, no-q **0.843090**) are **RETRACTED** in favour of
+  the fully-corrected roster (val1 0.905502 at 3 seeds, 5-seed ship bar in flight).
+- **Not reproduced** (|Δ| > 0.003) ⇒ the two corpora differ by something other than a uniform
+  one-day shift, the decomposition above is invalid, and NOTHING is concluded from it: the gap
+  returns to **unexplained** and the corrected roster still ships on correctness grounds.
+
+⚠️ `dec_lead!=0` members remain unservable and ungradeable as records: `check_sidecar` refused the
+diagnostic dump by default in this very chain (the refusal is in `logs/m1_declead_chain.log`), and
+only the explicit diagnostic reads set `M1_ALLOW_DIAGNOSTIC=1`. This probe cannot become a record.

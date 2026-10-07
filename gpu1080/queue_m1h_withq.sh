@@ -129,6 +129,11 @@ case "$M" in
   # ⛔ DIAGNOSTIC ONLY -- reads decoder forcing one day BEYOND the day it predicts, which is
   # outside perfect-forcing entitlement and unservable. check_sidecar refuses dec_lead!=0
   # dumps unless M1_ALLOW_DIAGNOSTIC=1, so this can be measured but never frozen.
+  # ⛔ DIAGNOSTIC ONLY. Both leads together shift every column one day, which should be
+  # EQUIVALENT to the misregistered corpus with no flags. That equivalence is the test:
+  # it decomposes the original into (led encoder) + (decoder reading rain(T+1)), and the
+  # second term is forcing beyond entitlement.
+  gridmetm9fix3L1D1)         CORP="$V3/camels_corpus_gridmetfix3_m3_cohort"; ENC="camels1f"; EXTRA="--enc-lead 1 --dec-lead 1"; TRS=2005-10-01 ;;
   gridmetm9fix3D1)           CORP="$V3/camels_corpus_gridmetfix3_m3_cohort"; ENC="camels1f"; EXTRA="--dec-lead 1"; TRS=2005-10-01 ;;
   gridmetm9fix3L1)           CORP="$V3/camels_corpus_gridmetfix3_m3_cohort"; ENC="camels1f"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
   fused4m9fix3)              CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2";   TRS=2005-10-01 ;;

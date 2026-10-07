@@ -1,0 +1,68 @@
+{
+  "n_dates": 115,
+  "lag": {
+    "precipitation_sum": {
+      "best_k": 0
+    },
+    "temperature_2m_mean": {
+      "best_k": 0
+    },
+    "temperature_2m_max": {
+      "best_k": 0
+    },
+    "temperature_2m_min": {
+      "best_k": 1
+    },
+    "shortwave_radiation_sum": {
+      "best_k": 0
+    },
+    "vapor_pressure": {
+      "best_k": 0
+    }
+  },
+  "magnitude": {
+    "precipitation_sum": {
+      "gfs_mean": 2.938414138713426,
+      "obs_mean": 3.3826771180124227,
+      "ratio": 0.8686652719725036,
+      "gfs_max": 262.1160012917309,
+      "obs_max": 237.0061
+    },
+    "temperature_2m_mean": {
+      "gfs_mean": 11.964961751214066,
+      "obs_mean": 12.266314995563445,
+      "ratio": 0.9754324551050275,
+      "gfs_max": 36.28424312642289,
+      "obs_max": 34.348
+    },
+    "temperature_2m_max": {
+      "gfs_mean": 18.279601897658882,
+      "obs_mean": 18.209154622892633,
+      "ratio": 1.0038687833798545,
+      "gfs_max": 47.179291953484096,
+      "obs_max": 43.782
+    },
+    "temperature_2m_min": {
+      "gfs_mean": 7.310431375683288,
+      "obs_mean": 6.323475368234251,
+      "ratio": 1.15607809787747,
+      "gfs_max": 29.5862577990398,
+      "obs_max": 27.615
+    },
+    "shortwave_radiation_sum": {
+      "gfs_mean": 16.818857213284865,
+      "obs_mean": 17.020746772528838,
+      "ratio": 0.9881386191838645,
+      "gfs_max": 34.54906262145554,
+      "obs_max": 37.813202
+    },
+    "vapor_pressure": {
+      "gfs_mean": 1087.0961368800824,
+      "obs_mean": 1088.5660198757764,
+      "ratio": 0.9986497070743934,
+      "gfs_max": 3105.540460601331,
+      "obs_max": 3357.24
+    }
+  },
+  "screen_passes": true
+}

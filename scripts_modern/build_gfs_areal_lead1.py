@@ -70,7 +70,11 @@ def decode(fs, grb, recs):
     """-> {(var, lev_line): 2D global array}"""
     got = {}
     for var, lev, ln, start, n in recs:
-        blob = fs.read_block(grb, start, n)
+        # ⭐ cat_file issues a real HTTP Range request; fs.read_block on a 546 MB object does
+        # not, and was MEASURED at 365.55s for the same 0.51 MB range that cat_file returns in
+        # 1.43s -- a 255x difference, with byte-identical output. read_block was the entire reason
+        # this builder looked like it had hung.
+        blob = fs.cat_file(grb, start=start, end=start + n)
         if blob[:4] != b"GRIB":
             continue
         with tempfile.NamedTemporaryFile(suffix=".grib2", delete=False) as t:

@@ -44,7 +44,8 @@ def fetch_one_record(fs, var="APCP", lev="surface"):
             nxt = lines[i + 1].split(":")[1] if i + 1 < len(lines) else None
             if nxt is None:
                 return None
-            return fs.read_block(grb, start, int(nxt) - start)
+            # cat_file does a real ranged GET; read_block is ~255x slower here (measured)
+            return fs.cat_file(grb, start=start, end=int(nxt))
     return None
 
 

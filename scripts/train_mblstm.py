@@ -785,10 +785,33 @@ def main() -> int:
         base_cfg = base_payload["cfg"]
         enc_vars, dec_vars = base_cfg["enc_vars"], base_cfg["dec_vars"]
         load_vars = list(base_cfg.get("load_vars") or dict.fromkeys(list(enc_vars) + list(dec_vars)))
-        if args.gfs_finetune and not set(dec_vars) <= set(COMPAT_VARS):
-            print(f"GFS archive only carries {COMPAT_VARS}; checkpoint decoder "
-                  f"wants {dec_vars} — fine-tune only supports compat-vars checkpoints")
-            return 1
+        if args.gfs_finetune:
+            # ⚠️ Check what the ARCHIVE ACTUALLY CARRIES, not a hardcoded list. This guard used to
+            # compare against COMPAT_VARS (5 variables, no vapor_pressure) because the original
+            # point-sampled archive carried only those. The areal rebuild
+            # (scripts_modern/build_gfs_areal_lead1.py) carries all six, so the hardcoded form
+            # would refuse a decoder the archive can in fact drive -- the same class of
+            # over-restrictive guard that has aborted valid work in this campaign. Its own message
+            # says "the archive only carries X", so asking the archive is faithful to its intent.
+            _av = None
+            try:
+                import glob as _glob
+                _fs = sorted(p for p in _glob.glob(str(GFS_DIR / "*.csv.gz"))
+                             if not os.path.basename(p).startswith("._"))
+                if _fs:
+                    _av = set(pd.read_csv(_fs[0], nrows=1).columns) - {"station_id", "lead_day"}
+            except Exception:
+                _av = None
+            _need = set(dec_vars)
+            if _av is None:
+                print(f"--gfs-finetune: no readable forcing file under {GFS_DIR}; cannot verify "
+                      f"the archive covers the decoder's {sorted(_need)}")
+                return 1
+            if not _need <= _av:
+                print(f"--gfs-finetune: archive under {GFS_DIR} carries {sorted(_av)}; the "
+                      f"checkpoint decoder needs {sorted(_need)} — missing {sorted(_need - _av)}")
+                return 1
+            print(f"--gfs-finetune: archive covers all {len(_need)} decoder variables", flush=True)
         args.hidden = int(base_cfg["hidden"])
     else:
         enc_vars = COMPAT_VARS if args.compat_vars else ENC_VARS
