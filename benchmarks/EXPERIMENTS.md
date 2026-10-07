@@ -8722,3 +8722,48 @@ So "four independent forcing products" is true for precipitation and temperature
 radiation and humidity**, where there are effectively two routes, not four. Forcing diversity is the
 only diversity this campaign is measurably paid for, so this belongs in the write-up rather than a
 footnote. It does not touch any score.
+
+### ⭐⭐ C RESOLVED ON MECHANISM, NOT ON SCORE — the misregistration is NOT a leak
+
+The score comparison could never settle vector C on its own: "corrected scores lower" is equally
+consistent with *the correction costs something* and with *the original was cheating*. So the
+question was moved off the score entirely (`analysis/m1_leak_future_rain_attribution.py`, written
+with its interpretation rules fixed before any number existed).
+
+**The discriminating partition.** For target day T the model is entitled to forcing through T. The
+misregistered corpus holds rain(T+1) in the decoder's first step — beyond entitlement. If that is
+what it is using, its advantage **must** concentrate on rows where rain(T+1) is high and rain(T) is
+low: the day before a storm, where the illegitimate information is maximally useful and the
+legitimate information says least. Measured on `gridmetm9` vs `gridmetm9fix`, val1, seed-matched to
+501-503, 708,266 rows over 490 basins, per-row squared error normalized by each basin's own variance:
+
+| row class | n | original's advantage | share of total |
+|---|---|---|---|
+| **PRE-STORM** rain(T+1) high, rain(T) low | 19,574 | **−0.116494** | **−16.2%** |
+| ON-STORM rain(T) high | 70,931 | +0.133194 | 67.2% |
+| DRY both low | 377,700 | +0.001183 | 3.2% |
+| all rows | 708,266 | +0.019853 | 100% |
+
+pre-storm minus dry contrast **−0.117677**, 95% CI **[−0.184177, −0.051213]**, cluster-bootstrapped
+over basins — excluding zero on the **anti-leak** side.
+
+⭐ **The original is WORSE exactly where future rain would help it, and 67% of its advantage sits on
+rows where the TARGET day's own rain is high** — information it is entitled to. The mechanism reads
+coherently in both directions: on a pre-storm day the misregistered decoder's first step carries
+rain(T+1) where the corrected one carries rain(T), so the misregistered member predicts a rise that
+does not come and is penalised for it. Consistency check: the all-rows mean (+0.019853) carries the
+same sign as the −0.011137 NSE gap.
+
+⭐ **So the gap is PLACEMENT, not entitlement.** Neither member holds more causally relevant rain:
+both have rain(T), the original in the encoder's final step, the corrected one in the decoder's
+first. Target-day rain in the encoder's last step beats target-day rain in the decoder's first, for
+a single-product member. That **refines** rather than contradicts
+`the-fused-member-decoder-never-saw-two-forcings`, whose +0.015528 came from *adding* target-day
+forcing to a decoder that had none — a different comparison from where a single copy sits.
+
+**Consequence for the records:** vector C does not make either record false. The with-q 0.910438 and
+no-q 0.843090 stand on this vector. The remaining question is only which gridMET registration makes
+the better *member*, which `gridmetm9fix3` answers on val1 as a model-selection question, not an
+integrity one. ⚠️ To be re-run on fix3's dumps, since fix1 is the mis-specified correction; the
+attribution asks *where* the advantage lives, which its internal de-sync does not confound, but the
+confirmation is cheap and belongs on the correctly-built corpus.
