@@ -4070,3 +4070,51 @@ original was penalised on pre-storm rows.
 
 ⚠️ Adjudicated on val1, 3 seeds, seed-matched against both baselines. 3 seeds is a SCREEN; the ship
 bar is 5. This probe changes no frozen record on its own.
+
+---
+
+## §MODERN-1 — the FULLY-CORRECTED roster, and what the headline should be
+
+Registered 2026-10-07 after the enc-lead screen read null and before the corrected fused members exist.
+
+**Where this stands.** gridMET is provably misregistered (precip one day ahead, triangulated against
+discharge by the streamflow referee and against the hourly-native product). The misregistered member
+is **better** by 0.011438 solo. The audit has cleared that advantage of leakage twice, on two
+separately-built corpora, CI excluding zero both times. Two candidate mechanisms were registered and
+both **falsified**: de-synchronisation (−0.000298, null) and encoder placement via `--enc-lead`
+(+0.000098, null). ⇒ **The 0.011438 is recorded as UNEXPLAINED**, per the registered branch, and not
+attributed to anything.
+
+**Measured roster options** (val1, trimmed, seeds 501-503, 490 basins):
+
+| roster | val1 | vs current |
+|---|---|---|
+| `gridmetm9`(misreg), fused4md49, fused4m9, nldasm9 — the frozen record | 0.913216 | — |
+| fused4md49, fused4m9, nldasm9 — gridMET member dropped | 0.910844 | −0.001273 |
+| `gridmetm9fix3`, fused4md49, fused4m9, nldasm9 | 0.908812 | −0.002884 |
+
+`gridmetm9fix3` carries LOO **−0.001191**, CI excluding zero, so by this campaign's own elimination
+rule the corrected member should be **dropped**, not shipped — it is worse than no gridMET member.
+
+⚠️ **None of the three is a clean record.** `fused4md49`, `fused4m9` and the no-q `lstm_fused4md4` are
+all built on `camels_corpus_fused4m_m3`, which carries the misregistered `*_gridmet` columns. Only
+`nldasm9` is gridMET-free. So a record that does not rest on misdated data requires the fused members
+rebuilt on `camels_corpus_fused4mfix3_m3` (built and verified: 671 basins, `q_mismatch_basins=0`,
+schema byte-identical, 490-symlink cohort).
+
+> **Registered: the fully-corrected roster scores BELOW the frozen record on val1, by −0.001 … −0.008.**
+
+A corrected roster that scores *above* 0.913216 would falsify the whole "correction costs skill"
+picture and should be treated as a reason to re-audit the corrected corpus, not as a free win.
+
+**Which number is the headline — decided now, before seeing it.** The corrected roster becomes the
+headline even though it is lower, and the misregistered figure is reported beside it as measured.
+Reasons, in order:
+1. The advantage of the misregistered data is **unexplained** after two falsified mechanisms. An
+   unexplained gain from provably misdated inputs is the exact shape of the `0.9253` retraction.
+2. The cost is small and measured (−0.001 … −0.003 at the ensemble level, not the 0.011 solo figure).
+3. Reporting both costs nothing and lets a reader see the size of the correction.
+
+⚠️ This is a **new test read** for a new roster, logged in `benchmarks/m1_test_reads.log` as such.
+Selection stays on val1; test is read once for the finally-chosen roster, and the earlier 0.910438
+read stands in the log as its own record rather than being overwritten.

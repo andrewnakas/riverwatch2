@@ -8776,3 +8776,100 @@ verdict does not depend on the implementation. ⚠️ The **wider** interval is 
 the figure quoted: re-estimating a threshold inside a resample makes the threshold depend on the
 resample and understates the uncertainty. Fixed thresholds + whole-basin resampling is the proper
 cluster bootstrap.
+
+### 🔚 C CLOSED — the registered prediction is FALSIFIED, and two of my premises with it
+
+`gridmetm9fix3` (precip + tmin shifted, tmean recomputed, every variable verified at k=0 against the
+hourly-native reference), val1, seed-matched 501-503, 490 basins:
+
+| comparison | paired delta | CI95 | breadth | verdict |
+|---|---|---|---|---|
+| fix3 vs **original** | **−0.011438** | [−0.015329, −0.006346] | 0.347 | fix3 **loses** |
+| fix3 vs fix2 (isolates `vapor_pressure`) | +0.000139 | [−0.000823, +0.000695] | 0.510 | **null** |
+| fix3 vs fix1 (isolates the de-sync) | −0.000298 | [−0.001085, +0.000325] | 0.482 | **null** |
+
+⛔ **The registered prediction (+0.002 … +0.015 for fix3) is falsified.** 23rd overturned causal
+claim. And two premises I had built on fall with it, both measured:
+
+1. ⛔ **fix1 was never confounded.** fix2 and fix3 were built because shifting precipitation alone
+   de-synchronised it from `tmin` and supposedly made the −0.011137 "uninterpretable." The de-sync is
+   worth **−0.000298, null**. fix1's number was correct from the start, and my "settles nothing" was
+   too strong.
+2. ⛔ **The `vapor_pressure` arbitration did not change the score.** fix2 shifted `vp` wrongly;
+   that cost **+0.000139, null**. The three-way arbiter and the `tmean` recompute produced a
+   genuinely *correct* corpus — worth having on its own terms — but they moved no number.
+
+⭐ All three corrections are statistically indistinguishable (−0.0114, −0.0111, −0.0102, pairwise
+null), so the effect is entirely the **precipitation** shift. Everything else was noise.
+
+**On the registered retraction branch.** It said falsification ⇒ retract. It does not fire, and the
+reason is not a reinterpretation of this number: registering the **score** as the integrity test was
+a design error, identified and corrected *before* this number existed, because a score cannot
+separate "the correction costs something" from "the original was cheating." The attribution test,
+with its interpretation rules fixed in advance, answers the integrity question — and re-run on the
+correctly-built fix3 corpus it returns the same verdict as on fix1:
+
+| row class | advantage | share |
+|---|---|---|
+| PRE-STORM rain(T+1) high, rain(T) low | **−0.108804** | −13.2% |
+| ON-STORM rain(T) high | +0.153203 | **67.3%** |
+| DRY both low | +0.002302 | 5.4% |
+
+contrast **−0.111106**, CI [−0.180373, −0.042155] — anti-leak, CI excluding zero. ⇒ **No retraction.
+The with-q 0.910438 and no-q 0.843090 stand.**
+
+**What ships, and the tension stated rather than hidden.** `gridmetm9` (misregistered) is the better
+member by 0.0114 on val1 and the audit clears it of leakage, so it stays in the record — selection is
+on measured val-frame skill. But its corpus carries a registration defect that is real and
+documented, which is an uncomfortable place to leave it. ⚠️ **The open question is now WHY the
+correct corpus loses 0.0114**, and only one explanation survives the attribution result: placement —
+target-day rain in the encoder's final step beats it in the decoder's first. `--enc-lead 1` on the
+corrected corpus tests that directly and, if confirmed, gives a member that is **both** correctly
+registered and skillful. If it reads null, the 0.0114 is recorded as **unexplained**, not attributed.
+
+### ⛔ `--enc-lead` READS NULL — the placement explanation is REFUTED, the 0.0114 is UNEXPLAINED
+
+`gridmetm9fix3L1` = the corrected corpus with the encoder's forcing run one day ahead of its
+discharge. Flag confirmed applied on all three seeds (`enc_lead=1` in every training log, and GUARD 1
+asserts it against the checkpoint in both directions). val1, seeds 501-503, 490 basins:
+
+| comparison | paired delta | CI95 | breadth | verdict |
+|---|---|---|---|---|
+| enc-lead vs `gridmetm9fix3` | **+0.000098** | [−0.000615, +0.000717] | 0.512 | **null** |
+| enc-lead vs misregistered `gridmetm9` | −0.013466 | [−0.017888, −0.010197] | 0.300 | loses |
+| attribution, L1 vs fix3 | contrast −0.006378 | [−0.028381, +0.006390] | — | flat |
+
+⛔ **Registered prediction (+0.008 … +0.016) FALSIFIED. 24th overturned causal claim.** Putting the
+target day's forcing in the encoder's final step deliberately buys **nothing**.
+
+⭐ So both registered mechanisms for the misregistered member's 0.011438 advantage are dead: the
+de-synchronisation (−0.000298, null) and encoder placement (+0.000098, null). Per the registered
+branch the gap is now recorded as **UNEXPLAINED** rather than attributed.
+
+⚠️ And it is genuinely puzzling, not merely unnamed: the information content is near-identical across
+all three configurations. For target T each of them has access to rain(T) **and** rain(T+1) — the
+original as (encoder-last, decoder-first), fix3 as (decoder-first, decoder-second), enc-lead as
+(encoder-last + decoder-first, decoder-second). They differ only in which slot carries which, and
+the slot provably does not matter. What remains untested is that the misregistered corpus shifts the
+**decoder** as well as the encoder; `--enc-lead` shifts only the encoder, so a deliberate
+decoder-side shift is the one configuration not yet measured. ⛔ Not asserted as the answer —
+recorded as the next testable candidate.
+
+### Roster consequences, measured (val1, trimmed, seeds 501-503)
+
+| roster | val1 | vs frozen |
+|---|---|---|
+| `gridmetm9`(misreg), fused4md49, fused4m9, nldasm9 — **the frozen record** | 0.913216 | — |
+| fused4md49, fused4m9, nldasm9 — gridMET member dropped | 0.910844 | −0.001273 |
+| `gridmetm9fix3`, fused4md49, fused4m9, nldasm9 | 0.908812 | −0.002884 |
+
+⭐ The ensemble absorbs ~75% of the solo gap: 0.011438 solo becomes −0.002884 in the ensemble. And
+`gridmetm9fix3` carries LOO **−0.001191**, CI excluding zero, so by this campaign's own elimination
+rule the corrected member should be **dropped** rather than shipped — it is worse than no gridMET
+member at all.
+
+⚠️ **None of those three is a clean record**: `fused4md49`, `fused4m9` and the no-q `lstm_fused4md4`
+are built on `camels_corpus_fused4m_m3`, which carries the misregistered `*_gridmet` columns. Only
+`nldasm9` is gridMET-free. The corrected fused members (`fused4md49fix3`, `fused4m9fix3` on the
+verified `camels_corpus_fused4mfix3_m3`) are training; the roster read and the headline choice are
+registered in PREREG_v2.md **before** they exist.
