@@ -121,6 +121,7 @@ case "$M" in
   gridmetm9fix2)             CORP="$V3/camels_corpus_gridmetfix2_m3_cohort"; ENC="camels1f"; TRS=2005-10-01 ;;
   gridmetm9fix)              CORP="$V3/camels_corpus_gridmetfix_m3_cohort"; ENC="camels1f"; TRS=2005-10-01 ;;
   # ---- the WINDOW-MATCHED 4-product members (9-year, like the whole roster) ---
+  gridmetm9fix3L1)           CORP="$V3/camels_corpus_gridmetfix3_m3_cohort"; ENC="camels1f"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
   fused4m9fix3)              CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2";   TRS=2005-10-01 ;;
   fused4md49fix3)            CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2d4"; TRS=2005-10-01 ;;
   fused4m9)                  CORP="$V3/camels_corpus_fused4m_m3_cohort";   ENC="camelsm4v2";   TRS=2005-10-01 ;;
@@ -201,9 +202,19 @@ assert w == exp, f"decoder width {w} != {exp} (dec={ndec} dec_q={dq})"
 # member named *q whose cfg says dec_q=False silently trained the wrong recipe.
 if "--dec-q" in os.environ.get("M1_EXTRA", ""):
     assert dq is True, "member expects --dec-q but the checkpoint says dec_q=False"
+# Same reasoning for --enc-lead: it changes no tensor SHAPE, so the width check above cannot see
+# it. A silently-dropped flag would train a byte-identical duplicate of the unled member and the
+# resulting null would be read as a measurement.
+_m = re.search(r"--enc-lead\s+(\d+)", os.environ.get("M1_EXTRA", ""))
+_want = int(_m.group(1)) if _m else 0
+assert int(cfg.get("enc_lead", 0)) == _want, (
+    f"enc_lead {cfg.get('enc_lead')} != requested {_want}")
+
 prods = {v.rsplit("_", 1)[1] for v in cfg["enc_vars"] if "_" in v}
 txt = open(log, encoding="utf-8", errors="replace").read()
 assert re.search(r"^epoch 30/30 ", txt, re.M), "no 'epoch 30/30' line - partial checkpoint"
+if _want:
+    assert re.search(rf"^enc_lead={_want} ", txt, re.M), "no enc_lead line in the training log"
 m = re.search(r"windows: train=(\d+).*?val=(\d+)", txt, re.S)
 print(f"GUARD 1 OK: stations={cfg['n_stations']} train={cfg['train_start']}..{cfg['train_end']} "
       f"enc={len(cfg['enc_vars'])} dec={ndec} products={sorted(prods)} dec_in={w}")

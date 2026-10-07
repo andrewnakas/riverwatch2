@@ -265,6 +265,11 @@ class Corpus:
                  dec_q: bool = False):
         # LEDGER 56c: feed the decoder the LAST OBSERVED discharge directly.
         self.dec_q = bool(dec_q)
+        # MODERN-1: run the encoder's FORCING this many days ahead of its discharge. 0 = the
+        # historical behaviour, byte-identical. 1 puts the target day's forcing in the encoder's
+        # final step while its discharge still stops at t0, which is what the misregistered
+        # gridMET corpus did accidentally and was worth +0.010 solo.
+        self.enc_lead = 0
         self.enc_vars, self.dec_vars = enc_vars, dec_vars
         # LEDGER 56b: st["wx"] columns are `load_vars` (encoder ∪ decoder, in that
         # order). Legacy checkpoints have dec ⊆ enc, so load_vars == enc_vars and
@@ -415,7 +420,14 @@ class Corpus:
                 q_n[drop] = 0.0
                 q_mask[drop] = 0.0
         sv = st["static"]
-        wx_enc = st["wx_n"][a: t0 + 1]
+        _L = getattr(self, "enc_lead", 0)
+        if _L:
+            # forcing shifted LATER by _L days; q_n/q_mask above are deliberately NOT shifted, so
+            # the encoder's discharge still ends at t0 and no target-day observation enters.
+            # window_index guarantees t0 + HORIZON is in range and HORIZON >= _L, so this is safe.
+            wx_enc = st["wx_n"][a + _L: t0 + 1 + _L]
+        else:
+            wx_enc = st["wx_n"][a: t0 + 1]
         if not self.enc_is_all:
             wx_enc = wx_enc[:, self.enc_cols]
         x_enc = np.concatenate([
@@ -668,6 +680,11 @@ def main() -> int:
                          "samples draw from windows with an archived init; "
                          "perfect samples draw from all windows. Validation "
                          "runs under real GFS forcing. Subsumes --gfs-finetune.")
+    ap.add_argument("--enc-lead", type=int, default=0,
+                    help="run the ENCODER's forcing this many days ahead of its discharge.\n"
+                         "0 (default) is the historical behaviour. 1 puts the target day's\n"
+                         "forcing in the encoder's final step while its discharge still ends\n"
+                         "at t0 -- perfect-forcing entitlement, no target-day observation.")
     ap.add_argument("--dec-q", action="store_true",
                     help="LEDGER 56c: give the DECODER the last observed discharge "
                          "(+ its mask) as two extra inputs, constant across leads. "
@@ -857,6 +874,10 @@ def main() -> int:
                     head=args.head, load_vars=load_vars,
                     dec_q=bool(base_cfg.get("dec_q", False)) if base_payload else bool(args.dec_q))
     corpus.no_q_input = bool(args.no_q_input)
+    corpus.enc_lead = int(base_cfg.get("enc_lead", 0) if base_payload else args.enc_lead)
+    if corpus.enc_lead:
+        print(f"enc_lead={corpus.enc_lead} (encoder forcing runs {corpus.enc_lead}d ahead of its "
+              f"discharge; target-day forcing reaches the encoder, target-day q does not)", flush=True)
     corpus.ar_mask_p = float(args.ar_mask_p)
     print(f"ar_mask_p={corpus.ar_mask_p}", flush=True)
     if args.head == "dhbv":
@@ -992,6 +1013,7 @@ def main() -> int:
             "quantiles": list(QUANTILES), "hidden": args.hidden,
             "head": args.head,
             "horizon": HORIZON, "context": CONTEXT_DAYS,
+            "enc_lead": int(getattr(corpus, "enc_lead", 0)),
             "wx_mean": {c: float(v) for c, v in zip(corpus.load_vars, corpus.wx_mean)},
             "wx_std": {c: float(v) for c, v in zip(corpus.load_vars, corpus.wx_std)},
             "load_vars": list(corpus.load_vars), "dec_q": bool(corpus.dec_q),

@@ -4020,3 +4020,53 @@ across all 115 checkpoints, every attribute forcing- or map-derived, **no Addor 
 G future discharge — perturbing observed q at t0+1, +2, +3, +7, +14 by 10.0 in z-space moves
 **neither** `x_enc` nor `x_dec` by any amount with `--dec-q` on and off, while q(t0) moves x_dec by
 exactly 10.0, so the model provably cannot read its own target day.
+
+---
+
+## §MODERN-1 — `--enc-lead`: the encoder's forcing one day ahead of its discharge
+
+Registered 2026-10-07 before `gridmetm9fix3L1` exists. This is a **recipe** probe, not a member.
+
+**Where it comes from.** The misregistered gridMET member beat the correctly-registered one by
+−0.010217 (fix2) and −0.011137 (fix1) on val1, and the per-row attribution localized that advantage
+to rows where the **target day's** rain is high (67% of it) while showing the misregistered member is
+**worse** (−0.116) where *future* rain would help it. So the advantage is not future information. It
+is that the encoder's final step carried rain(T) while its discharge still stopped at T−1. fix2
+minus fix1 is only +0.0009, so the loss is the **precipitation** shift alone, not the internal
+de-synchronisation — consistent with the same reading.
+
+**What the flag does.** `--enc-lead 1` slices the encoder's forcing `[a+1 : t0+2]` while leaving
+`q_n`/`q_mask` at `[a : t0+1]`. The encoder's final step then carries forcing for T = t0+1 and
+discharge for t0 = T−1. Verified, not asserted (`analysis/m1_verify_enc_lead.py`):
+- **off is byte-identical** to the pre-patch code — `max |difference| = 0` over 320 arrays, both
+  `--dec-q` settings, compared against a snapshot of the previous file;
+- **on**, perturbing target-day FORCING moves `x_enc` by 10.0 where at lead 0 it moved it by 0.0,
+  while perturbing target-day DISCHARGE moves **neither** tensor, and `d=+2` forcing moves nothing
+  — so the lead is exactly one day and carries no target-day observation.
+- GUARD 1 asserts `cfg["enc_lead"]` equals the requested value **in both directions** (all four
+  branches tested, `m1_verify_enc_lead_guard.py`): the flag changes no tensor shape, so the decoder
+  width check cannot see it, and a silently-dropped flag would train a byte-identical duplicate of
+  the unled member and have its null read as a measurement.
+
+**Why it matters more than the member.** Under perfect forcing the model is entitled to target-day
+forcing, and at `enc_lead=0` that forcing reaches **only** the decoder. If placing a copy at the
+encoder's final step is worth ~0.010, it is worth that for every product, and by the 1/N rule a
+recipe change lifting all members beats any single new member by about an order of magnitude.
+
+> **Registered: `gridmetm9fix3L1` beats `gridmetm9fix3` by +0.008 … +0.016 on val1, and beats the
+> misregistered `gridmetm9` by +0.002 … +0.012.**
+
+It should beat the *original* too, not merely match it: it keeps rain(T) in the encoder's last step
+**and** puts rain(T) rather than rain(T+1) in the decoder's first step, which is exactly where the
+original was penalised on pre-storm rows.
+
+- **Confirmed** ⇒ generalize: `--enc-lead 1` on all four products and on the fused members, which is
+  the actual prize. Registered as a separate ladder before those runs.
+- **Null vs fix3** (CI includes zero) ⇒ the encoder-placement explanation of the 0.010 is **wrong**.
+  The corrected registration then ships on correctness grounds and the gap is recorded as
+  **unexplained**, not quietly attributed.
+- **Worse than fix3** ⇒ the flag is harmful; record and close. `--enc-lead` stays default 0 either
+  way unless the ladder confirms it.
+
+⚠️ Adjudicated on val1, 3 seeds, seed-matched against both baselines. 3 seeds is a SCREEN; the ship
+bar is 5. This probe changes no frozen record on its own.
