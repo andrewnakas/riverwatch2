@@ -8767,3 +8767,12 @@ the better *member*, which `gridmetm9fix3` answers on val1 as a model-selection 
 integrity one. ⚠️ To be re-run on fix3's dumps, since fix1 is the mis-specified correction; the
 attribution asks *where* the advantage lives, which its internal de-sync does not confound, but the
 confirmation is cheap and belongs on the correctly-built corpus.
+
+⭐ **Cross-check, two bootstrap implementations.** The attribution was computed twice by accident of
+timing: once re-estimating each basin's rain thresholds INSIDE every resample, once with thresholds
+fixed and whole basins resampled. Point estimates are identical (−0.117677); CIs are
+[−0.158954, −0.063597] and [−0.184177, −0.051213]. Both exclude zero on the anti-leak side, so the
+verdict does not depend on the implementation. ⚠️ The **wider** interval is the correct one and is
+the figure quoted: re-estimating a threshold inside a resample makes the threshold depend on the
+resample and understates the uncertainty. Fixed thresholds + whole-basin resampling is the proper
+cluster bootstrap.
