@@ -1,0 +1,27 @@
+{
+  "candidate": "camels_corpus_station_v1",
+  "basins": 528,
+  "R2_bar": 0.9,
+  "min_basins": 400,
+  "vs": {
+    "camels_corpus_daymet_v2": {
+      "n": 512,
+      "median_event_R2": 0.7990760621570124,
+      "frac_basins_at_or_above_bar": 0.22265625,
+      "pass": true
+    },
+    "camels_corpus_nldas_v2": {
+      "n": 512,
+      "median_event_R2": 0.4986232147493282,
+      "frac_basins_at_or_above_bar": 0.001953125,
+      "pass": true
+    },
+    "camels_corpus_maurer_v2": {
+      "n": 512,
+      "median_event_R2": 0.294230516514452,
+      "frac_basins_at_or_above_bar": 0.033203125,
+      "pass": true
+    }
+  },
+  "verdict": "PASS A1-3"
+}

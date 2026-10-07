@@ -1,0 +1,35 @@
+{
+ "scope": "SINGLE-FORCING arm only -- the only arm ledger 41 runs. Does NOT license skipping a Daymet re-extraction for a MULTI-forcing prior: the 15-input streams (lstm_multi/multi5/multi6, 62% of ensemble weight) carry their value in the DISAGREEMENT BETWEEN slots, not in any slot's standalone quality. Settling test for that case is the inter-product correlation structure of {SCDNA,Livneh,QC_stations} vs {daymet,nldas,maurer} on shared gauges -- NOT run here.",
+ "referee": "streamflow (CAMELS q_cfs), never another forcing",
+ "method": "per basin, sign-aware peak of corr(precip(t), dQ(t+k)) over k in -3..+3; peak-over-lag makes it registration-invariant, so a one-day offset cannot win or lose it",
+ "reference": "camels_corpus_daymet_v2",
+ "window": [
+  "1981-01-01",
+  "1995-09-30"
+ ],
+ "n_gauges": 510,
+ "median_peak": {
+  "camels_daymet": 0.3947834505989574,
+  "SCDNA": 0.3911727917596376,
+  "Livneh": 0.3653628763927115
+ },
+ "peak_lag_mode": {
+  "camels_daymet": 0,
+  "SCDNA": 0,
+  "Livneh": 0
+ },
+ "paired_vs_camels_daymet": {
+  "SCDNA": {
+   "paired_median": -0.0014236113061095509,
+   "wins": 244,
+   "n": 510,
+   "win_share": 0.47843137254901963
+  },
+  "Livneh": {
+   "paired_median": -0.01344925581613965,
+   "wins": 203,
+   "n": 510,
+   "win_share": 0.3980392156862745
+  }
+ }
+}

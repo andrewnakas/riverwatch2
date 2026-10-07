@@ -1,0 +1,233 @@
+{
+ "stage": "ledger43_s1_statics_screen",
+ "r2_bar": 0.9,
+ "min_survivors": 3,
+ "basins": 531,
+ "camels27": [
+  "p_mean",
+  "pet_mean",
+  "aridity",
+  "p_seasonality",
+  "frac_snow",
+  "high_prec_freq",
+  "high_prec_dur",
+  "low_prec_freq",
+  "low_prec_dur",
+  "elev_mean",
+  "slope_mean",
+  "area_gages2",
+  "soil_depth_pelletier",
+  "soil_depth_statsgo",
+  "soil_porosity",
+  "soil_conductivity",
+  "max_water_content",
+  "sand_frac",
+  "silt_frac",
+  "clay_frac",
+  "frac_forest",
+  "lai_max",
+  "gvf_max",
+  "gvf_diff",
+  "root_depth_50",
+  "carbonate_rocks_frac",
+  "geol_permeability"
+ ],
+ "screen_validation": {
+  "copy_of_p_mean": {
+   "r2": 1.0,
+   "expected": 1.0
+  },
+  "linear_combo": {
+   "r2": 1.0,
+   "expected": 1.0
+  },
+  "pure_noise": {
+   "r2": 0.048260824047728024,
+   "expected": 0.0
+  }
+ },
+ "filter1": [
+  {
+   "attr": "AWCAVE",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "BFI_AVE",
+   "filter1": "EXCLUDE_LEAKAGE",
+   "reason": "baseflow index from hydrograph separation on the gauge's OWN observed record; a summary statistic of the target series"
+  },
+  {
+   "attr": "DEVNLCD06",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "ELEV_MEAN_M_BASIN",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'elev_mean'"
+  },
+  {
+   "attr": "EMERGWETNLCD06",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "FORESTNLCD06",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'frac_forest'"
+  },
+  {
+   "attr": "HGA_PCT",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "HGB_PCT",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "HGC_PCT",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "HGD_PCT",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "PERMAVE",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'geol_permeability'"
+  },
+  {
+   "attr": "PPTAVG_BASIN",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'p_mean'"
+  },
+  {
+   "attr": "RUNAVE7100",
+   "filter1": "EXCLUDE_LEAKAGE",
+   "reason": "mean annual runoff 1971-2000: derived from OBSERVED DISCHARGE and its period OVERLAPS the 1995-2008 test window"
+  },
+  {
+   "attr": "SLOPE_PCT",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'slope_mean'"
+  },
+  {
+   "attr": "SNOW_PCT_PRECIP",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'frac_snow'"
+  },
+  {
+   "attr": "TOPWET",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  },
+  {
+   "attr": "T_AVG_BASIN",
+   "filter1": "EXCLUDE_DUPLICATE",
+   "reason": "duplicates CAMELS-27 'pet_mean/aridity (temperature climatology)'"
+  },
+  {
+   "attr": "WOODYWETNLCD06",
+   "filter1": "ADMISSIBLE",
+   "reason": "physiographic; no observed-discharge content"
+  }
+ ],
+ "filter2": [
+  {
+   "attr": "AWCAVE",
+   "r2_vs_camels27": 0.6593567602350758
+  },
+  {
+   "attr": "DEVNLCD06",
+   "r2_vs_camels27": 0.45682755165720534
+  },
+  {
+   "attr": "EMERGWETNLCD06",
+   "r2_vs_camels27": 0.46455406082154904
+  },
+  {
+   "attr": "HGA_PCT",
+   "r2_vs_camels27": 0.4143065244263521
+  },
+  {
+   "attr": "HGB_PCT",
+   "r2_vs_camels27": 0.40815358555515013
+  },
+  {
+   "attr": "HGC_PCT",
+   "r2_vs_camels27": 0.36184807634871163
+  },
+  {
+   "attr": "HGD_PCT",
+   "r2_vs_camels27": 0.5960272261121828
+  },
+  {
+   "attr": "TOPWET",
+   "r2_vs_camels27": 0.874091635006819
+  },
+  {
+   "attr": "WOODYWETNLCD06",
+   "r2_vs_camels27": 0.68538681578554
+  }
+ ],
+ "accepted": [
+  {
+   "attr": "HGC_PCT",
+   "r2_vs_camels27": 0.36184807634871163,
+   "r2_vs_current_basis": 0.36184807634871163
+  },
+  {
+   "attr": "HGB_PCT",
+   "r2_vs_camels27": 0.40815358555515013,
+   "r2_vs_current_basis": 0.7707762480170935
+  },
+  {
+   "attr": "HGA_PCT",
+   "r2_vs_camels27": 0.4143065244263521,
+   "r2_vs_current_basis": 0.47786093290489695
+  },
+  {
+   "attr": "DEVNLCD06",
+   "r2_vs_camels27": 0.45682755165720534,
+   "r2_vs_current_basis": 0.4601379111248781
+  },
+  {
+   "attr": "EMERGWETNLCD06",
+   "r2_vs_camels27": 0.46455406082154904,
+   "r2_vs_current_basis": 0.46640107714214707
+  },
+  {
+   "attr": "AWCAVE",
+   "r2_vs_camels27": 0.6593567602350758,
+   "r2_vs_current_basis": 0.671975576408546
+  },
+  {
+   "attr": "WOODYWETNLCD06",
+   "r2_vs_camels27": 0.68538681578554,
+   "r2_vs_current_basis": 0.7103996668561474
+  },
+  {
+   "attr": "TOPWET",
+   "r2_vs_camels27": 0.874091635006819,
+   "r2_vs_current_basis": 0.8801000367234496
+  }
+ ],
+ "accepted_names": [
+  "HGC_PCT",
+  "HGB_PCT",
+  "HGA_PCT",
+  "DEVNLCD06",
+  "EMERGWETNLCD06",
+  "AWCAVE",
+  "WOODYWETNLCD06",
+  "TOPWET"
+ ],
+ "n_accepted": 8,
+ "falsifier_fired": false
+}

@@ -1,0 +1,48 @@
+{
+ "stage": "ledger43_s0_anchors",
+ "tol": 5e-07,
+ "anchor1": {
+  "artifact": "benchmarks/ledger43_anchor_train.json",
+  "md5": "082d25f1aac3e8e6608f1d8e78d659aa",
+  "computation": "noq_harness.py --mode baseline",
+  "median_nse": 0.9504577864064554,
+  "prereg": 0.950458,
+  "diff": -2.1359354462902047e-07,
+  "exact": true,
+  "basins": 531,
+  "val_rows": 69030,
+  "fit_rows": 127606,
+  "val_window": [
+   "1990-10-03",
+   "1995-09-13"
+  ],
+  "fit_window": [
+   "1981-01-07",
+   "1990-09-19"
+  ],
+  "weights": {
+   "lstm_daymet": 0.07291353868636831,
+   "lstm_nldas": 0.09554489623872627,
+   "lstm_maurer": 0.06392943966594786,
+   "lstm_multi": 0.1822617970313875,
+   "dhbv_daymet": 0.06509566933633576,
+   "dhbv_nldas": 0.043542990105856196,
+   "dhbv_maurer": 0.03992024317604991,
+   "lstm_multi5": 0.2410048545738384,
+   "lstm_multi6": 0.1957865711854898
+  }
+ },
+ "anchor2": {
+  "artifact": "noq_test_result.json",
+  "md5": "c4d7639df8647308e48dedc9f45f824e",
+  "computation": "median over per_basin_nse (recorded 2026-08-09; NO new query spent)",
+  "key": "per_basin_nse",
+  "median_nse": 0.8362893021622821,
+  "prereg": 0.836289,
+  "diff": 3.0216228219526187e-07,
+  "exact": true,
+  "basins": 531
+ },
+ "all_exact": true,
+ "failed": []
+}

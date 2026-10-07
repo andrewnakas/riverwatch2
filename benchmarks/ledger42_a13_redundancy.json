@@ -1,0 +1,27 @@
+{
+  "candidate": "camels_corpus_eventqm_v1",
+  "basins": 530,
+  "R2_bar": 0.9,
+  "min_basins": 400,
+  "vs": {
+    "camels_corpus_daymet_v2": {
+      "n": 530,
+      "median_event_R2": 0.9894460630406455,
+      "frac_basins_at_or_above_bar": 0.9867924528301887,
+      "pass": false
+    },
+    "camels_corpus_nldas_v2": {
+      "n": 530,
+      "median_event_R2": 0.5993143568457667,
+      "frac_basins_at_or_above_bar": 0.013207547169811321,
+      "pass": true
+    },
+    "camels_corpus_maurer_v2": {
+      "n": 530,
+      "median_event_R2": 0.33126602437793995,
+      "frac_basins_at_or_above_bar": 0.04150943396226415,
+      "pass": true
+    }
+  },
+  "verdict": "FAIL A1-3 \u2014 candidate is redundant with an existing input"
+}

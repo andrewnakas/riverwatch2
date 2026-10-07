@@ -1,0 +1,33 @@
+{
+  "full": {
+    "median_nse": 0.9504577851750362,
+    "mean_nse": 0.9007204916647735,
+    "median_kge": 0.9052831369413792,
+    "mean_kge": 0.8515827265613165,
+    "median_abs_fhv": 6.594032348794188
+  },
+  "members": {
+    "lstm_multi5": {
+      "median_nse_delta": 0.0020036924238278075,
+      "mean_nse_delta": 0.003962112196061177,
+      "paired_median_nse_delta": 0.001338937283580366,
+      "breadth_nse": 0.7627118644067796,
+      "median_kge_delta": 0.0035505626797723844,
+      "mean_kge_delta": 0.00498458658212305,
+      "median_abs_fhv_delta": 0.3667640059137085,
+      "mean_abs_fhv_improvement": 0.36124796575918744,
+      "basins": 531
+    },
+    "lstm_multi6": {
+      "median_nse_delta": 0.0009970906978779004,
+      "mean_nse_delta": 0.0014999972679413632,
+      "paired_median_nse_delta": 0.0003310402360116038,
+      "breadth_nse": 0.5894538606403014,
+      "median_kge_delta": 0.0010763797014504695,
+      "mean_kge_delta": 0.0024332484229669838,
+      "median_abs_fhv_delta": 0.0182557906447105,
+      "mean_abs_fhv_improvement": 0.024758789408969816,
+      "basins": 531
+    }
+  }
+}

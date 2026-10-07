@@ -1,0 +1,23 @@
+{
+  "shipped 9": {
+    "measured": 0.8367483011910586,
+    "limit_lower": 0.8378419810211949,
+    "limit_estimate": 0.8378419810211949,
+    "headroom_lower": 0.001093679830136307,
+    "headroom_estimate": 0.001093679830136307,
+    "n_streams": 9
+  },
+  "take-all": {
+    "measured": 0.8392940875847774,
+    "limit_lower": 0.8397728268655484,
+    "limit_estimate": 0.8404713838890967,
+    "headroom_lower": 0.00047873928077102335,
+    "headroom_estimate": 0.0011772963043192863,
+    "n_streams": 20
+  },
+  "total_vs_shipped": {
+    "breadth_only": 0.0025457863937188296,
+    "breadth_plus_depth_lower": 0.003024525674489853,
+    "breadth_plus_depth_estimate": 0.003723082698038116
+  }
+}

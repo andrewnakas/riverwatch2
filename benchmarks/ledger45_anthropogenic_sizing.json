@@ -1,0 +1,419 @@
+{
+ "ledger": 45,
+ "track": 5,
+ "question": "could fixing anthropogenically-disturbed basins move the 531-median NSE?",
+ "nse_source": {
+  "path": "analysis/noq_test_result.json",
+  "md5": "c4d7639df8647308e48dedc9f45f824e",
+  "n_basins": 531,
+  "base_median": 0.8362893021622821,
+  "p75": 0.8974353147648261
+ },
+ "gages2_source": "basinchar_and_report_sept_2011.zip (USGS, Falcone 2011), spreadsheets-in-csv-format",
+ "n_531_missing_gages2": 0,
+ "missing_ids": [],
+ "fields_used": {
+  "conterm_hydromod_dams.txt": [
+   "NDAMS_2009",
+   "MAJ_NDAMS_2009",
+   "DDENS_2009",
+   "MAJ_DDENS_2009",
+   "STOR_NID_2009",
+   "STOR_NOR_2009",
+   "RAW_DIS_NEAREST_DAM"
+  ],
+  "conterm_hydromod_other.txt": [
+   "FRESHW_WITHDRAWAL",
+   "PCT_IRRIG_AG",
+   "CANALS_PCT",
+   "NPDES_MAJ_DENS"
+  ],
+  "conterm_bas_classif.txt": [
+   "HYDRO_DISTURB_INDX",
+   "CLASS"
+  ],
+  "conterm_hydro.txt": [
+   "WB5100_ANN_MM"
+  ]
+ },
+ "fields_excluded_q_leakage": {
+  "BFI_AVE": "base-flow index = ratio of base flow to total observed streamflow; q-derived (banned)",
+  "RUNAVE7100": "1971-2000 runoff map integrating water use/regulation, built from gauged streamflow; q-derived (banned)",
+  "PERDUN/PERHOR/CONTACT/TOPWET(hydro-sheet siblings)": "not needed; hydro sheet only opened for the WB5100 model column",
+  "CLASS-as-primary-cohort": "Falcone reference screening partially involved inspection of gauge records; kept as diagnostic only"
+ },
+ "storage_days_note": "STOR_NOR_2009 [ML/km2 == mm] / (WB5100_ANN_MM/365.25); denominator is a precip+temperature water-balance MODEL, not observed discharge",
+ "hdi_quantiles_531": {
+  "q25": 6.0,
+  "q50": 9.0,
+  "q75": 12.0,
+  "p90": 15.0
+ },
+ "correlations_vs_nse": {
+  "NDAMS_2009": {
+   "n": 531,
+   "spearman_r": -0.1218,
+   "p": 0.00494
+  },
+  "MAJ_NDAMS_2009": {
+   "n": 531,
+   "spearman_r": -0.0338,
+   "p": 0.437
+  },
+  "DDENS_2009": {
+   "n": 531,
+   "spearman_r": -0.1545,
+   "p": 0.000351
+  },
+  "STOR_NID_2009": {
+   "n": 531,
+   "spearman_r": -0.1125,
+   "p": 0.00946
+  },
+  "STOR_NOR_2009": {
+   "n": 531,
+   "spearman_r": -0.1154,
+   "p": 0.00779
+  },
+  "STOR_DAYS_WB": {
+   "n": 531,
+   "spearman_r": -0.1928,
+   "p": 7.71e-06
+  },
+  "HYDRO_DISTURB_INDX": {
+   "n": 531,
+   "spearman_r": -0.1336,
+   "p": 0.00204
+  },
+  "FRESHW_WITHDRAWAL": {
+   "n": 531,
+   "spearman_r": 0.1199,
+   "p": 0.00567
+  },
+  "PCT_IRRIG_AG": {
+   "n": 531,
+   "spearman_r": -0.1662,
+   "p": 0.00012
+  },
+  "CANALS_PCT": {
+   "n": 531,
+   "spearman_r": -0.0481,
+   "p": 0.268
+  },
+  "NPDES_MAJ_DENS": {
+   "n": 531,
+   "spearman_r": 0.0408,
+   "p": 0.348
+  },
+  "RAW_DIS_NEAREST_DAM": {
+   "n": 531,
+   "spearman_r": -0.0787,
+   "p": 0.0701
+  }
+ },
+ "cohort_table": {
+  "any_dam (NDAMS_2009>=1)": {
+   "n": 303,
+   "n_below_median": 167,
+   "n_above_median": 136,
+   "frac_of_531": 0.571,
+   "cohort_median_nse": 0.8238,
+   "rest_median_nse": 0.8547,
+   "cohort_minus_rest": -0.0309,
+   "mannwhitney_p_cohort_worse": 0.00118,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0124823,
+    "plus_0.05": 0.0247666,
+    "plus_0.10": 0.044433,
+    "raise_to_p75": 0.061146,
+    "raise_to_1.0": 0.1637107
+   },
+   "near_median_band_n": 53,
+   "near_median_lift": 1.01
+  },
+  "ge5_dams (NDAMS_2009>=5)": {
+   "n": 129,
+   "n_below_median": 74,
+   "n_above_median": 55,
+   "frac_of_531": 0.243,
+   "cohort_median_nse": 0.8187,
+   "rest_median_nse": 0.8411,
+   "cohort_minus_rest": -0.0224,
+   "mannwhitney_p_cohort_worse": 0.103,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0047584,
+    "plus_0.05": 0.0107664,
+    "plus_0.10": 0.0179394,
+    "raise_to_p75": 0.0402555,
+    "raise_to_1.0": 0.0402555
+   },
+   "near_median_band_n": 20,
+   "near_median_lift": 0.89
+  },
+  "major_dam (MAJ_NDAMS_2009>=1)": {
+   "n": 68,
+   "n_below_median": 37,
+   "n_above_median": 31,
+   "frac_of_531": 0.128,
+   "cohort_median_nse": 0.8226,
+   "rest_median_nse": 0.8377,
+   "cohort_minus_rest": -0.0151,
+   "mannwhitney_p_cohort_worse": 0.235,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0014154,
+    "plus_0.05": 0.0045124,
+    "plus_0.10": 0.0061343,
+    "raise_to_p75": 0.0185565,
+    "raise_to_1.0": 0.0185565
+   },
+   "near_median_band_n": 8,
+   "near_median_lift": 0.68
+  },
+  "storage>=10d_wbflow": {
+   "n": 40,
+   "n_below_median": 32,
+   "n_above_median": 8,
+   "frac_of_531": 0.075,
+   "cohort_median_nse": 0.7425,
+   "rest_median_nse": 0.841,
+   "cohort_minus_rest": -0.0986,
+   "mannwhitney_p_cohort_worse": 3.9e-06,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0004827,
+    "plus_0.05": 0.0017733,
+    "plus_0.10": 0.0047584,
+    "raise_to_p75": 0.0158813,
+    "raise_to_1.0": 0.0158813
+   },
+   "near_median_band_n": 2,
+   "near_median_lift": 0.29
+  },
+  "storage>=30d_wbflow": {
+   "n": 16,
+   "n_below_median": 14,
+   "n_above_median": 2,
+   "frac_of_531": 0.03,
+   "cohort_median_nse": 0.6247,
+   "rest_median_nse": 0.8385,
+   "cohort_minus_rest": -0.2138,
+   "mannwhitney_p_cohort_worse": 0.000143,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0,
+    "plus_0.05": 0.0012151,
+    "plus_0.10": 0.0014154,
+    "raise_to_p75": 0.0054865,
+    "raise_to_1.0": 0.0054865
+   },
+   "near_median_band_n": 0,
+   "near_median_lift": 0.0
+  },
+  "storage>=90d_wbflow": {
+   "n": 5,
+   "n_below_median": 5,
+   "n_above_median": 0,
+   "frac_of_531": 0.009,
+   "cohort_median_nse": 0.7749,
+   "rest_median_nse": 0.8375,
+   "cohort_minus_rest": -0.0626,
+   "mannwhitney_p_cohort_worse": 0.0186,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0,
+    "plus_0.05": 0.0012151,
+    "plus_0.10": 0.0012777,
+    "raise_to_p75": 0.0017733,
+    "raise_to_1.0": 0.0017733
+   },
+   "near_median_band_n": 0,
+   "near_median_lift": 0.0
+  },
+  "hdi_top_half (>= 9)": {
+   "n": 275,
+   "n_below_median": 157,
+   "n_above_median": 118,
+   "frac_of_531": 0.518,
+   "cohort_median_nse": 0.8187,
+   "rest_median_nse": 0.8513,
+   "cohort_minus_rest": -0.0326,
+   "mannwhitney_p_cohort_worse": 0.000278,
+   "oracle_median_delta": {
+    "plus_0.02": 0.009373,
+    "plus_0.05": 0.0220754,
+    "plus_0.10": 0.0411611,
+    "raise_to_p75": 0.061146,
+    "raise_to_1.0": 0.1637107
+   },
+   "near_median_band_n": 44,
+   "near_median_lift": 0.92
+  },
+  "hdi_top_quartile (>= 12)": {
+   "n": 140,
+   "n_below_median": 80,
+   "n_above_median": 60,
+   "frac_of_531": 0.264,
+   "cohort_median_nse": 0.8176,
+   "rest_median_nse": 0.8411,
+   "cohort_minus_rest": -0.0235,
+   "mannwhitney_p_cohort_worse": 0.0355,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0047584,
+    "plus_0.05": 0.0120787,
+    "plus_0.10": 0.0190936,
+    "raise_to_p75": 0.046659,
+    "raise_to_1.0": 0.046659
+   },
+   "near_median_band_n": 21,
+   "near_median_lift": 0.87
+  },
+  "hdi_top_decile (>= 15)": {
+   "n": 62,
+   "n_below_median": 36,
+   "n_above_median": 26,
+   "frac_of_531": 0.117,
+   "cohort_median_nse": 0.8153,
+   "rest_median_nse": 0.8381,
+   "cohort_minus_rest": -0.0227,
+   "mannwhitney_p_cohort_worse": 0.123,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0012777,
+    "plus_0.05": 0.0047584,
+    "plus_0.10": 0.0086675,
+    "raise_to_p75": 0.0176039,
+    "raise_to_1.0": 0.0176039
+   },
+   "near_median_band_n": 6,
+   "near_median_lift": 0.56
+  },
+  "irrig>=5pct": {
+   "n": 20,
+   "n_below_median": 16,
+   "n_above_median": 4,
+   "frac_of_531": 0.038,
+   "cohort_median_nse": 0.7323,
+   "rest_median_nse": 0.8385,
+   "cohort_minus_rest": -0.1063,
+   "mannwhitney_p_cohort_worse": 0.00158,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0,
+    "plus_0.05": 0.0014154,
+    "plus_0.10": 0.0022126,
+    "raise_to_p75": 0.0067512,
+    "raise_to_1.0": 0.0067512
+   },
+   "near_median_band_n": 0,
+   "near_median_lift": 0.0
+  },
+  "irrig>=1pct": {
+   "n": 53,
+   "n_below_median": 35,
+   "n_above_median": 18,
+   "frac_of_531": 0.1,
+   "cohort_median_nse": 0.7752,
+   "rest_median_nse": 0.8403,
+   "cohort_minus_rest": -0.065,
+   "mannwhitney_p_cohort_worse": 0.00158,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0004827,
+    "plus_0.05": 0.0022126,
+    "plus_0.10": 0.0054865,
+    "raise_to_p75": 0.0179394,
+    "raise_to_1.0": 0.0179394
+   },
+   "near_median_band_n": 5,
+   "near_median_lift": 0.54
+  },
+  "withdrawal>=50mm_yr": {
+   "n": 107,
+   "n_below_median": 53,
+   "n_above_median": 54,
+   "frac_of_531": 0.202,
+   "cohort_median_nse": 0.8408,
+   "rest_median_nse": 0.8363,
+   "cohort_minus_rest": 0.0045,
+   "mannwhitney_p_cohort_worse": 0.703,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0045483,
+    "plus_0.05": 0.0106585,
+    "plus_0.10": 0.0159068,
+    "raise_to_p75": 0.0273293,
+    "raise_to_1.0": 0.0273293
+   },
+   "near_median_band_n": 17,
+   "near_median_lift": 0.92
+  },
+  "withdrawal>=10mm_yr": {
+   "n": 282,
+   "n_below_median": 132,
+   "n_above_median": 150,
+   "frac_of_531": 0.531,
+   "cohort_median_nse": 0.8462,
+   "rest_median_nse": 0.8273,
+   "cohort_minus_rest": 0.0189,
+   "mannwhitney_p_cohort_worse": 0.989,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0103881,
+    "plus_0.05": 0.0231257,
+    "plus_0.10": 0.0418324,
+    "raise_to_p75": 0.061146,
+    "raise_to_1.0": 0.1637107
+   },
+   "near_median_band_n": 46,
+   "near_median_lift": 0.94
+  },
+  "canals>=5pct": {
+   "n": 12,
+   "n_below_median": 10,
+   "n_above_median": 2,
+   "frac_of_531": 0.023,
+   "cohort_median_nse": 0.7871,
+   "rest_median_nse": 0.8377,
+   "cohort_minus_rest": -0.0506,
+   "mannwhitney_p_cohort_worse": 0.0182,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0004827,
+    "plus_0.05": 0.0014154,
+    "plus_0.10": 0.0017733,
+    "raise_to_p75": 0.0045124,
+    "raise_to_1.0": 0.0045124
+   },
+   "near_median_band_n": 1,
+   "near_median_lift": 0.48
+  },
+  "nonref_CLASS (diagnostic only)": {
+   "n": 0
+  },
+  "union_disturbed": {
+   "n": 221,
+   "n_below_median": 115,
+   "n_above_median": 106,
+   "frac_of_531": 0.416,
+   "cohort_median_nse": 0.8273,
+   "rest_median_nse": 0.8388,
+   "cohort_minus_rest": -0.0114,
+   "mannwhitney_p_cohort_worse": 0.202,
+   "oracle_median_delta": {
+    "plus_0.02": 0.0073779,
+    "plus_0.05": 0.0195158,
+    "plus_0.10": 0.0328619,
+    "raise_to_p75": 0.061146,
+    "raise_to_1.0": 0.0828744
+   },
+   "near_median_band_n": 35,
+   "near_median_lift": 0.91
+  }
+ },
+ "bars": {
+  "resolution_floor": 0.00103,
+  "record_claim": 0.003
+ },
+ "verdict": {
+  "call": "KILL",
+  "reasons": [
+   "all 531 CAMELS basins are GAGES-II CLASS=Ref (least-disturbed); the non-ref cohort is EMPTY -- the corpus was screened for exactly the disturbance the SOTA authors blame",
+   "disturbance-NSE correlations are weak (max |rho|=0.19, STOR_DAYS_WB; ~3.7% of rank variance) and FRESHW_WITHDRAWAL is POSITIVELY correlated with NSE (+0.12)",
+   "every genuinely-disturbed cohort has near-median lift 0.00-0.68x (prior cohort attempt died at 1.70x vs a 3.0x bar): disturbed basins sit deep in the low tail, where uplift cannot cross the median",
+   "plausible oracle (+0.05 NSE on every cohort basin) moves the median +0.0002..+0.0018 for all targeted cohorts -- below the +0.003 record bar; +0.02 is below the 0.00103 resolution floor",
+   "to reach +0.003 via the largest measurably-hurt cohort (storage>=10d, n=40) requires >+0.10 NSE on all 40 basins, ~30x any per-basin gain any campaign lever has delivered",
+   "broad cohorts (any_dam n=303, union n=221) show larger oracle deltas only because they cover ~half the corpus, i.e. they are not a targeting signal at all"
+  ]
+ }
+}

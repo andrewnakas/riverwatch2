@@ -1,0 +1,60 @@
+{
+ "question": "does the CCI SM conjunction PASS survive controls for the 3.2x availability ramp and the time trend?",
+ "rows": [
+  {
+   "channel": "C_sm_comb_raw",
+   "near_pcorr": 0.20910706709552088,
+   "all_pcorr": 0.19255372457803752,
+   "x_noise": 3.93798619765576,
+   "n_basins": 243,
+   "n_near": 40,
+   "r2_existing": 0.3206568427909138,
+   "r2_extended": 0.40456369149155147,
+   "verdict": "PASS conjunction \u2014 worth building"
+  },
+  {
+   "channel": "C_sm_vfrac",
+   "near_pcorr": 0.05944276505329167,
+   "all_pcorr": 0.06865675035106214,
+   "x_noise": 1.119449436031858,
+   "n_basins": 530,
+   "n_near": 78,
+   "r2_existing": 0.04899386045038068,
+   "r2_extended": 0.060783266584264695,
+   "verdict": "DEAD \u2014 below 3x noise"
+  },
+  {
+   "channel": "C_date",
+   "near_pcorr": 0.06567690975454958,
+   "all_pcorr": 0.0678044696771126,
+   "x_noise": 1.2368532910461314,
+   "n_basins": 530,
+   "n_near": 78,
+   "r2_existing": 0.037969242695644334,
+   "r2_extended": 0.09107477154193128,
+   "verdict": "DEAD \u2014 below 3x noise"
+  },
+  {
+   "channel": "C_sm_deseas",
+   "near_pcorr": 0.137493308242018,
+   "all_pcorr": 0.12132435088612166,
+   "x_noise": 2.5893278388327308,
+   "n_basins": 243,
+   "n_near": 40,
+   "r2_existing": 0.08259542607865222,
+   "r2_extended": 0.15190772486830884,
+   "verdict": "DEAD \u2014 below 3x noise"
+  },
+  {
+   "channel": "A_noise",
+   "near_pcorr": 0.07131693154699958,
+   "all_pcorr": 0.06527355766042117,
+   "x_noise": 1.3430683907156231,
+   "n_basins": 530,
+   "n_near": 78,
+   "r2_existing": NaN,
+   "r2_extended": NaN,
+   "verdict": "ANCHOR"
+  }
+ ]
+}

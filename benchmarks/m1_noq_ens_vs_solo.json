@@ -1,0 +1,44 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "members": [
+  "lstm_fused3md3",
+  "lstm_gridmetm",
+  "lstm_fused4md4",
+  "lstm_fused4m",
+  "lstm_nldasm"
+ ],
+ "solo": "lstm_fused4md4",
+ "basins": 490,
+ "rows": 708266,
+ "comparisons": {
+  "mean": {
+   "ensemble_median": 0.8488450936190906,
+   "paired_delta": -0.0010577703873520528,
+   "ci95": [
+    -0.0029526508138871255,
+    0.0008041996997679712
+   ],
+   "breadth": 0.47346938775510206,
+   "verdict": "NULL (CI includes zero)"
+  },
+  "trimmed": {
+   "ensemble_median": 0.8519201385921904,
+   "paired_delta": 0.0008611900271497941,
+   "ci95": [
+    -0.000950400379117089,
+    0.0024323785777766727
+   ],
+   "breadth": 0.5142857142857142,
+   "verdict": "NULL (CI includes zero)"
+  }
+ },
+ "solo_median": 0.8540104034294587
+}

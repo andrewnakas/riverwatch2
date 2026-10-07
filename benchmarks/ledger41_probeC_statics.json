@@ -1,0 +1,178 @@
+{
+ "_meta": {
+  "probe": "ledger41 Probe C - static attribute strategy",
+  "bars": {
+   "median_cv_r2": 0.4,
+   "critical_cv_r2": 0.25
+  },
+  "median_cv_r2": 0.871,
+  "critical_failures": [],
+  "verdict": "PASS"
+ },
+ "imputed": {
+  "area_gages2": {
+   "n": 671,
+   "cv_r2": 0.8765,
+   "pearson_r": 0.9362,
+   "critical": false
+  },
+  "carbonate_rocks_frac": {
+   "n": 671,
+   "cv_r2": 0.4173,
+   "pearson_r": 0.6465,
+   "critical": false
+  },
+  "clay_frac": {
+   "n": 671,
+   "cv_r2": 0.8723,
+   "pearson_r": 0.9343,
+   "critical": true
+  },
+  "elev_mean": {
+   "n": 671,
+   "cv_r2": 0.9865,
+   "pearson_r": 0.9932,
+   "critical": false
+  },
+  "frac_forest": {
+   "n": 671,
+   "cv_r2": 0.8747,
+   "pearson_r": 0.9359,
+   "critical": false
+  },
+  "geol_permeability": {
+   "n": 671,
+   "cv_r2": 0.4673,
+   "pearson_r": 0.6885,
+   "critical": true
+  },
+  "gvf_diff": {
+   "n": 671,
+   "cv_r2": 0.9312,
+   "pearson_r": 0.9662,
+   "critical": false
+  },
+  "gvf_max": {
+   "n": 671,
+   "cv_r2": 0.9111,
+   "pearson_r": 0.9554,
+   "critical": false
+  },
+  "lai_max": {
+   "n": 671,
+   "cv_r2": 0.9291,
+   "pearson_r": 0.9649,
+   "critical": false
+  },
+  "max_water_content": {
+   "n": 671,
+   "cv_r2": 0.8262,
+   "pearson_r": 0.9095,
+   "critical": true
+  },
+  "root_depth_50": {
+   "n": 647,
+   "cv_r2": 0.768,
+   "pearson_r": 0.8797,
+   "critical": false
+  },
+  "sand_frac": {
+   "n": 671,
+   "cv_r2": 0.8415,
+   "pearson_r": 0.9179,
+   "critical": true
+  },
+  "silt_frac": {
+   "n": 671,
+   "cv_r2": 0.8588,
+   "pearson_r": 0.9279,
+   "critical": true
+  },
+  "slope_mean": {
+   "n": 671,
+   "cv_r2": 0.9252,
+   "pearson_r": 0.962,
+   "critical": false
+  },
+  "soil_conductivity": {
+   "n": 671,
+   "cv_r2": 0.8933,
+   "pearson_r": 0.9451,
+   "critical": true
+  },
+  "soil_depth_pelletier": {
+   "n": 671,
+   "cv_r2": 0.8697,
+   "pearson_r": 0.9327,
+   "critical": true
+  },
+  "soil_depth_statsgo": {
+   "n": 671,
+   "cv_r2": 0.8198,
+   "pearson_r": 0.9057,
+   "critical": true
+  },
+  "soil_porosity": {
+   "n": 671,
+   "cv_r2": 0.6033,
+   "pearson_r": 0.7768,
+   "critical": true
+  }
+ },
+ "climate_recomputed": {
+  "p_mean": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": -0.0,
+   "rel_bias_pct": -0.0
+  },
+  "pet_mean": {
+   "n": 531,
+   "pearson_r": 0.8362,
+   "bias": -0.1179,
+   "rel_bias_pct": -4.26
+  },
+  "aridity": {
+   "n": 531,
+   "pearson_r": 0.9685,
+   "bias": -0.0437,
+   "rel_bias_pct": -4.49
+  },
+  "p_seasonality": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": 0.0,
+   "rel_bias_pct": 0.0
+  },
+  "frac_snow": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": -0.0,
+   "rel_bias_pct": -0.01
+  },
+  "high_prec_freq": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": 0.0,
+   "rel_bias_pct": 0.0
+  },
+  "high_prec_dur": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": -0.0,
+   "rel_bias_pct": -0.0
+  },
+  "low_prec_freq": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": 0.0,
+   "rel_bias_pct": 0.0
+  },
+  "low_prec_dur": {
+   "n": 531,
+   "pearson_r": 1.0,
+   "bias": -0.0,
+   "rel_bias_pct": -0.0
+  }
+ }
+}

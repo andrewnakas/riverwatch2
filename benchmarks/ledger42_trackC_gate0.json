@@ -1,0 +1,53 @@
+{
+  "n_basins": 531,
+  "train_median": 0.9504577864064554,
+  "test_median": 0.8362893021622821,
+  "window": 0.01,
+  "n_train_cohort": 78,
+  "n_test_cohort": 44,
+  "overlap": 11,
+  "expected_by_chance": 6.463276836158192,
+  "lift": 1.7019230769230769,
+  "p_value_sim": 0.0385,
+  "spearman_rank_corr": 0.3460380243861973,
+  "window_sensitivity": [
+    {
+      "window": 0.005,
+      "n_train": 46,
+      "n_test": 23,
+      "overlap": 2,
+      "expected": 1.9924670433145009,
+      "lift": 1.003780718336484
+    },
+    {
+      "window": 0.01,
+      "n_train": 78,
+      "n_test": 44,
+      "overlap": 11,
+      "expected": 6.463276836158192,
+      "lift": 1.7019230769230769
+    },
+    {
+      "window": 0.02,
+      "n_train": 177,
+      "n_test": 92,
+      "overlap": 39,
+      "expected": 30.666666666666668,
+      "lift": 1.2717391304347825
+    },
+    {
+      "window": 0.05,
+      "n_train": 391,
+      "n_test": 191,
+      "overlap": 149,
+      "expected": 140.64218455743878,
+      "lift": 1.0594260923126364
+    }
+  ],
+  "bars": {
+    "lift_pass": 3.0,
+    "lift_fail": 2.0,
+    "min_overlap": 15
+  },
+  "verdict": "FAIL \u2014 near-median membership is not transferable; TRACK C CLOSED at zero GPU"
+}

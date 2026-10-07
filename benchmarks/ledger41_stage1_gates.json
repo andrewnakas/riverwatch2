@@ -1,0 +1,74 @@
+{
+ "gates": {
+  "S1a_artifacts": {
+   "n_basins": 1906,
+   "bar": 1500,
+   "bad_gzip": [],
+   "pass": true
+  },
+  "S1b_no_nan": {
+   "basins_with_nan": 0,
+   "examples": [],
+   "pass": true
+  },
+  "S1c_lag": {
+   "pretrain_peak_lag": 0,
+   "camels_peak_lag": 0,
+   "pretrain_share_at_peak": 0.756,
+   "camels_share_at_peak": 0.892,
+   "share_bar": 0.75,
+   "pass": true
+  },
+  "S1d_scaler": {
+   "per_variable": {
+    "precipitation_sum": {
+     "pretrain_mean": 2.7806288909711143,
+     "pretrain_std": 6.827217841889754,
+     "ref_mean": 3.4956795901126405,
+     "ref_std": 7.712363459689726,
+     "dmean_sigma": -0.09271486009170699,
+     "dstd_pct": -11.47696970489488,
+     "pass": true
+    },
+    "temperature_2m_max": {
+     "pretrain_mean": 17.11496324304945,
+     "pretrain_std": 9.958585627453822,
+     "ref_mean": 17.386490337922403,
+     "ref_std": 9.631135112051004,
+     "dmean_sigma": -0.028192636871349163,
+     "dstd_pct": 3.399916121964627,
+     "pass": true
+    },
+    "temperature_2m_min": {
+     "pretrain_mean": 4.0738604841915285,
+     "pretrain_std": 8.868693534117734,
+     "ref_mean": 5.347079142678348,
+     "ref_std": 9.181678013430421,
+     "dmean_sigma": -0.13866949555674138,
+     "dstd_pct": -3.4087938920845633,
+     "pass": true
+    },
+    "vapor_pressure": {
+     "pretrain_mean": 1013.803426993832,
+     "pretrain_std": 550.7136966027141,
+     "ref_mean": 1079.931772149562,
+     "ref_std": 595.3346900020758,
+     "dmean_sigma": -0.11107759427810168,
+     "dstd_pct": -7.495110590516093,
+     "pass": true
+    },
+    "shortwave_radiation_sum": {
+     "pretrain_mean": 15.30432444440356,
+     "pretrain_std": 6.178357944574195,
+     "ref_mean": 14.76453951341555,
+     "ref_std": 6.5782961740906725,
+     "dmean_sigma": 0.08205543148300501,
+     "dstd_pct": -6.079662863032486,
+     "pass": true
+    }
+   },
+   "pass": true
+  }
+ },
+ "verdict": "PASS"
+}

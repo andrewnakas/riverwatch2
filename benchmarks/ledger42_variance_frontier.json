@@ -1,0 +1,93 @@
+{
+  "fit_alpha_median": 0.942976695275892,
+  "fit_r_median": 0.9725070632802416,
+  "arms": [
+    {
+      "arm": "baseline",
+      "basins": 519,
+      "median_nse": 0.9504577864064554,
+      "median_kge": 0.9057099372969661,
+      "median_abs_fhv": 6.57676081881182,
+      "median_alpha": 0.944548788012943,
+      "median_beta": 1.0025370115278218,
+      "mean_nse": 0.9014380852881183
+    },
+    {
+      "arm": "bias-correct (beta->1)",
+      "basins": 519,
+      "median_nse": 0.9491950212307703,
+      "median_kge": 0.9024628075870659,
+      "median_abs_fhv": 6.488068712598325,
+      "median_alpha": 0.9445487880129427,
+      "median_beta": 1.0020439000011554,
+      "mean_nse": 0.902996264759602
+    },
+    {
+      "arm": "inflate lam=0.25",
+      "basins": 519,
+      "median_nse": 0.950681874649039,
+      "median_kge": 0.9117406945532385,
+      "median_abs_fhv": 5.904329408579847,
+      "median_alpha": 0.957570897732846,
+      "median_beta": 1.002258137794393,
+      "mean_nse": 0.895125259659149
+    },
+    {
+      "arm": "inflate lam=0.50",
+      "basins": 519,
+      "median_nse": 0.9485310875187623,
+      "median_kge": 0.91009440189135,
+      "median_abs_fhv": 5.455667211697847,
+      "median_alpha": 0.9707226553014948,
+      "median_beta": 1.0041028028554315,
+      "mean_nse": 0.8804685115301112
+    },
+    {
+      "arm": "inflate lam=0.75",
+      "basins": 519,
+      "median_nse": 0.9425395513194226,
+      "median_kge": 0.9025620214437182,
+      "median_abs_fhv": 5.516989793033729,
+      "median_alpha": 0.9822481313383706,
+      "median_beta": 1.003856659730727,
+      "mean_nse": 0.8574678409010046
+    },
+    {
+      "arm": "inflate lam=1.00",
+      "basins": 519,
+      "median_nse": 0.9366957917790477,
+      "median_kge": 0.8968991155926868,
+      "median_abs_fhv": 5.932302032053364,
+      "median_alpha": 0.9958888675951877,
+      "median_beta": 1.0036425099895119,
+      "mean_nse": 0.8261232477718292
+    },
+    {
+      "arm": "bias+inflate lam=0.50",
+      "basins": 519,
+      "median_nse": 0.947201900110982,
+      "median_kge": 0.9083996996691256,
+      "median_abs_fhv": 5.785530711629798,
+      "median_alpha": 0.9707226553014948,
+      "median_beta": 1.0048469561233717,
+      "mean_nse": 0.8820361200506766
+    },
+    {
+      "arm": "bias+inflate lam=1.00",
+      "basins": 519,
+      "median_nse": 0.9369114942595751,
+      "median_kge": 0.8962246652012404,
+      "median_abs_fhv": 6.145057816081152,
+      "median_alpha": 0.9958888675951878,
+      "median_beta": 1.0045173191469337,
+      "mean_nse": 0.8277002853414762
+    },
+    {
+      "arm": "NESTED-SELECTED lam=0.0",
+      "median_nse": 0.9504577864064554,
+      "median_kge": 0.9057099372969661,
+      "median_abs_fhv": 6.57676081881182,
+      "selected_lambda": 0.0
+    }
+  ]
+}

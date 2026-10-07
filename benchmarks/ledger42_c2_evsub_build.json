@@ -1,0 +1,4798 @@
+{
+  "out": "gpu1080/corpora671/camels_corpus_evsub_v1",
+  "basins": 531,
+  "substituted": 529,
+  "passed_through": 2,
+  "fit_window": [
+    "1981-01-01",
+    "1995-09-30"
+  ],
+  "params": {
+    "WET": 1.0,
+    "Q_EVENT": 0.9,
+    "MIN_WET": 200,
+    "MAX_DIST_KM": 50.0,
+    "BLEND_DAYS": 1
+  },
+  "median_frac_days_changed": 0.05553817271589487,
+  "median_station_over_daymet_on_events": 0.9267820024250822,
+  "per_basin": {
+    "01022500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 466,
+      "n_substituted": 821,
+      "frac_days_changed": 0.064220901126408,
+      "median_ratio_on_events": 1.0891182484476993,
+      "threshold_mm": 22.12600000000001
+    },
+    "01031500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 530,
+      "n_substituted": 988,
+      "frac_days_changed": 0.07728410513141427,
+      "median_ratio_on_events": 0.9971271247306678,
+      "threshold_mm": 19.581999999999997
+    },
+    "01047000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 487,
+      "n_substituted": 952,
+      "frac_days_changed": 0.07446808510638298,
+      "median_ratio_on_events": 0.9134453214598934,
+      "threshold_mm": 20.33
+    },
+    "01052500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 609,
+      "n_substituted": 1218,
+      "frac_days_changed": 0.09527534418022528,
+      "median_ratio_on_events": 0.8180201541197392,
+      "threshold_mm": 16.608
+    },
+    "01054200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 544,
+      "n_substituted": 926,
+      "frac_days_changed": 0.0724342928660826,
+      "median_ratio_on_events": 0.8449853809587788,
+      "threshold_mm": 21.377000000000002
+    },
+    "01055000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 517,
+      "n_substituted": 513,
+      "frac_days_changed": 0.04012828535669587,
+      "median_ratio_on_events": 1.0876029705077033,
+      "threshold_mm": 19.4
+    },
+    "01057000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 482,
+      "n_substituted": 747,
+      "frac_days_changed": 0.05843241551939925,
+      "median_ratio_on_events": 1.0406091370558377,
+      "threshold_mm": 22.155
+    },
+    "01073000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 428,
+      "n_substituted": 769,
+      "frac_days_changed": 0.06015331664580726,
+      "median_ratio_on_events": 1.0328221086167297,
+      "threshold_mm": 23.247000000000025
+    },
+    "01078000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 533,
+      "n_substituted": 978,
+      "frac_days_changed": 0.07650187734668336,
+      "median_ratio_on_events": 0.9261083743842364,
+      "threshold_mm": 20.862000000000005
+    },
+    "01123000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 402,
+      "n_substituted": 748,
+      "frac_days_changed": 0.05851063829787234,
+      "median_ratio_on_events": 0.9683022224959268,
+      "threshold_mm": 26.298000000000005
+    },
+    "01134500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 599,
+      "n_substituted": 1253,
+      "frac_days_changed": 0.09801314142678348,
+      "median_ratio_on_events": 0.7405675085749923,
+      "threshold_mm": 16.547
+    },
+    "01137500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 591,
+      "n_substituted": 1115,
+      "frac_days_changed": 0.08721839799749687,
+      "median_ratio_on_events": 0.561476048591037,
+      "threshold_mm": 19.0
+    },
+    "01139000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 539,
+      "n_substituted": 1046,
+      "frac_days_changed": 0.08182102628285357,
+      "median_ratio_on_events": 0.9516242937853109,
+      "threshold_mm": 16.97
+    },
+    "01139800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 477,
+      "n_substituted": 997,
+      "frac_days_changed": 0.0779881101376721,
+      "median_ratio_on_events": 0.645464809936018,
+      "threshold_mm": 19.426
+    },
+    "01142500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 522,
+      "n_substituted": 924,
+      "frac_days_changed": 0.07227784730913642,
+      "median_ratio_on_events": 1.0565930956423315,
+      "threshold_mm": 19.034000000000002
+    },
+    "01144000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 530,
+      "n_substituted": 1176,
+      "frac_days_changed": 0.09198998748435544,
+      "median_ratio_on_events": 0.6468891635764318,
+      "threshold_mm": 18.925
+    },
+    "01162500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 416,
+      "n_substituted": 841,
+      "frac_days_changed": 0.06578535669586984,
+      "median_ratio_on_events": 0.9076090569865995,
+      "threshold_mm": 24.866000000000003
+    },
+    "01169000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 419,
+      "n_substituted": 822,
+      "frac_days_changed": 0.0642991239048811,
+      "median_ratio_on_events": 0.9828340626051834,
+      "threshold_mm": 25.513999999999996
+    },
+    "01170100": {
+      "applied": false,
+      "reason": "no station corpus",
+      "n_events": 0,
+      "n_substituted": 0,
+      "frac_days_changed": 0.0,
+      "median_ratio_on_events": NaN
+    },
+    "01181000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 432,
+      "n_substituted": 362,
+      "frac_days_changed": 0.028316645807259073,
+      "median_ratio_on_events": 0.14714563405456005,
+      "threshold_mm": 25.295
+    },
+    "01187300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 401,
+      "n_substituted": 911,
+      "frac_days_changed": 0.07126095118898623,
+      "median_ratio_on_events": 0.7996381727725012,
+      "threshold_mm": 26.98199999999999
+    },
+    "01195100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 343,
+      "n_substituted": 185,
+      "frac_days_changed": 0.014471214017521902,
+      "median_ratio_on_events": 0.8924879393521709,
+      "threshold_mm": 28.272000000000006
+    },
+    "01333000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 508,
+      "n_substituted": 714,
+      "frac_days_changed": 0.05585106382978723,
+      "median_ratio_on_events": 0.9007246697453926,
+      "threshold_mm": 20.578
+    },
+    "01350000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 553,
+      "n_substituted": 770,
+      "frac_days_changed": 0.06023153942428035,
+      "median_ratio_on_events": 0.716966966966967,
+      "threshold_mm": 21.901
+    },
+    "01350080": {
+      "applied": true,
+      "reason": "",
+      "n_events": 538,
+      "n_substituted": 821,
+      "frac_days_changed": 0.064220901126408,
+      "median_ratio_on_events": 0.9914435759107558,
+      "threshold_mm": 19.668000000000003
+    },
+    "01350140": {
+      "applied": true,
+      "reason": "",
+      "n_events": 574,
+      "n_substituted": 803,
+      "frac_days_changed": 0.06281289111389236,
+      "median_ratio_on_events": 0.8855592208521723,
+      "threshold_mm": 17.762
+    },
+    "01365000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 498,
+      "n_substituted": 910,
+      "frac_days_changed": 0.07118272841051314,
+      "median_ratio_on_events": 0.9733140154916928,
+      "threshold_mm": 24.878000000000004
+    },
+    "01411300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 729,
+      "frac_days_changed": 0.057024405506883605,
+      "median_ratio_on_events": 1.0033623222818373,
+      "threshold_mm": 23.414000000000012
+    },
+    "01413500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 592,
+      "n_substituted": 1134,
+      "frac_days_changed": 0.0887046307884856,
+      "median_ratio_on_events": 0.9750257997936017,
+      "threshold_mm": 19.735
+    },
+    "01414500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 563,
+      "n_substituted": 1032,
+      "frac_days_changed": 0.08072590738423029,
+      "median_ratio_on_events": 0.7526084655820248,
+      "threshold_mm": 21.494
+    },
+    "01415000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 554,
+      "n_substituted": 1015,
+      "frac_days_changed": 0.07939612015018774,
+      "median_ratio_on_events": 0.9162162554841374,
+      "threshold_mm": 19.54
+    },
+    "01423000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 605,
+      "n_substituted": 1073,
+      "frac_days_changed": 0.08393304130162703,
+      "median_ratio_on_events": 0.9782104775150673,
+      "threshold_mm": 17.904
+    },
+    "01434025": {
+      "applied": true,
+      "reason": "",
+      "n_events": 555,
+      "n_substituted": 992,
+      "frac_days_changed": 0.07759699624530664,
+      "median_ratio_on_events": 0.9380283800005141,
+      "threshold_mm": 24.22
+    },
+    "01435000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 548,
+      "n_substituted": 993,
+      "frac_days_changed": 0.07767521902377972,
+      "median_ratio_on_events": 0.9660455927710321,
+      "threshold_mm": 24.104999999999997
+    },
+    "01439500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 492,
+      "n_substituted": 813,
+      "frac_days_changed": 0.06359511889862328,
+      "median_ratio_on_events": 1.0097590296355108,
+      "threshold_mm": 22.286
+    },
+    "01440000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 447,
+      "n_substituted": 752,
+      "frac_days_changed": 0.058823529411764705,
+      "median_ratio_on_events": 0.8785216601029991,
+      "threshold_mm": 23.514999999999993
+    },
+    "01440400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 473,
+      "n_substituted": 784,
+      "frac_days_changed": 0.06132665832290363,
+      "median_ratio_on_events": 1.015713452752622,
+      "threshold_mm": 23.12
+    },
+    "01451800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 408,
+      "n_substituted": 843,
+      "frac_days_changed": 0.06594180225281603,
+      "median_ratio_on_events": 0.9394313306700013,
+      "threshold_mm": 24.108000000000004
+    },
+    "01466500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 389,
+      "n_substituted": 614,
+      "frac_days_changed": 0.048028785982478096,
+      "median_ratio_on_events": 0.9869325997248969,
+      "threshold_mm": 25.347
+    },
+    "01484100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 372,
+      "n_substituted": 624,
+      "frac_days_changed": 0.04881101376720901,
+      "median_ratio_on_events": 0.9872246182233629,
+      "threshold_mm": 24.0
+    },
+    "01487000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 383,
+      "n_substituted": 336,
+      "frac_days_changed": 0.026282853566958697,
+      "median_ratio_on_events": 0.7801645699818024,
+      "threshold_mm": 23.884000000000004
+    },
+    "01491000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 669,
+      "frac_days_changed": 0.052331038798498125,
+      "median_ratio_on_events": 1.0864656856643244,
+      "threshold_mm": 23.17400000000001
+    },
+    "01510000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 527,
+      "n_substituted": 620,
+      "frac_days_changed": 0.04849812265331665,
+      "median_ratio_on_events": 0.9999630480437018,
+      "threshold_mm": 17.502
+    },
+    "01516500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 482,
+      "n_substituted": 918,
+      "frac_days_changed": 0.07180851063829788,
+      "median_ratio_on_events": 0.9523153252480705,
+      "threshold_mm": 17.858
+    },
+    "01518862": {
+      "applied": true,
+      "reason": "",
+      "n_events": 545,
+      "n_substituted": 1021,
+      "frac_days_changed": 0.07986545682102628,
+      "median_ratio_on_events": 0.9982531514456134,
+      "threshold_mm": 16.177
+    },
+    "01532000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 478,
+      "n_substituted": 823,
+      "frac_days_changed": 0.0643773466833542,
+      "median_ratio_on_events": 0.9361120601298257,
+      "threshold_mm": 18.97200000000001
+    },
+    "01539000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 463,
+      "n_substituted": 735,
+      "frac_days_changed": 0.05749374217772215,
+      "median_ratio_on_events": 0.9408509166378416,
+      "threshold_mm": 21.34
+    },
+    "01542810": {
+      "applied": true,
+      "reason": "",
+      "n_events": 533,
+      "n_substituted": 978,
+      "frac_days_changed": 0.07650187734668336,
+      "median_ratio_on_events": 1.0099188458070334,
+      "threshold_mm": 17.322000000000003
+    },
+    "01543000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 537,
+      "n_substituted": 1042,
+      "frac_days_changed": 0.0815081351689612,
+      "median_ratio_on_events": 0.9583249635645646,
+      "threshold_mm": 17.560000000000002
+    },
+    "01543500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 528,
+      "n_substituted": 1043,
+      "frac_days_changed": 0.0815863579474343,
+      "median_ratio_on_events": 0.9888013744145334,
+      "threshold_mm": 17.733
+    },
+    "01544500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 567,
+      "n_substituted": 1042,
+      "frac_days_changed": 0.0815081351689612,
+      "median_ratio_on_events": 0.9517353579175705,
+      "threshold_mm": 17.08
+    },
+    "01545600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 531,
+      "n_substituted": 946,
+      "frac_days_changed": 0.07399874843554444,
+      "median_ratio_on_events": 0.9401295549500996,
+      "threshold_mm": 17.91
+    },
+    "01547700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 503,
+      "n_substituted": 947,
+      "frac_days_changed": 0.07407697121401752,
+      "median_ratio_on_events": 1.0,
+      "threshold_mm": 18.272
+    },
+    "01548500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 552,
+      "n_substituted": 837,
+      "frac_days_changed": 0.06547246558197747,
+      "median_ratio_on_events": 0.9829968119022316,
+      "threshold_mm": 16.490000000000002
+    },
+    "01549500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 509,
+      "n_substituted": 726,
+      "frac_days_changed": 0.05678973717146433,
+      "median_ratio_on_events": 0.9563492063492064,
+      "threshold_mm": 18.105
+    },
+    "01550000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 502,
+      "n_substituted": 1018,
+      "frac_days_changed": 0.07963078848560701,
+      "median_ratio_on_events": 0.3062841219059079,
+      "threshold_mm": 18.166
+    },
+    "01552000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 503,
+      "n_substituted": 1045,
+      "frac_days_changed": 0.08174280350438047,
+      "median_ratio_on_events": 0.21210553543714433,
+      "threshold_mm": 19.290000000000006
+    },
+    "01552500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 471,
+      "n_substituted": 231,
+      "frac_days_changed": 0.018069461827284104,
+      "median_ratio_on_events": 0.9243137598597722,
+      "threshold_mm": 21.47600000000001
+    },
+    "01557500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 519,
+      "n_substituted": 883,
+      "frac_days_changed": 0.06907071339173967,
+      "median_ratio_on_events": 1.0300429184549358,
+      "threshold_mm": 17.732000000000006
+    },
+    "01567500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 426,
+      "n_substituted": 87,
+      "frac_days_changed": 0.006805381727158949,
+      "median_ratio_on_events": 1.0571424403717806,
+      "threshold_mm": 20.94
+    },
+    "01568000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 425,
+      "n_substituted": 86,
+      "frac_days_changed": 0.006727158948685858,
+      "median_ratio_on_events": 1.1083786771113628,
+      "threshold_mm": 21.416000000000004
+    },
+    "01580000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 444,
+      "n_substituted": 852,
+      "frac_days_changed": 0.06664580725907385,
+      "median_ratio_on_events": 0.9844533563002611,
+      "threshold_mm": 22.6
+    },
+    "01583500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 425,
+      "n_substituted": 450,
+      "frac_days_changed": 0.03520025031289111,
+      "median_ratio_on_events": 0.9595416497080049,
+      "threshold_mm": 22.219
+    },
+    "01586610": {
+      "applied": true,
+      "reason": "",
+      "n_events": 430,
+      "n_substituted": 443,
+      "frac_days_changed": 0.03465269086357947,
+      "median_ratio_on_events": 1.0140474100087797,
+      "threshold_mm": 22.21
+    },
+    "01591400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 412,
+      "n_substituted": 779,
+      "frac_days_changed": 0.060935544430538176,
+      "median_ratio_on_events": 1.0062646828504307,
+      "threshold_mm": 22.474000000000004
+    },
+    "01594950": {
+      "applied": true,
+      "reason": "",
+      "n_events": 603,
+      "n_substituted": 1276,
+      "frac_days_changed": 0.09981226533166458,
+      "median_ratio_on_events": 0.942082869650986,
+      "threshold_mm": 18.019000000000002
+    },
+    "01596500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 518,
+      "n_substituted": 1030,
+      "frac_days_changed": 0.08056946182728411,
+      "median_ratio_on_events": 0.9729911088743497,
+      "threshold_mm": 18.790000000000006
+    },
+    "01605500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 451,
+      "n_substituted": 886,
+      "frac_days_changed": 0.06930538172715894,
+      "median_ratio_on_events": 0.8566761333851727,
+      "threshold_mm": 18.998
+    },
+    "01606500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 571,
+      "n_substituted": 1105,
+      "frac_days_changed": 0.08643617021276596,
+      "median_ratio_on_events": 0.7662123089632383,
+      "threshold_mm": 16.66
+    },
+    "01632000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 432,
+      "n_substituted": 812,
+      "frac_days_changed": 0.06351689612015018,
+      "median_ratio_on_events": 0.9696691176470588,
+      "threshold_mm": 18.926000000000005
+    },
+    "01632900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 423,
+      "n_substituted": 792,
+      "frac_days_changed": 0.06195244055068836,
+      "median_ratio_on_events": 0.99728014505893,
+      "threshold_mm": 19.512
+    },
+    "01634500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 435,
+      "n_substituted": 825,
+      "frac_days_changed": 0.06453379224030037,
+      "median_ratio_on_events": 0.9718751718281291,
+      "threshold_mm": 19.968000000000004
+    },
+    "01638480": {
+      "applied": true,
+      "reason": "",
+      "n_events": 422,
+      "n_substituted": 695,
+      "frac_days_changed": 0.0543648310387985,
+      "median_ratio_on_events": 1.0363155265513047,
+      "threshold_mm": 20.658
+    },
+    "01639500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 444,
+      "n_substituted": 871,
+      "frac_days_changed": 0.06813204005006258,
+      "median_ratio_on_events": 1.0159817351598173,
+      "threshold_mm": 21.32
+    },
+    "01644000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 404,
+      "n_substituted": 871,
+      "frac_days_changed": 0.06813204005006258,
+      "median_ratio_on_events": 0.8030486589977911,
+      "threshold_mm": 21.613999999999997
+    },
+    "01664000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 424,
+      "n_substituted": 661,
+      "frac_days_changed": 0.05170525657071339,
+      "median_ratio_on_events": 1.009255178492728,
+      "threshold_mm": 21.775
+    },
+    "01666500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 425,
+      "n_substituted": 772,
+      "frac_days_changed": 0.060387984981226536,
+      "median_ratio_on_events": 0.9550457413183353,
+      "threshold_mm": 22.41700000000001
+    },
+    "01667500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 416,
+      "n_substituted": 748,
+      "frac_days_changed": 0.05851063829787234,
+      "median_ratio_on_events": 1.0187701838979333,
+      "threshold_mm": 22.57
+    },
+    "01669000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 421,
+      "n_substituted": 769,
+      "frac_days_changed": 0.06015331664580726,
+      "median_ratio_on_events": 1.0499574342772926,
+      "threshold_mm": 22.824999999999996
+    },
+    "01669520": {
+      "applied": true,
+      "reason": "",
+      "n_events": 409,
+      "n_substituted": 751,
+      "frac_days_changed": 0.05874530663329162,
+      "median_ratio_on_events": 1.0076990327433273,
+      "threshold_mm": 22.877
+    },
+    "02011400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 441,
+      "n_substituted": 857,
+      "frac_days_changed": 0.0670369211514393,
+      "median_ratio_on_events": 0.8910433979686058,
+      "threshold_mm": 19.93800000000001
+    },
+    "02013000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 416,
+      "n_substituted": 838,
+      "frac_days_changed": 0.06555068836045057,
+      "median_ratio_on_events": 0.9655857435535493,
+      "threshold_mm": 20.242000000000004
+    },
+    "02014000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 426,
+      "n_substituted": 837,
+      "frac_days_changed": 0.06547246558197747,
+      "median_ratio_on_events": 0.9509679242616929,
+      "threshold_mm": 20.265000000000004
+    },
+    "02015700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 408,
+      "n_substituted": 764,
+      "frac_days_changed": 0.0597622027534418,
+      "median_ratio_on_events": 1.0337150127226462,
+      "threshold_mm": 20.558000000000003
+    },
+    "02016000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 421,
+      "n_substituted": 872,
+      "frac_days_changed": 0.06821026282853566,
+      "median_ratio_on_events": 0.9745288847698487,
+      "threshold_mm": 19.953999999999997
+    },
+    "02017500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 426,
+      "n_substituted": 887,
+      "frac_days_changed": 0.06938360450563204,
+      "median_ratio_on_events": 0.7293235858241727,
+      "threshold_mm": 19.589000000000027
+    },
+    "02018000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 431,
+      "n_substituted": 764,
+      "frac_days_changed": 0.0597622027534418,
+      "median_ratio_on_events": 0.9096892082885577,
+      "threshold_mm": 19.439
+    },
+    "02027000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 357,
+      "n_substituted": 619,
+      "frac_days_changed": 0.048419899874843554,
+      "median_ratio_on_events": 0.9097714618198143,
+      "threshold_mm": 26.47
+    },
+    "02027500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 358,
+      "n_substituted": 616,
+      "frac_days_changed": 0.04818523153942428,
+      "median_ratio_on_events": 0.9091371765347067,
+      "threshold_mm": 27.21800000000001
+    },
+    "02028500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 352,
+      "n_substituted": 44,
+      "frac_days_changed": 0.00344180225281602,
+      "median_ratio_on_events": 0.9931618365353305,
+      "threshold_mm": 25.697000000000003
+    },
+    "02038850": {
+      "applied": true,
+      "reason": "",
+      "n_events": 328,
+      "n_substituted": 655,
+      "frac_days_changed": 0.051235919899874846,
+      "median_ratio_on_events": 1.0220405261286882,
+      "threshold_mm": 25.419000000000004
+    },
+    "02046000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 430,
+      "n_substituted": 609,
+      "frac_days_changed": 0.04763767209011264,
+      "median_ratio_on_events": 0.9494013363428451,
+      "threshold_mm": 23.15
+    },
+    "02051500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 393,
+      "n_substituted": 824,
+      "frac_days_changed": 0.06445556946182729,
+      "median_ratio_on_events": 0.7107750472589792,
+      "threshold_mm": 23.64
+    },
+    "02053200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 654,
+      "frac_days_changed": 0.05115769712140175,
+      "median_ratio_on_events": 0.9904270986745213,
+      "threshold_mm": 24.328000000000003
+    },
+    "02053800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 378,
+      "n_substituted": 725,
+      "frac_days_changed": 0.05671151439299124,
+      "median_ratio_on_events": 0.9648855828059386,
+      "threshold_mm": 22.435000000000002
+    },
+    "02055100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 367,
+      "n_substituted": 703,
+      "frac_days_changed": 0.05499061326658323,
+      "median_ratio_on_events": 0.7342549923195084,
+      "threshold_mm": 22.045000000000005
+    },
+    "02056900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 371,
+      "n_substituted": 660,
+      "frac_days_changed": 0.0516270337922403,
+      "median_ratio_on_events": 1.0427135678391959,
+      "threshold_mm": 23.284000000000006
+    },
+    "02059500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 359,
+      "n_substituted": 656,
+      "frac_days_changed": 0.05131414267834793,
+      "median_ratio_on_events": 1.027982326951399,
+      "threshold_mm": 23.387999999999995
+    },
+    "02064000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 316,
+      "n_substituted": 571,
+      "frac_days_changed": 0.04466520650813517,
+      "median_ratio_on_events": 1.1028343023255816,
+      "threshold_mm": 25.326000000000008
+    },
+    "02065500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 319,
+      "n_substituted": 604,
+      "frac_days_changed": 0.04724655819774718,
+      "median_ratio_on_events": 1.0204468321261002,
+      "threshold_mm": 25.842000000000002
+    },
+    "02069700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 381,
+      "n_substituted": 729,
+      "frac_days_changed": 0.057024405506883605,
+      "median_ratio_on_events": 0.9623191795652304,
+      "threshold_mm": 26.189999999999987
+    },
+    "02070000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 369,
+      "n_substituted": 778,
+      "frac_days_changed": 0.06085732165206508,
+      "median_ratio_on_events": 0.7856565895367278,
+      "threshold_mm": 24.781999999999996
+    },
+    "02074500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 364,
+      "n_substituted": 745,
+      "frac_days_changed": 0.058275969962453066,
+      "median_ratio_on_events": 0.9793169494876603,
+      "threshold_mm": 24.052000000000003
+    },
+    "02077200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 363,
+      "n_substituted": 730,
+      "frac_days_changed": 0.0571026282853567,
+      "median_ratio_on_events": 0.8227114716106605,
+      "threshold_mm": 24.335
+    },
+    "02081500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 385,
+      "n_substituted": 722,
+      "frac_days_changed": 0.056476846057571965,
+      "median_ratio_on_events": 0.9275302576653628,
+      "threshold_mm": 24.343000000000004
+    },
+    "02082950": {
+      "applied": true,
+      "reason": "",
+      "n_events": 377,
+      "n_substituted": 699,
+      "frac_days_changed": 0.054677722152690865,
+      "median_ratio_on_events": 1.0358126721763086,
+      "threshold_mm": 24.151000000000014
+    },
+    "02092500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 411,
+      "n_substituted": 708,
+      "frac_days_changed": 0.055381727158948686,
+      "median_ratio_on_events": 1.0123143788482436,
+      "threshold_mm": 25.116000000000003
+    },
+    "02096846": {
+      "applied": true,
+      "reason": "",
+      "n_events": 364,
+      "n_substituted": 757,
+      "frac_days_changed": 0.05921464330413016,
+      "median_ratio_on_events": 1.0120332740665483,
+      "threshold_mm": 25.982000000000003
+    },
+    "02102908": {
+      "applied": true,
+      "reason": "",
+      "n_events": 359,
+      "n_substituted": 605,
+      "frac_days_changed": 0.047324780976220275,
+      "median_ratio_on_events": 1.033876828390663,
+      "threshold_mm": 25.444000000000003
+    },
+    "02108000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 371,
+      "n_substituted": 632,
+      "frac_days_changed": 0.04943679599499374,
+      "median_ratio_on_events": 0.9539007092198581,
+      "threshold_mm": 26.886000000000003
+    },
+    "02111180": {
+      "applied": true,
+      "reason": "",
+      "n_events": 441,
+      "n_substituted": 943,
+      "frac_days_changed": 0.07376408010012515,
+      "median_ratio_on_events": 0.8750365817968978,
+      "threshold_mm": 23.608
+    },
+    "02111500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 403,
+      "n_substituted": 816,
+      "frac_days_changed": 0.06382978723404255,
+      "median_ratio_on_events": 0.7901792013545929,
+      "threshold_mm": 24.89500000000002
+    },
+    "02112120": {
+      "applied": true,
+      "reason": "",
+      "n_events": 388,
+      "n_substituted": 780,
+      "frac_days_changed": 0.06101376720901126,
+      "median_ratio_on_events": 0.8098965883831062,
+      "threshold_mm": 25.37
+    },
+    "02112360": {
+      "applied": true,
+      "reason": "",
+      "n_events": 380,
+      "n_substituted": 689,
+      "frac_days_changed": 0.05389549436795995,
+      "median_ratio_on_events": 0.9854973278583111,
+      "threshold_mm": 24.98500000000002
+    },
+    "02118500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 759,
+      "frac_days_changed": 0.059371088861076345,
+      "median_ratio_on_events": 0.8444971603303725,
+      "threshold_mm": 24.95
+    },
+    "02125000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 348,
+      "n_substituted": 642,
+      "frac_days_changed": 0.050219023779724654,
+      "median_ratio_on_events": 1.0603792436365718,
+      "threshold_mm": 25.969999999999995
+    },
+    "02128000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 369,
+      "n_substituted": 686,
+      "frac_days_changed": 0.05366082603254067,
+      "median_ratio_on_events": 0.931951060188065,
+      "threshold_mm": 24.125999999999998
+    },
+    "02137727": {
+      "applied": true,
+      "reason": "",
+      "n_events": 452,
+      "n_substituted": 955,
+      "frac_days_changed": 0.07470275344180226,
+      "median_ratio_on_events": 1.0437856177313032,
+      "threshold_mm": 24.33
+    },
+    "02140991": {
+      "applied": true,
+      "reason": "",
+      "n_events": 442,
+      "n_substituted": 981,
+      "frac_days_changed": 0.07673654568210263,
+      "median_ratio_on_events": 0.931665369790218,
+      "threshold_mm": 23.037
+    },
+    "02143000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 383,
+      "n_substituted": 804,
+      "frac_days_changed": 0.06289111389236546,
+      "median_ratio_on_events": 0.9038941173060339,
+      "threshold_mm": 25.880000000000013
+    },
+    "02143040": {
+      "applied": true,
+      "reason": "",
+      "n_events": 360,
+      "n_substituted": 757,
+      "frac_days_changed": 0.05921464330413016,
+      "median_ratio_on_events": 0.8267130089374379,
+      "threshold_mm": 28.296
+    },
+    "02149000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 440,
+      "n_substituted": 595,
+      "frac_days_changed": 0.04654255319148936,
+      "median_ratio_on_events": 1.15819209039548,
+      "threshold_mm": 24.255000000000003
+    },
+    "02152100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 377,
+      "n_substituted": 740,
+      "frac_days_changed": 0.05788485607008761,
+      "median_ratio_on_events": 0.8261661834261609,
+      "threshold_mm": 27.088
+    },
+    "02177000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 478,
+      "n_substituted": 917,
+      "frac_days_changed": 0.07173028785982478,
+      "median_ratio_on_events": 0.8422967838604378,
+      "threshold_mm": 32.59
+    },
+    "02178400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 460,
+      "n_substituted": 881,
+      "frac_days_changed": 0.06891426783479349,
+      "median_ratio_on_events": 1.038571353941871,
+      "threshold_mm": 32.024999999999984
+    },
+    "02193340": {
+      "applied": true,
+      "reason": "",
+      "n_events": 324,
+      "n_substituted": 624,
+      "frac_days_changed": 0.04881101376720901,
+      "median_ratio_on_events": 1.0037105751391466,
+      "threshold_mm": 26.772000000000002
+    },
+    "02196000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 317,
+      "n_substituted": 641,
+      "frac_days_changed": 0.05014080100125157,
+      "median_ratio_on_events": 0.9305527285931885,
+      "threshold_mm": 27.08700000000001
+    },
+    "02198100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 327,
+      "n_substituted": 524,
+      "frac_days_changed": 0.04098873591989988,
+      "median_ratio_on_events": 1.0043532338308458,
+      "threshold_mm": 27.092000000000006
+    },
+    "02202600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 337,
+      "n_substituted": 579,
+      "frac_days_changed": 0.0452909887359199,
+      "median_ratio_on_events": 0.6798128707188227,
+      "threshold_mm": 26.816000000000003
+    },
+    "02212600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 304,
+      "n_substituted": 550,
+      "frac_days_changed": 0.04302252816020025,
+      "median_ratio_on_events": 1.0891089108910892,
+      "threshold_mm": 28.055000000000003
+    },
+    "02215100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 365,
+      "n_substituted": 606,
+      "frac_days_changed": 0.04740300375469337,
+      "median_ratio_on_events": 1.008432028303059,
+      "threshold_mm": 26.133999999999997
+    },
+    "02216180": {
+      "applied": true,
+      "reason": "",
+      "n_events": 313,
+      "n_substituted": 198,
+      "frac_days_changed": 0.01548811013767209,
+      "median_ratio_on_events": 0.9722931354327466,
+      "threshold_mm": 28.706000000000014
+    },
+    "02221525": {
+      "applied": true,
+      "reason": "",
+      "n_events": 324,
+      "n_substituted": 577,
+      "frac_days_changed": 0.04513454317897372,
+      "median_ratio_on_events": 0.9902136490119323,
+      "threshold_mm": 27.505
+    },
+    "02231000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 387,
+      "n_substituted": 685,
+      "frac_days_changed": 0.053582603254067586,
+      "median_ratio_on_events": 1.040205940474769,
+      "threshold_mm": 25.505
+    },
+    "02245500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 400,
+      "n_substituted": 735,
+      "frac_days_changed": 0.05749374217772215,
+      "median_ratio_on_events": 0.5229734777736272,
+      "threshold_mm": 24.004999999999995
+    },
+    "02246000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 377,
+      "n_substituted": 681,
+      "frac_days_changed": 0.05326971214017522,
+      "median_ratio_on_events": 0.577038285371372,
+      "threshold_mm": 25.18
+    },
+    "02296500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 419,
+      "n_substituted": 840,
+      "frac_days_changed": 0.06570713391739674,
+      "median_ratio_on_events": 0.7304726621513808,
+      "threshold_mm": 24.53
+    },
+    "02297155": {
+      "applied": true,
+      "reason": "",
+      "n_events": 357,
+      "n_substituted": 634,
+      "frac_days_changed": 0.04959324155193993,
+      "median_ratio_on_events": 0.9316570466941575,
+      "threshold_mm": 28.83
+    },
+    "02297310": {
+      "applied": true,
+      "reason": "",
+      "n_events": 403,
+      "n_substituted": 737,
+      "frac_days_changed": 0.05765018773466834,
+      "median_ratio_on_events": 0.743455497382199,
+      "threshold_mm": 26.375
+    },
+    "02298123": {
+      "applied": true,
+      "reason": "",
+      "n_events": 365,
+      "n_substituted": 701,
+      "frac_days_changed": 0.05483416770963705,
+      "median_ratio_on_events": 0.5309247596716664,
+      "threshold_mm": 25.414000000000005
+    },
+    "02298608": {
+      "applied": true,
+      "reason": "",
+      "n_events": 367,
+      "n_substituted": 693,
+      "frac_days_changed": 0.05420838548185231,
+      "median_ratio_on_events": 0.9165019762845851,
+      "threshold_mm": 27.777000000000005
+    },
+    "02299950": {
+      "applied": true,
+      "reason": "",
+      "n_events": 378,
+      "n_substituted": 706,
+      "frac_days_changed": 0.055225281602002504,
+      "median_ratio_on_events": 1.0059439336312739,
+      "threshold_mm": 27.733999999999998
+    },
+    "02300700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 372,
+      "n_substituted": 710,
+      "frac_days_changed": 0.05553817271589487,
+      "median_ratio_on_events": 0.8690056895150368,
+      "threshold_mm": 26.81600000000001
+    },
+    "02342933": {
+      "applied": true,
+      "reason": "",
+      "n_events": 355,
+      "n_substituted": 600,
+      "frac_days_changed": 0.04693366708385482,
+      "median_ratio_on_events": 1.0049231723035557,
+      "threshold_mm": 30.36
+    },
+    "02349900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 351,
+      "n_substituted": 594,
+      "frac_days_changed": 0.04646433041301627,
+      "median_ratio_on_events": 1.0184895017235975,
+      "threshold_mm": 27.137
+    },
+    "02350900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 369,
+      "n_substituted": 608,
+      "frac_days_changed": 0.04755944931163955,
+      "median_ratio_on_events": 0.5239504870572038,
+      "threshold_mm": 27.0
+    },
+    "02361000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 381,
+      "n_substituted": 768,
+      "frac_days_changed": 0.060075093867334166,
+      "median_ratio_on_events": 0.6962145363745385,
+      "threshold_mm": 28.781000000000002
+    },
+    "02363000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 390,
+      "n_substituted": 414,
+      "frac_days_changed": 0.032384230287859826,
+      "median_ratio_on_events": 1.0414767547857795,
+      "threshold_mm": 29.44400000000002
+    },
+    "02369800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 415,
+      "n_substituted": 683,
+      "frac_days_changed": 0.053426157697121404,
+      "median_ratio_on_events": 1.012664153864585,
+      "threshold_mm": 30.612000000000002
+    },
+    "02371500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 395,
+      "n_substituted": 630,
+      "frac_days_changed": 0.04928035043804756,
+      "median_ratio_on_events": 0.933063776926971,
+      "threshold_mm": 28.936000000000003
+    },
+    "02372250": {
+      "applied": true,
+      "reason": "",
+      "n_events": 392,
+      "n_substituted": 691,
+      "frac_days_changed": 0.05405193992490613,
+      "median_ratio_on_events": 1.0038926449498053,
+      "threshold_mm": 29.17
+    },
+    "02374500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 372,
+      "n_substituted": 629,
+      "frac_days_changed": 0.04920212765957447,
+      "median_ratio_on_events": 1.0291628716785173,
+      "threshold_mm": 32.726000000000006
+    },
+    "02381600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 381,
+      "n_substituted": 685,
+      "frac_days_changed": 0.053582603254067586,
+      "median_ratio_on_events": 0.9939831528279182,
+      "threshold_mm": 30.452000000000005
+    },
+    "02384540": {
+      "applied": true,
+      "reason": "",
+      "n_events": 373,
+      "n_substituted": 679,
+      "frac_days_changed": 0.053113266583229034,
+      "median_ratio_on_events": 0.6416115081915237,
+      "threshold_mm": 31.136
+    },
+    "02395120": {
+      "applied": true,
+      "reason": "",
+      "n_events": 325,
+      "n_substituted": 685,
+      "frac_days_changed": 0.053582603254067586,
+      "median_ratio_on_events": 0.9113241184917538,
+      "threshold_mm": 31.06000000000001
+    },
+    "02415000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 394,
+      "n_substituted": 657,
+      "frac_days_changed": 0.05139236545682103,
+      "median_ratio_on_events": 0.9946106294033088,
+      "threshold_mm": 29.312000000000005
+    },
+    "02427250": {
+      "applied": true,
+      "reason": "",
+      "n_events": 353,
+      "n_substituted": 566,
+      "frac_days_changed": 0.044274092615769714,
+      "median_ratio_on_events": 1.0714546928583424,
+      "threshold_mm": 32.03000000000001
+    },
+    "02430085": {
+      "applied": true,
+      "reason": "",
+      "n_events": 339,
+      "n_substituted": 501,
+      "frac_days_changed": 0.03918961201501878,
+      "median_ratio_on_events": 0.9326715984642756,
+      "threshold_mm": 33.299
+    },
+    "02450250": {
+      "applied": true,
+      "reason": "",
+      "n_events": 414,
+      "n_substituted": 771,
+      "frac_days_changed": 0.06030976220275344,
+      "median_ratio_on_events": 1.0193632502314152,
+      "threshold_mm": 29.57
+    },
+    "02464000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 419,
+      "n_substituted": 802,
+      "frac_days_changed": 0.06273466833541927,
+      "median_ratio_on_events": 0.9784373323797604,
+      "threshold_mm": 29.328
+    },
+    "02464360": {
+      "applied": true,
+      "reason": "",
+      "n_events": 390,
+      "n_substituted": 792,
+      "frac_days_changed": 0.06195244055068836,
+      "median_ratio_on_events": 0.6504815938778202,
+      "threshold_mm": 29.667000000000023
+    },
+    "02465493": {
+      "applied": true,
+      "reason": "",
+      "n_events": 364,
+      "n_substituted": 705,
+      "frac_days_changed": 0.05514705882352941,
+      "median_ratio_on_events": 0.6839269679736607,
+      "threshold_mm": 30.757999999999996
+    },
+    "02469800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 354,
+      "n_substituted": 580,
+      "frac_days_changed": 0.04536921151439299,
+      "median_ratio_on_events": 0.9406970466107827,
+      "threshold_mm": 32.182000000000016
+    },
+    "02472000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 361,
+      "n_substituted": 645,
+      "frac_days_changed": 0.05045369211514393,
+      "median_ratio_on_events": 0.9930788590604027,
+      "threshold_mm": 33.43
+    },
+    "02472500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 358,
+      "n_substituted": 650,
+      "frac_days_changed": 0.05084480600750939,
+      "median_ratio_on_events": 0.9673074266102465,
+      "threshold_mm": 33.60100000000002
+    },
+    "02479155": {
+      "applied": true,
+      "reason": "",
+      "n_events": 351,
+      "n_substituted": 501,
+      "frac_days_changed": 0.03918961201501878,
+      "median_ratio_on_events": 0.9585352719439957,
+      "threshold_mm": 34.17699999999999
+    },
+    "02479300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 393,
+      "n_substituted": 734,
+      "frac_days_changed": 0.05741551939924906,
+      "median_ratio_on_events": 0.9974866478165253,
+      "threshold_mm": 32.00800000000001
+    },
+    "02479560": {
+      "applied": true,
+      "reason": "",
+      "n_events": 397,
+      "n_substituted": 768,
+      "frac_days_changed": 0.060075093867334166,
+      "median_ratio_on_events": 0.5834901855337457,
+      "threshold_mm": 32.201000000000015
+    },
+    "02481000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 362,
+      "n_substituted": 689,
+      "frac_days_changed": 0.05389549436795995,
+      "median_ratio_on_events": 1.0037037037037038,
+      "threshold_mm": 34.99400000000001
+    },
+    "02481510": {
+      "applied": true,
+      "reason": "",
+      "n_events": 412,
+      "n_substituted": 764,
+      "frac_days_changed": 0.0597622027534418,
+      "median_ratio_on_events": 0.9238565048970685,
+      "threshold_mm": 31.647999999999996
+    },
+    "03010655": {
+      "applied": true,
+      "reason": "",
+      "n_events": 563,
+      "n_substituted": 1114,
+      "frac_days_changed": 0.08714017521902379,
+      "median_ratio_on_events": 0.8454933524504693,
+      "threshold_mm": 16.462
+    },
+    "03011800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 558,
+      "n_substituted": 1196,
+      "frac_days_changed": 0.09355444305381727,
+      "median_ratio_on_events": 0.8074002780451288,
+      "threshold_mm": 17.304000000000002
+    },
+    "03015500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 548,
+      "n_substituted": 1015,
+      "frac_days_changed": 0.07939612015018774,
+      "median_ratio_on_events": 0.9095038190452105,
+      "threshold_mm": 17.655
+    },
+    "03021350": {
+      "applied": true,
+      "reason": "",
+      "n_events": 534,
+      "n_substituted": 776,
+      "frac_days_changed": 0.0607008760951189,
+      "median_ratio_on_events": 0.9291412482402629,
+      "threshold_mm": 18.204
+    },
+    "03026500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 541,
+      "n_substituted": 1151,
+      "frac_days_changed": 0.09003441802252816,
+      "median_ratio_on_events": 0.8818023799973259,
+      "threshold_mm": 17.887
+    },
+    "03028000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 554,
+      "n_substituted": 1045,
+      "frac_days_changed": 0.08174280350438047,
+      "median_ratio_on_events": 1.020820896967904,
+      "threshold_mm": 17.48
+    },
+    "03049000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 500,
+      "n_substituted": 1058,
+      "frac_days_changed": 0.08275969962453067,
+      "median_ratio_on_events": 0.8778107239930812,
+      "threshold_mm": 18.265
+    },
+    "03049800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 455,
+      "n_substituted": 1014,
+      "frac_days_changed": 0.07931789737171464,
+      "median_ratio_on_events": 0.7183699720642892,
+      "threshold_mm": 17.98
+    },
+    "03050000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 571,
+      "n_substituted": 1300,
+      "frac_days_changed": 0.10168961201501878,
+      "median_ratio_on_events": 0.7454289732770745,
+      "threshold_mm": 18.392000000000007
+    },
+    "03069500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 666,
+      "n_substituted": 1337,
+      "frac_days_changed": 0.10458385481852316,
+      "median_ratio_on_events": 0.943952802359882,
+      "threshold_mm": 17.183000000000003
+    },
+    "03070500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 578,
+      "n_substituted": 1337,
+      "frac_days_changed": 0.10458385481852316,
+      "median_ratio_on_events": 0.8602761335678639,
+      "threshold_mm": 18.06
+    },
+    "03076600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 568,
+      "n_substituted": 1133,
+      "frac_days_changed": 0.08862640801001252,
+      "median_ratio_on_events": 0.9536307961504813,
+      "threshold_mm": 17.979999999999997
+    },
+    "03078000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 547,
+      "n_substituted": 1131,
+      "frac_days_changed": 0.08846996245306633,
+      "median_ratio_on_events": 0.9640419351408481,
+      "threshold_mm": 18.373
+    },
+    "03140000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 469,
+      "n_substituted": 981,
+      "frac_days_changed": 0.07673654568210263,
+      "median_ratio_on_events": 0.8734825043266363,
+      "threshold_mm": 17.996
+    },
+    "03144000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 444,
+      "n_substituted": 812,
+      "frac_days_changed": 0.06351689612015018,
+      "median_ratio_on_events": 1.0579576816927323,
+      "threshold_mm": 19.13
+    },
+    "03170000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 394,
+      "n_substituted": 789,
+      "frac_days_changed": 0.061717772215269084,
+      "median_ratio_on_events": 0.801849569766939,
+      "threshold_mm": 23.105000000000008
+    },
+    "03173000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 464,
+      "n_substituted": 911,
+      "frac_days_changed": 0.07126095118898623,
+      "median_ratio_on_events": 0.9913326110509209,
+      "threshold_mm": 17.665
+    },
+    "03180500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 548,
+      "n_substituted": 1151,
+      "frac_days_changed": 0.09003441802252816,
+      "median_ratio_on_events": 1.0256410256410255,
+      "threshold_mm": 18.42
+    },
+    "03182500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 553,
+      "n_substituted": 1114,
+      "frac_days_changed": 0.08714017521902379,
+      "median_ratio_on_events": 0.944891489880517,
+      "threshold_mm": 18.096
+    },
+    "03186500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 560,
+      "n_substituted": 861,
+      "frac_days_changed": 0.06734981226533167,
+      "median_ratio_on_events": 0.8865388416683139,
+      "threshold_mm": 19.75
+    },
+    "03237280": {
+      "applied": true,
+      "reason": "",
+      "n_events": 437,
+      "n_substituted": 688,
+      "frac_days_changed": 0.05381727158948686,
+      "median_ratio_on_events": 1.0303469961377472,
+      "threshold_mm": 20.994
+    },
+    "03237500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 450,
+      "n_substituted": 730,
+      "frac_days_changed": 0.0571026282853567,
+      "median_ratio_on_events": 1.0699476812177844,
+      "threshold_mm": 20.1
+    },
+    "03238500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 419,
+      "n_substituted": 784,
+      "frac_days_changed": 0.06132665832290363,
+      "median_ratio_on_events": 0.970276834274689,
+      "threshold_mm": 21.192000000000004
+    },
+    "03241500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 422,
+      "n_substituted": 783,
+      "frac_days_changed": 0.06124843554443054,
+      "median_ratio_on_events": 0.7844794105197346,
+      "threshold_mm": 20.372000000000003
+    },
+    "03280700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 493,
+      "n_substituted": 904,
+      "frac_days_changed": 0.0707133917396746,
+      "median_ratio_on_events": 0.924879259972232,
+      "threshold_mm": 22.235000000000003
+    },
+    "03281500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 443,
+      "n_substituted": 710,
+      "frac_days_changed": 0.05553817271589487,
+      "median_ratio_on_events": 0.9837439059154496,
+      "threshold_mm": 22.779999999999998
+    },
+    "03285000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 383,
+      "n_substituted": 738,
+      "frac_days_changed": 0.057728410513141426,
+      "median_ratio_on_events": 0.8789625360230547,
+      "threshold_mm": 24.57
+    },
+    "03291780": {
+      "applied": true,
+      "reason": "",
+      "n_events": 458,
+      "n_substituted": 830,
+      "frac_days_changed": 0.06492490613266583,
+      "median_ratio_on_events": 0.8821307140158671,
+      "threshold_mm": 22.334000000000003
+    },
+    "03338780": {
+      "applied": true,
+      "reason": "",
+      "n_events": 383,
+      "n_substituted": 796,
+      "frac_days_changed": 0.062265331664580724,
+      "median_ratio_on_events": 0.713525026624068,
+      "threshold_mm": 21.213000000000008
+    },
+    "03340800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 442,
+      "n_substituted": 834,
+      "frac_days_changed": 0.0652377972465582,
+      "median_ratio_on_events": 0.952548950432175,
+      "threshold_mm": 21.21
+    },
+    "03346000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 394,
+      "n_substituted": 693,
+      "frac_days_changed": 0.05420838548185231,
+      "median_ratio_on_events": 1.0570140853221828,
+      "threshold_mm": 22.24600000000001
+    },
+    "03364500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 460,
+      "n_substituted": 818,
+      "frac_days_changed": 0.06398623279098874,
+      "median_ratio_on_events": 1.0276760276760277,
+      "threshold_mm": 21.285
+    },
+    "03366500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 459,
+      "n_substituted": 721,
+      "frac_days_changed": 0.05639862327909887,
+      "median_ratio_on_events": 0.9125085440874914,
+      "threshold_mm": 22.532000000000004
+    },
+    "03368000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 454,
+      "n_substituted": 745,
+      "frac_days_changed": 0.058275969962453066,
+      "median_ratio_on_events": 0.8788653801441525,
+      "threshold_mm": 22.17
+    },
+    "03384450": {
+      "applied": true,
+      "reason": "",
+      "n_events": 375,
+      "n_substituted": 637,
+      "frac_days_changed": 0.0498279098873592,
+      "median_ratio_on_events": 1.0257326661901358,
+      "threshold_mm": 27.64
+    },
+    "03439000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 483,
+      "n_substituted": 950,
+      "frac_days_changed": 0.0743116395494368,
+      "median_ratio_on_events": 0.9490397492824212,
+      "threshold_mm": 33.551
+    },
+    "03455500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 515,
+      "n_substituted": 943,
+      "frac_days_changed": 0.07376408010012515,
+      "median_ratio_on_events": 0.6012297882031428,
+      "threshold_mm": 31.88
+    },
+    "03456500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 514,
+      "n_substituted": 936,
+      "frac_days_changed": 0.07321652065081352,
+      "median_ratio_on_events": 0.6216227602477471,
+      "threshold_mm": 25.988
+    },
+    "03460000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 491,
+      "n_substituted": 959,
+      "frac_days_changed": 0.07501564455569462,
+      "median_ratio_on_events": 0.7442569151429911,
+      "threshold_mm": 23.873999999999995
+    },
+    "03463300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 475,
+      "n_substituted": 961,
+      "frac_days_changed": 0.0751720901126408,
+      "median_ratio_on_events": 0.9518991454675549,
+      "threshold_mm": 25.969000000000012
+    },
+    "03471500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 450,
+      "n_substituted": 864,
+      "frac_days_changed": 0.06758448060075094,
+      "median_ratio_on_events": 0.9669536886199673,
+      "threshold_mm": 20.284999999999997
+    },
+    "03473000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 489,
+      "n_substituted": 974,
+      "frac_days_changed": 0.076188986232791,
+      "median_ratio_on_events": 0.857132618654877,
+      "threshold_mm": 19.325
+    },
+    "03479000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 464,
+      "n_substituted": 954,
+      "frac_days_changed": 0.07462453066332916,
+      "median_ratio_on_events": 1.006775228812552,
+      "threshold_mm": 22.822
+    },
+    "03488000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 488,
+      "n_substituted": 663,
+      "frac_days_changed": 0.05186170212765957,
+      "median_ratio_on_events": 1.0112359550561798,
+      "threshold_mm": 18.29
+    },
+    "03498500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 569,
+      "n_substituted": 1118,
+      "frac_days_changed": 0.08745306633291615,
+      "median_ratio_on_events": 0.7624888032959645,
+      "threshold_mm": 21.479999999999997
+    },
+    "03500000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 458,
+      "n_substituted": 936,
+      "frac_days_changed": 0.07321652065081352,
+      "median_ratio_on_events": 0.9515542242993039,
+      "threshold_mm": 32.27799999999999
+    },
+    "03500240": {
+      "applied": true,
+      "reason": "",
+      "n_events": 468,
+      "n_substituted": 946,
+      "frac_days_changed": 0.07399874843554444,
+      "median_ratio_on_events": 1.0022211033610073,
+      "threshold_mm": 30.353999999999992
+    },
+    "03504000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 448,
+      "n_substituted": 835,
+      "frac_days_changed": 0.06531602002503129,
+      "median_ratio_on_events": 0.795523504183925,
+      "threshold_mm": 34.422000000000004
+    },
+    "03574500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 455,
+      "n_substituted": 767,
+      "frac_days_changed": 0.05999687108886108,
+      "median_ratio_on_events": 1.0942311640320261,
+      "threshold_mm": 26.485999999999997
+    },
+    "03592718": {
+      "applied": true,
+      "reason": "",
+      "n_events": 363,
+      "n_substituted": 570,
+      "frac_days_changed": 0.04458698372966208,
+      "median_ratio_on_events": 1.0692054192603442,
+      "threshold_mm": 31.62
+    },
+    "03604000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 361,
+      "n_substituted": 674,
+      "frac_days_changed": 0.05272215269086358,
+      "median_ratio_on_events": 0.9485488126649078,
+      "threshold_mm": 30.791
+    },
+    "04015330": {
+      "applied": true,
+      "reason": "",
+      "n_events": 367,
+      "n_substituted": 635,
+      "frac_days_changed": 0.049671464330413015,
+      "median_ratio_on_events": 1.1049107142857142,
+      "threshold_mm": 16.893000000000004
+    },
+    "04024430": {
+      "applied": true,
+      "reason": "",
+      "n_events": 364,
+      "n_substituted": 736,
+      "frac_days_changed": 0.057571964956195244,
+      "median_ratio_on_events": 0.906971938238643,
+      "threshold_mm": 17.716000000000008
+    },
+    "04027000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 457,
+      "n_substituted": 867,
+      "frac_days_changed": 0.0678191489361702,
+      "median_ratio_on_events": 1.0003582415384298,
+      "threshold_mm": 15.794000000000006
+    },
+    "04040500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 431,
+      "n_substituted": 789,
+      "frac_days_changed": 0.061717772215269084,
+      "median_ratio_on_events": 1.0852002852672515,
+      "threshold_mm": 14.895000000000007
+    },
+    "04043050": {
+      "applied": true,
+      "reason": "",
+      "n_events": 406,
+      "n_substituted": 568,
+      "frac_days_changed": 0.044430538172715896,
+      "median_ratio_on_events": 0.8770405169711534,
+      "threshold_mm": 14.885000000000002
+    },
+    "04045500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 567,
+      "n_substituted": 997,
+      "frac_days_changed": 0.0779881101376721,
+      "median_ratio_on_events": 0.8528198719706863,
+      "threshold_mm": 12.614999999999998
+    },
+    "04057510": {
+      "applied": true,
+      "reason": "",
+      "n_events": 465,
+      "n_substituted": 251,
+      "frac_days_changed": 0.019633917396745932,
+      "median_ratio_on_events": 0.9595972049985059,
+      "threshold_mm": 13.96
+    },
+    "04057800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 419,
+      "n_substituted": 670,
+      "frac_days_changed": 0.05240926157697121,
+      "median_ratio_on_events": 1.0119047619047619,
+      "threshold_mm": 15.572000000000003
+    },
+    "04059500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 405,
+      "n_substituted": 682,
+      "frac_days_changed": 0.05334793491864831,
+      "median_ratio_on_events": 0.8054979584697872,
+      "threshold_mm": 14.74600000000001
+    },
+    "04063700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 391,
+      "n_substituted": 638,
+      "frac_days_changed": 0.04990613266583229,
+      "median_ratio_on_events": 0.8203325672569961,
+      "threshold_mm": 15.878000000000005
+    },
+    "04074950": {
+      "applied": true,
+      "reason": "",
+      "n_events": 354,
+      "n_substituted": 529,
+      "frac_days_changed": 0.041379849812265335,
+      "median_ratio_on_events": 0.9109518935516889,
+      "threshold_mm": 17.563
+    },
+    "04105700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 393,
+      "n_substituted": 736,
+      "frac_days_changed": 0.057571964956195244,
+      "median_ratio_on_events": 1.0267251130872403,
+      "threshold_mm": 18.165000000000003
+    },
+    "04115265": {
+      "applied": true,
+      "reason": "",
+      "n_events": 347,
+      "n_substituted": 648,
+      "frac_days_changed": 0.05068836045056321,
+      "median_ratio_on_events": 0.9096434769880601,
+      "threshold_mm": 18.72
+    },
+    "04122200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 437,
+      "n_substituted": 757,
+      "frac_days_changed": 0.05921464330413016,
+      "median_ratio_on_events": 0.976510496724201,
+      "threshold_mm": 16.816000000000003
+    },
+    "04122500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 438,
+      "n_substituted": 752,
+      "frac_days_changed": 0.058823529411764705,
+      "median_ratio_on_events": 0.9106756114309862,
+      "threshold_mm": 16.545
+    },
+    "04127918": {
+      "applied": true,
+      "reason": "",
+      "n_events": 552,
+      "n_substituted": 811,
+      "frac_days_changed": 0.06343867334167709,
+      "median_ratio_on_events": 0.96,
+      "threshold_mm": 12.851
+    },
+    "04127997": {
+      "applied": true,
+      "reason": "",
+      "n_events": 518,
+      "n_substituted": 911,
+      "frac_days_changed": 0.07126095118898623,
+      "median_ratio_on_events": 0.9519230769230769,
+      "threshold_mm": 13.562000000000003
+    },
+    "04161580": {
+      "applied": true,
+      "reason": "",
+      "n_events": 429,
+      "n_substituted": 600,
+      "frac_days_changed": 0.04693366708385482,
+      "median_ratio_on_events": 0.9405940594059405,
+      "threshold_mm": 16.110000000000003
+    },
+    "04185000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 406,
+      "n_substituted": 799,
+      "frac_days_changed": 0.0625,
+      "median_ratio_on_events": 1.0066131061690204,
+      "threshold_mm": 18.038999999999998
+    },
+    "04196800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 438,
+      "n_substituted": 828,
+      "frac_days_changed": 0.06476846057571965,
+      "median_ratio_on_events": 1.0227670753064797,
+      "threshold_mm": 17.618
+    },
+    "04197100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 432,
+      "n_substituted": 748,
+      "frac_days_changed": 0.05851063829787234,
+      "median_ratio_on_events": 1.0584518167456556,
+      "threshold_mm": 17.907999999999998
+    },
+    "04197170": {
+      "applied": true,
+      "reason": "",
+      "n_events": 436,
+      "n_substituted": 790,
+      "frac_days_changed": 0.06179599499374218,
+      "median_ratio_on_events": 1.0553083280356008,
+      "threshold_mm": 17.854999999999997
+    },
+    "04213000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 511,
+      "n_substituted": 911,
+      "frac_days_changed": 0.07126095118898623,
+      "median_ratio_on_events": 1.0244929595295156,
+      "threshold_mm": 17.4
+    },
+    "04213075": {
+      "applied": true,
+      "reason": "",
+      "n_events": 478,
+      "n_substituted": 920,
+      "frac_days_changed": 0.07196495619524405,
+      "median_ratio_on_events": 0.5962717528283987,
+      "threshold_mm": 17.773999999999994
+    },
+    "04216418": {
+      "applied": true,
+      "reason": "",
+      "n_events": 573,
+      "n_substituted": 1136,
+      "frac_days_changed": 0.08886107634543179,
+      "median_ratio_on_events": 0.8912333049161694,
+      "threshold_mm": 15.41
+    },
+    "04221000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 548,
+      "n_substituted": 1175,
+      "frac_days_changed": 0.09191176470588236,
+      "median_ratio_on_events": 0.7829400196656834,
+      "threshold_mm": 16.014
+    },
+    "04224775": {
+      "applied": true,
+      "reason": "",
+      "n_events": 529,
+      "n_substituted": 1057,
+      "frac_days_changed": 0.08268147684605757,
+      "median_ratio_on_events": 0.8588015400594742,
+      "threshold_mm": 15.212000000000003
+    },
+    "04233000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 510,
+      "n_substituted": 949,
+      "frac_days_changed": 0.0742334167709637,
+      "median_ratio_on_events": 0.9863083164300205,
+      "threshold_mm": 15.918
+    },
+    "04256000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 612,
+      "n_substituted": 1198,
+      "frac_days_changed": 0.09371088861076346,
+      "median_ratio_on_events": 0.9675821215158631,
+      "threshold_mm": 16.78
+    },
+    "04296000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 726,
+      "n_substituted": 1294,
+      "frac_days_changed": 0.10122027534418022,
+      "median_ratio_on_events": 0.8297202104245694,
+      "threshold_mm": 14.57
+    },
+    "05057200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 251,
+      "n_substituted": 433,
+      "frac_days_changed": 0.03387046307884856,
+      "median_ratio_on_events": 0.9545663148233136,
+      "threshold_mm": 16.559000000000015
+    },
+    "05120500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 257,
+      "n_substituted": 433,
+      "frac_days_changed": 0.03387046307884856,
+      "median_ratio_on_events": 0.939297124600639,
+      "threshold_mm": 15.5
+    },
+    "05291000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 280,
+      "n_substituted": 528,
+      "frac_days_changed": 0.04130162703379224,
+      "median_ratio_on_events": 0.7404624583111076,
+      "threshold_mm": 17.983000000000004
+    },
+    "05362000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 412,
+      "n_substituted": 811,
+      "frac_days_changed": 0.06343867334167709,
+      "median_ratio_on_events": 0.8445002791736461,
+      "threshold_mm": 17.081999999999997
+    },
+    "05393500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 425,
+      "n_substituted": 704,
+      "frac_days_changed": 0.05506883604505632,
+      "median_ratio_on_events": 0.9917466822882298,
+      "threshold_mm": 17.358000000000004
+    },
+    "05399500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 371,
+      "n_substituted": 714,
+      "frac_days_changed": 0.05585106382978723,
+      "median_ratio_on_events": 0.9182382802354785,
+      "threshold_mm": 18.305999999999997
+    },
+    "05408000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 327,
+      "n_substituted": 658,
+      "frac_days_changed": 0.051470588235294115,
+      "median_ratio_on_events": 0.8838304552590266,
+      "threshold_mm": 21.194
+    },
+    "05413500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 380,
+      "n_substituted": 709,
+      "frac_days_changed": 0.05545994993742178,
+      "median_ratio_on_events": 0.9936821200650754,
+      "threshold_mm": 20.261000000000003
+    },
+    "05414000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 397,
+      "n_substituted": 763,
+      "frac_days_changed": 0.05968397997496871,
+      "median_ratio_on_events": 1.01708489054992,
+      "threshold_mm": 19.662000000000003
+    },
+    "05444000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 387,
+      "n_substituted": 699,
+      "frac_days_changed": 0.054677722152690865,
+      "median_ratio_on_events": 0.8624887032262435,
+      "threshold_mm": 20.702999999999992
+    },
+    "05454000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 697,
+      "frac_days_changed": 0.05452127659574468,
+      "median_ratio_on_events": 0.9658318519915712,
+      "threshold_mm": 20.423000000000005
+    },
+    "05458000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 357,
+      "n_substituted": 673,
+      "frac_days_changed": 0.05264392991239049,
+      "median_ratio_on_events": 1.028942356402463,
+      "threshold_mm": 20.446
+    },
+    "05466500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 420,
+      "n_substituted": 789,
+      "frac_days_changed": 0.061717772215269084,
+      "median_ratio_on_events": 0.950149126544525,
+      "threshold_mm": 19.618
+    },
+    "05487980": {
+      "applied": true,
+      "reason": "",
+      "n_events": 394,
+      "n_substituted": 678,
+      "frac_days_changed": 0.053035043804755946,
+      "median_ratio_on_events": 0.822287677957781,
+      "threshold_mm": 21.167999999999996
+    },
+    "05488200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 349,
+      "n_substituted": 687,
+      "frac_days_changed": 0.05373904881101377,
+      "median_ratio_on_events": 0.9393453198787858,
+      "threshold_mm": 22.751
+    },
+    "05489000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 364,
+      "n_substituted": 745,
+      "frac_days_changed": 0.058275969962453066,
+      "median_ratio_on_events": 0.8875645609852998,
+      "threshold_mm": 22.338
+    },
+    "05495000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 376,
+      "n_substituted": 684,
+      "frac_days_changed": 0.05350438047559449,
+      "median_ratio_on_events": 0.8651685393258428,
+      "threshold_mm": 22.128000000000004
+    },
+    "05495500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 345,
+      "n_substituted": 636,
+      "frac_days_changed": 0.04974968710888611,
+      "median_ratio_on_events": 1.018710331553918,
+      "threshold_mm": 23.060000000000002
+    },
+    "05501000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 365,
+      "n_substituted": 703,
+      "frac_days_changed": 0.05499061326658323,
+      "median_ratio_on_events": 0.9487107623318386,
+      "threshold_mm": 23.16200000000001
+    },
+    "05503800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 330,
+      "n_substituted": 566,
+      "frac_days_changed": 0.044274092615769714,
+      "median_ratio_on_events": 1.0266381489403071,
+      "threshold_mm": 24.976
+    },
+    "05507600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 344,
+      "n_substituted": 603,
+      "frac_days_changed": 0.04716833541927409,
+      "median_ratio_on_events": 0.9758958627208159,
+      "threshold_mm": 24.265
+    },
+    "05508805": {
+      "applied": true,
+      "reason": "",
+      "n_events": 344,
+      "n_substituted": 675,
+      "frac_days_changed": 0.05280037546933667,
+      "median_ratio_on_events": 0.9579607359440846,
+      "threshold_mm": 24.676999999999996
+    },
+    "05525500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 377,
+      "n_substituted": 732,
+      "frac_days_changed": 0.05725907384230288,
+      "median_ratio_on_events": 0.928931697640099,
+      "threshold_mm": 20.303
+    },
+    "05556500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 375,
+      "n_substituted": 697,
+      "frac_days_changed": 0.05452127659574468,
+      "median_ratio_on_events": 0.450750510702549,
+      "threshold_mm": 20.44
+    },
+    "05584500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 357,
+      "n_substituted": 700,
+      "frac_days_changed": 0.05475594493116395,
+      "median_ratio_on_events": 1.0449545671927307,
+      "threshold_mm": 22.7
+    },
+    "05591550": {
+      "applied": true,
+      "reason": "",
+      "n_events": 377,
+      "n_substituted": 733,
+      "frac_days_changed": 0.05733729662077597,
+      "median_ratio_on_events": 0.9297720287937578,
+      "threshold_mm": 22.419000000000004
+    },
+    "05592050": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 716,
+      "frac_days_changed": 0.05600750938673342,
+      "median_ratio_on_events": 1.0258010819808572,
+      "threshold_mm": 22.009999999999998
+    },
+    "05592575": {
+      "applied": true,
+      "reason": "",
+      "n_events": 389,
+      "n_substituted": 672,
+      "frac_days_changed": 0.052565707133917394,
+      "median_ratio_on_events": 0.9861064046086072,
+      "threshold_mm": 23.691000000000003
+    },
+    "05593575": {
+      "applied": true,
+      "reason": "",
+      "n_events": 342,
+      "n_substituted": 599,
+      "frac_days_changed": 0.04685544430538173,
+      "median_ratio_on_events": 0.984264116013576,
+      "threshold_mm": 25.445000000000004
+    },
+    "05593900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 384,
+      "n_substituted": 692,
+      "frac_days_changed": 0.054130162703379225,
+      "median_ratio_on_events": 0.9800470050496617,
+      "threshold_mm": 22.705
+    },
+    "05595730": {
+      "applied": true,
+      "reason": "",
+      "n_events": 362,
+      "n_substituted": 645,
+      "frac_days_changed": 0.05045369211514393,
+      "median_ratio_on_events": 1.0061804650216688,
+      "threshold_mm": 25.16400000000001
+    },
+    "06221400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 241,
+      "n_substituted": 438,
+      "frac_days_changed": 0.03426157697121402,
+      "median_ratio_on_events": 0.0,
+      "threshold_mm": 13.509999999999998
+    },
+    "06224000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 273,
+      "n_substituted": 528,
+      "frac_days_changed": 0.04130162703379224,
+      "median_ratio_on_events": 0.1811949069539667,
+      "threshold_mm": 12.84
+    },
+    "06278300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 319,
+      "n_substituted": 668,
+      "frac_days_changed": 0.05225281602002503,
+      "median_ratio_on_events": 0.9089101034208433,
+      "threshold_mm": 12.36
+    },
+    "06280300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 414,
+      "n_substituted": 776,
+      "frac_days_changed": 0.0607008760951189,
+      "median_ratio_on_events": 0.9290496518117402,
+      "threshold_mm": 11.326000000000004
+    },
+    "06289000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 323,
+      "n_substituted": 582,
+      "frac_days_changed": 0.045525657071339175,
+      "median_ratio_on_events": 0.9176300578034682,
+      "threshold_mm": 11.629000000000001
+    },
+    "06291500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 331,
+      "n_substituted": 543,
+      "frac_days_changed": 0.042474968710888614,
+      "median_ratio_on_events": 0.7340882467786022,
+      "threshold_mm": 11.92
+    },
+    "06311000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 271,
+      "n_substituted": 526,
+      "frac_days_changed": 0.04114518147684606,
+      "median_ratio_on_events": 0.8506896232528003,
+      "threshold_mm": 11.752000000000002
+    },
+    "06332515": {
+      "applied": true,
+      "reason": "",
+      "n_events": 218,
+      "n_substituted": 331,
+      "frac_days_changed": 0.025891739674593243,
+      "median_ratio_on_events": 1.0546448087431695,
+      "threshold_mm": 15.463000000000001
+    },
+    "06339100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 235,
+      "n_substituted": 293,
+      "frac_days_changed": 0.02291927409261577,
+      "median_ratio_on_events": 0.9941111142219857,
+      "threshold_mm": 14.405000000000001
+    },
+    "06344600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 238,
+      "n_substituted": 443,
+      "frac_days_changed": 0.03465269086357947,
+      "median_ratio_on_events": 0.8852522941713774,
+      "threshold_mm": 13.73100000000001
+    },
+    "06350000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 254,
+      "n_substituted": 343,
+      "frac_days_changed": 0.026830413016270337,
+      "median_ratio_on_events": 0.8443271767810026,
+      "threshold_mm": 13.295
+    },
+    "06352000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 249,
+      "n_substituted": 334,
+      "frac_days_changed": 0.026126408010012515,
+      "median_ratio_on_events": 0.8430691506157246,
+      "threshold_mm": 13.23
+    },
+    "06404000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 274,
+      "n_substituted": 573,
+      "frac_days_changed": 0.044821652065081354,
+      "median_ratio_on_events": 0.8652446324527097,
+      "threshold_mm": 14.63
+    },
+    "06406000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 270,
+      "n_substituted": 520,
+      "frac_days_changed": 0.040675844806007506,
+      "median_ratio_on_events": 0.9356602186711522,
+      "threshold_mm": 13.932000000000002
+    },
+    "06409000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 327,
+      "n_substituted": 586,
+      "frac_days_changed": 0.04583854818523154,
+      "median_ratio_on_events": 0.8725805853121085,
+      "threshold_mm": 13.885000000000002
+    },
+    "06431500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 379,
+      "n_substituted": 708,
+      "frac_days_changed": 0.055381727158948686,
+      "median_ratio_on_events": 0.9014887589657044,
+      "threshold_mm": 13.823
+    },
+    "06440200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 235,
+      "n_substituted": 451,
+      "frac_days_changed": 0.035278473091364206,
+      "median_ratio_on_events": 0.864509608977823,
+      "threshold_mm": 15.544000000000006
+    },
+    "06447500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 267,
+      "n_substituted": 462,
+      "frac_days_changed": 0.03613892365456821,
+      "median_ratio_on_events": 0.99813200498132,
+      "threshold_mm": 14.928999999999997
+    },
+    "06470800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 273,
+      "n_substituted": 500,
+      "frac_days_changed": 0.03911138923654568,
+      "median_ratio_on_events": 0.8919761663211444,
+      "threshold_mm": 16.596
+    },
+    "06477500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 235,
+      "n_substituted": 435,
+      "frac_days_changed": 0.034026908635794745,
+      "median_ratio_on_events": 0.9067557153865913,
+      "threshold_mm": 19.788000000000004
+    },
+    "06479215": {
+      "applied": true,
+      "reason": "",
+      "n_events": 271,
+      "n_substituted": 415,
+      "frac_days_changed": 0.032462453066332914,
+      "median_ratio_on_events": 1.0421530977784337,
+      "threshold_mm": 18.48
+    },
+    "06601000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 269,
+      "n_substituted": 567,
+      "frac_days_changed": 0.0443523153942428,
+      "median_ratio_on_events": 0.8839896089691004,
+      "threshold_mm": 22.470000000000006
+    },
+    "06614800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 417,
+      "n_substituted": 825,
+      "frac_days_changed": 0.06453379224030037,
+      "median_ratio_on_events": 0.8357142857142857,
+      "threshold_mm": 15.648000000000005
+    },
+    "06622700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 442,
+      "n_substituted": 889,
+      "frac_days_changed": 0.06954005006257823,
+      "median_ratio_on_events": 1.006383621108282,
+      "threshold_mm": 12.604000000000001
+    },
+    "06623800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 499,
+      "n_substituted": 1040,
+      "frac_days_changed": 0.08135168961201501,
+      "median_ratio_on_events": 0.9376153562200075,
+      "threshold_mm": 14.746000000000002
+    },
+    "06632400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 448,
+      "n_substituted": 759,
+      "frac_days_changed": 0.059371088861076345,
+      "median_ratio_on_events": 0.08093889113719142,
+      "threshold_mm": 12.993000000000006
+    },
+    "06746095": {
+      "applied": true,
+      "reason": "",
+      "n_events": 430,
+      "n_substituted": 870,
+      "frac_days_changed": 0.06805381727158949,
+      "median_ratio_on_events": 0.8810889121906913,
+      "threshold_mm": 14.643
+    },
+    "06803510": {
+      "applied": true,
+      "reason": "",
+      "n_events": 259,
+      "n_substituted": 542,
+      "frac_days_changed": 0.04239674593241552,
+      "median_ratio_on_events": 0.9100824637878288,
+      "threshold_mm": 22.82
+    },
+    "06803530": {
+      "applied": true,
+      "reason": "",
+      "n_events": 260,
+      "n_substituted": 475,
+      "frac_days_changed": 0.0371558197747184,
+      "median_ratio_on_events": 0.9895269050198625,
+      "threshold_mm": 23.32
+    },
+    "06814000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 274,
+      "n_substituted": 533,
+      "frac_days_changed": 0.0416927409261577,
+      "median_ratio_on_events": 0.9720794792737238,
+      "threshold_mm": 25.064999999999998
+    },
+    "06847900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 224,
+      "n_substituted": 456,
+      "frac_days_changed": 0.03566958698372966,
+      "median_ratio_on_events": 0.8814655172413793,
+      "threshold_mm": 20.062000000000005
+    },
+    "06853800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 261,
+      "n_substituted": 520,
+      "frac_days_changed": 0.040675844806007506,
+      "median_ratio_on_events": 0.946551724137931,
+      "threshold_mm": 22.015000000000004
+    },
+    "06876700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 255,
+      "n_substituted": 535,
+      "frac_days_changed": 0.04184918648310388,
+      "median_ratio_on_events": 0.817559575149708,
+      "threshold_mm": 22.892000000000003
+    },
+    "06878000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 275,
+      "n_substituted": 594,
+      "frac_days_changed": 0.04646433041301627,
+      "median_ratio_on_events": 0.9502460360852925,
+      "threshold_mm": 23.324000000000005
+    },
+    "06879650": {
+      "applied": true,
+      "reason": "",
+      "n_events": 312,
+      "n_substituted": 651,
+      "frac_days_changed": 0.050923028785982476,
+      "median_ratio_on_events": 0.9144542772861357,
+      "threshold_mm": 25.08400000000002
+    },
+    "06885500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 269,
+      "n_substituted": 558,
+      "frac_days_changed": 0.04364831038798498,
+      "median_ratio_on_events": 0.9419897805831078,
+      "threshold_mm": 25.576000000000004
+    },
+    "06888500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 301,
+      "n_substituted": 597,
+      "frac_days_changed": 0.04669899874843554,
+      "median_ratio_on_events": 0.9717209232625292,
+      "threshold_mm": 25.467999999999993
+    },
+    "06889200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 272,
+      "n_substituted": 538,
+      "frac_days_changed": 0.042083854818523156,
+      "median_ratio_on_events": 0.9854966748524563,
+      "threshold_mm": 27.30000000000001
+    },
+    "06889500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 282,
+      "n_substituted": 657,
+      "frac_days_changed": 0.05139236545682103,
+      "median_ratio_on_events": 0.7825887392900857,
+      "threshold_mm": 26.24600000000001
+    },
+    "06892000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 327,
+      "n_substituted": 667,
+      "frac_days_changed": 0.05217459324155194,
+      "median_ratio_on_events": 0.9293291838089448,
+      "threshold_mm": 24.828
+    },
+    "06903400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 366,
+      "n_substituted": 666,
+      "frac_days_changed": 0.05209637046307885,
+      "median_ratio_on_events": 1.0382461436401893,
+      "threshold_mm": 22.39000000000001
+    },
+    "06906800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 333,
+      "n_substituted": 603,
+      "frac_days_changed": 0.04716833541927409,
+      "median_ratio_on_events": 1.0443995963673056,
+      "threshold_mm": 27.41100000000001
+    },
+    "06910800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 299,
+      "n_substituted": 604,
+      "frac_days_changed": 0.04724655819774718,
+      "median_ratio_on_events": 0.924276915215108,
+      "threshold_mm": 26.60600000000001
+    },
+    "06911900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 282,
+      "n_substituted": 548,
+      "frac_days_changed": 0.042866082603254065,
+      "median_ratio_on_events": 0.9824794854734974,
+      "threshold_mm": 27.352000000000025
+    },
+    "06917000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 297,
+      "n_substituted": 533,
+      "frac_days_changed": 0.0416927409261577,
+      "median_ratio_on_events": 0.979519145146928,
+      "threshold_mm": 29.15700000000002
+    },
+    "06918460": {
+      "applied": true,
+      "reason": "",
+      "n_events": 327,
+      "n_substituted": 600,
+      "frac_days_changed": 0.04693366708385482,
+      "median_ratio_on_events": 1.0140011845148953,
+      "threshold_mm": 28.18
+    },
+    "06919500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 328,
+      "n_substituted": 670,
+      "frac_days_changed": 0.05240926157697121,
+      "median_ratio_on_events": 0.942322422706394,
+      "threshold_mm": 29.235000000000007
+    },
+    "06921070": {
+      "applied": true,
+      "reason": "",
+      "n_events": 341,
+      "n_substituted": 648,
+      "frac_days_changed": 0.05068836045056321,
+      "median_ratio_on_events": 1.0587268029128496,
+      "threshold_mm": 25.93
+    },
+    "06921200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 340,
+      "n_substituted": 656,
+      "frac_days_changed": 0.05131414267834793,
+      "median_ratio_on_events": 1.0233592880978866,
+      "threshold_mm": 26.85
+    },
+    "07057500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 320,
+      "n_substituted": 562,
+      "frac_days_changed": 0.043961201501877344,
+      "median_ratio_on_events": 0.9747824195706929,
+      "threshold_mm": 27.506000000000004
+    },
+    "07060710": {
+      "applied": true,
+      "reason": "",
+      "n_events": 341,
+      "n_substituted": 611,
+      "frac_days_changed": 0.04779411764705882,
+      "median_ratio_on_events": 0.9983254596833048,
+      "threshold_mm": 29.961000000000002
+    },
+    "07066000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 315,
+      "n_substituted": 608,
+      "frac_days_changed": 0.04755944931163955,
+      "median_ratio_on_events": 0.873217115689382,
+      "threshold_mm": 28.263
+    },
+    "07083000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 368,
+      "n_substituted": 758,
+      "frac_days_changed": 0.05929286608260326,
+      "median_ratio_on_events": 0.5454545454545454,
+      "threshold_mm": 12.405000000000001
+    },
+    "07142300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 250,
+      "n_substituted": 450,
+      "frac_days_changed": 0.03520025031289111,
+      "median_ratio_on_events": 1.0194552529182879,
+      "threshold_mm": 22.398
+    },
+    "07145700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 283,
+      "n_substituted": 537,
+      "frac_days_changed": 0.04200563204005006,
+      "median_ratio_on_events": 1.0070808513182836,
+      "threshold_mm": 26.089
+    },
+    "07167500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 301,
+      "n_substituted": 552,
+      "frac_days_changed": 0.043178973717146435,
+      "median_ratio_on_events": 1.0316086794279231,
+      "threshold_mm": 27.092000000000013
+    },
+    "07180500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 234,
+      "n_substituted": 446,
+      "frac_days_changed": 0.03488735919899875,
+      "median_ratio_on_events": 0.9771553958447162,
+      "threshold_mm": 29.89
+    },
+    "07184000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 292,
+      "n_substituted": 566,
+      "frac_days_changed": 0.044274092615769714,
+      "median_ratio_on_events": 0.9995911733299806,
+      "threshold_mm": 29.974000000000014
+    },
+    "07195800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 315,
+      "n_substituted": 566,
+      "frac_days_changed": 0.044274092615769714,
+      "median_ratio_on_events": 0.8779169971205811,
+      "threshold_mm": 30.22
+    },
+    "07196900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 303,
+      "n_substituted": 523,
+      "frac_days_changed": 0.04091051314142678,
+      "median_ratio_on_events": 1.0860409145607701,
+      "threshold_mm": 32.31200000000005
+    },
+    "07197000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 312,
+      "n_substituted": 541,
+      "frac_days_changed": 0.042318523153942425,
+      "median_ratio_on_events": 0.8673550661570721,
+      "threshold_mm": 30.97
+    },
+    "07208500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 272,
+      "n_substituted": 488,
+      "frac_days_changed": 0.038172715894868585,
+      "median_ratio_on_events": 0.8914365933551708,
+      "threshold_mm": 14.55
+    },
+    "07261000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 349,
+      "n_substituted": 704,
+      "frac_days_changed": 0.05506883604505632,
+      "median_ratio_on_events": 0.7664905983585399,
+      "threshold_mm": 31.515
+    },
+    "07263295": {
+      "applied": true,
+      "reason": "",
+      "n_events": 370,
+      "n_substituted": 722,
+      "frac_days_changed": 0.056476846057571965,
+      "median_ratio_on_events": 0.9807348674052176,
+      "threshold_mm": 30.973999999999997
+    },
+    "07291000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 391,
+      "n_substituted": 491,
+      "frac_days_changed": 0.03840738423028786,
+      "median_ratio_on_events": 1.0198662097786528,
+      "threshold_mm": 32.86
+    },
+    "07299670": {
+      "applied": true,
+      "reason": "",
+      "n_events": 172,
+      "n_substituted": 296,
+      "frac_days_changed": 0.023153942428035045,
+      "median_ratio_on_events": 0.8302237340379237,
+      "threshold_mm": 26.14200000000003
+    },
+    "07301410": {
+      "applied": true,
+      "reason": "",
+      "n_events": 241,
+      "n_substituted": 392,
+      "frac_days_changed": 0.030663329161451813,
+      "median_ratio_on_events": 0.9185739181243868,
+      "threshold_mm": 21.944000000000003
+    },
+    "07315200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 192,
+      "n_substituted": 101,
+      "frac_days_changed": 0.007900500625782228,
+      "median_ratio_on_events": 0.842948717948718,
+      "threshold_mm": 30.06
+    },
+    "07315700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 217,
+      "n_substituted": 127,
+      "frac_days_changed": 0.009934292866082604,
+      "median_ratio_on_events": 0.6743814844373504,
+      "threshold_mm": 30.122999999999998
+    },
+    "07335700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 343,
+      "n_substituted": 562,
+      "frac_days_changed": 0.043961201501877344,
+      "median_ratio_on_events": 1.0305487837804816,
+      "threshold_mm": 36.69000000000002
+    },
+    "07340300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 344,
+      "n_substituted": 681,
+      "frac_days_changed": 0.05326971214017522,
+      "median_ratio_on_events": 0.9879266310657069,
+      "threshold_mm": 36.32300000000002
+    },
+    "07346045": {
+      "applied": true,
+      "reason": "",
+      "n_events": 307,
+      "n_substituted": 561,
+      "frac_days_changed": 0.043882978723404256,
+      "median_ratio_on_events": 0.9267820024250822,
+      "threshold_mm": 32.35
+    },
+    "07359610": {
+      "applied": true,
+      "reason": "",
+      "n_events": 356,
+      "n_substituted": 737,
+      "frac_days_changed": 0.05765018773466834,
+      "median_ratio_on_events": 0.9623133350478037,
+      "threshold_mm": 34.736000000000004
+    },
+    "07362100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 321,
+      "n_substituted": 667,
+      "frac_days_changed": 0.05217459324155194,
+      "median_ratio_on_events": 0.8914728682170543,
+      "threshold_mm": 31.396000000000008
+    },
+    "07362587": {
+      "applied": true,
+      "reason": "",
+      "n_events": 367,
+      "n_substituted": 701,
+      "frac_days_changed": 0.05483416770963705,
+      "median_ratio_on_events": 0.9942166077388817,
+      "threshold_mm": 33.480999999999995
+    },
+    "07375000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 379,
+      "n_substituted": 651,
+      "frac_days_changed": 0.050923028785982476,
+      "median_ratio_on_events": 0.7901106500691563,
+      "threshold_mm": 33.778000000000006
+    },
+    "08013000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 381,
+      "n_substituted": 666,
+      "frac_days_changed": 0.05209637046307885,
+      "median_ratio_on_events": 0.8578856152512999,
+      "threshold_mm": 31.24
+    },
+    "08014500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 372,
+      "n_substituted": 717,
+      "frac_days_changed": 0.05608573216520651,
+      "median_ratio_on_events": 0.8012727798669367,
+      "threshold_mm": 33.438
+    },
+    "08023080": {
+      "applied": true,
+      "reason": "",
+      "n_events": 308,
+      "n_substituted": 557,
+      "frac_days_changed": 0.04357008760951189,
+      "median_ratio_on_events": 1.0049220672682526,
+      "threshold_mm": 34.592
+    },
+    "08050800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 223,
+      "n_substituted": 115,
+      "frac_days_changed": 0.008995619524405507,
+      "median_ratio_on_events": 0.925469372273848,
+      "threshold_mm": 33.04000000000001
+    },
+    "08066200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 298,
+      "n_substituted": 490,
+      "frac_days_changed": 0.03832916145181477,
+      "median_ratio_on_events": 1.0778822245962052,
+      "threshold_mm": 33.04
+    },
+    "08066300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 317,
+      "n_substituted": 538,
+      "frac_days_changed": 0.042083854818523156,
+      "median_ratio_on_events": 0.911190053285968,
+      "threshold_mm": 34.276
+    },
+    "08070000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 318,
+      "n_substituted": 613,
+      "frac_days_changed": 0.04795056320400501,
+      "median_ratio_on_events": 1.0338335876284441,
+      "threshold_mm": 31.711000000000002
+    },
+    "08070200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 322,
+      "n_substituted": 630,
+      "frac_days_changed": 0.04928035043804756,
+      "median_ratio_on_events": 1.083848797250859,
+      "threshold_mm": 31.556
+    },
+    "08082700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 210,
+      "n_substituted": 373,
+      "frac_days_changed": 0.02917709637046308,
+      "median_ratio_on_events": 0.9863571224585995,
+      "threshold_mm": 25.968
+    },
+    "08086212": {
+      "applied": true,
+      "reason": "",
+      "n_events": 203,
+      "n_substituted": 396,
+      "frac_days_changed": 0.03097622027534418,
+      "median_ratio_on_events": 0.9030544488711819,
+      "threshold_mm": 25.104000000000003
+    },
+    "08086290": {
+      "applied": true,
+      "reason": "",
+      "n_events": 188,
+      "n_substituted": 313,
+      "frac_days_changed": 0.024483729662077597,
+      "median_ratio_on_events": 0.6857370807101062,
+      "threshold_mm": 27.70900000000001
+    },
+    "08101000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 264,
+      "n_substituted": 492,
+      "frac_days_changed": 0.03848560700876095,
+      "median_ratio_on_events": 0.8181116542320557,
+      "threshold_mm": 25.67400000000002
+    },
+    "08103900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 231,
+      "n_substituted": 499,
+      "frac_days_changed": 0.03903316645807259,
+      "median_ratio_on_events": 0.7961716528387621,
+      "threshold_mm": 28.80900000000002
+    },
+    "08104900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 255,
+      "n_substituted": 513,
+      "frac_days_changed": 0.04012828535669587,
+      "median_ratio_on_events": 0.8880888181127902,
+      "threshold_mm": 27.93
+    },
+    "08109700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 237,
+      "n_substituted": 491,
+      "frac_days_changed": 0.03840738423028786,
+      "median_ratio_on_events": 0.7922306339374473,
+      "threshold_mm": 30.148
+    },
+    "08150800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 202,
+      "n_substituted": 275,
+      "frac_days_changed": 0.021511264080100127,
+      "median_ratio_on_events": 0.7908707704699143,
+      "threshold_mm": 27.924000000000003
+    },
+    "08158700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 249,
+      "n_substituted": 442,
+      "frac_days_changed": 0.034574468085106384,
+      "median_ratio_on_events": 0.5120287493812903,
+      "threshold_mm": 28.890000000000008
+    },
+    "08158810": {
+      "applied": true,
+      "reason": "",
+      "n_events": 246,
+      "n_substituted": 227,
+      "frac_days_changed": 0.01775657071339174,
+      "median_ratio_on_events": 0.4843244883355245,
+      "threshold_mm": 28.68200000000001
+    },
+    "08164300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 261,
+      "n_substituted": 508,
+      "frac_days_changed": 0.039737171464330416,
+      "median_ratio_on_events": 0.8360992571518887,
+      "threshold_mm": 30.814999999999994
+    },
+    "08164600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 276,
+      "n_substituted": 504,
+      "frac_days_changed": 0.039424280350438046,
+      "median_ratio_on_events": 1.003911998633074,
+      "threshold_mm": 31.08
+    },
+    "08165300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 197,
+      "n_substituted": 347,
+      "frac_days_changed": 0.027143304130162704,
+      "median_ratio_on_events": 0.7226173541963016,
+      "threshold_mm": 29.373999999999995
+    },
+    "08171300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 274,
+      "n_substituted": 496,
+      "frac_days_changed": 0.03879849812265332,
+      "median_ratio_on_events": 0.49528931705481005,
+      "threshold_mm": 27.554000000000016
+    },
+    "08175000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 328,
+      "n_substituted": 562,
+      "frac_days_changed": 0.043961201501877344,
+      "median_ratio_on_events": 0.7690905932101251,
+      "threshold_mm": 23.743999999999996
+    },
+    "08176900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 230,
+      "n_substituted": 385,
+      "frac_days_changed": 0.030115769712140174,
+      "median_ratio_on_events": 0.9609061015710632,
+      "threshold_mm": 30.49300000000003
+    },
+    "08178880": {
+      "applied": true,
+      "reason": "",
+      "n_events": 223,
+      "n_substituted": 400,
+      "frac_days_changed": 0.03128911138923655,
+      "median_ratio_on_events": 1.036626916524702,
+      "threshold_mm": 30.17
+    },
+    "08189500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 272,
+      "n_substituted": 498,
+      "frac_days_changed": 0.0389549436795995,
+      "median_ratio_on_events": 0.6398786934128491,
+      "threshold_mm": 25.75500000000001
+    },
+    "08190000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 192,
+      "n_substituted": 336,
+      "frac_days_changed": 0.026282853566958697,
+      "median_ratio_on_events": 0.9220985691573925,
+      "threshold_mm": 26.79
+    },
+    "08190500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 195,
+      "n_substituted": 262,
+      "frac_days_changed": 0.02049436795994994,
+      "median_ratio_on_events": 0.5430831729741287,
+      "threshold_mm": 26.857000000000006
+    },
+    "08194200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 151,
+      "n_substituted": 191,
+      "frac_days_changed": 0.01494055068836045,
+      "median_ratio_on_events": 0.7375145180023229,
+      "threshold_mm": 26.08
+    },
+    "08195000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 221,
+      "n_substituted": 281,
+      "frac_days_changed": 0.021980600750938672,
+      "median_ratio_on_events": 0.7786519167196051,
+      "threshold_mm": 28.092
+    },
+    "08196000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 207,
+      "n_substituted": 254,
+      "frac_days_changed": 0.019868585732165208,
+      "median_ratio_on_events": 0.7264367816091954,
+      "threshold_mm": 28.277999999999995
+    },
+    "08198500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 238,
+      "n_substituted": 414,
+      "frac_days_changed": 0.032384230287859826,
+      "median_ratio_on_events": 0.45467887411133956,
+      "threshold_mm": 26.42
+    },
+    "08200000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 212,
+      "n_substituted": 402,
+      "frac_days_changed": 0.03144555694618273,
+      "median_ratio_on_events": 0.6626340390431675,
+      "threshold_mm": 29.848
+    },
+    "08202700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 220,
+      "n_substituted": 436,
+      "frac_days_changed": 0.03410513141426783,
+      "median_ratio_on_events": 0.6997222140712267,
+      "threshold_mm": 27.536
+    },
+    "08267500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 288,
+      "n_substituted": 540,
+      "frac_days_changed": 0.04224030037546934,
+      "median_ratio_on_events": 0.5531815017049878,
+      "threshold_mm": 13.564000000000002
+    },
+    "08269000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 261,
+      "n_substituted": 405,
+      "frac_days_changed": 0.031680225281602005,
+      "median_ratio_on_events": 0.2968270214943705,
+      "threshold_mm": 13.061000000000002
+    },
+    "08271000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 242,
+      "n_substituted": 488,
+      "frac_days_changed": 0.038172715894868585,
+      "median_ratio_on_events": 0.4919614973954576,
+      "threshold_mm": 14.999
+    },
+    "08324000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 271,
+      "n_substituted": 509,
+      "frac_days_changed": 0.039815394242803503,
+      "median_ratio_on_events": 0.7343452595567703,
+      "threshold_mm": 13.376
+    },
+    "08377900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 228,
+      "n_substituted": 461,
+      "frac_days_changed": 0.03606070087609512,
+      "median_ratio_on_events": 0.5577269993986771,
+      "threshold_mm": 19.028000000000002
+    },
+    "08378500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 233,
+      "n_substituted": 475,
+      "frac_days_changed": 0.0371558197747184,
+      "median_ratio_on_events": 0.3823395539371871,
+      "threshold_mm": 18.03400000000002
+    },
+    "08380500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 220,
+      "n_substituted": 444,
+      "frac_days_changed": 0.034730913642052566,
+      "median_ratio_on_events": 0.5352339850150903,
+      "threshold_mm": 16.919000000000008
+    },
+    "09035800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 385,
+      "n_substituted": 788,
+      "frac_days_changed": 0.061639549436796,
+      "median_ratio_on_events": 0.6371158392434987,
+      "threshold_mm": 13.716000000000003
+    },
+    "09035900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 401,
+      "n_substituted": 813,
+      "frac_days_changed": 0.06359511889862328,
+      "median_ratio_on_events": 0.7348971483291253,
+      "threshold_mm": 12.79
+    },
+    "09047700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 423,
+      "n_substituted": 861,
+      "frac_days_changed": 0.06734981226533167,
+      "median_ratio_on_events": 0.7180875987679456,
+      "threshold_mm": 10.672
+    },
+    "09065500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 353,
+      "n_substituted": 743,
+      "frac_days_changed": 0.058119524405506884,
+      "median_ratio_on_events": 0.6968973747016707,
+      "threshold_mm": 13.842
+    },
+    "09066000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 403,
+      "n_substituted": 868,
+      "frac_days_changed": 0.0678973717146433,
+      "median_ratio_on_events": 0.749860879243183,
+      "threshold_mm": 11.603
+    },
+    "09066200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 351,
+      "n_substituted": 766,
+      "frac_days_changed": 0.059918648310387984,
+      "median_ratio_on_events": 0.6312111682219453,
+      "threshold_mm": 14.702000000000004
+    },
+    "09066300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 361,
+      "n_substituted": 714,
+      "frac_days_changed": 0.05585106382978723,
+      "median_ratio_on_events": 0.865574398773594,
+      "threshold_mm": 13.975000000000001
+    },
+    "09081600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 395,
+      "n_substituted": 723,
+      "frac_days_changed": 0.05655506883604506,
+      "median_ratio_on_events": 0.8699902248289345,
+      "threshold_mm": 15.054000000000002
+    },
+    "09107000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 345,
+      "n_substituted": 673,
+      "frac_days_changed": 0.05264392991239049,
+      "median_ratio_on_events": 0.8163078477176589,
+      "threshold_mm": 11.85
+    },
+    "09210500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 341,
+      "n_substituted": 538,
+      "frac_days_changed": 0.042083854818523156,
+      "median_ratio_on_events": 0.15352455035265866,
+      "threshold_mm": 10.45
+    },
+    "09223000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 351,
+      "n_substituted": 646,
+      "frac_days_changed": 0.05053191489361702,
+      "median_ratio_on_events": 1.1680476050811117,
+      "threshold_mm": 12.116000000000003
+    },
+    "09306242": {
+      "applied": true,
+      "reason": "",
+      "n_events": 283,
+      "n_substituted": 449,
+      "frac_days_changed": 0.035122027534418024,
+      "median_ratio_on_events": 0.6118665018541409,
+      "threshold_mm": 11.592
+    },
+    "09312600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 332,
+      "n_substituted": 699,
+      "frac_days_changed": 0.054677722152690865,
+      "median_ratio_on_events": 1.004192746807155,
+      "threshold_mm": 11.7
+    },
+    "09352900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 410,
+      "n_substituted": 772,
+      "frac_days_changed": 0.060387984981226536,
+      "median_ratio_on_events": 0.6763019028836417,
+      "threshold_mm": 16.583000000000002
+    },
+    "09378170": {
+      "applied": true,
+      "reason": "",
+      "n_events": 230,
+      "n_substituted": 348,
+      "frac_days_changed": 0.027221526908635794,
+      "median_ratio_on_events": 0.6467289719626168,
+      "threshold_mm": 18.4
+    },
+    "09386900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 206,
+      "n_substituted": 338,
+      "frac_days_changed": 0.026439299123904882,
+      "median_ratio_on_events": 1.2339989759344598,
+      "threshold_mm": 13.701000000000002
+    },
+    "09404450": {
+      "applied": true,
+      "reason": "",
+      "n_events": 259,
+      "n_substituted": 488,
+      "frac_days_changed": 0.038172715894868585,
+      "median_ratio_on_events": 0.9465418481428696,
+      "threshold_mm": 15.132
+    },
+    "09430600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 171,
+      "n_substituted": 374,
+      "frac_days_changed": 0.02925531914893617,
+      "median_ratio_on_events": 0.9686307757524375,
+      "threshold_mm": 19.305
+    },
+    "09447800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 182,
+      "n_substituted": 372,
+      "frac_days_changed": 0.02909887359198999,
+      "median_ratio_on_events": 0.688723835246455,
+      "threshold_mm": 14.120000000000001
+    },
+    "09484600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 201,
+      "n_substituted": 395,
+      "frac_days_changed": 0.03089799749687109,
+      "median_ratio_on_events": 0.4204451772464962,
+      "threshold_mm": 16.176000000000002
+    },
+    "09492400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 257,
+      "n_substituted": 375,
+      "frac_days_changed": 0.02933354192740926,
+      "median_ratio_on_events": 0.5843559483167828,
+      "threshold_mm": 17.696
+    },
+    "09494000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 261,
+      "n_substituted": 410,
+      "frac_days_changed": 0.03207133917396746,
+      "median_ratio_on_events": 0.7402773174234891,
+      "threshold_mm": 16.299000000000003
+    },
+    "09497980": {
+      "applied": true,
+      "reason": "",
+      "n_events": 230,
+      "n_substituted": 427,
+      "frac_days_changed": 0.03340112640801001,
+      "median_ratio_on_events": 1.4346920809700117,
+      "threshold_mm": 20.195000000000004
+    },
+    "09505350": {
+      "applied": true,
+      "reason": "",
+      "n_events": 232,
+      "n_substituted": 441,
+      "frac_days_changed": 0.03449624530663329,
+      "median_ratio_on_events": 0.5669291338582677,
+      "threshold_mm": 19.390000000000008
+    },
+    "09505800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 245,
+      "n_substituted": 433,
+      "frac_days_changed": 0.03387046307884856,
+      "median_ratio_on_events": 0.3901300433477826,
+      "threshold_mm": 19.86
+    },
+    "09508300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 190,
+      "n_substituted": 314,
+      "frac_days_changed": 0.024561952440550688,
+      "median_ratio_on_events": 0.6933946763062767,
+      "threshold_mm": 22.07
+    },
+    "09510200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 159,
+      "n_substituted": 315,
+      "frac_days_changed": 0.02464017521902378,
+      "median_ratio_on_events": 0.6599600456621004,
+      "threshold_mm": 22.568
+    },
+    "09512280": {
+      "applied": true,
+      "reason": "",
+      "n_events": 162,
+      "n_substituted": 279,
+      "frac_days_changed": 0.02182415519399249,
+      "median_ratio_on_events": 0.8102886949672983,
+      "threshold_mm": 22.833
+    },
+    "09513780": {
+      "applied": true,
+      "reason": "",
+      "n_events": 167,
+      "n_substituted": 285,
+      "frac_days_changed": 0.02229349186483104,
+      "median_ratio_on_events": 0.7479387514723204,
+      "threshold_mm": 22.535999999999994
+    },
+    "10234500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 285,
+      "n_substituted": 582,
+      "frac_days_changed": 0.045525657071339175,
+      "median_ratio_on_events": 1.027793351969061,
+      "threshold_mm": 16.048000000000002
+    },
+    "10244950": {
+      "applied": true,
+      "reason": "",
+      "n_events": 198,
+      "n_substituted": 408,
+      "frac_days_changed": 0.031914893617021274,
+      "median_ratio_on_events": 0.7869504209541628,
+      "threshold_mm": 16.3
+    },
+    "10259000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 95,
+      "n_substituted": 187,
+      "frac_days_changed": 0.014627659574468085,
+      "median_ratio_on_events": 0.7026349818206892,
+      "threshold_mm": 32.282
+    },
+    "10336645": {
+      "applied": true,
+      "reason": "",
+      "n_events": 282,
+      "n_substituted": 586,
+      "frac_days_changed": 0.04583854818523154,
+      "median_ratio_on_events": 0.8044777535338203,
+      "threshold_mm": 35.286
+    },
+    "10336660": {
+      "applied": true,
+      "reason": "",
+      "n_events": 327,
+      "n_substituted": 653,
+      "frac_days_changed": 0.05107947434292866,
+      "median_ratio_on_events": 0.7237559014382473,
+      "threshold_mm": 35.759
+    },
+    "10343500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 272,
+      "n_substituted": 543,
+      "frac_days_changed": 0.042474968710888614,
+      "median_ratio_on_events": 0.889093985540686,
+      "threshold_mm": 28.929
+    },
+    "11124500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 116,
+      "n_substituted": 259,
+      "frac_days_changed": 0.020259699624530662,
+      "median_ratio_on_events": 0.9268018018018019,
+      "threshold_mm": 43.87899999999999
+    },
+    "11141280": {
+      "applied": true,
+      "reason": "",
+      "n_events": 131,
+      "n_substituted": 279,
+      "frac_days_changed": 0.02182415519399249,
+      "median_ratio_on_events": 1.2594423842878726,
+      "threshold_mm": 32.286
+    },
+    "11143000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 207,
+      "n_substituted": 385,
+      "frac_days_changed": 0.030115769712140174,
+      "median_ratio_on_events": 0.9082385790456798,
+      "threshold_mm": 35.445000000000014
+    },
+    "11148900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 184,
+      "n_substituted": 360,
+      "frac_days_changed": 0.028160200250312892,
+      "median_ratio_on_events": 0.4172099087353324,
+      "threshold_mm": 33.50200000000001
+    },
+    "11151300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 144,
+      "n_substituted": 295,
+      "frac_days_changed": 0.02307571964956195,
+      "median_ratio_on_events": 0.6571720981925451,
+      "threshold_mm": 22.692000000000007
+    },
+    "11176400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 214,
+      "n_substituted": 434,
+      "frac_days_changed": 0.03394868585732165,
+      "median_ratio_on_events": 1.0450729120636324,
+      "threshold_mm": 19.04
+    },
+    "11230500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 314,
+      "n_substituted": 500,
+      "frac_days_changed": 0.03911138923654568,
+      "median_ratio_on_events": 1.4151436031331592,
+      "threshold_mm": 21.550000000000004
+    },
+    "11237500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 220,
+      "n_substituted": 403,
+      "frac_days_changed": 0.03152377972465582,
+      "median_ratio_on_events": 1.0982218665176702,
+      "threshold_mm": 37.83000000000001
+    },
+    "11264500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 292,
+      "n_substituted": 444,
+      "frac_days_changed": 0.034730913642052566,
+      "median_ratio_on_events": 1.0163569953946323,
+      "threshold_mm": 28.85
+    },
+    "11266500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 295,
+      "n_substituted": 544,
+      "frac_days_changed": 0.0425531914893617,
+      "median_ratio_on_events": 1.0834940764034076,
+      "threshold_mm": 29.220000000000002
+    },
+    "11284400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 209,
+      "n_substituted": 348,
+      "frac_days_changed": 0.027221526908635794,
+      "median_ratio_on_events": 0.8429682573050242,
+      "threshold_mm": 38.05600000000001
+    },
+    "11381500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 271,
+      "n_substituted": 532,
+      "frac_days_changed": 0.041614518147684604,
+      "median_ratio_on_events": 0.2722550600035823,
+      "threshold_mm": 34.44000000000001
+    },
+    "11451100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 286,
+      "n_substituted": 449,
+      "frac_days_changed": 0.035122027534418024,
+      "median_ratio_on_events": 0.8969996906897619,
+      "threshold_mm": 30.71500000000004
+    },
+    "11468500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 312,
+      "n_substituted": 583,
+      "frac_days_changed": 0.04560387984981226,
+      "median_ratio_on_events": 0.7803199077554857,
+      "threshold_mm": 32.96200000000003
+    },
+    "11473900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 300,
+      "n_substituted": 547,
+      "frac_days_changed": 0.04278785982478098,
+      "median_ratio_on_events": 0.9497944292895102,
+      "threshold_mm": 34.692
+    },
+    "11475560": {
+      "applied": true,
+      "reason": "",
+      "n_events": 304,
+      "n_substituted": 562,
+      "frac_days_changed": 0.043961201501877344,
+      "median_ratio_on_events": 1.1041738182012948,
+      "threshold_mm": 43.876000000000005
+    },
+    "11476600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 360,
+      "n_substituted": 738,
+      "frac_days_changed": 0.057728410513141426,
+      "median_ratio_on_events": 0.8175537882946654,
+      "threshold_mm": 36.1
+    },
+    "11478500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 296,
+      "n_substituted": 622,
+      "frac_days_changed": 0.04865456821026283,
+      "median_ratio_on_events": 0.7843681896953927,
+      "threshold_mm": 37.81
+    },
+    "11480390": {
+      "applied": true,
+      "reason": "",
+      "n_events": 244,
+      "n_substituted": 502,
+      "frac_days_changed": 0.039267834793491864,
+      "median_ratio_on_events": 1.2593666908387722,
+      "threshold_mm": 38.718
+    },
+    "11481200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 338,
+      "n_substituted": 728,
+      "frac_days_changed": 0.05694618272841051,
+      "median_ratio_on_events": 0.5775201821569033,
+      "threshold_mm": 30.62
+    },
+    "11482500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 352,
+      "n_substituted": 644,
+      "frac_days_changed": 0.050375469336670836,
+      "median_ratio_on_events": 0.9430463576158941,
+      "threshold_mm": 31.804000000000002
+    },
+    "11522500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 338,
+      "n_substituted": 676,
+      "frac_days_changed": 0.052878598247809765,
+      "median_ratio_on_events": 1.1288775183882314,
+      "threshold_mm": 25.22
+    },
+    "11523200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 353,
+      "n_substituted": 679,
+      "frac_days_changed": 0.053113266583229034,
+      "median_ratio_on_events": 0.509731232622799,
+      "threshold_mm": 24.3
+    },
+    "11528700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 257,
+      "n_substituted": 381,
+      "frac_days_changed": 0.02980287859824781,
+      "median_ratio_on_events": 0.771273233025667,
+      "threshold_mm": 35.40200000000001
+    },
+    "11532500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 401,
+      "n_substituted": 846,
+      "frac_days_changed": 0.0661764705882353,
+      "median_ratio_on_events": 1.0344163106928161,
+      "threshold_mm": 35.782000000000004
+    },
+    "12010000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 716,
+      "n_substituted": 1357,
+      "frac_days_changed": 0.10614831038798499,
+      "median_ratio_on_events": 1.0596766174159913,
+      "threshold_mm": 29.06200000000001
+    },
+    "12013500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 697,
+      "n_substituted": 1303,
+      "frac_days_changed": 0.10192428035043805,
+      "median_ratio_on_events": 0.9192200557103063,
+      "threshold_mm": 26.435000000000002
+    },
+    "12020000": {
+      "applied": false,
+      "reason": "no station corpus",
+      "n_events": 0,
+      "n_substituted": 0,
+      "frac_days_changed": 0.0,
+      "median_ratio_on_events": NaN
+    },
+    "12025700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 654,
+      "n_substituted": 1157,
+      "frac_days_changed": 0.0905037546933667,
+      "median_ratio_on_events": 0.752827178540451,
+      "threshold_mm": 19.912000000000003
+    },
+    "12035000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 647,
+      "n_substituted": 1185,
+      "frac_days_changed": 0.09269399249061326,
+      "median_ratio_on_events": 0.734290185378167,
+      "threshold_mm": 30.025
+    },
+    "12040500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 631,
+      "n_substituted": 1207,
+      "frac_days_changed": 0.09441489361702128,
+      "median_ratio_on_events": 0.928122819260293,
+      "threshold_mm": 36.91899999999999
+    },
+    "12041200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 568,
+      "n_substituted": 1121,
+      "frac_days_changed": 0.08768773466833542,
+      "median_ratio_on_events": 1.1502347417840375,
+      "threshold_mm": 37.256
+    },
+    "12048000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 399,
+      "n_substituted": 735,
+      "frac_days_changed": 0.05749374217772215,
+      "median_ratio_on_events": 0.10439822069774801,
+      "threshold_mm": 33.694
+    },
+    "12054000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 612,
+      "n_substituted": 881,
+      "frac_days_changed": 0.06891426783479349,
+      "median_ratio_on_events": 0.7518796992481204,
+      "threshold_mm": 29.092000000000002
+    },
+    "12056500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 578,
+      "n_substituted": 1067,
+      "frac_days_changed": 0.08346370463078849,
+      "median_ratio_on_events": 0.9397379005216115,
+      "threshold_mm": 34.51
+    },
+    "12073500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 612,
+      "n_substituted": 1134,
+      "frac_days_changed": 0.0887046307884856,
+      "median_ratio_on_events": 1.0786496011871638,
+      "threshold_mm": 19.0
+    },
+    "12082500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 712,
+      "n_substituted": 1229,
+      "frac_days_changed": 0.09613579474342929,
+      "median_ratio_on_events": 0.9006882679981356,
+      "threshold_mm": 27.48
+    },
+    "12092000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 669,
+      "n_substituted": 1170,
+      "frac_days_changed": 0.0915206508135169,
+      "median_ratio_on_events": 0.8375998361662912,
+      "threshold_mm": 28.568
+    },
+    "12114500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 729,
+      "n_substituted": 1351,
+      "frac_days_changed": 0.10567897371714643,
+      "median_ratio_on_events": 0.6654061293626408,
+      "threshold_mm": 28.40599999999999
+    },
+    "12115000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 749,
+      "n_substituted": 1390,
+      "frac_days_changed": 0.108729662077597,
+      "median_ratio_on_events": 0.6539732242064898,
+      "threshold_mm": 27.528000000000013
+    },
+    "12117000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 727,
+      "n_substituted": 1300,
+      "frac_days_changed": 0.10168961201501878,
+      "median_ratio_on_events": 0.8039058133293167,
+      "threshold_mm": 24.71
+    },
+    "12143600": {
+      "applied": true,
+      "reason": "",
+      "n_events": 770,
+      "n_substituted": 1375,
+      "frac_days_changed": 0.10755632040050063,
+      "median_ratio_on_events": 0.5693296602387511,
+      "threshold_mm": 28.54
+    },
+    "12144000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 792,
+      "n_substituted": 1409,
+      "frac_days_changed": 0.11021589486858573,
+      "median_ratio_on_events": 0.6538872201685471,
+      "threshold_mm": 26.618000000000038
+    },
+    "12145500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 764,
+      "n_substituted": 1380,
+      "frac_days_changed": 0.10794743429286609,
+      "median_ratio_on_events": 0.9979174797915455,
+      "threshold_mm": 21.064999999999998
+    },
+    "12147500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 1144,
+      "n_substituted": 1917,
+      "frac_days_changed": 0.14995306633291614,
+      "median_ratio_on_events": 0.730873087308731,
+      "threshold_mm": 23.511000000000006
+    },
+    "12167000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 800,
+      "n_substituted": 1362,
+      "frac_days_changed": 0.10653942428035044,
+      "median_ratio_on_events": 0.27217125382262997,
+      "threshold_mm": 24.318
+    },
+    "12175500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 599,
+      "n_substituted": 1040,
+      "frac_days_changed": 0.08135168961201501,
+      "median_ratio_on_events": 0.9546785304927481,
+      "threshold_mm": 25.644000000000005
+    },
+    "12178100": {
+      "applied": true,
+      "reason": "",
+      "n_events": 629,
+      "n_substituted": 1081,
+      "frac_days_changed": 0.08455882352941177,
+      "median_ratio_on_events": 0.9940928270042194,
+      "threshold_mm": 27.304000000000013
+    },
+    "12186000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 795,
+      "n_substituted": 915,
+      "frac_days_changed": 0.0715738423028786,
+      "median_ratio_on_events": 0.8756607676396232,
+      "threshold_mm": 24.13
+    },
+    "12189500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 734,
+      "n_substituted": 1265,
+      "frac_days_changed": 0.09895181476846057,
+      "median_ratio_on_events": 0.8463073852295409,
+      "threshold_mm": 23.418000000000006
+    },
+    "12375900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 464,
+      "n_substituted": 890,
+      "frac_days_changed": 0.06961827284105132,
+      "median_ratio_on_events": 0.457290767903365,
+      "threshold_mm": 17.06
+    },
+    "12377150": {
+      "applied": true,
+      "reason": "",
+      "n_events": 464,
+      "n_substituted": 894,
+      "frac_days_changed": 0.06993116395494368,
+      "median_ratio_on_events": 0.43318280648937946,
+      "threshold_mm": 19.09
+    },
+    "12381400": {
+      "applied": true,
+      "reason": "",
+      "n_events": 493,
+      "n_substituted": 838,
+      "frac_days_changed": 0.06555068836045057,
+      "median_ratio_on_events": 0.14565521168879386,
+      "threshold_mm": 14.334000000000001
+    },
+    "12383500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 435,
+      "n_substituted": 731,
+      "frac_days_changed": 0.057180851063829786,
+      "median_ratio_on_events": 0.1354129623044097,
+      "threshold_mm": 15.856000000000002
+    },
+    "12390700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 528,
+      "n_substituted": 1034,
+      "frac_days_changed": 0.08088235294117647,
+      "median_ratio_on_events": 0.558521822236381,
+      "threshold_mm": 14.687
+    },
+    "12411000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 567,
+      "n_substituted": 1099,
+      "frac_days_changed": 0.08596683354192741,
+      "median_ratio_on_events": 0.7964417683932696,
+      "threshold_mm": 16.068000000000005
+    },
+    "12447390": {
+      "applied": true,
+      "reason": "",
+      "n_events": 347,
+      "n_substituted": 622,
+      "frac_days_changed": 0.04865456821026283,
+      "median_ratio_on_events": 0.584061135371179,
+      "threshold_mm": 16.918000000000006
+    },
+    "12451000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 534,
+      "n_substituted": 978,
+      "frac_days_changed": 0.07650187734668336,
+      "median_ratio_on_events": 0.8921886698278013,
+      "threshold_mm": 22.792000000000005
+    },
+    "12488500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 668,
+      "n_substituted": 1151,
+      "frac_days_changed": 0.09003441802252816,
+      "median_ratio_on_events": 1.1568314885197977,
+      "threshold_mm": 21.267999999999994
+    },
+    "13011500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 471,
+      "n_substituted": 930,
+      "frac_days_changed": 0.07274718397997497,
+      "median_ratio_on_events": 0.8725504398241357,
+      "threshold_mm": 13.2
+    },
+    "13011900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 469,
+      "n_substituted": 940,
+      "frac_days_changed": 0.07352941176470588,
+      "median_ratio_on_events": 0.8430932281135836,
+      "threshold_mm": 12.62
+    },
+    "13018300": {
+      "applied": true,
+      "reason": "",
+      "n_events": 412,
+      "n_substituted": 798,
+      "frac_days_changed": 0.062421777221526906,
+      "median_ratio_on_events": 0.7947434292866083,
+      "threshold_mm": 13.46
+    },
+    "13023000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 502,
+      "n_substituted": 903,
+      "frac_days_changed": 0.0706351689612015,
+      "median_ratio_on_events": 0.5949197860962566,
+      "threshold_mm": 12.45
+    },
+    "13161500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 363,
+      "n_substituted": 747,
+      "frac_days_changed": 0.05843241551939925,
+      "median_ratio_on_events": 1.1434269964838801,
+      "threshold_mm": 10.064999999999998
+    },
+    "13235000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 453,
+      "n_substituted": 850,
+      "frac_days_changed": 0.06648936170212766,
+      "median_ratio_on_events": 1.110503282275711,
+      "threshold_mm": 16.69400000000002
+    },
+    "13240000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 441,
+      "n_substituted": 866,
+      "frac_days_changed": 0.06774092615769713,
+      "median_ratio_on_events": 0.3904282115869018,
+      "threshold_mm": 19.248
+    },
+    "13313000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 524,
+      "n_substituted": 59,
+      "frac_days_changed": 0.0046151439299123905,
+      "median_ratio_on_events": 0.17302488107140374,
+      "threshold_mm": 19.97
+    },
+    "13331500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 478,
+      "n_substituted": 882,
+      "frac_days_changed": 0.06899249061326658,
+      "median_ratio_on_events": 0.44600938967136156,
+      "threshold_mm": 14.379000000000001
+    },
+    "14020000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 440,
+      "n_substituted": 881,
+      "frac_days_changed": 0.06891426783479349,
+      "median_ratio_on_events": 0.839452603471295,
+      "threshold_mm": 15.662000000000003
+    },
+    "14096850": {
+      "applied": true,
+      "reason": "",
+      "n_events": 537,
+      "n_substituted": 984,
+      "frac_days_changed": 0.0769712140175219,
+      "median_ratio_on_events": 0.17178209563139954,
+      "threshold_mm": 13.99
+    },
+    "14137000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 778,
+      "n_substituted": 1375,
+      "frac_days_changed": 0.10755632040050063,
+      "median_ratio_on_events": 1.0222215550084401,
+      "threshold_mm": 24.66
+    },
+    "14138800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 723,
+      "n_substituted": 1324,
+      "frac_days_changed": 0.10356695869837297,
+      "median_ratio_on_events": 0.9337511680503571,
+      "threshold_mm": 31.36
+    },
+    "14138870": {
+      "applied": true,
+      "reason": "",
+      "n_events": 771,
+      "n_substituted": 1430,
+      "frac_days_changed": 0.11185857321652065,
+      "median_ratio_on_events": 0.8757727765141321,
+      "threshold_mm": 32.17300000000002
+    },
+    "14138900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 808,
+      "n_substituted": 1445,
+      "frac_days_changed": 0.11303191489361702,
+      "median_ratio_on_events": 0.8392414062323694,
+      "threshold_mm": 33.486000000000004
+    },
+    "14139800": {
+      "applied": true,
+      "reason": "",
+      "n_events": 791,
+      "n_substituted": 1474,
+      "frac_days_changed": 0.11530037546933668,
+      "median_ratio_on_events": 0.7854746981001162,
+      "threshold_mm": 30.043999999999997
+    },
+    "14141500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 798,
+      "n_substituted": 1505,
+      "frac_days_changed": 0.1177252816020025,
+      "median_ratio_on_events": 0.8359493082199745,
+      "threshold_mm": 27.773000000000003
+    },
+    "14154500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 577,
+      "n_substituted": 1133,
+      "frac_days_changed": 0.08862640801001252,
+      "median_ratio_on_events": 0.7702327196943384,
+      "threshold_mm": 21.149000000000008
+    },
+    "14158790": {
+      "applied": true,
+      "reason": "",
+      "n_events": 642,
+      "n_substituted": 1198,
+      "frac_days_changed": 0.09371088861076346,
+      "median_ratio_on_events": 0.9247648902821316,
+      "threshold_mm": 27.65
+    },
+    "14166500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 600,
+      "n_substituted": 1103,
+      "frac_days_changed": 0.08627972465581978,
+      "median_ratio_on_events": 0.726124586554443,
+      "threshold_mm": 22.51
+    },
+    "14182500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 706,
+      "n_substituted": 1271,
+      "frac_days_changed": 0.09942115143929912,
+      "median_ratio_on_events": 0.6448522097234964,
+      "threshold_mm": 25.686000000000007
+    },
+    "14185000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 691,
+      "n_substituted": 1241,
+      "frac_days_changed": 0.09707446808510638,
+      "median_ratio_on_events": 0.6590144674585628,
+      "threshold_mm": 24.233999999999998
+    },
+    "14185900": {
+      "applied": true,
+      "reason": "",
+      "n_events": 689,
+      "n_substituted": 1236,
+      "frac_days_changed": 0.09668335419274092,
+      "median_ratio_on_events": 0.7741182572614107,
+      "threshold_mm": 27.84
+    },
+    "14187000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 630,
+      "n_substituted": 1192,
+      "frac_days_changed": 0.09324155193992491,
+      "median_ratio_on_events": 0.8285584356525693,
+      "threshold_mm": 23.392000000000003
+    },
+    "14216500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 673,
+      "n_substituted": 1272,
+      "frac_days_changed": 0.09949937421777222,
+      "median_ratio_on_events": 0.9346321448649697,
+      "threshold_mm": 32.39100000000001
+    },
+    "14222500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 703,
+      "n_substituted": 1296,
+      "frac_days_changed": 0.10137672090112641,
+      "median_ratio_on_events": 0.5095718551771211,
+      "threshold_mm": 28.454
+    },
+    "14236200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 737,
+      "n_substituted": 1275,
+      "frac_days_changed": 0.09973404255319149,
+      "median_ratio_on_events": 0.6913527397260274,
+      "threshold_mm": 21.804
+    },
+    "14301000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 707,
+      "n_substituted": 1294,
+      "frac_days_changed": 0.10122027534418022,
+      "median_ratio_on_events": 1.4493232089798613,
+      "threshold_mm": 23.054000000000002
+    },
+    "14303200": {
+      "applied": true,
+      "reason": "",
+      "n_events": 616,
+      "n_substituted": 1123,
+      "frac_days_changed": 0.0878441802252816,
+      "median_ratio_on_events": 0.961847869304532,
+      "threshold_mm": 29.826000000000022
+    },
+    "14305500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 660,
+      "n_substituted": 1141,
+      "frac_days_changed": 0.08925219023779725,
+      "median_ratio_on_events": 0.5773180251988359,
+      "threshold_mm": 30.0
+    },
+    "14306340": {
+      "applied": true,
+      "reason": "",
+      "n_events": 663,
+      "n_substituted": 1146,
+      "frac_days_changed": 0.08964330413016271,
+      "median_ratio_on_events": 1.0253204126289466,
+      "threshold_mm": 28.568
+    },
+    "14306500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 656,
+      "n_substituted": 1190,
+      "frac_days_changed": 0.09308510638297872,
+      "median_ratio_on_events": 1.0878367590801312,
+      "threshold_mm": 27.373
+    },
+    "14308990": {
+      "applied": true,
+      "reason": "",
+      "n_events": 485,
+      "n_substituted": 894,
+      "frac_days_changed": 0.06993116395494368,
+      "median_ratio_on_events": 0.9661723818350326,
+      "threshold_mm": 19.7
+    },
+    "14309500": {
+      "applied": true,
+      "reason": "",
+      "n_events": 556,
+      "n_substituted": 982,
+      "frac_days_changed": 0.07681476846057572,
+      "median_ratio_on_events": 0.42926239419588874,
+      "threshold_mm": 23.942000000000007
+    },
+    "14316700": {
+      "applied": true,
+      "reason": "",
+      "n_events": 568,
+      "n_substituted": 1115,
+      "frac_days_changed": 0.08721839799749687,
+      "median_ratio_on_events": 0.9896825780922531,
+      "threshold_mm": 21.626
+    },
+    "14325000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 509,
+      "n_substituted": 918,
+      "frac_days_changed": 0.07180851063829788,
+      "median_ratio_on_events": 0.7511923688394276,
+      "threshold_mm": 31.802000000000003
+    },
+    "14362250": {
+      "applied": true,
+      "reason": "",
+      "n_events": 397,
+      "n_substituted": 758,
+      "frac_days_changed": 0.05929286608260326,
+      "median_ratio_on_events": 0.9881780262458963,
+      "threshold_mm": 18.81
+    },
+    "14400000": {
+      "applied": true,
+      "reason": "",
+      "n_events": 439,
+      "n_substituted": 633,
+      "frac_days_changed": 0.04951501877346683,
+      "median_ratio_on_events": 0.82477693269129,
+      "threshold_mm": 33.28
+    }
+  }
+}

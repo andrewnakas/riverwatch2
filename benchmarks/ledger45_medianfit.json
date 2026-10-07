@@ -1,0 +1,140 @@
+{
+  "no_ship_clause": "ORACLE_median is fit on held-out rows: a bound, never shipped; no legal rule tuned from it.",
+  "record": 0.8362893021622821,
+  "BASE_h1": {
+    "_baseline_median": 0.8362893021622821,
+    "_n_streams": 9,
+    "quadform_check_absdiff": 2.220446049250313e-16,
+    "oracle_median_trainside_value": 0.8413104919935447,
+    "ORACLE_median_on_test": {
+      "median": 0.8413104919935456,
+      "base_median": 0.8362893021622821,
+      "paired": -0.0016586457652442155,
+      "breadth": 0.4218455743879473,
+      "boot95": [
+        -0.00274173758979467,
+        -0.0006263444558736059
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    },
+    "legal_median_train_value": 0.9473172697281391,
+    "legal_median_train_gain": 0.0029508106639115628,
+    "LEGAL_median_fit_on_train": {
+      "median": 0.8350144676019702,
+      "base_median": 0.8362893021622821,
+      "paired": -0.0013251085731359469,
+      "breadth": 0.4425612052730697,
+      "boot95": [
+        -0.0021124293641304748,
+        -0.00039719814917171803
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    }
+  },
+  "BASE_all": {
+    "_baseline_median": 0.8311068230611828,
+    "_n_streams": 9,
+    "quadform_check_absdiff": 1.1102230246251565e-16,
+    "oracle_median_trainside_value": 0.8354201373550895,
+    "ORACLE_median_on_test": {
+      "median": 0.8354201373550879,
+      "base_median": 0.8311068230611828,
+      "paired": 0.00041782182830729653,
+      "breadth": 0.5235404896421846,
+      "boot95": [
+        -0.00025524937641119294,
+        0.0010151401947624539
+      ],
+      "n": 531,
+      "ci_excl_0": false,
+      "clears_0.003": false
+    },
+    "legal_median_train_value": 0.9569437220786796,
+    "legal_median_train_gain": 0.006601861879617754,
+    "LEGAL_median_fit_on_train": {
+      "median": 0.8150865769089745,
+      "base_median": 0.8311068230611828,
+      "paired": -0.012190462762396437,
+      "breadth": 0.1751412429378531,
+      "boot95": [
+        -0.014837566563861593,
+        -0.010376666148587677
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    }
+  },
+  "POOL_h1": {
+    "_baseline_median": 0.8392940875847774,
+    "_n_streams": 20,
+    "quadform_check_absdiff": 1.6653345369377348e-15,
+    "oracle_median_trainside_value": 0.8432143450887721,
+    "ORACLE_median_on_test": {
+      "median": 0.8432143450887725,
+      "base_median": 0.8392940875847774,
+      "paired": 0.0004535262487811442,
+      "breadth": 0.5536723163841808,
+      "boot95": [
+        0.0001079463424173699,
+        0.0007728400165946114
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    },
+    "legal_median_train_value": 0.948566437038486,
+    "legal_median_train_gain": 0.0022914293238915917,
+    "LEGAL_median_fit_on_train": {
+      "median": 0.8384935537684288,
+      "base_median": 0.8392940875847774,
+      "paired": 0.0015370027353623916,
+      "breadth": 0.5894538606403014,
+      "boot95": [
+        0.0009393739711716087,
+        0.002150321220921403
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    }
+  },
+  "POOL_all": {
+    "_baseline_median": 0.8365175993289679,
+    "_n_streams": 20,
+    "quadform_check_absdiff": 6.661338147750939e-16,
+    "oracle_median_trainside_value": 0.8406088692866948,
+    "ORACLE_median_on_test": {
+      "median": 0.8406088692866952,
+      "base_median": 0.8365175993289679,
+      "paired": 0.0006506052543071572,
+      "breadth": 0.583804143126177,
+      "boot95": [
+        0.0004017553454206402,
+        0.0009601049370443482
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    },
+    "legal_median_train_value": 0.9563262578827063,
+    "legal_median_train_gain": 0.009443215009882877,
+    "LEGAL_median_fit_on_train": {
+      "median": 0.8248315581752081,
+      "base_median": 0.8365175993289679,
+      "paired": -0.006179250914431611,
+      "breadth": 0.2693032015065913,
+      "boot95": [
+        -0.007646468999692124,
+        -0.004891432668536311
+      ],
+      "n": 531,
+      "ci_excl_0": true,
+      "clears_0.003": false
+    }
+  }
+}

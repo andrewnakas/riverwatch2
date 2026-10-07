@@ -1,1 +1,3 @@
 2026-10-02T07:04:09+00:00 arm=withq frame=test1 protocol=modern-v3-9yr members=fused3md3q(SOLO,3 seeds) headline=0.889700 is_record=False out=benchmarks/m1_decade_probe.json note=READ_BY_THE_DECADE_PROBE_not_for_selection
+2026-10-07T04:38:01.708919+00:00 arm=withq frame=test1 protocol=modern-v3-9yr members=gridmetm9,fused4md49,fused4m9,nldasm9 headline=0.910438 is_record=True out=benchmarks/m1_FINAL_withq.json git=dfa93050
+2026-10-07T04:38:34.711057+00:00 arm=noq frame=test1 protocol=modern-v3-9yr members=lstm_fused4md4 headline=0.843090 is_record=True out=benchmarks/m1_FINAL_noq.json git=dfa93050

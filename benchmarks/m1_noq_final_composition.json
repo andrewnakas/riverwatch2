@@ -1,0 +1,41 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "seeds": [
+  501,
+  502,
+  503
+ ],
+ "start_members": [
+  "lstm_fused3md3",
+  "lstm_fused3m",
+  "lstm_gridmetm",
+  "lstm_fused4md4",
+  "lstm_fused4m",
+  "lstm_nldasm"
+ ],
+ "final_members": [
+  "lstm_fused3md3",
+  "lstm_gridmetm",
+  "lstm_fused4md4",
+  "lstm_fused4m",
+  "lstm_nldasm"
+ ],
+ "final_mean": 0.8462102486162127,
+ "final_trimmed": 0.8507681191719747,
+ "removal_trail": [
+  {
+   "dropped": "lstm_fused3m",
+   "from_n": 6,
+   "median_before": 0.8452969690388867,
+   "gain": 0.000713053814270781,
+   "ci": [
+    5.3498473169932836e-05,
+    0.0015013607281287311
+   ],
+   "breadth": 0.5489795918367347
+  }
+ ],
+ "basins": 490,
+ "rows": 708266
+}

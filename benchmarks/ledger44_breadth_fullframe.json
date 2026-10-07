@@ -1,0 +1,45 @@
+{
+  "pool": [
+    "multih512",
+    "multi9",
+    "multi8",
+    "multi5b",
+    "multi730",
+    "multi671",
+    "multi_eps05",
+    "multi10",
+    "multidrop",
+    "multih128"
+  ],
+  "n_shipped": 9,
+  "n_all": 19,
+  "drop_aorc": true,
+  "with_multi14": false,
+  "test_rows": 2564730,
+  "test_basins": 531,
+  "h1": {
+    "shipped": 0.8362936509838824,
+    "take_all": 0.8358145084757895,
+    "paired_delta": 0.0003366318093541709,
+    "diff_of_medians": -0.00047914250809288905,
+    "breadth": 0.5160075329566854,
+    "n_basins": 531,
+    "boot95": [
+      -0.000508064948203435,
+      0.0010840030187578842
+    ]
+  },
+  "all": {
+    "shipped": 0.8311038147261038,
+    "take_all": 0.8356865190851294,
+    "paired_delta": 0.002109178717671245,
+    "diff_of_medians": 0.0045827043590255245,
+    "breadth": 0.623352165725047,
+    "n_basins": 531,
+    "boot95": [
+      0.0014088941719375692,
+      0.0027003645751343397
+    ]
+  },
+  "verdict": "D-PARTIAL \u2014 positive on both frames, sub-bar; measured, NOT claimed as skill"
+}

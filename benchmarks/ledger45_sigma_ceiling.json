@@ -1,0 +1,43 @@
+{
+  "record": 0.8362893021622821,
+  "sigma_source": "analysis/ledger45_gauge_sigma.json",
+  "n_gaugings": 263524,
+  "ceiling": {
+    "MEASURED_empirical": {
+      "n_basins": 525,
+      "median_ceiling": 0.9413443093131446,
+      "p10": 0.4489069760014454,
+      "p90": 0.9912219263518363,
+      "median_headroom_vs_record": 0.08064568671168348,
+      "frac_basins_above_ceiling": 0.2704761904761905
+    },
+    "assumed_central": {
+      "n_basins": 528,
+      "median_ceiling": 0.8524392394220581,
+      "p10": 0.8039752648310051,
+      "p90": 0.8781395919958697,
+      "median_headroom_vs_record": 0.00951770918540601,
+      "frac_basins_above_ceiling": 0.48484848484848486
+    },
+    "assumed_optimistic": {
+      "n_basins": 528,
+      "median_ceiling": 0.9772446970291127,
+      "p10": 0.9643781246445725,
+      "p90": 0.9821481608390316,
+      "median_headroom_vs_record": 0.1382170203111473,
+      "frac_basins_above_ceiling": 0.0
+    }
+  },
+  "killtest": {
+    "n_basins": 527,
+    "var_between": 0.6217489487886382,
+    "var_within": 0.123597403378736,
+    "within_share": 0.16582546224225847,
+    "band_median_dev": {
+      "low": 0.10223008926177535,
+      "mid": -0.07780080149430546,
+      "high": -0.014343944300798217
+    },
+    "implied_within_weight_spread": 2.0196132727350102
+  }
+}

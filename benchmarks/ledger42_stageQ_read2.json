@@ -1,0 +1,42 @@
+{
+  "read": 2,
+  "authorised": "user 2026-08-23",
+  "target": 0.84,
+  "quantities": {
+    "q1_frozen_F1": {
+      "value": 0.8362893021622821,
+      "anchor": 0.8362893021622821,
+      "ok": true,
+      "ci95": [
+        0.8263081796893148,
+        0.846947806447403
+      ],
+      "basins": 531
+    },
+    "q2_frozen_F2": {
+      "value": 0.8314223444676605,
+      "ci95": [
+        0.8252285942852017,
+        0.8442604295680863
+      ],
+      "rows": 2564730,
+      "delta_vs_q1": -0.004866957694621643,
+      "note": "F3 == F2 (stride-14 tiles, S0.2)"
+    }
+  },
+  "controls": {
+    "c1_7stream_on_7frame": {
+      "value": 0.8305122188187086,
+      "anchor": 0.8298,
+      "ok": false,
+      "rows": 183195
+    },
+    "c2_9stream_on_9frame": {
+      "value": 0.8337646534246352,
+      "anchor": 0.8337646534246352,
+      "ok": true
+    }
+  },
+  "valid": false,
+  "branch_reading": "Phase lever CLOSED NEGATIVE held-out: all-leads scores LOWER (0.8314 < 0.8363). h==1 was the luckier phase."
+}

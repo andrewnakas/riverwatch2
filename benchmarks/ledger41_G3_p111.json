@@ -1,0 +1,79 @@
+{
+ "from_date": "1990-10-01",
+ "per_seed": {
+  "treatment": [
+   {
+    "dump": "treatment_PRIOR_p111_TRAIN_s111.csv.gz",
+    "median_nse": 0.8990386019347528,
+    "n_basins": 531
+   },
+   {
+    "dump": "treatment_PRIOR_p111_TRAIN_s222.csv.gz",
+    "median_nse": 0.8827967238613258,
+    "n_basins": 531
+   },
+   {
+    "dump": "treatment_PRIOR_p111_TRAIN_s333.csv.gz",
+    "median_nse": 0.8926925978076284,
+    "n_basins": 531
+   }
+  ],
+  "control": [
+   {
+    "dump": "camels531ls_daymet_nhlstm_TRAIN_s111.csv.gz",
+    "median_nse": 0.9024123216570328,
+    "n_basins": 531
+   },
+   {
+    "dump": "camels531ls_daymet_nhlstm_TRAIN_s222.csv.gz",
+    "median_nse": 0.9179689035145858,
+    "n_basins": 531
+   },
+   {
+    "dump": "camels531ls_daymet_nhlstm_TRAIN_s333.csv.gz",
+    "median_nse": 0.9196303114882546,
+    "n_basins": 531
+   }
+  ]
+ },
+ "seed_separation": false,
+ "reverse_separation": true,
+ "treatment_range": [
+  0.8827967238613258,
+  0.8990386019347528
+ ],
+ "control_range": [
+  0.9024123216570328,
+  0.9196303114882546
+ ],
+ "seed_averaged": {
+  "n_basins": 531,
+  "median_nse_control": 0.9261781664957192,
+  "median_nse_treatment": 0.8962146080943915,
+  "paired_median_delta": -0.024635908453932487,
+  "breadth": 0.12429378531073447,
+  "near_median_delta": -0.030683234184840882,
+  "n_near_median": 70
+ },
+ "null_calibration": {
+  "median_delta": [
+   -0.0127,
+   0.0127
+  ],
+  "breadth": [
+   0.298,
+   0.702
+  ],
+  "near_median": [
+   -0.0221,
+   0.0097
+  ]
+ },
+ "n_seeds": {
+  "treatment": 3,
+  "control": 3
+ },
+ "min_seeds_required": 3,
+ "underpowered": false,
+ "verdict": "FAIL"
+}

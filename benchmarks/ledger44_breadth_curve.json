@@ -1,0 +1,170 @@
+{
+  "pool": [
+    "aorc",
+    "cmal",
+    "conus404",
+    "gmm",
+    "l41ft",
+    "l41zeroshot",
+    "multi10",
+    "multi11",
+    "multi12",
+    "multi4",
+    "multi5b",
+    "multi671",
+    "multi730",
+    "multi8",
+    "multi9",
+    "multi_eps05",
+    "multibagb",
+    "multidrop",
+    "multih128",
+    "multih512"
+  ],
+  "solo_screen": {
+    "pool_multih512": 0.9384066877591288,
+    "pool_multi9": 0.9359366487671406,
+    "pool_multi8": 0.9355657365367415,
+    "pool_multi5b": 0.9327189933954338,
+    "pool_multi730": 0.9299135561637293,
+    "pool_multi671": 0.9280610062276125,
+    "pool_multi_eps05": 0.9267956719486448,
+    "pool_multi10": 0.9177039212941285,
+    "pool_multidrop": 0.9130213437969188,
+    "pool_multih128": 0.9123694747608991,
+    "pool_aorc": 0.9055902481984252,
+    "pool_l41ft": 0.8904607999316947,
+    "pool_multi4": 0.8757728485533817,
+    "pool_multi11": 0.8744252976844245,
+    "pool_cmal": 0.8714741718156138,
+    "pool_gmm": 0.8697164796173344,
+    "pool_multibagb": 0.8660451502716716,
+    "pool_conus404": 0.8549239927666599,
+    "pool_multi12": 0.8436227571272563,
+    "pool_l41zeroshot": 0.6091667358824189
+  },
+  "kept": [
+    "pool_multih512",
+    "pool_multi9",
+    "pool_multi8",
+    "pool_multi5b",
+    "pool_multi730",
+    "pool_multi671",
+    "pool_multi_eps05",
+    "pool_multi10",
+    "pool_multidrop",
+    "pool_multih128",
+    "pool_aorc"
+  ],
+  "anchors": {
+    "train": 0.9478952089174623,
+    "test": 0.8367483011910586
+  },
+  "curve": [
+    {
+      "k": 9,
+      "added": "(shipped 9)",
+      "train": 0.9478952089174623,
+      "test": 0.8367483011910586,
+      "train_delta": 0.0,
+      "test_delta": 0.0
+    },
+    {
+      "k": 10,
+      "added": "multih512",
+      "train": 0.9478957083118229,
+      "test": 0.8386850381181571,
+      "train_delta": 4.993943606423912e-07,
+      "test_delta": 0.0019367369270985035
+    },
+    {
+      "k": 11,
+      "added": "multi9",
+      "train": 0.9487873463385246,
+      "test": 0.8378288380023883,
+      "train_delta": 0.0008921374210623112,
+      "test_delta": 0.001080536811329691
+    },
+    {
+      "k": 12,
+      "added": "multi8",
+      "train": 0.9487321110061844,
+      "test": 0.8377622544383123,
+      "train_delta": 0.0008369020887221135,
+      "test_delta": 0.0010139532472537294
+    },
+    {
+      "k": 13,
+      "added": "multi5b",
+      "train": 0.949525852502133,
+      "test": 0.838031682168547,
+      "train_delta": 0.001630643584670688,
+      "test_delta": 0.0012833809774883687
+    },
+    {
+      "k": 14,
+      "added": "multi730",
+      "train": 0.9491365778665856,
+      "test": 0.8378493087244584,
+      "train_delta": 0.0012413689491233004,
+      "test_delta": 0.0011010075333998115
+    },
+    {
+      "k": 15,
+      "added": "multi671",
+      "train": 0.9484141683007791,
+      "test": 0.839541407155586,
+      "train_delta": 0.0005189593833168082,
+      "test_delta": 0.0027931059645274203
+    },
+    {
+      "k": 16,
+      "added": "multi_eps05",
+      "train": 0.9485308640981753,
+      "test": 0.8387845152971475,
+      "train_delta": 0.0006356551807130684,
+      "test_delta": 0.002036214106088896
+    },
+    {
+      "k": 17,
+      "added": "multi10",
+      "train": 0.948522865871605,
+      "test": 0.8401204949750584,
+      "train_delta": 0.0006276569541426857,
+      "test_delta": 0.0033721937839997773
+    },
+    {
+      "k": 18,
+      "added": "multidrop",
+      "train": 0.948274362238848,
+      "test": 0.8388791987227874,
+      "train_delta": 0.0003791533213857168,
+      "test_delta": 0.0021308975317287926
+    },
+    {
+      "k": 19,
+      "added": "multih128",
+      "train": 0.9479464801179193,
+      "test": 0.839250770519403,
+      "train_delta": 5.127120045700373e-05,
+      "test_delta": 0.0025024693283444144
+    },
+    {
+      "k": 20,
+      "added": "aorc",
+      "train": 0.9477862935486058,
+      "test": 0.8392940875847774,
+      "train_delta": -0.00010891536885648812,
+      "test_delta": 0.0025457863937188296
+    }
+  ],
+  "take_all": {
+    "k": 20,
+    "added": "aorc",
+    "train": 0.9477862935486058,
+    "test": 0.8392940875847774,
+    "train_delta": -0.00010891536885648812,
+    "test_delta": 0.0025457863937188296
+  },
+  "verdict": "D-PARTIAL \u2014 reported as measured, NOT claimed as skill"
+}

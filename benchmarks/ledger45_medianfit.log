@@ -1,0 +1,22 @@
+
+[BASE h1] k=9 baseline 0.836289  quad-form check |Δ|=2.22e-16
+  ORACLE_median_on_test            med 0.841310 paired -0.001659 [-0.002742,-0.000626] br 0.422
+  LEGAL train-side median 0.947317 (gain +0.002951) -> held-out:
+  LEGAL_median_fit_on_train        med 0.835014 paired -0.001325 [-0.002112,-0.000397] br 0.443
+
+[BASE all] k=9 baseline 0.831107  quad-form check |Δ|=1.11e-16
+  ORACLE_median_on_test            med 0.835420 paired +0.000418 [-0.000255,+0.001015] br 0.524
+  LEGAL train-side median 0.956944 (gain +0.006602) -> held-out:
+  LEGAL_median_fit_on_train        med 0.815087 paired -0.012190 [-0.014838,-0.010377] br 0.175
+
+[POOL h1] k=20 baseline 0.839294  quad-form check |Δ|=1.67e-15
+  ORACLE_median_on_test            med 0.843214 paired +0.000454 [+0.000108,+0.000773] br 0.554
+  LEGAL train-side median 0.948566 (gain +0.002291) -> held-out:
+  LEGAL_median_fit_on_train        med 0.838494 paired +0.001537 [+0.000939,+0.002150] br 0.589
+
+[POOL all] k=20 baseline 0.836518  quad-form check |Δ|=6.66e-16
+  ORACLE_median_on_test            med 0.840609 paired +0.000651 [+0.000402,+0.000960] br 0.584
+  LEGAL train-side median 0.956326 (gain +0.009443) -> held-out:
+  LEGAL_median_fit_on_train        med 0.824832 paired -0.006179 [-0.007646,-0.004891] br 0.269
+
+wrote benchmarks/ledger45_medianfit.json md5 b6edcfc8003c22ac8a3518b94d87e168

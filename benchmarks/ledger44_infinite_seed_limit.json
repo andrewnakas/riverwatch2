@@ -1,0 +1,17 @@
+{
+  "test": {
+    "measured": 0.836289302162282,
+    "infinite_seed": 0.8378545353202099,
+    "headroom": 0.0015652331579278922,
+    "cross_corr_max_abs": 0.11026154447058198,
+    "cross_corr_mean_abs": 0.028545158461887835
+  },
+  "train": {
+    "measured": 0.9504577864064554,
+    "infinite_seed": 0.9511328359803292,
+    "headroom": 0.000675049573873765,
+    "cross_corr_max_abs": 0.16921027017037973,
+    "cross_corr_mean_abs": 0.042987029184366664
+  },
+  "understatement_factor": 2.3186936463729886
+}

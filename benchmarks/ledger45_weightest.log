@@ -1,0 +1,70 @@
+building BASE streams (9, all leads)...
+==============================================================================
+ANCHOR — shipped 9, production rule, h==1, BASE frame
+==============================================================================
+  got    0.8362893021622821
+  record 0.8362893021622821   diff +0.00e+00   REPRODUCES
+  stats-path vs direct MSE: max rel diff 1.46e-15
+
+==============================================================================
+A — E1 (variance-normalised fit) ON THE SHIPPED 9, BASE FRAME
+    This is the only test here that could move the RECORD itself.
+==============================================================================
+  [h1] baseline 0.836289  fit rows 196,636  score rows 183,195
+  ship9_E1_varnorm                 med 0.836225 paired +0.000055 [-0.000122,+0.000218] br 0.508
+  ship9_E2_js                      med 0.835511 paired -0.000255 [-0.000433,-0.000075] br 0.439
+  ship9_E1+E2_js_varnorm           med 0.833765 paired -0.002555 [-0.003394,-0.001827] br 0.380
+  -- ORACLE (illegal; bounds only) --
+  ORACLE_ship9_invmse_on_test      med 0.836835 paired -0.000028 [-0.000345,+0.000226] br 0.497
+  ORACLE_ship9_lsq_on_test         med 0.835372 paired -0.001218 [-0.002382,-0.000332] br 0.450
+  ORACLE_ship9_lsqvar_on_test      med 0.824747 paired -0.011494 [-0.013171,-0.008624] br 0.296
+  [all] baseline 0.831107  fit rows 2,752,904  score rows 2,557,827
+  ship9_E1_varnorm                 med 0.829589 paired -0.000711 [-0.001682,-0.000086] br 0.448
+  ship9_E2_js                      med 0.830169 paired -0.000641 [-0.000969,-0.000339] br 0.401
+  ship9_E1+E2_js_varnorm           med 0.829879 paired -0.000819 [-0.001225,-0.000446] br 0.390
+  -- ORACLE (illegal; bounds only) --
+  ORACLE_ship9_invmse_on_test      med 0.831731 paired +0.001275 [+0.000655,+0.001681] br 0.591
+  ORACLE_ship9_lsq_on_test         med 0.830962 paired +0.001863 [+0.001141,+0.002395] br 0.588
+  ORACLE_ship9_lsqvar_on_test      med 0.830335 paired +0.001255 [+0.000241,+0.001833] br 0.569
+
+==============================================================================
+B — THE 19-STREAM POOL, POOL FRAME (20 streams; inner joins dropped 14.3% of base rows)
+    ⚠️ baseline here is NOT the record — different frame. Paired only.
+==============================================================================
+
+  [h1] baseline(ship9,pool frame) 0.836748  fit 168,166  score 166,663
+  -- LEGAL --
+  pool_production                  med 0.839294 paired +0.000396 [-0.000248,+0.001016] br 0.524
+  pool_E1_varnorm                  med 0.838989 paired +0.000691 [+0.000117,+0.001247] br 0.552
+  pool_E2_js                       med 0.837595 paired +0.000078 [-0.000591,+0.000937] br 0.501
+  pool_E1+E2_js_varnorm            med 0.835874 paired -0.000285 [-0.001313,+0.000484] br 0.476
+  ship9_E1_varnorm                 med 0.837719 paired -0.000071 [-0.000273,+0.000062] br 0.473
+  pool_E3_framemix_a0.25           med 0.839224 paired +0.000408 [-0.000151,+0.000894] br 0.522
+  pool_E3_framemix_a0.5            med 0.839770 paired +0.000173 [-0.000336,+0.000872] br 0.520
+  pool_E3_framemix_a0.75           med 0.839165 paired -0.000090 [-0.000662,+0.000620] br 0.492
+  pool_E3_framemix_a1.0            med 0.838649 paired -0.000239 [-0.000826,+0.000397] br 0.475
+  -- ORACLE (illegal; bounds only) --
+  ORACLE_pool_invmse_on_test       med 0.838121 paired +0.000171 [-0.000537,+0.000931] br 0.510
+  ORACLE_pool_lsq_on_test          med 0.831712 paired -0.002022 [-0.003758,-0.000081] br 0.452
+  ORACLE_pool_lsqvar_on_test       med 0.816342 paired -0.020550 [-0.024966,-0.015347] br 0.286
+
+  [all] baseline(ship9,pool frame) 0.832237  fit 2,358,061  score 2,326,231
+  -- LEGAL --
+  pool_production                  med 0.836518 paired +0.002444 [+0.001753,+0.003196] br 0.637
+  pool_E1_varnorm                  med 0.836349 paired +0.002413 [+0.001805,+0.003118] br 0.644
+  pool_E2_js                       med 0.836719 paired +0.002335 [+0.001681,+0.003173] br 0.621
+  pool_E1+E2_js_varnorm            med 0.836288 paired +0.002375 [+0.001494,+0.003025] br 0.625
+  ship9_E1_varnorm                 med 0.831805 paired -0.001369 [-0.002290,-0.000380] br 0.435
+  -- ORACLE (illegal; bounds only) --
+  ORACLE_pool_invmse_on_test       med 0.834863 paired +0.001752 [+0.000820,+0.002956] br 0.584
+  ORACLE_pool_lsq_on_test          med 0.836065 paired +0.003575 [+0.002535,+0.004589] br 0.635
+  ORACLE_pool_lsqvar_on_test       med 0.837003 paired +0.003017 [+0.002080,+0.004042] br 0.633
+
+==============================================================================
+S1 — SAMPLING NOISE OF THE WEIGHT VECTOR (legal, train rows)
+==============================================================================
+  [h1] fit rows   168,166  mean rel-SD of 20 weights 0.0734  max 0.1603
+  [all] fit rows 2,358,061  mean rel-SD of 20 weights 0.0519  max 0.1434
+  => h==1 weight noise is 1.41x all-leads
+
+wrote benchmarks/ledger45_weightest.json  md5 d278f86d9b5b18daef133e0d9d0e61f7

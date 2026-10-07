@@ -1,0 +1,106 @@
+{
+  "from_date": "1990-10-01",
+  "min_seeds": 3,
+  "per_seed": {
+    "treatment": [
+      {
+        "dump": "camels531ls_l42evsubtreat_nhlstm_TRAIN_s111.csv.gz",
+        "median_nse": 0.8864215111224619,
+        "n_basins": 531
+      },
+      {
+        "dump": "camels531ls_l42evsubtreat_nhlstm_TRAIN_s222.csv.gz",
+        "median_nse": 0.9307287390191777,
+        "n_basins": 531
+      },
+      {
+        "dump": "camels531ls_l42evsubtreat_nhlstm_TRAIN_s333.csv.gz",
+        "median_nse": 0.9305844543919627,
+        "n_basins": 531
+      }
+    ],
+    "control": [
+      {
+        "dump": "camels531ls_l42evsubctrl_nhlstm_TRAIN_s111.csv.gz",
+        "median_nse": 0.9340131590181225,
+        "n_basins": 531
+      },
+      {
+        "dump": "camels531ls_l42evsubctrl_nhlstm_TRAIN_s222.csv.gz",
+        "median_nse": 0.9322466312344139,
+        "n_basins": 531
+      },
+      {
+        "dump": "camels531ls_l42evsubctrl_nhlstm_TRAIN_s333.csv.gz",
+        "median_nse": 0.8890562618296793,
+        "n_basins": 531
+      }
+    ]
+  },
+  "seed_separation": false,
+  "reverse_separation": false,
+  "underpowered": false,
+  "treatment_range": [
+    0.8864215111224619,
+    0.9307287390191777
+  ],
+  "control_range": [
+    0.8890562618296793,
+    0.9340131590181225
+  ],
+  "descriptive": {
+    "paired_median_delta": -0.0011536284758079107,
+    "breadth": 0.4726930320150659,
+    "near_median_delta": -0.0012838843467178913,
+    "n_basins": 531
+  },
+  "null_sources": {
+    "stream": "benchmarks/ledger42_s03_null_multi.json",
+    "ensemble": "benchmarks/ledger42_s03b_null_ensemble.json"
+  },
+  "stream_null": {
+    "median_delta_range": [
+      -0.0023788917617345584,
+      0.0023788917617345584
+    ],
+    "breadth_range": [
+      0.4425612052730697,
+      0.5574387947269304
+    ],
+    "near_median_delta_range": [
+      -0.006072531811490772,
+      0.00471293988366906
+    ],
+    "per_seed_median_spread": 0.004482927534920633
+  },
+  "ensemble_null": {
+    "median_delta_null": [
+      -0.00016537072987243828,
+      0.00016537072987243828
+    ],
+    "near_median_delta_null": [
+      -0.00037472490804641735,
+      0.00035192018011464665
+    ]
+  },
+  "ship": {
+    "recombined_median_treatment": 0.948656707389895,
+    "recombined_median_control": 0.9488757713953306,
+    "near_median_delta_ensemble": -0.00015802107687088482,
+    "bar_median_pass": false,
+    "bar_near_median_pass": false,
+    "ship": false,
+    "weights_treatment": {
+      "lstm_daymet": 0.07788077841587124,
+      "lstm_nldas": 0.10300274155687371,
+      "lstm_maurer": 0.06790796949692046,
+      "dhbv_daymet": 0.06920254401484972,
+      "dhbv_nldas": 0.04527796892184811,
+      "dhbv_maurer": 0.04125653474012837,
+      "lstm_multi": 0.11672461366345704,
+      "lstm_multi5": 0.2644707269984147,
+      "lstm_multi6": 0.21427612219163672
+    }
+  },
+  "verdict": "FAIL (arms overlap)"
+}

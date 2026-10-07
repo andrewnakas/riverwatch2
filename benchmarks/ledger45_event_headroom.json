@@ -1,0 +1,27 @@
+{
+  "record": 0.8362893021622821,
+  "n_basins": 525,
+  "bands": {
+    "low": {
+      "irreducible_fraction_measured": 0.07607256366435261,
+      "irreducible_fraction_assumed": 0.17981910151742245,
+      "share_of_total_squared_error": 0.009601886855227669,
+      "p25": 0.02837069108062728,
+      "p75": 0.22658431671593846
+    },
+    "mid": {
+      "irreducible_fraction_measured": 0.16759816350354742,
+      "irreducible_fraction_assumed": 0.1702453057906758,
+      "share_of_total_squared_error": 0.034153571351700635,
+      "p25": 0.06536128660756305,
+      "p75": 0.4266330555203224
+    },
+    "high": {
+      "irreducible_fraction_measured": 0.4044039455378267,
+      "irreducible_fraction_assumed": 1.2390226720305224,
+      "share_of_total_squared_error": 0.9562445417930716,
+      "p25": 0.11928749093813745,
+      "p75": 1.6848125594608632
+    }
+  }
+}

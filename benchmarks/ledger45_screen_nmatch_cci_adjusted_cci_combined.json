@@ -1,0 +1,27 @@
+{
+ "n_rows_used": {
+  "A_noise": {
+   "n_basins": 531,
+   "median_rows": 130
+  },
+  "cci_adjusted": {
+   "n_basins": 243,
+   "median_rows": 76
+  },
+  "cci_combined": {
+   "n_basins": 243,
+   "median_rows": 76
+  }
+ },
+ "matched_null": {
+  "cci_adjusted": {
+   "median_ratio": 2.2475938602042826,
+   "n_basins": 243
+  },
+  "cci_combined": {
+   "median_ratio": 2.3808951626892827,
+   "n_basins": 243
+  }
+ },
+ "predicted_inflation_sqrt_n_ratio": 1.3078709094514924
+}

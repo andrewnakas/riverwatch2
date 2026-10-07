@@ -1,0 +1,39 @@
+{
+ "candidate": "multi14",
+ "mode": "swap",
+ "replaces": "lstm_multi6",
+ "seeds": [
+  "camels531ls_multi14_nhlstm_TRAIN_s111.csv.gz"
+ ],
+ "n_seeds": 1,
+ "anchor_h1": 0.9504577864064554,
+ "anchor_prereg": 0.950458,
+ "rows": 2752904,
+ "basins": 531,
+ "base_h1": 0.9504577864064554,
+ "cand_h1": 0.9489145455058595,
+ "delta_h1": -0.00013791701181742333,
+ "diff_of_medians_h1": -0.001543240900595877,
+ "breadth_h1": 0.4708097928436911,
+ "val_rows_h1": 69030,
+ "base_all": 0.9539300095564232,
+ "cand_all": 0.9541284500595643,
+ "delta_all": 0.0002127097217817786,
+ "diff_of_medians_all": 0.00019844050314110628,
+ "breadth_all": 0.6214689265536724,
+ "val_rows_all": 967482,
+ "solo_val_h1": 0.9355083540128311,
+ "solo_val_h1_control": 0.9446529029247024,
+ "near_median_delta": 0.0002229792551702997,
+ "near_median_n": 160,
+ "near_median_breadth": 0.5875,
+ "bars": {
+  "1": false,
+  "2": true,
+  "3": false,
+  "4": true,
+  "5": true,
+  "6": false
+ },
+ "gate": "FAIL"
+}

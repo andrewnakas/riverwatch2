@@ -1,0 +1,44 @@
+{
+  "target": 0.84,
+  "current_median": 0.8362893021622821,
+  "near_median_window": 0.01,
+  "near_median_n": 44,
+  "scenarios": {
+    "central": {
+      "sigma": [
+        0.3,
+        0.18,
+        0.35
+      ],
+      "ceiling_median_old_form": 0.8808816844643547,
+      "ceiling_median_new_form": 0.8831559107472746,
+      "max_achievable_median_all_at_ceiling": 0.9185779954675354,
+      "max_achievable_median_old_form": 0.8905052876910152,
+      "basins_saturated": 110,
+      "basins_scored": 531,
+      "near_median_saturated": 0,
+      "near_median_n": 44,
+      "near_median_median_headroom": 0.05484157354710534,
+      "target_reachable_in_principle": true,
+      "pct_of_recoverable_headroom_needed_for_target": 4.509365368037673
+    },
+    "optimistic": {
+      "sigma": [
+        0.25,
+        0.13,
+        0.13
+      ],
+      "ceiling_median_old_form": 0.9472950341398919,
+      "ceiling_median_new_form": 0.9754724465076303,
+      "max_achievable_median_all_at_ceiling": 0.9754724465076303,
+      "max_achievable_median_old_form": 0.9480773509460977,
+      "basins_saturated": 1,
+      "basins_scored": 531,
+      "near_median_saturated": 0,
+      "near_median_n": 44,
+      "near_median_median_headroom": 0.13946004243323895,
+      "target_reachable_in_principle": true,
+      "pct_of_recoverable_headroom_needed_for_target": 2.666054036335503
+    }
+  }
+}

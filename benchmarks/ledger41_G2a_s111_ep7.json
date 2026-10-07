@@ -1,0 +1,12 @@
+{
+ "gate": "G2a",
+ "results": "gpu1080/nh_runs/l41_pretrain_hysets_s111_2008_064029/test/model_epoch007/test_results.p",
+ "bar": 0.6,
+ "n_basins": 141,
+ "n_skipped": 0,
+ "median_nse": 0.6356773376464844,
+ "mean_nse": 0.46623921394348145,
+ "frac_gt_0.5": 0.723404255319149,
+ "frac_gt_0": 0.9361702127659575,
+ "verdict": "PASS"
+}

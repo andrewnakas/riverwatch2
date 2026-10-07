@@ -1,0 +1,22 @@
+{
+ "treatment": "gpu1080/dumps/camels531ls_daymet_nhlstm_TRAIN_s222.csv.gz",
+ "control": "gpu1080/dumps/camels531ls_daymet_nhlstm_TRAIN_s111.csv.gz",
+ "from_date": "1990-10-01",
+ "n_basins": 531,
+ "median_nse_control": 0.9024123216570328,
+ "median_nse_treatment": 0.9179689035145858,
+ "paired_median_delta": 0.010950918330845827,
+ "ci95": [
+  0.008626663539395008,
+  0.014329228679466288
+ ],
+ "breadth": 0.6986817325800376,
+ "near_median_delta": 0.009673214267808131,
+ "n_near_median": 45,
+ "gates": {
+  "paired_median": true,
+  "breadth": true,
+  "near_median": true
+ },
+ "verdict": "PASS"
+}

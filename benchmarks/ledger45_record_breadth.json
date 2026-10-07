@@ -1,0 +1,38 @@
+{
+  "record": 0.8362893021622821,
+  "streams": [
+    "lstm_daymet",
+    "lstm_nldas",
+    "lstm_maurer",
+    "lstm_multi",
+    "lstm_multi5",
+    "lstm_multi6",
+    "dhbv_daymet",
+    "dhbv_nldas",
+    "dhbv_maurer"
+  ],
+  "h1": {
+    "weighted_median": 0.8362893021622821,
+    "equal_median": 0.8337646534246351,
+    "diff_of_medians": 0.0025246487376470172,
+    "paired": 0.0025553313361973418,
+    "breadth": 0.6195856873822976,
+    "boot95": [
+      0.0018265042195829695,
+      0.0033944012322248973
+    ],
+    "n": 531
+  },
+  "all": {
+    "weighted_median": 0.8311068230611828,
+    "equal_median": 0.8298786630139682,
+    "diff_of_medians": 0.0012281600472145993,
+    "paired": 0.0008193148041013565,
+    "breadth": 0.6101694915254238,
+    "boot95": [
+      0.00044623300976631697,
+      0.001225161518809137
+    ],
+    "n": 531
+  }
+}

@@ -1,0 +1,88 @@
+{
+ "anchor": 0.9504577864064554,
+ "noise": 0.0531,
+ "rows": {
+  "event_p": {
+   "near_pcorr": NaN,
+   "x_noise": NaN,
+   "n_near": 0,
+   "all_pcorr": NaN,
+   "n_basins": 0
+  },
+  "ordinary_p": {
+   "near_pcorr": 0.15998773464627344,
+   "x_noise": 3.0129516882537373,
+   "n_near": 28,
+   "all_pcorr": 0.19024791484886255,
+   "n_basins": 195
+  },
+  "event_r": {
+   "near_pcorr": NaN,
+   "x_noise": NaN,
+   "n_near": 0,
+   "all_pcorr": NaN,
+   "n_basins": 0
+  },
+  "ordinary_r": {
+   "near_pcorr": 0.17920535519658087,
+   "x_noise": 3.374865446263293,
+   "n_near": 28,
+   "all_pcorr": 0.2314109983869079,
+   "n_basins": 195
+  },
+  "all": {
+   "near_pcorr": 0.20910706709552088,
+   "x_noise": 3.93798619765576,
+   "n_near": 40,
+   "all_pcorr": 0.19255372457803752,
+   "n_basins": 243
+  }
+ },
+ "pooled": {
+  "near_median": {
+   "event_precip": {
+    "pcorr": 0.1393819777312771,
+    "n": 294
+   },
+   "ordinary_precip": {
+    "pcorr": 0.18891014309751689,
+    "n": 2637
+   },
+   "event_resid": {
+    "pcorr": 0.1986528382201978,
+    "n": 294
+   },
+   "ordinary_resid": {
+    "pcorr": 0.14192223307238822,
+    "n": 2637
+   },
+   "all": {
+    "pcorr": 0.1967120816292006,
+    "n": 2931
+   }
+  },
+  "all_basins": {
+   "event_precip": {
+    "pcorr": 0.11188880734648149,
+    "n": 1855
+   },
+   "ordinary_precip": {
+    "pcorr": 0.17328565764908893,
+    "n": 16690
+   },
+   "event_resid": {
+    "pcorr": 0.15106997180423914,
+    "n": 1855
+   },
+   "ordinary_resid": {
+    "pcorr": 0.16899495656944336,
+    "n": 16690
+   },
+   "all": {
+    "pcorr": 0.1896996514526255,
+    "n": 18545
+   }
+  }
+ },
+ "verdict": "informative ON EVENT DAYS \u2014 aimed at the residual"
+}

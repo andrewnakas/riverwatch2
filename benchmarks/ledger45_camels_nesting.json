@@ -1,0 +1,1538 @@
+{
+ "question": "CAMELS-internal nesting among the 531 benchmark basins",
+ "n_basins": 531,
+ "n_polygons_matched": 531,
+ "missing_polygon_ids": [],
+ "geometry_source": "/home/nakas/riverwatch2/data/gages2/boundaries-shapefiles-by-aggeco",
+ "equal_area_crs": "EPSG:5070",
+ "nested_definition": "smaller basin >= 0.5 contained in larger",
+ "n_intersecting_pairs_any": 134,
+ "by_band": {
+  "0.9": {
+   "n_pairs": 24,
+   "n_basins_involved": 45
+  },
+  "0.5": {
+   "n_pairs": 24,
+   "n_basins_involved": 45
+  },
+  "0.25": {
+   "n_pairs": 24,
+   "n_basins_involved": 45
+  },
+  "0.1": {
+   "n_pairs": 24,
+   "n_basins_involved": 45
+  }
+ },
+ "nested_pairs": [
+  {
+   "small": "01542810",
+   "large": "01543000",
+   "area_small_km2": 13.62,
+   "area_large_km2": 705.5,
+   "inter_km2": 13.6242,
+   "frac_small": 1.0,
+   "frac_large": 0.019311
+  },
+  {
+   "small": "02017500",
+   "large": "02018000",
+   "area_small_km2": 276.15,
+   "area_large_km2": 852.34,
+   "inter_km2": 276.1497,
+   "frac_small": 1.0,
+   "frac_large": 0.323989
+  },
+  {
+   "small": "02297155",
+   "large": "02297310",
+   "area_small_km2": 93.6,
+   "area_large_km2": 528.37,
+   "inter_km2": 93.6018,
+   "frac_small": 1.0,
+   "frac_large": 0.177152
+  },
+  {
+   "small": "03180500",
+   "large": "03182500",
+   "area_small_km2": 345.05,
+   "area_large_km2": 1364.97,
+   "inter_km2": 345.051,
+   "frac_small": 1.0,
+   "frac_large": 0.252791
+  },
+  {
+   "small": "03471500",
+   "large": "03473000",
+   "area_small_km2": 198.16,
+   "area_large_km2": 784.81,
+   "inter_km2": 198.1611,
+   "frac_small": 1.0,
+   "frac_large": 0.252495
+  },
+  {
+   "small": "06404000",
+   "large": "06406000",
+   "area_small_km2": 151.83,
+   "area_large_km2": 436.34,
+   "inter_km2": 151.8273,
+   "frac_small": 1.0,
+   "frac_large": 0.347958
+  },
+  {
+   "small": "08377900",
+   "large": "08378500",
+   "area_small_km2": 139.03,
+   "area_large_km2": 444.96,
+   "inter_km2": 139.0311,
+   "frac_small": 1.0,
+   "frac_large": 0.312458
+  },
+  {
+   "small": "12143600",
+   "large": "12144000",
+   "area_small_km2": 165.01,
+   "area_large_km2": 210.11,
+   "inter_km2": 165.0069,
+   "frac_small": 1.0,
+   "frac_large": 0.785351
+  },
+  {
+   "small": "14306340",
+   "large": "14306500",
+   "area_small_km2": 14.73,
+   "area_large_km2": 857.16,
+   "inter_km2": 14.7276,
+   "frac_small": 1.0,
+   "frac_large": 0.017182
+  },
+  {
+   "small": "01142500",
+   "large": "01144000",
+   "area_small_km2": 82.17,
+   "area_large_km2": 1790.24,
+   "inter_km2": 82.1665,
+   "frac_small": 0.999998,
+   "frac_large": 0.045897
+  },
+  {
+   "small": "11264500",
+   "large": "11266500",
+   "area_small_km2": 467.98,
+   "area_large_km2": 833.08,
+   "inter_km2": 467.8377,
+   "frac_small": 0.999704,
+   "frac_large": 0.561575
+  },
+  {
+   "small": "01666500",
+   "large": "01667500",
+   "area_small_km2": 463.15,
+   "area_large_km2": 1209.75,
+   "inter_km2": 462.598,
+   "frac_small": 0.998816,
+   "frac_large": 0.382392
+  },
+  {
+   "small": "09492400",
+   "large": "09494000",
+   "area_small_km2": 128.97,
+   "area_large_km2": 1628.23,
+   "inter_km2": 128.8048,
+   "frac_small": 0.998754,
+   "frac_large": 0.079108
+  },
+  {
+   "small": "12186000",
+   "large": "12189500",
+   "area_small_km2": 398.44,
+   "area_large_km2": 1855.32,
+   "inter_km2": 397.899,
+   "frac_small": 0.998654,
+   "frac_large": 0.214464
+  },
+  {
+   "small": "06889200",
+   "large": "06889500",
+   "area_small_km2": 385.66,
+   "area_large_km2": 748.58,
+   "inter_km2": 384.7329,
+   "frac_small": 0.997596,
+   "frac_large": 0.513949
+  },
+  {
+   "small": "02015700",
+   "large": "02016000",
+   "area_small_km2": 285.41,
+   "area_large_km2": 1194.55,
+   "inter_km2": 284.7062,
+   "frac_small": 0.997547,
+   "frac_large": 0.238337
+  },
+  {
+   "small": "01434025",
+   "large": "01435000",
+   "area_small_km2": 9.7,
+   "area_large_km2": 172.46,
+   "inter_km2": 9.6714,
+   "frac_small": 0.997031,
+   "frac_large": 0.05608
+  },
+  {
+   "small": "01543000",
+   "large": "01543500",
+   "area_small_km2": 705.5,
+   "area_large_km2": 1778.26,
+   "inter_km2": 703.3086,
+   "frac_small": 0.996898,
+   "frac_large": 0.395504
+  },
+  {
+   "small": "01605500",
+   "large": "01606500",
+   "area_small_km2": 463.85,
+   "area_large_km2": 1684.55,
+   "inter_km2": 462.1646,
+   "frac_small": 0.996368,
+   "frac_large": 0.274355
+  },
+  {
+   "small": "08070000",
+   "large": "08070200",
+   "area_small_km2": 841.05,
+   "area_large_km2": 989.36,
+   "inter_km2": 837.4095,
+   "frac_small": 0.995666,
+   "frac_large": 0.846415
+  },
+  {
+   "small": "01567500",
+   "large": "01568000",
+   "area_small_km2": 38.77,
+   "area_large_km2": 534.39,
+   "inter_km2": 38.5895,
+   "frac_small": 0.995271,
+   "frac_large": 0.072212
+  },
+  {
+   "small": "01542810",
+   "large": "01543500",
+   "area_small_km2": 13.62,
+   "area_large_km2": 1778.26,
+   "inter_km2": 13.5596,
+   "frac_small": 0.99526,
+   "frac_large": 0.007625
+  },
+  {
+   "small": "07196900",
+   "large": "07197000",
+   "area_small_km2": 106.35,
+   "area_large_km2": 808.45,
+   "inter_km2": 105.5818,
+   "frac_small": 0.992757,
+   "frac_large": 0.130598
+  },
+  {
+   "small": "12114500",
+   "large": "12115000",
+   "area_small_km2": 66.56,
+   "area_large_km2": 102.8,
+   "inter_km2": 64.1093,
+   "frac_small": 0.963239,
+   "frac_large": 0.623641
+  }
+ ],
+ "n_nested_pairs": 24,
+ "n_basins_involved": 45,
+ "basins_involved": [
+  "01142500",
+  "01144000",
+  "01434025",
+  "01435000",
+  "01542810",
+  "01543000",
+  "01543500",
+  "01567500",
+  "01568000",
+  "01605500",
+  "01606500",
+  "01666500",
+  "01667500",
+  "02015700",
+  "02016000",
+  "02017500",
+  "02018000",
+  "02297155",
+  "02297310",
+  "03180500",
+  "03182500",
+  "03471500",
+  "03473000",
+  "06404000",
+  "06406000",
+  "06889200",
+  "06889500",
+  "07196900",
+  "07197000",
+  "08070000",
+  "08070200",
+  "08377900",
+  "08378500",
+  "09492400",
+  "09494000",
+  "11264500",
+  "11266500",
+  "12114500",
+  "12115000",
+  "12143600",
+  "12144000",
+  "12186000",
+  "12189500",
+  "14306340",
+  "14306500"
+ ],
+ "n_components_ge2": 22,
+ "component_sizes": [
+  3,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2
+ ],
+ "component_size_hist": {
+  "3": 1,
+  "2": 21
+ },
+ "all_intersecting_pairs": [
+  {
+   "small": "01542810",
+   "large": "01543000",
+   "area_small_km2": 13.62,
+   "area_large_km2": 705.5,
+   "inter_km2": 13.6242,
+   "frac_small": 1.0,
+   "frac_large": 0.019311
+  },
+  {
+   "small": "02017500",
+   "large": "02018000",
+   "area_small_km2": 276.15,
+   "area_large_km2": 852.34,
+   "inter_km2": 276.1497,
+   "frac_small": 1.0,
+   "frac_large": 0.323989
+  },
+  {
+   "small": "02297155",
+   "large": "02297310",
+   "area_small_km2": 93.6,
+   "area_large_km2": 528.37,
+   "inter_km2": 93.6018,
+   "frac_small": 1.0,
+   "frac_large": 0.177152
+  },
+  {
+   "small": "03180500",
+   "large": "03182500",
+   "area_small_km2": 345.05,
+   "area_large_km2": 1364.97,
+   "inter_km2": 345.051,
+   "frac_small": 1.0,
+   "frac_large": 0.252791
+  },
+  {
+   "small": "03471500",
+   "large": "03473000",
+   "area_small_km2": 198.16,
+   "area_large_km2": 784.81,
+   "inter_km2": 198.1611,
+   "frac_small": 1.0,
+   "frac_large": 0.252495
+  },
+  {
+   "small": "06404000",
+   "large": "06406000",
+   "area_small_km2": 151.83,
+   "area_large_km2": 436.34,
+   "inter_km2": 151.8273,
+   "frac_small": 1.0,
+   "frac_large": 0.347958
+  },
+  {
+   "small": "08377900",
+   "large": "08378500",
+   "area_small_km2": 139.03,
+   "area_large_km2": 444.96,
+   "inter_km2": 139.0311,
+   "frac_small": 1.0,
+   "frac_large": 0.312458
+  },
+  {
+   "small": "12143600",
+   "large": "12144000",
+   "area_small_km2": 165.01,
+   "area_large_km2": 210.11,
+   "inter_km2": 165.0069,
+   "frac_small": 1.0,
+   "frac_large": 0.785351
+  },
+  {
+   "small": "14306340",
+   "large": "14306500",
+   "area_small_km2": 14.73,
+   "area_large_km2": 857.16,
+   "inter_km2": 14.7276,
+   "frac_small": 1.0,
+   "frac_large": 0.017182
+  },
+  {
+   "small": "01142500",
+   "large": "01144000",
+   "area_small_km2": 82.17,
+   "area_large_km2": 1790.24,
+   "inter_km2": 82.1665,
+   "frac_small": 0.999998,
+   "frac_large": 0.045897
+  },
+  {
+   "small": "11264500",
+   "large": "11266500",
+   "area_small_km2": 467.98,
+   "area_large_km2": 833.08,
+   "inter_km2": 467.8377,
+   "frac_small": 0.999704,
+   "frac_large": 0.561575
+  },
+  {
+   "small": "01666500",
+   "large": "01667500",
+   "area_small_km2": 463.15,
+   "area_large_km2": 1209.75,
+   "inter_km2": 462.598,
+   "frac_small": 0.998816,
+   "frac_large": 0.382392
+  },
+  {
+   "small": "09492400",
+   "large": "09494000",
+   "area_small_km2": 128.97,
+   "area_large_km2": 1628.23,
+   "inter_km2": 128.8048,
+   "frac_small": 0.998754,
+   "frac_large": 0.079108
+  },
+  {
+   "small": "12186000",
+   "large": "12189500",
+   "area_small_km2": 398.44,
+   "area_large_km2": 1855.32,
+   "inter_km2": 397.899,
+   "frac_small": 0.998654,
+   "frac_large": 0.214464
+  },
+  {
+   "small": "06889200",
+   "large": "06889500",
+   "area_small_km2": 385.66,
+   "area_large_km2": 748.58,
+   "inter_km2": 384.7329,
+   "frac_small": 0.997596,
+   "frac_large": 0.513949
+  },
+  {
+   "small": "02015700",
+   "large": "02016000",
+   "area_small_km2": 285.41,
+   "area_large_km2": 1194.55,
+   "inter_km2": 284.7062,
+   "frac_small": 0.997547,
+   "frac_large": 0.238337
+  },
+  {
+   "small": "01434025",
+   "large": "01435000",
+   "area_small_km2": 9.7,
+   "area_large_km2": 172.46,
+   "inter_km2": 9.6714,
+   "frac_small": 0.997031,
+   "frac_large": 0.05608
+  },
+  {
+   "small": "01543000",
+   "large": "01543500",
+   "area_small_km2": 705.5,
+   "area_large_km2": 1778.26,
+   "inter_km2": 703.3086,
+   "frac_small": 0.996898,
+   "frac_large": 0.395504
+  },
+  {
+   "small": "01605500",
+   "large": "01606500",
+   "area_small_km2": 463.85,
+   "area_large_km2": 1684.55,
+   "inter_km2": 462.1646,
+   "frac_small": 0.996368,
+   "frac_large": 0.274355
+  },
+  {
+   "small": "08070000",
+   "large": "08070200",
+   "area_small_km2": 841.05,
+   "area_large_km2": 989.36,
+   "inter_km2": 837.4095,
+   "frac_small": 0.995666,
+   "frac_large": 0.846415
+  },
+  {
+   "small": "01567500",
+   "large": "01568000",
+   "area_small_km2": 38.77,
+   "area_large_km2": 534.39,
+   "inter_km2": 38.5895,
+   "frac_small": 0.995271,
+   "frac_large": 0.072212
+  },
+  {
+   "small": "01542810",
+   "large": "01543500",
+   "area_small_km2": 13.62,
+   "area_large_km2": 1778.26,
+   "inter_km2": 13.5596,
+   "frac_small": 0.99526,
+   "frac_large": 0.007625
+  },
+  {
+   "small": "07196900",
+   "large": "07197000",
+   "area_small_km2": 106.35,
+   "area_large_km2": 808.45,
+   "inter_km2": 105.5818,
+   "frac_small": 0.992757,
+   "frac_large": 0.130598
+  },
+  {
+   "small": "12114500",
+   "large": "12115000",
+   "area_small_km2": 66.56,
+   "area_large_km2": 102.8,
+   "inter_km2": 64.1093,
+   "frac_small": 0.963239,
+   "frac_large": 0.623641
+  },
+  {
+   "small": "01484100",
+   "large": "01487000",
+   "area_small_km2": 9.0,
+   "area_large_km2": 187.41,
+   "inter_km2": 0.665,
+   "frac_small": 0.07385,
+   "frac_large": 0.003548
+  },
+  {
+   "small": "08196000",
+   "large": "08195000",
+   "area_small_km2": 326.98,
+   "area_large_km2": 1028.29,
+   "inter_km2": 11.5999,
+   "frac_small": 0.035476,
+   "frac_large": 0.011281
+  },
+  {
+   "small": "08196000",
+   "large": "08190000",
+   "area_small_km2": 326.98,
+   "area_large_km2": 1961.43,
+   "inter_km2": 4.1472,
+   "frac_small": 0.012684,
+   "frac_large": 0.002114
+  },
+  {
+   "small": "08190500",
+   "large": "08190000",
+   "area_small_km2": 1799.09,
+   "area_large_km2": 1961.43,
+   "inter_km2": 14.4881,
+   "frac_small": 0.008053,
+   "frac_large": 0.007387
+  },
+  {
+   "small": "12115000",
+   "large": "12143600",
+   "area_small_km2": 102.8,
+   "area_large_km2": 165.01,
+   "inter_km2": 0.714,
+   "frac_small": 0.006946,
+   "frac_large": 0.004327
+  },
+  {
+   "small": "12115000",
+   "large": "12144000",
+   "area_small_km2": 102.8,
+   "area_large_km2": 210.11,
+   "inter_km2": 0.714,
+   "frac_small": 0.006946,
+   "frac_large": 0.003398
+  },
+  {
+   "small": "03026500",
+   "large": "03028000",
+   "area_small_km2": 20.31,
+   "area_large_km2": 161.11,
+   "inter_km2": 0.1241,
+   "frac_small": 0.006109,
+   "frac_large": 0.00077
+  },
+  {
+   "small": "04127918",
+   "large": "04045500",
+   "area_small_km2": 548.29,
+   "area_large_km2": 1909.59,
+   "inter_km2": 2.5587,
+   "frac_small": 0.004667,
+   "frac_large": 0.00134
+  },
+  {
+   "small": "02092500",
+   "large": "02108000",
+   "area_small_km2": 447.58,
+   "area_large_km2": 1569.48,
+   "inter_km2": 1.9197,
+   "frac_small": 0.004289,
+   "frac_large": 0.001223
+  },
+  {
+   "small": "08086290",
+   "large": "08086212",
+   "area_small_km2": 732.98,
+   "area_large_km2": 1584.82,
+   "inter_km2": 2.9248,
+   "frac_small": 0.00399,
+   "frac_large": 0.001845
+  },
+  {
+   "small": "02349900",
+   "large": "02215100",
+   "area_small_km2": 122.87,
+   "area_large_km2": 420.29,
+   "inter_km2": 0.4534,
+   "frac_small": 0.00369,
+   "frac_large": 0.001079
+  },
+  {
+   "small": "02143040",
+   "large": "02143000",
+   "area_small_km2": 66.48,
+   "area_large_km2": 216.67,
+   "inter_km2": 0.245,
+   "frac_small": 0.003684,
+   "frac_large": 0.001131
+  },
+  {
+   "small": "06921200",
+   "large": "06921070",
+   "area_small_km2": 323.62,
+   "area_large_km2": 712.59,
+   "inter_km2": 1.1486,
+   "frac_small": 0.003549,
+   "frac_large": 0.001612
+  },
+  {
+   "small": "14141500",
+   "large": "14137000",
+   "area_small_km2": 59.87,
+   "area_large_km2": 674.24,
+   "inter_km2": 0.2007,
+   "frac_small": 0.003353,
+   "frac_large": 0.000298
+  },
+  {
+   "small": "03504000",
+   "large": "03500240",
+   "area_small_km2": 134.52,
+   "area_large_km2": 145.86,
+   "inter_km2": 0.4189,
+   "frac_small": 0.003114,
+   "frac_large": 0.002872
+  },
+  {
+   "small": "08178880",
+   "large": "08195000",
+   "area_small_km2": 850.58,
+   "area_large_km2": 1028.29,
+   "inter_km2": 2.4424,
+   "frac_small": 0.002871,
+   "frac_large": 0.002375
+  },
+  {
+   "small": "12383500",
+   "large": "12381400",
+   "area_small_km2": 17.67,
+   "area_large_km2": 150.94,
+   "inter_km2": 0.043,
+   "frac_small": 0.002432,
+   "frac_large": 0.000285
+  },
+  {
+   "small": "01544500",
+   "large": "01548500",
+   "area_small_km2": 355.06,
+   "area_large_km2": 1557.05,
+   "inter_km2": 0.8599,
+   "frac_small": 0.002422,
+   "frac_large": 0.000552
+  },
+  {
+   "small": "02245500",
+   "large": "02246000",
+   "area_small_km2": 348.43,
+   "area_large_km2": 451.06,
+   "inter_km2": 0.8437,
+   "frac_small": 0.002421,
+   "frac_large": 0.001871
+  },
+  {
+   "small": "14138800",
+   "large": "14137000",
+   "area_small_km2": 21.29,
+   "area_large_km2": 674.24,
+   "inter_km2": 0.0515,
+   "frac_small": 0.00242,
+   "frac_large": 7.6e-05
+  },
+  {
+   "small": "01552500",
+   "large": "01539000",
+   "area_small_km2": 60.64,
+   "area_large_km2": 701.78,
+   "inter_km2": 0.1312,
+   "frac_small": 0.002163,
+   "frac_large": 0.000187
+  },
+  {
+   "small": "02053800",
+   "large": "03170000",
+   "area_small_km2": 280.72,
+   "area_large_km2": 794.64,
+   "inter_km2": 0.6067,
+   "frac_small": 0.002161,
+   "frac_large": 0.000764
+  },
+  {
+   "small": "14138870",
+   "large": "14139800",
+   "area_small_km2": 14.02,
+   "area_large_km2": 40.7,
+   "inter_km2": 0.0294,
+   "frac_small": 0.002096,
+   "frac_large": 0.000722
+  },
+  {
+   "small": "05495500",
+   "large": "05584500",
+   "area_small_km2": 905.56,
+   "area_large_km2": 1695.67,
+   "inter_km2": 1.88,
+   "frac_small": 0.002076,
+   "frac_large": 0.001109
+  },
+  {
+   "small": "05488200",
+   "large": "05489000",
+   "area_small_km2": 234.21,
+   "area_large_km2": 964.76,
+   "inter_km2": 0.4644,
+   "frac_small": 0.001983,
+   "frac_large": 0.000481
+  },
+  {
+   "small": "03076600",
+   "large": "03078000",
+   "area_small_km2": 127.4,
+   "area_large_km2": 161.48,
+   "inter_km2": 0.2334,
+   "frac_small": 0.001832,
+   "frac_large": 0.001445
+  },
+  {
+   "small": "01518862",
+   "large": "04221000",
+   "area_small_km2": 233.91,
+   "area_large_km2": 750.88,
+   "inter_km2": 0.3897,
+   "frac_small": 0.001666,
+   "frac_large": 0.000519
+  },
+  {
+   "small": "08202700",
+   "large": "08198500",
+   "area_small_km2": 434.75,
+   "area_large_km2": 624.35,
+   "inter_km2": 0.7121,
+   "frac_small": 0.001638,
+   "frac_large": 0.001141
+  },
+  {
+   "small": "02015700",
+   "large": "02011400",
+   "area_small_km2": 285.41,
+   "area_large_km2": 407.72,
+   "inter_km2": 0.4392,
+   "frac_small": 0.001539,
+   "frac_large": 0.001077
+  },
+  {
+   "small": "01550000",
+   "large": "01552000",
+   "area_small_km2": 452.68,
+   "area_large_km2": 1129.49,
+   "inter_km2": 0.6874,
+   "frac_small": 0.001518,
+   "frac_large": 0.000609
+  },
+  {
+   "small": "03463300",
+   "large": "02137727",
+   "area_small_km2": 112.16,
+   "area_large_km2": 329.54,
+   "inter_km2": 0.1647,
+   "frac_small": 0.001468,
+   "frac_large": 0.0005
+  },
+  {
+   "small": "08200000",
+   "large": "08178880",
+   "area_small_km2": 249.11,
+   "area_large_km2": 850.58,
+   "inter_km2": 0.3591,
+   "frac_small": 0.001442,
+   "frac_large": 0.000422
+  },
+  {
+   "small": "06479215",
+   "large": "05291000",
+   "area_small_km2": 175.28,
+   "area_large_km2": 1046.77,
+   "inter_km2": 0.2522,
+   "frac_small": 0.001439,
+   "frac_large": 0.000241
+  },
+  {
+   "small": "08165300",
+   "large": "08195000",
+   "area_small_km2": 435.99,
+   "area_large_km2": 1028.29,
+   "inter_km2": 0.6255,
+   "frac_small": 0.001435,
+   "frac_large": 0.000608
+  },
+  {
+   "small": "01415000",
+   "large": "01423000",
+   "area_small_km2": 85.63,
+   "area_large_km2": 859.68,
+   "inter_km2": 0.1217,
+   "frac_small": 0.001422,
+   "frac_large": 0.000142
+  },
+  {
+   "small": "03504000",
+   "large": "03500000",
+   "area_small_km2": 134.52,
+   "area_large_km2": 361.14,
+   "inter_km2": 0.1877,
+   "frac_small": 0.001395,
+   "frac_large": 0.00052
+  },
+  {
+   "small": "02149000",
+   "large": "02137727",
+   "area_small_km2": 203.85,
+   "area_large_km2": 329.54,
+   "inter_km2": 0.2831,
+   "frac_small": 0.001389,
+   "frac_large": 0.000859
+  },
+  {
+   "small": "03050000",
+   "large": "03069500",
+   "area_small_km2": 487.29,
+   "area_large_km2": 1856.85,
+   "inter_km2": 0.675,
+   "frac_small": 0.001385,
+   "frac_large": 0.000364
+  },
+  {
+   "small": "03186500",
+   "large": "03182500",
+   "area_small_km2": 329.68,
+   "area_large_km2": 1364.97,
+   "inter_km2": 0.4437,
+   "frac_small": 0.001346,
+   "frac_large": 0.000325
+  },
+  {
+   "small": "01350080",
+   "large": "01350000",
+   "area_small_km2": 83.84,
+   "area_large_km2": 612.51,
+   "inter_km2": 0.1046,
+   "frac_small": 0.001248,
+   "frac_large": 0.000171
+  },
+  {
+   "small": "02011400",
+   "large": "01606500",
+   "area_small_km2": 407.72,
+   "area_large_km2": 1684.55,
+   "inter_km2": 0.4964,
+   "frac_small": 0.001218,
+   "frac_large": 0.000295
+  },
+  {
+   "small": "02056900",
+   "large": "03170000",
+   "area_small_km2": 298.11,
+   "area_large_km2": 794.64,
+   "inter_km2": 0.3464,
+   "frac_small": 0.001162,
+   "frac_large": 0.000436
+  },
+  {
+   "small": "03021350",
+   "large": "03015500",
+   "area_small_km2": 239.67,
+   "area_large_km2": 784.85,
+   "inter_km2": 0.2763,
+   "frac_small": 0.001153,
+   "frac_large": 0.000352
+  },
+  {
+   "small": "01532000",
+   "large": "01552000",
+   "area_small_km2": 553.94,
+   "area_large_km2": 1129.49,
+   "inter_km2": 0.6325,
+   "frac_small": 0.001142,
+   "frac_large": 0.00056
+  },
+  {
+   "small": "02014000",
+   "large": "02013000",
+   "area_small_km2": 396.78,
+   "area_large_km2": 424.78,
+   "inter_km2": 0.4417,
+   "frac_small": 0.001113,
+   "frac_large": 0.00104
+  },
+  {
+   "small": "02027500",
+   "large": "02027000",
+   "area_small_km2": 123.34,
+   "area_large_km2": 240.77,
+   "inter_km2": 0.133,
+   "frac_small": 0.001078,
+   "frac_large": 0.000552
+  },
+  {
+   "small": "02481510",
+   "large": "02479300",
+   "area_small_km2": 800.66,
+   "area_large_km2": 1144.2,
+   "inter_km2": 0.8271,
+   "frac_small": 0.001033,
+   "frac_large": 0.000723
+  },
+  {
+   "small": "01170100",
+   "large": "01169000",
+   "area_small_km2": 106.99,
+   "area_large_km2": 230.64,
+   "inter_km2": 0.1092,
+   "frac_small": 0.00102,
+   "frac_large": 0.000473
+  },
+  {
+   "small": "03010655",
+   "large": "04221000",
+   "area_small_km2": 254.44,
+   "area_large_km2": 750.88,
+   "inter_km2": 0.2565,
+   "frac_small": 0.001008,
+   "frac_large": 0.000342
+  },
+  {
+   "small": "02015700",
+   "large": "01606500",
+   "area_small_km2": 285.41,
+   "area_large_km2": 1684.55,
+   "inter_km2": 0.269,
+   "frac_small": 0.000942,
+   "frac_large": 0.00016
+  },
+  {
+   "small": "01518862",
+   "large": "01548500",
+   "area_small_km2": 233.91,
+   "area_large_km2": 1557.05,
+   "inter_km2": 0.214,
+   "frac_small": 0.000915,
+   "frac_large": 0.000137
+  },
+  {
+   "small": "02481000",
+   "large": "02479300",
+   "area_small_km2": 249.23,
+   "area_large_km2": 1144.2,
+   "inter_km2": 0.2273,
+   "frac_small": 0.000912,
+   "frac_large": 0.000199
+  },
+  {
+   "small": "06291500",
+   "large": "06289000",
+   "area_small_km2": 217.96,
+   "area_large_km2": 471.27,
+   "inter_km2": 0.1938,
+   "frac_small": 0.000889,
+   "frac_large": 0.000411
+  },
+  {
+   "small": "02178400",
+   "large": "03500000",
+   "area_small_km2": 151.28,
+   "area_large_km2": 361.14,
+   "inter_km2": 0.1338,
+   "frac_small": 0.000884,
+   "frac_large": 0.00037
+  },
+  {
+   "small": "03479000",
+   "large": "02140991",
+   "area_small_km2": 235.6,
+   "area_large_km2": 521.99,
+   "inter_km2": 0.2061,
+   "frac_small": 0.000875,
+   "frac_large": 0.000395
+  },
+  {
+   "small": "01667500",
+   "large": "01664000",
+   "area_small_km2": 1209.75,
+   "area_large_km2": 1605.1,
+   "inter_km2": 1.0055,
+   "frac_small": 0.000831,
+   "frac_large": 0.000626
+  },
+  {
+   "small": "02015700",
+   "large": "01605500",
+   "area_small_km2": 285.41,
+   "area_large_km2": 463.85,
+   "inter_km2": 0.2362,
+   "frac_small": 0.000828,
+   "frac_large": 0.000509
+  },
+  {
+   "small": "14187000",
+   "large": "14185000",
+   "area_small_km2": 134.75,
+   "area_large_km2": 458.18,
+   "inter_km2": 0.1085,
+   "frac_small": 0.000805,
+   "frac_large": 0.000237
+  },
+  {
+   "small": "12175500",
+   "large": "12451000",
+   "area_small_km2": 273.82,
+   "area_large_km2": 830.6,
+   "inter_km2": 0.2189,
+   "frac_small": 0.0008,
+   "frac_large": 0.000264
+  },
+  {
+   "small": "11480390",
+   "large": "11528700",
+   "area_small_km2": 242.6,
+   "area_large_km2": 1980.08,
+   "inter_km2": 0.1928,
+   "frac_small": 0.000795,
+   "frac_large": 9.7e-05
+  },
+  {
+   "small": "08013000",
+   "large": "08014500",
+   "area_small_km2": 1293.69,
+   "area_large_km2": 1305.15,
+   "inter_km2": 1.0059,
+   "frac_small": 0.000778,
+   "frac_large": 0.000771
+  },
+  {
+   "small": "01606500",
+   "large": "03069500",
+   "area_small_km2": 1684.55,
+   "area_large_km2": 1856.85,
+   "inter_km2": 1.2876,
+   "frac_small": 0.000764,
+   "frac_large": 0.000693
+  },
+  {
+   "small": "03338780",
+   "large": "05525500",
+   "area_small_km2": 691.56,
+   "area_large_km2": 1158.76,
+   "inter_km2": 0.5236,
+   "frac_small": 0.000757,
+   "frac_large": 0.000452
+  },
+  {
+   "small": "03291780",
+   "large": "03366500",
+   "area_small_km2": 71.41,
+   "area_large_km2": 755.22,
+   "inter_km2": 0.052,
+   "frac_small": 0.000729,
+   "frac_large": 6.9e-05
+  },
+  {
+   "small": "14158790",
+   "large": "14185000",
+   "area_small_km2": 40.57,
+   "area_large_km2": 458.18,
+   "inter_km2": 0.0295,
+   "frac_small": 0.000727,
+   "frac_large": 6.4e-05
+  },
+  {
+   "small": "01644000",
+   "large": "01664000",
+   "area_small_km2": 859.17,
+   "area_large_km2": 1605.1,
+   "inter_km2": 0.6206,
+   "frac_small": 0.000722,
+   "frac_large": 0.000387
+  },
+  {
+   "small": "12056500",
+   "large": "12054000",
+   "area_small_km2": 146.97,
+   "area_large_km2": 171.68,
+   "inter_km2": 0.1049,
+   "frac_small": 0.000714,
+   "frac_large": 0.000611
+  },
+  {
+   "small": "02363000",
+   "large": "02371500",
+   "area_small_km2": 1292.51,
+   "area_large_km2": 1292.78,
+   "inter_km2": 0.9194,
+   "frac_small": 0.000711,
+   "frac_large": 0.000711
+  },
+  {
+   "small": "02372250",
+   "large": "02371500",
+   "area_small_km2": 1145.22,
+   "area_large_km2": 1292.78,
+   "inter_km2": 0.7373,
+   "frac_small": 0.000644,
+   "frac_large": 0.00057
+  },
+  {
+   "small": "01350140",
+   "large": "01423000",
+   "area_small_km2": 43.76,
+   "area_large_km2": 859.68,
+   "inter_km2": 0.0277,
+   "frac_small": 0.000632,
+   "frac_large": 3.2e-05
+  },
+  {
+   "small": "03180500",
+   "large": "01606500",
+   "area_small_km2": 345.05,
+   "area_large_km2": 1684.55,
+   "inter_km2": 0.2178,
+   "frac_small": 0.000631,
+   "frac_large": 0.000129
+  },
+  {
+   "small": "03488000",
+   "large": "03173000",
+   "area_small_km2": 578.21,
+   "area_large_km2": 773.31,
+   "inter_km2": 0.3363,
+   "frac_small": 0.000582,
+   "frac_large": 0.000435
+  },
+  {
+   "small": "08198500",
+   "large": "08178880",
+   "area_small_km2": 624.35,
+   "area_large_km2": 850.58,
+   "inter_km2": 0.3276,
+   "frac_small": 0.000525,
+   "frac_large": 0.000385
+  },
+  {
+   "small": "08377900",
+   "large": "08380500",
+   "area_small_km2": 139.03,
+   "area_large_km2": 198.06,
+   "inter_km2": 0.0725,
+   "frac_small": 0.000521,
+   "frac_large": 0.000366
+  },
+  {
+   "small": "01434025",
+   "large": "01413500",
+   "area_small_km2": 9.7,
+   "area_large_km2": 424.1,
+   "inter_km2": 0.005,
+   "frac_small": 0.00051,
+   "frac_large": 1.2e-05
+  },
+  {
+   "small": "02363000",
+   "large": "02361000",
+   "area_small_km2": 1292.51,
+   "area_large_km2": 1781.61,
+   "inter_km2": 0.6586,
+   "frac_small": 0.00051,
+   "frac_large": 0.00037
+  },
+  {
+   "small": "04221000",
+   "large": "01548500",
+   "area_small_km2": 750.88,
+   "area_large_km2": 1557.05,
+   "inter_km2": 0.3823,
+   "frac_small": 0.000509,
+   "frac_large": 0.000246
+  },
+  {
+   "small": "08066200",
+   "large": "08066300",
+   "area_small_km2": 364.12,
+   "area_large_km2": 383.57,
+   "inter_km2": 0.1812,
+   "frac_small": 0.000498,
+   "frac_large": 0.000472
+  },
+  {
+   "small": "13011500",
+   "large": "13011900",
+   "area_small_km2": 404.08,
+   "area_large_km2": 851.8,
+   "inter_km2": 0.1881,
+   "frac_small": 0.000466,
+   "frac_large": 0.000221
+  },
+  {
+   "small": "02065500",
+   "large": "02064000",
+   "area_small_km2": 252.58,
+   "area_large_km2": 427.77,
+   "inter_km2": 0.1172,
+   "frac_small": 0.000464,
+   "frac_large": 0.000274
+  },
+  {
+   "small": "02152100",
+   "large": "02143000",
+   "area_small_km2": 154.99,
+   "area_large_km2": 216.67,
+   "inter_km2": 0.0688,
+   "frac_small": 0.000444,
+   "frac_large": 0.000318
+  },
+  {
+   "small": "08200000",
+   "large": "08202700",
+   "area_small_km2": 249.11,
+   "area_large_km2": 434.75,
+   "inter_km2": 0.1062,
+   "frac_small": 0.000426,
+   "frac_large": 0.000244
+  },
+  {
+   "small": "03455500",
+   "large": "03439000",
+   "area_small_km2": 72.95,
+   "area_large_km2": 178.67,
+   "inter_km2": 0.031,
+   "frac_small": 0.000425,
+   "frac_large": 0.000173
+  },
+  {
+   "small": "01545600",
+   "large": "01544500",
+   "area_small_km2": 120.0,
+   "area_large_km2": 355.06,
+   "inter_km2": 0.0492,
+   "frac_small": 0.00041,
+   "frac_large": 0.000138
+  },
+  {
+   "small": "01596500",
+   "large": "03078000",
+   "area_small_km2": 124.65,
+   "area_large_km2": 161.48,
+   "inter_km2": 0.0486,
+   "frac_small": 0.00039,
+   "frac_large": 0.000301
+  },
+  {
+   "small": "03011800",
+   "large": "03028000",
+   "area_small_km2": 100.1,
+   "area_large_km2": 161.11,
+   "inter_km2": 0.0372,
+   "frac_small": 0.000372,
+   "frac_large": 0.000231
+  },
+  {
+   "small": "14309500",
+   "large": "14325000",
+   "area_small_km2": 224.92,
+   "area_large_km2": 443.07,
+   "inter_km2": 0.0837,
+   "frac_small": 0.000372,
+   "frac_large": 0.000189
+  },
+  {
+   "small": "08380500",
+   "large": "08378500",
+   "area_small_km2": 198.06,
+   "area_large_km2": 444.96,
+   "inter_km2": 0.0725,
+   "frac_small": 0.000366,
+   "frac_large": 0.000163
+  },
+  {
+   "small": "02246000",
+   "large": "02231000",
+   "area_small_km2": 451.06,
+   "area_large_km2": 1748.37,
+   "inter_km2": 0.1497,
+   "frac_small": 0.000332,
+   "frac_large": 8.6e-05
+  },
+  {
+   "small": "08195000",
+   "large": "08190000",
+   "area_small_km2": 1028.29,
+   "area_large_km2": 1961.43,
+   "inter_km2": 0.3324,
+   "frac_small": 0.000323,
+   "frac_large": 0.000169
+  },
+  {
+   "small": "02027000",
+   "large": "02028500",
+   "area_small_km2": 240.77,
+   "area_large_km2": 245.45,
+   "inter_km2": 0.0711,
+   "frac_small": 0.000295,
+   "frac_large": 0.00029
+  },
+  {
+   "small": "03504000",
+   "large": "02178400",
+   "area_small_km2": 134.52,
+   "area_large_km2": 151.28,
+   "inter_km2": 0.0374,
+   "frac_small": 0.000278,
+   "frac_large": 0.000247
+  },
+  {
+   "small": "12451000",
+   "large": "12189500",
+   "area_small_km2": 830.6,
+   "area_large_km2": 1855.32,
+   "inter_km2": 0.2212,
+   "frac_small": 0.000266,
+   "frac_large": 0.000119
+  },
+  {
+   "small": "11480390",
+   "large": "11473900",
+   "area_small_km2": 242.6,
+   "area_large_km2": 1925.01,
+   "inter_km2": 0.0639,
+   "frac_small": 0.000263,
+   "frac_large": 3.3e-05
+  },
+  {
+   "small": "02053800",
+   "large": "02056900",
+   "area_small_km2": 280.72,
+   "area_large_km2": 298.11,
+   "inter_km2": 0.0736,
+   "frac_small": 0.000262,
+   "frac_large": 0.000247
+  },
+  {
+   "small": "06344600",
+   "large": "06339100",
+   "area_small_km2": 402.5,
+   "area_large_km2": 529.14,
+   "inter_km2": 0.1044,
+   "frac_small": 0.000259,
+   "frac_large": 0.000197
+  },
+  {
+   "small": "02016000",
+   "large": "01606500",
+   "area_small_km2": 1194.55,
+   "area_large_km2": 1684.55,
+   "inter_km2": 0.2436,
+   "frac_small": 0.000204,
+   "frac_large": 0.000145
+  },
+  {
+   "small": "14400000",
+   "large": "11532500",
+   "area_small_km2": 702.63,
+   "area_large_km2": 1577.96,
+   "inter_km2": 0.1285,
+   "frac_small": 0.000183,
+   "frac_large": 8.1e-05
+  },
+  {
+   "small": "03182500",
+   "large": "01606500",
+   "area_small_km2": 1364.97,
+   "area_large_km2": 1684.55,
+   "inter_km2": 0.2234,
+   "frac_small": 0.000164,
+   "frac_large": 0.000133
+  },
+  {
+   "small": "08198500",
+   "large": "08195000",
+   "area_small_km2": 624.35,
+   "area_large_km2": 1028.29,
+   "inter_km2": 0.0983,
+   "frac_small": 0.000157,
+   "frac_large": 9.6e-05
+  },
+  {
+   "small": "05487980",
+   "large": "05489000",
+   "area_small_km2": 882.72,
+   "area_large_km2": 964.76,
+   "inter_km2": 0.1154,
+   "frac_small": 0.000131,
+   "frac_large": 0.00012
+  },
+  {
+   "small": "08202700",
+   "large": "08178880",
+   "area_small_km2": 434.75,
+   "area_large_km2": 850.58,
+   "inter_km2": 0.0385,
+   "frac_small": 8.9e-05,
+   "frac_large": 4.5e-05
+  },
+  {
+   "small": "02143040",
+   "large": "02152100",
+   "area_small_km2": 66.48,
+   "area_large_km2": 154.99,
+   "inter_km2": 0.005,
+   "frac_small": 7.5e-05,
+   "frac_large": 3.2e-05
+  },
+  {
+   "small": "14154500",
+   "large": "14316700",
+   "area_small_km2": 546.81,
+   "area_large_km2": 587.9,
+   "inter_km2": 0.0328,
+   "frac_small": 6e-05,
+   "frac_large": 5.6e-05
+  },
+  {
+   "small": "11480390",
+   "large": "11478500",
+   "area_small_km2": 242.6,
+   "area_large_km2": 572.38,
+   "inter_km2": 0.0124,
+   "frac_small": 5.1e-05,
+   "frac_large": 2.2e-05
+  },
+  {
+   "small": "08176900",
+   "large": "08175000",
+   "area_small_km2": 925.44,
+   "area_large_km2": 1421.66,
+   "inter_km2": 0.0409,
+   "frac_small": 4.4e-05,
+   "frac_large": 2.9e-05
+  },
+  {
+   "small": "01539000",
+   "large": "01552000",
+   "area_small_km2": 701.78,
+   "area_large_km2": 1129.49,
+   "inter_km2": 0.0189,
+   "frac_small": 2.7e-05,
+   "frac_large": 1.7e-05
+  },
+  {
+   "small": "07066000",
+   "large": "07057500",
+   "area_small_km2": 1053.49,
+   "area_large_km2": 1456.44,
+   "inter_km2": 0.0196,
+   "frac_small": 1.9e-05,
+   "frac_large": 1.3e-05
+  },
+  {
+   "small": "01440400",
+   "large": "01439500",
+   "area_small_km2": 175.21,
+   "area_large_km2": 305.88,
+   "inter_km2": 0.0018,
+   "frac_small": 1e-05,
+   "frac_large": 6e-06
+  },
+  {
+   "small": "06814000",
+   "large": "06885500",
+   "area_small_km2": 713.83,
+   "area_large_km2": 1062.87,
+   "inter_km2": 0.0002,
+   "frac_small": 0.0,
+   "frac_large": 0.0
+  }
+ ],
+ "area_sanity": {
+  "log_area_pearson_r": 0.9999999985430972,
+  "median_poly_over_gages2_ratio": 0.9999983767363123,
+  "n_gross_mismatch_gt10pct": 0,
+  "gross_mismatches": []
+ }
+}

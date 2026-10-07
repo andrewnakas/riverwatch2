@@ -1,0 +1,12 @@
+{
+ "gate": "G2b",
+ "results": "gpu4050/nh_runs/l41_zeroshot_p222_s111_2008_142841/train/model_epoch001/train_results.p",
+ "bar": 0.45,
+ "n_basins": 531,
+ "n_skipped": 0,
+ "median_nse": 0.5739139318466187,
+ "mean_nse": 0.08742587268352509,
+ "frac_gt_0.5": 0.6214689265536724,
+ "frac_gt_0": 0.8983050847457628,
+ "verdict": "PASS"
+}

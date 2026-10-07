@@ -1,0 +1,87 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "members": [
+  "lstm_fused3md3",
+  "lstm_gridmetm",
+  "lstm_fused4md4",
+  "lstm_fused4m",
+  "lstm_nldasm"
+ ],
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "rows": 708266,
+ "basins": 490,
+ "solo": {
+  "lstm_fused3md3": 0.8305172979161068,
+  "lstm_gridmetm": 0.778273015014395,
+  "lstm_fused4md4": 0.8540104034294587,
+  "lstm_fused4m": 0.8113561868444243,
+  "lstm_nldasm": 0.7597636324643473
+ },
+ "composition": {
+  "mean": 0.8488450936190906,
+  "trimmed": 0.8519201385921904,
+  "median": 0.8510798009998777
+ },
+ "loo": {
+  "lstm_fused3md3": {
+   "delta": 0.0010290400434711522,
+   "ci": [
+    0.0003410701112196435,
+    0.001706196553550976
+   ],
+   "breadth": 0.573469387755102
+  },
+  "lstm_gridmetm": {
+   "delta": 0.0017363357063039375,
+   "ci": [
+    0.0008968901308640989,
+    0.002698158410661955
+   ],
+   "breadth": 0.5938775510204082
+  },
+  "lstm_fused4md4": {
+   "delta": 0.0038283134785853656,
+   "ci": [
+    0.003216304952653976,
+    0.004256989951401979
+   ],
+   "breadth": 0.7877551020408163
+  },
+  "lstm_fused4m": {
+   "delta": 0.0021952231115369147,
+   "ci": [
+    0.0012117529255018995,
+    0.0031901033017844305
+   ],
+   "breadth": 0.5979591836734693
+  },
+  "lstm_nldasm": {
+   "delta": 0.0032874754431262976,
+   "ci": [
+    0.0020678799226322726,
+    0.00466447340345455
+   ],
+   "breadth": 0.6020408163265306
+  }
+ },
+ "pairwise_err_corr": {
+  "lstm_fused3md3|lstm_gridmetm": 0.8404242515322066,
+  "lstm_fused3md3|lstm_fused4md4": 0.9350339864178789,
+  "lstm_fused3md3|lstm_fused4m": 0.8935677811734235,
+  "lstm_fused3md3|lstm_nldasm": 0.6417752130254689,
+  "lstm_gridmetm|lstm_fused4md4": 0.7623802747559099,
+  "lstm_gridmetm|lstm_fused4m": 0.6819539580007384,
+  "lstm_gridmetm|lstm_nldasm": 0.6119013820438728,
+  "lstm_fused4md4|lstm_fused4m": 0.9020919070287843,
+  "lstm_fused4md4|lstm_nldasm": 0.7626086964581931,
+  "lstm_fused4m|lstm_nldasm": 0.6526954812085007
+ },
+ "mean_err_corr": 0.7684432931644977
+}

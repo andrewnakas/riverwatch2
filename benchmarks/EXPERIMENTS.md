@@ -8482,3 +8482,76 @@ CI-positive (+0.003642 / +0.003254 / +0.001486 / +0.001140). Solos 0.910369 / 0.
 0.811356 / 0.778273 / 0.759764.
 ⚠️ 3 seeds → 5 seeds moved with-q 0.913216 → 0.914227 (+0.001011) and no-q 0.850768 → 0.851920 (+0.001152):
 small, positive, consistent with seed depth saturating.
+
+# 🏁 MODERN-1 COMPLETE — BOTH ARMS FROZEN (2026-10-06)
+
+Test read **once per arm**, selecting nothing. `analysis/m1_freeze_record.py`;
+artifacts `benchmarks/m1_FINAL_withq.json`, `m1_FINAL_noq.json`; audit trail
+`benchmarks/m1_test_reads.log`.
+
+| arm | composition | val1 | **test1** | val→test |
+|---|---|---|---|---|
+| **with-q** | `gridmetm9, fused4md49, fused4m9, nldasm9`, trimmed, 5 seeds | 0.914227 | **0.910438** | −0.003789 |
+| **no-q** | `lstm_fused4md4` (single member), 5 seeds | 0.854010 | **0.843090** | −0.010920 |
+
+mean-combiner for reference: with-q test1 0.909256. Both arms met the 5-seed ship bar; both
+artifacts self-verify (the reported median is reproducible from the per-basin map each contains).
+
+**Both exceeded their registered bands** (written before any data existed): with-q predicted
+**0.86–0.90**, delivered **0.910438**; no-q predicted **0.79–0.84**, delivered **0.843090**.
+
+## ⚠️ WHAT THESE NUMBERS MAY AND MAY NOT BE COMPARED TO
+- ⛔ **Not** the frozen legacy record 0.898364, and **not** Nearing 2022's 0.879. Different decade,
+  different cohort (490 vs 531), different products (Maurer is gone). The freeze artifact prints the
+  Nearing delta **labelled as context** and this is the only place it should ever appear.
+- ⛔ **Not** the legacy no-q record 0.836289 either — that was scored on a **stride-14** frame, which this
+  campaign measured as flattering by **+0.036**. On a matched all-days frame the modern 0.843090 is far
+  ahead, but the two are not one number.
+- ✅ **The honest anchor is internal**, and it is measured: Gate A puts the **product** cost at
+  **−0.017036** and the decade probe puts the **window** effect at **+0.010445** (the modern decade is
+  *easier* for a fixed model). No published work evaluates the CAMELS-531 lineage on a post-2014 window
+  (literature search 2026-09-30), so there is no external benchmark to beat.
+
+## THE ONE FINDING THAT ORGANISES EVERYTHING
+**What pays is how much target-day information reaches the DECODER.** Every measurement lines up:
+
+| measurement | paired |
+|---|---|
+| all-product decoder, with-q | +0.015528 |
+| all-product decoder, **no-q** | **+0.020291** |
+| 4th product, **encoder only** | +0.003487 |
+| 4th product, **encoder + decoder** | **+0.013106** (≈3.8× the encoder channel) |
+| *which* single product the decoder sees | **null** |
+| discharge to the decoder (`--dec-q`) | **null** |
+
+Larger without discharge, because forcing is then the only target-day source. Product **count** dominates;
+identity is a ~19% secondary effect.
+
+## ⛔ WHAT THIS ARM CLOSED
+- **Ensembling adds nothing demonstrable.** Neither arm's ensemble beats its own best member with a
+  CI excluding zero; the with-q *mean* actually loses. The campaign's engine for six ledgers stops paying
+  once one member dominates (modern solo spread 0.044 / 0.094 vs legacy ~0.02).
+- **h1-weight saturates at 0.5** (0.5→0.8 null; 0.8→1.0 −0.000926) — and the unscored leads 2-14 do real
+  work as auxiliary supervision, so zeroing them costs skill.
+- **Gate B null twice** (single-product and 4-product) ⇒ 9-year window, ~3.5× compute unspent.
+- **Model-family diversity null at matched products** (`nhar0m3` swap −0.000012).
+- **`--dec-q` null.**
+
+## ALL-LEADS, AND A SIGN FLIP BETWEEN ARMS
+| lead | with-q | no-q |
+|---|---|---|
+| 1 | 0.910394 | 0.846210 |
+| 14 | 0.871070 | **0.855896** |
+| decay | **−0.039324** | **+0.009686** |
+
+⭐ **The no-q arm gets BETTER with lead.** Hypothesis, not asserted: with-q lead 1 carries the discharge
+anchor, which dominates and then decays, while no-q has no anchor and later leads benefit from the decoder
+having accumulated **more of the target period's forcing** — the same mechanism as above, seen along the
+horizon. Both tables passed the integrity check that the `h==1` slice reproduces the day-1 dump
+(**diff +0** and **+1.11e-16**).
+
+⚠️ **Honest note on the audit trail**: the with-q freeze warned that `m1_test_reads.log` already held a
+test read — `fused3md3q` **solo** 0.889700, consumed by the decade probe, which by design evaluates a
+member on its own test window. That was registered but I failed to flag at the time that it *constituted*
+a test read. Nothing was selected on it (the roster was settled on val1 LOO), and the log makes it visible
+rather than invisible, which is what it is for.
