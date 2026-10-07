@@ -121,6 +121,11 @@ case "$M" in
   gridmetm9fix2)             CORP="$V3/camels_corpus_gridmetfix2_m3_cohort"; ENC="camels1f"; TRS=2005-10-01 ;;
   gridmetm9fix)              CORP="$V3/camels_corpus_gridmetfix_m3_cohort"; ENC="camels1f"; TRS=2005-10-01 ;;
   # ---- the WINDOW-MATCHED 4-product members (9-year, like the whole roster) ---
+  daymetm9L1)                CORP="$V3/camels_corpus_daymet_m3_cohort";    ENC="camels1f"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
+  nldasm9L1)                 CORP="$V3/camels_corpus_nldas_m3_cohort";     ENC="camels1f"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
+  nclimgridm9L1)             CORP="$V3/camels_corpus_nclimgrid_m3_cohort"; ENC="camels1f"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
+  fused4m9fix3L1)            CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2";   EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
+  fused4md49fix3L1)          CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2d4"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
   gridmetm9fix3L1)           CORP="$V3/camels_corpus_gridmetfix3_m3_cohort"; ENC="camels1f"; EXTRA="--enc-lead 1"; TRS=2005-10-01 ;;
   fused4m9fix3)              CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2";   TRS=2005-10-01 ;;
   fused4md49fix3)            CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2d4"; TRS=2005-10-01 ;;

@@ -39,6 +39,7 @@ CKPT="data/mblstm/gpu_ckpts/m1_${M}_s${S}.pt"
 TRS=2005-10-01; TRE=2014-09-30
 VS=2014-10-01;  VE=2018-09-30
 TS=2018-10-01;  TE=2025-09-30
+EXTRA=""
 SMOKE=0
 case "$M" in *smoke*) SMOKE=1 ;; esac
 LIMIT=""; [ "$SMOKE" = "1" ] && LIMIT="--limit-stations 8"
@@ -63,6 +64,7 @@ case "$M" in
   # only source of target-day information. Raising the decoder's product count 3 -> 4
   # should therefore pay at least as well here as in the with-q arm.
   lstm_fused4m)                     CORP="$V3/camels_corpus_fused4m_m3_cohort"; ENC="camelsm4v2" ;;
+  lstm_fused4md4fix3L1)             CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2d4"; EXTRA="--enc-lead 1" ;;
   lstm_fused4md4fix3)               CORP="$V3/camels_corpus_fused4mfix3_m3_cohort"; ENC="camelsm4v2d4" ;;
   lstm_fused4md4)                   CORP="$V3/camels_corpus_fused4m_m3_cohort"; ENC="camelsm4v2d4" ;;
   *) echo "unknown no-q member $M"; exit 2 ;;
@@ -95,13 +97,13 @@ if [ ! -f "$CKPT" ]; then
     --static-set camels --hidden 256 --corpus-dir "$CORP" \
     --train-start "$TRS" --train-end "$TRE" \
     --val-start "$VS" --val-end "$VE" \
-    --h1-weight 0.5 --no-q-input $LIMIT $DEV
+    --h1-weight 0.5 --no-q-input $EXTRA $LIMIT $DEV
   echo "=== trained rc=$? $(date +%T) ==="
 fi
 
 # ---- GUARD 1: read the arm back out of the CHECKPOINT, never argv ----------
-$PY - "$CKPT" "$LOG" "$TRS" "$TRE" "$VS" "$VE" <<'PYG'
-import re, sys, torch
+M1_EXTRA="$EXTRA" $PY - "$CKPT" "$LOG" "$TRS" "$TRE" "$VS" "$VE" <<'PYG'
+import os, re, sys, torch
 ck, log, trs, tre, vs, ve = sys.argv[1:7]
 sd = torch.load(ck, map_location="cpu")
 cfg = sd["cfg"]
@@ -119,8 +121,16 @@ ndec = len(cfg["dec_vars"])
 w = sd["state_dict"]["decoder.weight_ih_l0"].shape[1]
 exp = ndec + 2 + 1 + len(cfg["static_feats"])
 assert w == exp, f"decoder width {w} != {exp} (dec={ndec})"
+# --enc-lead changes no tensor SHAPE, so the width check above cannot see it. Assert it in BOTH
+# directions, or a dropped flag trains a duplicate and its null gets read as a measurement.
+_m = re.search(r"--enc-lead\s+(\d+)", os.environ.get("M1_EXTRA", ""))
+_want = int(_m.group(1)) if _m else 0
+assert int(cfg.get("enc_lead", 0)) == _want, \
+    f"enc_lead {cfg.get('enc_lead')} != requested {_want}"
 txt = open(log, encoding="utf-8", errors="replace").read()
 assert re.search(r"^epoch 30/30 ", txt, re.M), "no 'epoch 30/30' line - partial checkpoint"
+if _want:
+    assert re.search(rf"^enc_lead={_want} ", txt, re.M), "no enc_lead line in the training log"
 print(f"GUARD 1 OK: NO-Q confirmed, stations={cfg['n_stations']} "
       f"train={cfg['train_start']}..{cfg['train_end']} enc={len(cfg['enc_vars'])} dec={ndec}")
 PYG
