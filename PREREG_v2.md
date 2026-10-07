@@ -3962,3 +3962,61 @@ both the day-1 gain **and** the all-leads loss get reported.
 **Scope**: probed on `fused3md3` (the champion member class) at 3 seeds, 2 values = 6 runs. ⭐ If it wins, it
 applies to **every member**, which by the 1/N rule is worth far more than any single new member — that is why
 a 3 h probe is justified where another member would not be.
+
+---
+
+## §MODERN-1 LEAKAGE AUDIT — the gridMET registration verdict, registered before the number
+
+Registered 2026-10-07, while `gridmetm9fix3` is training and before any score exists.
+
+**The defect.** gridMET's variables do not share one calendar-day convention. Lag-scanned against
+`camels_corpus_nldas_m3` — the only hourly-native product in the corpus, so the only one whose day
+labelling our own builder derives rather than inherits — `precipitation_sum` (+1),
+`temperature_2m_min` (+1) and the derived `temperature_2m_mean` sit one day ahead, while
+`temperature_2m_max`, `shortwave_radiation_sum` and `vapor_pressure` sit at k=0
+(`benchmarks/m1_leakaudit_threeway.json`).
+
+Every one of those six readings is explained by gridMET's two upstream sources, which is why this is
+read as a real convention difference and not a corpus bug: PRISM accumulates precipitation 12Z-12Z
+and attributes the overnight minimum to the following morning (both land +1), PRISM's daytime maximum
+is calendar-day (0), and gridMET carries humidity and radiation from NLDAS-2 (0) — measured here as
+gridmet-srad = 0.99941 x nldas-srad, r 0.9996, where daymet-vs-nldas on identical rows reads 0.8437.
+
+**Why the first two correction attempts cannot answer it.** `gridmetm9fix` shifted precipitation
+alone (-0.011137 val1, CI [-0.015229, -0.006135]), which de-synchronised precipitation from tmin
+*inside* gridMET; `gridmetm9fix2` shifted precip + tmin + vapor_pressure, which shifts vp wrongly and
+misses tmean. `gridmetm9fix3` shifts precip + tmin and RECOMPUTES tmean = (tmax+tmin)/2, which
+`analysis/m1_tmean_repair_check.py` shows beats the column-shift in 60/60 basins (RMSE 1.63 vs 2.27)
+— a difference the lag scan cannot see, since the stale mean is a half-day smooth of the right one.
+
+**The registered prediction, and its mechanism.** Under perfect forcing the model is entitled to
+target-day forcing, so the offset grants almost no extra entitlement: for h=1 (target t0+1) the
+union of encoder and decoder rows covers rain(t0+1..t0+15) misregistered versus rain(t0+1..t0+14)
+correct, and the one extra day is irrelevant at lead 1. What the offset *does* do is move the
+**target day's rain out of the decoder and into the encoder's final step**. This campaign's largest
+measured effect is that target-day information pays only when it reaches the DECODER
+(`the-fused-member-decoder-never-saw-two-forcings`, +0.015528 with-q). So:
+
+> **Registered: `gridmetm9fix3` scores ABOVE `gridmetm9` on val1, by +0.002 … +0.015.**
+
+- **Confirmed (fix3 > orig, CI excludes zero)** ⇒ the misregistration was a **cost**, not a leak. The
+  frozen records (with-q test1 0.910438, no-q 0.843090) **stand and are understated**, and the
+  corrected gridMET is the better member going forward.
+- **Falsified (fix3 < orig, CI excludes zero)** ⇒ the original was gaining from the offset in a way
+  perfect-forcing entitlement does not explain. That is the retraction branch: **retract both
+  records and rebuild** every gridMET-carrying member (`gridmetm9`, `fused4md49`, `fused4m9` and
+  every no-q member; only `nldasm9` is gridMET-free).
+- **Null (CI includes zero)** ⇒ registration is not worth a member rebuild; record the defect as
+  measured-immaterial and keep the corrected corpus for future builds on correctness grounds alone.
+
+⚠️ Adjudicated on **val1**, not test1. This decides whether a record is retracted, and test is read
+once. The earlier -0.011137 is a val1 number too, so the three are comparable on one frame.
+
+**Audit vectors closed alongside it** (all zero-GPU, all in `benchmarks/m1_leakaudit_*.json`):
+A normalization (train-only) · B `--dec-q` is q(t0) · D train/val/test windows on 25/25 checkpoints
+with a 1097-day encoder gap before test · E statics period · F statics content — one 27-attribute set
+across all 115 checkpoints, every attribute forcing- or map-derived, **no Addor hydrologic signature**
+(`q_mean`, `runoff_ratio`, `baseflow_index`, …), so no static carries observed discharge ·
+G future discharge — perturbing observed q at t0+1, +2, +3, +7, +14 by 10.0 in z-space moves
+**neither** `x_enc` nor `x_dec` by any amount with `--dec-q` on and off, while q(t0) moves x_dec by
+exactly 10.0, so the model provably cannot read its own target day.

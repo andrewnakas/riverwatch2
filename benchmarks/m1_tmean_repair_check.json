@@ -1,0 +1,8 @@
+{
+  "median_rmse": {
+    "A recompute (tmax + shifted tmin)/2": 1.628593354859153,
+    "B shift the tmean column (stale)": 2.266768788144833,
+    "U unrepaired gridmet tmean": 2.373596555736165
+  },
+  "winner": "A recompute (tmax + shifted tmin)/2"
+}

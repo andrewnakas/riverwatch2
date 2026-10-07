@@ -8617,3 +8617,108 @@ carries no q-derived attribute. ⇒ **Read the artifact, not the default.**
    CAMELS convention and the legacy record's convention, so the comparison is internally consistent — but
    **these numbers are not operationally achievable**, and the all-leads decay (−0.039 with-q) is the only
    horizon evidence here, not a forecast-skill measurement.
+
+---
+
+## 🔍 MODERN-1 LEAKAGE AUDIT — nine vectors, eight clean, one real defect (2026-10-07)
+
+Asked for directly: *"do an audit for all data leaks in the modern training set that may make this
+record false."* The records under audit are with-q test1 **0.910438** (4 members, trimmed, 5 seeds)
+and no-q test1 **0.843090** (single member, 5 seeds). Every vector below is MEASURED, with the probe
+and its JSON named, because reading code and asserting direction has been wrong 22 times here.
+
+| # | vector | method | verdict |
+|---|---|---|---|
+| A/I | normalization sees test data | perturb raw values in train/val/test, diff every z-constant | ✅ clean |
+| B | `--dec-q` carries the target day | read the channel's source | ✅ it is q(t0) |
+| C | **gridMET one-day registration** | three-way lag scan + streamflow referee | ⚠️ **real defect, verdict pending** |
+| D | train/val/test window overlap | read windows back from 25/25 checkpoints | ✅ clean, 1097-day gap |
+| E | statics computed over the test period | attribute provenance | ✅ clean |
+| F | statics derived from observed discharge | `static_feats` from 115 checkpoints | ✅ clean |
+| G | future discharge reaches the inputs | causal perturbation of q at t0+1…t0+14 | ✅ clean |
+| H | cohort rule selects easy basins | legacy 531-basin per-basin NSE, kept vs dropped | ✅ null, sign conservative |
+| J | val and test dumps share rows | set intersection on (station, target date) | ✅ clean, zero shared |
+
+### The three worth reading in full
+
+**G — future discharge cannot reach the model** (`analysis/m1_leak_vectorG_future_q.py`). The one
+leak that would make a discharge-assimilating record worthless. Tested on the INPUT tensors, not the
+outputs, because leakage is an input property: if q(T) is absent from `x_enc` and `x_dec`, no
+architecture or weight set can use it. Perturbing observed q by 10.0 in z-space at t0+1, +2, +3, +7
+and +14 moves **neither tensor by any amount**, with `--dec-q` on and off — while q(t0) moves `x_dec`
+by exactly 10.0 with `--dec-q` on, confirming assimilation works and the test is not vacuous.
+
+**F — no static attribute carries observed discharge** (`m1_leak_vectorF_statics.py`). All 115
+MODERN-1 checkpoints share **one** 27-attribute set, every attribute climate-, soil-, topo-,
+vegetation- or geology-derived. None of Addor's hydrologic-signature group (`q_mean`,
+`runoff_ratio`, `baseflow_index`, `slope_fdc`, …) is present. ⚠️ Read from `cfg["static_feats"]` in
+the checkpoints: an earlier pass of this audit nearly reported false leakage by reading the
+module-level `STATIC_FEATS` default (14 GAGES-II features including `RUNAVE7100` and `BFI_AVE`),
+which no MODERN-1 member was trained with.
+
+**H — the cohort rule is test-conditioned, and that is worth stating** (`m1_leak_vectorH_cohort.py`).
+The 490-basin cohort keeps a basin only if it has ≥90% daily discharge over the 2018-2025 **test**
+window; 41 of the 531 are dropped, all for coverage. Availability carries no model information, and
+the rule was fixed before any score, but the basin set *is* conditioned on test-period data. Measured
+on the legacy dumps, where all 531 reported: the dropped basins were **easier**, by −0.027288
+(`fused3h1`), −0.029443 (`daymeth1`), −0.037498 (`nldash1`). CI [−0.0756, +0.0239] includes zero at
+n=41, so it reads null — but all three members agree in sign, so the inflation direction is the one
+the evidence excludes. ⚠️ Difference-of-medians, labelled as such: the groups are different basins,
+so no pairing exists and this campaign's usual paired estimator does not apply.
+
+### C — the one real defect: gridMET does not have one calendar-day convention
+
+Lag-scanned against `camels_corpus_nldas_m3`, the only **hourly-native** product in the corpus and so
+the only one whose day labelling our own builder derives rather than inherits
+(`benchmarks/m1_leakaudit_threeway.json`):
+
+| variable | vs Daymet | **vs NLDAS** | truth |
+|---|---|---|---|
+| precipitation_sum | +1 | **+1** (67%) | offset |
+| temperature_2m_mean | 0 | **+1** (80%) | offset (derived — see below) |
+| temperature_2m_min | +1 | **+1** (97%) | offset |
+| vapor_pressure | +1 | **0** (100%) | aligned |
+| temperature_2m_max | 0 | 0 (100%) | aligned |
+| shortwave_radiation_sum | 0 | 0 (100%) | aligned |
+
+⭐ **Every one of the six is explained by gridMET's two upstream sources**, which is why this reads as
+a convention difference rather than a corpus bug: PRISM accumulates precipitation 12Z-12Z and
+attributes the overnight minimum to the following morning (both land +1), PRISM's daytime maximum is
+calendar-day (0), and gridMET carries humidity and radiation from NLDAS-2 (0). That last one is
+measured, not assumed: **gridmet-srad = 0.99941 × nldas-srad, r 0.9996, residual 2.7%**, where
+daymet-vs-nldas on identical rows reads 0.8437 (`m1_leak_srad_rescale.py`). Six measured offsets, six
+mechanisms.
+
+⚠️ **The first two correction attempts were both wrong, and the second failed its own verification.**
+`gridmetm9fix` shifted precipitation alone — val1 **−0.011137**, CI [−0.015229, −0.006135] — but that
+de-synchronised precipitation from tmin *inside* gridMET, so the loss is uninterpretable.
+`gridmetm9fix2` shifted precip + tmin + vapor_pressure: vp is aligned (shifted wrongly) and tmean was
+missed. `gridmetm9fix3` shifts precip + tmin and **recomputes** tmean = (tmax+tmin)/2, because shifting
+the tmean *column* yields (Tmax(t−1)+Tmin(t))/2 — half a day stale.
+
+⭐⭐ **A guard tolerance was the only thing standing between us and a silently wrong build.** The
+recompute branch was gated on `tmean == (tmax+tmin)/2` within `1e-6`; the column is stored at 3
+decimals, so the true identity shows up as max|resid| = 5e-4 and the gate took the WRONG branch. The
+lag scan then **passed the wrong build**, because a half-day-stale mean is a smooth of the right one
+and still peaks at k=0. What caught it was a sharper check — RMSE against the hourly-native daily mean
+— where the recompute wins **60/60 basins, 1.63 vs 2.27** (`m1_tmean_repair_check.py`). Lesson: a
+tolerance must match the STORED precision, and a verification that cannot distinguish the right
+artifact from the wrong one is not a verification.
+
+**The verdict is registered in `PREREG_v2.md` §MODERN-1 LEAKAGE AUDIT before the number exists**:
+fix3 above orig by **+0.002 … +0.015** on val1. Mechanism: under perfect forcing the model is
+entitled to target-day forcing, so the offset grants essentially no extra entitlement at lead 1 — it
+moves the target day's rain *out of the decoder and into the encoder's last step*, and this
+campaign's largest measured effect is that target-day information pays only when it reaches the
+DECODER. Confirmed ⇒ the defect was a **cost** and both records **stand, understated**. Falsified ⇒
+**retract and rebuild** every gridMET-carrying member (only `nldasm9` is gridMET-free).
+
+### Not a leak, but it corrects the design claim
+
+gridMET and NLDAS-2 are **not independent** for radiation or humidity (above), and nClimGrid's srad
+and vapor_pressure are byte-identical to gridMET's (100% of values,
+`m1_leakaudit_shared_columns.json` — the known, intentional borrow, since nClimGrid publishes neither).
+So "four independent forcing products" is true for precipitation and temperature and **false for
+radiation and humidity**, where there are effectively two routes, not four. Forcing diversity is the
+only diversity this campaign is measurably paid for, so this belongs in the write-up rather than a
+footnote. It does not touch any score.

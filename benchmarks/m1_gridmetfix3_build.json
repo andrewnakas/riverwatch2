@@ -1,0 +1,9 @@
+{
+  "shifted": [
+    "precipitation_sum",
+    "temperature_2m_min"
+  ],
+  "tmean_recomputed": true,
+  "all_k0": true,
+  "arbiter": "benchmarks/m1_leakaudit_threeway.json"
+}

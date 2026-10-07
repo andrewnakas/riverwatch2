@@ -1,0 +1,14 @@
+[
+  {
+    "var": "shortwave_radiation_sum",
+    "a": "gridmet",
+    "b": "nclimgrid",
+    "frac_identical": 1.0
+  },
+  {
+    "var": "vapor_pressure",
+    "a": "gridmet",
+    "b": "nclimgrid",
+    "frac_identical": 1.0
+  }
+]
