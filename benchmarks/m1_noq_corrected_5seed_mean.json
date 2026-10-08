@@ -1,0 +1,25 @@
+{
+ "frame": "val1",
+ "protocol": "modern-v3-9yr",
+ "members": [
+  "lstm_fused4md4fix3"
+ ],
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "rows": 708266,
+ "basins": 490,
+ "solo": {
+  "lstm_fused4md4fix3": 0.846553039151559
+ },
+ "composition": {
+  "mean": 0.846553039151559,
+  "trimmed": 0.846553039151559,
+  "median": 0.846553039151559
+ },
+ "loo": {}
+}

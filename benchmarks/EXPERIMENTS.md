@@ -9012,3 +9012,50 @@ input is correctly dated. Its test read is the single remaining step.
 **−0.004322** behind the old val1 figure. The correction costs real skill. It is still the right
 number, for the same reason the 0.9253 retraction was: a record that scores higher because a model
 saw data it could not have at forecast time is not a record.
+
+---
+
+## 🏁 MODERN-1 FINAL — the corrected records
+
+| arm | RETRACTED | **CORRECTED RECORD** | cost of correctness |
+|---|---|---|---|
+| with-q | 0.910438 | **test1 0.905829** | −0.004609 |
+| no-q | 0.843090 | **test1 0.834558** | −0.008532 |
+
+**with-q**: `fused4md49fix3, fused4m9fix3, nldasm9`, equal-weight **mean**, 5 seeds, 490 basins,
+1,243,864 rows, protocol modern-v3-9yr (train 2005-10-01…2014-09-30, val 2014-10-01…2018-09-30,
+test 2018-10-01…2025-09-30). val1 0.903022 (mean). `benchmarks/m1_FINAL_withq_corrected.json`.
+Inside the registered 0.890…0.910 band.
+
+**no-q**: `lstm_fused4md4fix3`, 5 seeds, same protocol and cohort. val1 0.846553.
+`benchmarks/m1_FINAL_noq_corrected.json`.
+
+Every input in both is correctly dated. The composition was reached on val1 by mechanical backward
+elimination, which dropped `gridmetm9fix3` (LOO −0.000733, CI excluding zero) and then found nothing
+else droppable. Both artifacts self-verified: every reported median is reproducible from the
+per-basin map inside it.
+
+### ⚠️ Three caveats that belong next to these numbers, not in a footnote
+
+1. ⚠️ **NEITHER IS A FIRST TEST READ.** `benchmarks/m1_test_reads.log` records 2 prior with-q test1
+   reads (the decade probe, and the now-retracted record) and 1 prior no-q read. The freeze script
+   refused to let that pass silently and printed the warning both times. The corrected roster was
+   selected entirely on **val1** by a mechanical rule, which limits the exposure — but these are
+   **not** virgin held-out numbers and must never be presented as such. The retracted entries are
+   kept in the log; it is append-only.
+2. ⚠️ **The combiner is the MEAN, not "trimmed".** A trimmed mean is *mathematically undefined* for
+   3 members (dropping max and min leaves one value) and for 1. The earlier quoted val1 "trimmed
+   0.904644" was therefore a **median-of-3**, which reads +0.0016 above the mean. The registered
+   combiner choice was one bit between mean and trimmed; with trimmed degenerate, selecting the
+   median would be a third option chosen on val, so the equal-weight **mean** — zero fitted
+   parameters, the campaign's doctrine — is what ships.
+3. ⚠️ **The reference figures are a different decade, cohort and product set.** Nearing 2022's 0.879
+   and this campaign's legacy 0.836289 are context only, never like-for-like.
+
+### What the correction cost, and why it is still right
+
+Correctness cost **−0.0046** (with-q) and **−0.0085** (no-q). The retracted numbers were higher
+because `gridmetm9` and every `fused4m_m3`-based member read precipitation for **T+1** at the decoder
+step that predicts T — measured at **+0.021007** (CI [+0.015378, +0.027145]) on a controlled pair
+differing in nothing else. A model that scores higher because it saw data unavailable at forecast
+time is not a record; that is the same principle that retracted the 0.9253.
