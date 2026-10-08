@@ -793,20 +793,25 @@ def main() -> int:
             # would refuse a decoder the archive can in fact drive -- the same class of
             # over-restrictive guard that has aborted valid work in this campaign. Its own message
             # says "the archive only carries X", so asking the archive is faithful to its intent.
-            _av = None
-            try:
-                import glob as _glob
-                _fs = sorted(p for p in _glob.glob(str(GFS_DIR / "*.csv.gz"))
-                             if not os.path.basename(p).startswith("._"))
-                if _fs:
-                    _av = set(pd.read_csv(_fs[0], nrows=1).columns) - {"station_id", "lead_day"}
-            except Exception:
-                _av = None
-            _need = set(dec_vars)
-            if _av is None:
-                print(f"--gfs-finetune: no readable forcing file under {GFS_DIR}; cannot verify "
-                      f"the archive covers the decoder's {sorted(_need)}")
+            # ⚠️ Do NOT swallow the exception. The first version wrapped this in
+            # `except Exception: _av = None`, which turned a real read error into the misleading
+            # message "no readable forcing file under ..." while 115 perfectly good files sat in
+            # that directory and the glob found all of them. A handled failure is a silent failure.
+            # os is NOT imported at module level in this file -- it is imported locally in a
+            # few functions -- so the guard imports what it uses rather than assuming.
+            import glob as _glob, os as _os
+            _fs = sorted(p for p in _glob.glob(str(GFS_DIR / "*.csv.gz"))
+                         if not _os.path.basename(p).startswith("._"))
+            if not _fs:
+                print(f"--gfs-finetune: no *.csv.gz under {GFS_DIR}")
                 return 1
+            try:
+                _av = set(pd.read_csv(_fs[0], nrows=1).columns) - {"station_id", "lead_day"}
+            except Exception as _e:
+                print(f"--gfs-finetune: cannot read {_fs[0]}: "
+                      f"{type(_e).__name__}: {_e}")
+                return 1
+            _need = set(dec_vars)
             if not _need <= _av:
                 print(f"--gfs-finetune: archive under {GFS_DIR} carries {sorted(_av)}; the "
                       f"checkpoint decoder needs {sorted(_need)} — missing {sorted(_need - _av)}")

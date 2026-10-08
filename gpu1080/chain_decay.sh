@@ -22,7 +22,7 @@ QUIET=0
 for i in $(seq 1 2880); do
   B=$(ps -eo cmd --no-headers | awk 'index($0,"run_m1_batch.sh")>0 && $0 !~ /grep/ {c++} END{print c+0}')
   T=$(ps -eo cmd --no-headers | awk 'index($0,"train_mblstm.py")>0 && $0 !~ /grep/ {c++} END{print c+0}')
-  C=$(ps -eo cmd --no-headers | awk 'index($0,"chain_decomp.sh")>0 && $0 !~ /grep/ {c++} END{print c+0}')
+  C=$(ps -eo cmd --no-headers | awk '(index($0,"chain_decomp.sh")>0 || index($0,"chain_noqfix3.sh")>0) && $0 !~ /grep/ {c++} END{print c+0}')
   N=$(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null | wc -l)
   if [ "$B" -eq 0 ] && [ "$T" -eq 0 ] && [ "$C" -eq 0 ] && [ "$N" -eq 0 ]; then
     QUIET=$((QUIET+1)); else QUIET=0; fi
