@@ -9059,3 +9059,47 @@ because `gridmetm9` and every `fused4m_m3`-based member read precipitation for *
 step that predicts T — measured at **+0.021007** (CI [+0.015378, +0.027145]) on a controlled pair
 differing in nothing else. A model that scores higher because it saw data unavailable at forecast
 time is not a record; that is the same principle that retracted the 0.9253.
+
+## ✅ DECISION (c) CLOSED — the day-1 forecast-forcing decay, MEASURED
+
+`nldasm9` (the gridMET-free member of the corrected roster), 5 seeds, same frozen checkpoints in
+both arms, paired on identical (basin, t0) rows:
+
+| | median NSE |
+|---|---|
+| perfect forcing (sparse frame) | 0.904258 |
+| **real 1-day-ahead GFS forcing** | **0.802928** |
+
+**paired delta −0.048033**, CI [−0.059808, −0.039718], breadth 0.213. 489 basins, 56,224 paired
+rows, span 2021-04-30…2025-09-12. `benchmarks/m1_decay_day1_nldasm9.json`.
+
+⇒ **The operational discount on the perfect-forcing headline is ≈0.048 of median NSE at lead 1.**
+Measured, not assumed, and the first time this campaign has put a number on it.
+
+**How it was made possible without the blocked drive.** `/Volumes/STORAGE_SD` is still unmounted, so
+the archived forcing was rebuilt from the public NOAA GFS bucket — and the rebuild is **better** than
+the blocked archive, not a substitute: the archived `gfs_fcst` is point-sampled at gauge coordinates
+(~53% dry versus the areal mean in mountain terrain) while the whole corpus is areal. 115 init dates,
+areal over the 490-basin cohort with weights whose coverage-weighted area reproduces known basin
+areas to median 0.14%.
+
+⚠️ **Frame caveat, and only the DELTA is reportable.** The archive starts 2021-05 and is sampled every
+14 days, so these rows are a sparse subset of the test window; a stride-14 frame once flattered an
+absolute median here by +0.036. The comparison is paired on identical rows, so the sparsity affects
+both arms equally and the delta is sound — but the absolute 0.904258/0.802928 are **not** comparable
+to the headline. (Reassuringly the perfect-forcing figure lands near the 0.905829 headline, which is
+a sanity check, not a licence to quote it.)
+
+⚠️ Design detail that makes the lead-1 number exact: `_parse_forcing_file` drops any station lacking
+all 14 leads, so each file carries lead 1 = real GFS and leads 2-14 = observed. That is sound only
+because the decoder is **measurably causal** (`analysis/m1_decoder_causality.py`: an input at lead k
+moves only leads ≥ k, exact zeros below), so the observed fill cannot touch lead 1.
+
+### MODERN-1 deliverables against the four decisions taken at the outset
+
+| decision | status |
+|---|---|
+| (a) day-1 median NSE headline **+ all-leads 1–14 table** | headline ✅ (0.905829 / 0.834558); all-leads **test** table outstanding |
+| (b) four forcing products | ✅ built — ⚠️ independent for precip/temp only; gridMET carries NLDAS-2 radiation+humidity, nClimGrid's srad/vp are byte-identical to gridMET's |
+| (c) perfect forcing, then measure real-forecast decay once | ✅ −0.048033 |
+| (d) let LEDGER 56 finish first | ✅ |
