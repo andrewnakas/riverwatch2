@@ -9103,3 +9103,64 @@ moves only leads ≥ k, exact zeros below), so the observed fill cannot touch le
 | (b) four forcing products | ✅ built — ⚠️ independent for precip/temp only; gridMET carries NLDAS-2 radiation+humidity, nClimGrid's srad/vp are byte-identical to gridMET's |
 | (c) perfect forcing, then measure real-forecast decay once | ✅ −0.048033 |
 | (d) let LEDGER 56 finish first | ✅ |
+
+## ✅ DECISION (a) CLOSED — the all-leads 1–14 table, both arms, test frame, 5 seeds
+
+`benchmarks/m1_withq_allleads_test14_FINAL.json`, `m1_noq_allleads_test14_FINAL.json`.
+490 basins at every lead.
+
+| lead | **with-q ensemble** | **no-q** | | lead | with-q | no-q |
+|---|---|---|---|---|---|---|
+| 1 | **0.905829** | **0.834558** | | 8 | 0.856439 | 0.842153 |
+| 2 | 0.877090 | 0.836106 | | 9 | 0.855569 | 0.842815 |
+| 3 | 0.869103 | 0.839178 | | 10 | 0.853675 | 0.842975 |
+| 4 | 0.865473 | 0.841947 | | 11 | 0.852291 | 0.844270 |
+| 5 | 0.862277 | 0.841109 | | 12 | 0.850612 | 0.843920 |
+| 6 | 0.858938 | 0.840208 | | 13 | 0.849348 | 0.844534 |
+| 7 | 0.858724 | 0.840579 | | 14 | 0.850161 | 0.845594 |
+
+⭐ **INTEGRITY PASSES on both arms.** The `h==1` slice of the 14-lead dump reproduces the
+independently produced day-1 dump's median to **6.46e-10** (with-q: 0.905829186 vs 0.905829187) and
+**3.57e-09** (no-q: 0.834557543 vs 0.834557546). Two separate dump paths, same answer — the headline
+and the table are the same model.
+
+### ⭐ The two arms decay in OPPOSITE directions, and I cannot explain it
+
+| arm | lead 1 → lead 14 |
+|---|---|
+| with-q | 0.905829 → 0.850161, **−0.055669** |
+| no-q | 0.834558 → 0.845594, **+0.011036** |
+
+The with-q decline is expected and over-determined: `--h1-weight 0.5` spends half the gradient on
+lead 1, and the assimilated discharge at T−1 is most informative about T itself, so its edge decays.
+
+⚠️ **The no-q arm getting BETTER with lead is not explained.** The obvious candidate — "longer leads
+have more antecedent forcing" — does not survive inspection: at lead 1 the days T−13…T−1 sit in the
+**encoder**, which sees them, so the information content is the same and only its placement differs.
+And `--h1-weight 0.5` pushes the other way, concentrating gradient on lead 1. Candidates not yet
+tested: an encoder-vs-decoder placement effect for *antecedent* (not target-day) forcing — note the
+one placement probe run here, `--enc-lead`, read null for the **target** day; or a mild target-date
+distribution shift (lead-14 targets sit 13 days later on the same t0 grid, which over 7 years should
+be negligible). ⛔ Recorded as **unexplained** rather than attributed — the one thing this ledger has
+learned repeatedly is that a plausible mechanism here is usually the wrong one (25 overturned claims).
+
+🔧 Minor flaw in `chain_allleads.sh`: it prints "a decline is EXPECTED" unconditionally, so it
+printed that line for the no-q arm where skill *rose*. Cosmetic, affects no number, but the message
+should key on the sign.
+
+---
+
+## 🏁 MODERN-1 COMPLETE — all four decisions closed
+
+| decision | result |
+|---|---|
+| (a) day-1 headline + all-leads 1–14 table | ✅ **with-q 0.905829**, **no-q 0.834558**, full 14-lead tables, integrity verified to <1e-8 |
+| (b) four forcing products | ✅ Daymet V4R1, NLDAS-2, gridMET, nClimGrid — ⚠️ independent for precip/temp only |
+| (c) perfect forcing, then decay measured once | ✅ **−0.048033** under real 1-day-ahead GFS (CI [−0.059808, −0.039718]) |
+| (d) let LEDGER 56 finish first | ✅ |
+
+**The number to quote, with its discount:** day-1 median NSE **0.905829** under perfect forcing on
+the 2018-10-01…2025-09-30 window over 490 basins, and roughly **0.86** under real 1-day-ahead
+forecast forcing (0.905829 − 0.048033, where the decay was measured on `nldasm9` and the sparse
+forecast frame supports only the delta). ⚠️ Both records are **second** test reads — see the three
+caveats recorded with the final numbers above.
