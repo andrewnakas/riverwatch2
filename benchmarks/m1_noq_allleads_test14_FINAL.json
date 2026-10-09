@@ -1,0 +1,125 @@
+{
+ "frame": "test14",
+ "protocol": "modern-v3-9yr",
+ "members": [
+  "lstm_fused4md4fix3"
+ ],
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "rows": 17414285,
+ "basins": 490,
+ "combiner": "equal-weight mean, zero fitted parameters",
+ "by_lead": {
+  "1": {
+   "ensemble": 0.8345575463931447,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8345575463931447
+   }
+  },
+  "2": {
+   "ensemble": 0.8361060789460149,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8361060789460149
+   }
+  },
+  "3": {
+   "ensemble": 0.8391783539807217,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8391783539807217
+   }
+  },
+  "4": {
+   "ensemble": 0.8419469410463236,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8419469410463236
+   }
+  },
+  "5": {
+   "ensemble": 0.8411092214258258,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8411092214258258
+   }
+  },
+  "6": {
+   "ensemble": 0.8402080757526962,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8402080757526962
+   }
+  },
+  "7": {
+   "ensemble": 0.8405788845297355,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8405788845297355
+   }
+  },
+  "8": {
+   "ensemble": 0.8421525290918533,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8421525290918533
+   }
+  },
+  "9": {
+   "ensemble": 0.8428146569945882,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8428146569945882
+   }
+  },
+  "10": {
+   "ensemble": 0.8429749461457765,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8429749461457765
+   }
+  },
+  "11": {
+   "ensemble": 0.8442703475662098,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8442703475662098
+   }
+  },
+  "12": {
+   "ensemble": 0.843919559803457,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.843919559803457
+   }
+  },
+  "13": {
+   "ensemble": 0.8445336236562517,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8445336236562517
+   }
+  },
+  "14": {
+   "ensemble": 0.8455936164354937,
+   "n_basins": 490,
+   "members": {
+    "lstm_fused4md4fix3": 0.8455936164354937
+   }
+  }
+ },
+ "lead1": 0.8345575463931447,
+ "lead_last": 0.8455936164354937,
+ "decay": 0.011036070042348967,
+ "crosscheck": {
+  "day1_frame_median": 0.834557542823926,
+  "allleads_h1_median": 0.8345575463931447,
+  "difference": 3.5692186983737884e-09
+ }
+}

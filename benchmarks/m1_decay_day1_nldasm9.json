@@ -1,0 +1,25 @@
+{
+  "member": "nldasm9",
+  "seeds": [
+    "501",
+    "502",
+    "503",
+    "504",
+    "505"
+  ],
+  "rows": 56224,
+  "basins_scored": 489,
+  "span": [
+    "2021-04-30",
+    "2025-09-12"
+  ],
+  "median_nse_perfect_SPARSE_FRAME": 0.904257582825307,
+  "median_nse_gfs_day1": 0.8029278930695586,
+  "paired_delta": -0.048033307111507106,
+  "ci95": [
+    -0.05980848008244488,
+    -0.039718437289156805
+  ],
+  "breadth": 0.21267893660531698,
+  "frame_caveat": "sparse: archive starts 2021-05, 14-day stride; only the DELTA is reportable, absolute NSE is not comparable to the headline"
+}
