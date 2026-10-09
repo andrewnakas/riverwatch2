@@ -1,0 +1,3307 @@
+{
+ "_note": "Skill of the map's drainage-area-ratio transfer, measured observed-to-observed between gauges NLDI places on the same mainstem. This is the TRANSFER step only -- it excludes the donor's forecast error, and it is NOT ungauged-model skill.",
+ "generated_utc": "2026-10-09T11:07:30.958961+00:00",
+ "window": [
+  "2021-01-01",
+  "2025-12-31"
+ ],
+ "method": "Q_target = Q_donor * (A_target / A_donor); NSE vs target observed",
+ "n_gauges_sampled": 220,
+ "overall": {
+  "n_pairs": 322,
+  "median_nse": 0.7043519635413158,
+  "mean_nse": -2.1601230389300965,
+  "frac_above_0": 0.7515527950310559,
+  "frac_above_0.5": 0.6055900621118012,
+  "p25": 0.004009219561430355,
+  "p75": 0.8732941437031652
+ },
+ "bins": [
+  {
+   "n_pairs": 73,
+   "median_nse": 0.8200740352622086,
+   "mean_nse": -1.8408401097944735,
+   "frac_above_0": 0.8493150684931506,
+   "frac_above_0.5": 0.7534246575342466,
+   "p25": 0.5541752365971997,
+   "p75": 0.9444817421765379,
+   "max_abs_log_ratio": 0.22314355131420976,
+   "label": "1.25x"
+  },
+  {
+   "n_pairs": 156,
+   "median_nse": 0.8214633306517964,
+   "mean_nse": -0.5698986074538676,
+   "frac_above_0": 0.8397435897435898,
+   "frac_above_0.5": 0.7435897435897436,
+   "p25": 0.44646604007810614,
+   "p75": 0.934481142175543,
+   "max_abs_log_ratio": 0.6931471805599453,
+   "label": "2x"
+  },
+  {
+   "n_pairs": 251,
+   "median_nse": 0.7707850488300585,
+   "mean_nse": -0.8328411554759143,
+   "frac_above_0": 0.7848605577689243,
+   "frac_above_0.5": 0.6613545816733067,
+   "p25": 0.19593453730932253,
+   "p75": 0.9031238733011109,
+   "max_abs_log_ratio": 1.3862943611198906,
+   "label": "4x"
+  },
+  {
+   "n_pairs": 322,
+   "median_nse": 0.7043519635413158,
+   "mean_nse": -2.1601230389300965,
+   "frac_above_0": 0.7515527950310559,
+   "frac_above_0.5": 0.6055900621118012,
+   "p25": 0.004009219561430355,
+   "p75": 0.8732941437031652,
+   "max_abs_log_ratio": 2.302585092994046,
+   "label": "10x"
+  }
+ ],
+ "by_direction": {
+  "upstream": {
+   "n_pairs": 141,
+   "median_nse": 0.6880347153754001,
+   "mean_nse": -1.158869206493755,
+   "frac_above_0": 0.75177304964539,
+   "frac_above_0.5": 0.6028368794326241,
+   "p25": 0.03297271230201959,
+   "p75": 0.9027908263476178
+  },
+  "downstream": {
+   "n_pairs": 181,
+   "median_nse": 0.7458640861873038,
+   "mean_nse": -2.940105306187137,
+   "frac_above_0": 0.7513812154696132,
+   "frac_above_0.5": 0.6077348066298343,
+   "p25": 0.0019619644650331614,
+   "p75": 0.8524123741832922
+  }
+ },
+ "pairs": [
+  {
+   "target": "01029200",
+   "donor": "01029500",
+   "direction": "downstream",
+   "target_km2": 450.657931198464,
+   "donor_km2": 2167.820048351232,
+   "abs_log_ratio": 1.5707687712749463,
+   "n_days": 1826,
+   "nse": 0.6455174123840446
+  },
+  {
+   "target": "01104370",
+   "donor": "01104460",
+   "direction": "downstream",
+   "target_km2": 26.417878725427197,
+   "donor_km2": 56.97973842739199,
+   "abs_log_ratio": 0.7686547330680905,
+   "n_days": 1826,
+   "nse": 0.8821655705776565
+  },
+  {
+   "target": "01104370",
+   "donor": "01104480",
+   "direction": "downstream",
+   "target_km2": 26.417878725427197,
+   "donor_km2": 61.3827182149632,
+   "abs_log_ratio": 0.8430873278508602,
+   "n_days": 1826,
+   "nse": 0.7174838320951056
+  },
+  {
+   "target": "01105554",
+   "donor": "01105000",
+   "direction": "upstream",
+   "target_km2": 216.7820048351232,
+   "donor_km2": 89.8725874286592,
+   "abs_log_ratio": 0.8804992905426161,
+   "n_days": 1826,
+   "nse": 0.6721320625993645
+  },
+  {
+   "target": "01116905",
+   "donor": "01117000",
+   "direction": "downstream",
+   "target_km2": 41.439809765376,
+   "donor_km2": 59.310727726694395,
+   "abs_log_ratio": 0.3585481883204128,
+   "n_days": 1826,
+   "nse": 0.947322825372152
+  },
+  {
+   "target": "01306460",
+   "donor": "01306500",
+   "direction": "downstream",
+   "target_km2": 56.720739616358394,
+   "donor_km2": 63.454708703231994,
+   "abs_log_ratio": 0.11218648072822622,
+   "n_days": 1826,
+   "nse": -0.828285617229318
+  },
+  {
+   "target": "01354083",
+   "donor": "01349527",
+   "direction": "upstream",
+   "target_km2": 8163.642523779072,
+   "donor_km2": 5485.594817691648,
+   "abs_log_ratio": 0.3975649248164179,
+   "n_days": 1826,
+   "nse": 0.9339275077064304
+  },
+  {
+   "target": "01354083",
+   "donor": "01347000",
+   "direction": "upstream",
+   "target_km2": 8163.642523779072,
+   "donor_km2": 3475.764044070912,
+   "abs_log_ratio": 0.8538761334461428,
+   "n_days": 1826,
+   "nse": 0.799688697933058
+  },
+  {
+   "target": "01354083",
+   "donor": "01357500",
+   "direction": "downstream",
+   "target_km2": 8163.642523779072,
+   "donor_km2": 8935.4589806592,
+   "abs_log_ratio": 0.09033705904763564,
+   "n_days": 1826,
+   "nse": 0.9444817421765379
+  },
+  {
+   "target": "01354083",
+   "donor": "01354500",
+   "direction": "downstream",
+   "target_km2": 8163.642523779072,
+   "donor_km2": 8572.86064521216,
+   "abs_log_ratio": 0.04891101739333894,
+   "n_days": 1826,
+   "nse": 0.9741547181681285
+  },
+  {
+   "target": "01354083",
+   "donor": "01358000",
+   "direction": "downstream",
+   "target_km2": 8163.642523779072,
+   "donor_km2": 20953.003812618237,
+   "abs_log_ratio": 0.9425915590747675,
+   "n_days": 1826,
+   "nse": 0.8386157115347491
+  },
+  {
+   "target": "01357500",
+   "donor": "01349527",
+   "direction": "upstream",
+   "target_km2": 8935.4589806592,
+   "donor_km2": 5485.594817691648,
+   "abs_log_ratio": 0.48790198386405353,
+   "n_days": 1826,
+   "nse": 0.8819783878956466
+  },
+  {
+   "target": "01357500",
+   "donor": "01354500",
+   "direction": "upstream",
+   "target_km2": 8935.4589806592,
+   "donor_km2": 8572.86064521216,
+   "abs_log_ratio": 0.04142604165429673,
+   "n_days": 1826,
+   "nse": 0.9827808380569321
+  },
+  {
+   "target": "01357500",
+   "donor": "01358000",
+   "direction": "downstream",
+   "target_km2": 8935.4589806592,
+   "donor_km2": 20953.003812618237,
+   "abs_log_ratio": 0.8522545000271319,
+   "n_days": 1826,
+   "nse": 0.8771760036016951
+  },
+  {
+   "target": "01368050",
+   "donor": "01370520",
+   "direction": "downstream",
+   "target_km2": 393.67819277107196,
+   "donor_km2": 1111.104899334144,
+   "abs_log_ratio": 1.0375763980817405,
+   "n_days": 1826,
+   "nse": 0.9062033086864875
+  },
+  {
+   "target": "01368050",
+   "donor": "01371500",
+   "direction": "downstream",
+   "target_km2": 393.67819277107196,
+   "donor_km2": 1800.04173668352,
+   "abs_log_ratio": 1.5200313247185158,
+   "n_days": 1826,
+   "nse": 0.7803379414485501
+  },
+  {
+   "target": "01388000",
+   "donor": "01387905",
+   "direction": "upstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 375.54827599872,
+   "abs_log_ratio": 0.09844007281325251,
+   "n_days": 1826,
+   "nse": 0.9732895039298868
+  },
+  {
+   "target": "01388000",
+   "donor": "01387400",
+   "direction": "upstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 225.0699667881984,
+   "abs_log_ratio": 0.6104157829624806,
+   "n_days": 1826,
+   "nse": 0.9246552895458869
+  },
+  {
+   "target": "01388000",
+   "donor": "01387500",
+   "direction": "upstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 310.79857324031997,
+   "abs_log_ratio": 0.287682072451781,
+   "n_days": 1826,
+   "nse": 0.9596055429076658
+  },
+  {
+   "target": "01388000",
+   "donor": "01387420",
+   "direction": "upstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 240.868894261248,
+   "abs_log_ratio": 0.542574322080571,
+   "n_days": 1826,
+   "nse": 0.9361420455828809
+  },
+  {
+   "target": "01388000",
+   "donor": "01389010",
+   "direction": "downstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 1916.59120164864,
+   "abs_log_ratio": 1.5314763709643886,
+   "n_days": 1826,
+   "nse": 0.5196710472981743
+  },
+  {
+   "target": "01388000",
+   "donor": "01389890",
+   "direction": "downstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 2084.94042882048,
+   "abs_log_ratio": 1.6156684621847366,
+   "n_days": 1826,
+   "nse": 0.5908074635611638
+  },
+  {
+   "target": "01388000",
+   "donor": "01388500",
+   "direction": "downstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 919.44577916928,
+   "abs_log_ratio": 0.7969439742415888,
+   "n_days": 1826,
+   "nse": 0.9360018709815855
+  },
+  {
+   "target": "01388000",
+   "donor": "01389500",
+   "direction": "downstream",
+   "target_km2": 414.39809765376,
+   "donor_km2": 1973.5709400760318,
+   "abs_log_ratio": 1.5607727404528193,
+   "n_days": 1826,
+   "nse": 0.5701402888315554
+  },
+  {
+   "target": "01436690",
+   "donor": "01436000",
+   "direction": "upstream",
+   "target_km2": 442.887966867456,
+   "donor_km2": 239.83289901711356,
+   "abs_log_ratio": 0.6133744148505264,
+   "n_days": 1826,
+   "nse": 0.7013983690982872
+  },
+  {
+   "target": "01436690",
+   "donor": "01434498",
+   "direction": "upstream",
+   "target_km2": 442.887966867456,
+   "donor_km2": 87.54159812935679,
+   "abs_log_ratio": 1.6212027540136869,
+   "n_days": 1810,
+   "nse": -1.5223428348004835
+  },
+  {
+   "target": "01436690",
+   "donor": "01435000",
+   "direction": "upstream",
+   "target_km2": 442.887966867456,
+   "donor_km2": 172.49320814837756,
+   "abs_log_ratio": 0.9429589789563165,
+   "n_days": 1826,
+   "nse": -1.14095135897984
+  },
+  {
+   "target": "01436690",
+   "donor": "01437500",
+   "direction": "downstream",
+   "target_km2": 442.887966867456,
+   "donor_km2": 795.126349873152,
+   "abs_log_ratio": 0.5851841910845372,
+   "n_days": 1826,
+   "nse": 0.92388976144514
+  },
+  {
+   "target": "01445500",
+   "donor": "01445000",
+   "direction": "upstream",
+   "target_km2": 274.53873969561596,
+   "donor_km2": 80.289631420416,
+   "abs_log_ratio": 1.2294518896269209,
+   "n_days": 1826,
+   "nse": 0.9303694354857481
+  },
+  {
+   "target": "01445500",
+   "donor": "01446000",
+   "direction": "downstream",
+   "target_km2": 274.53873969561596,
+   "donor_km2": 95.0525636493312,
+   "abs_log_ratio": 1.0606623390515424,
+   "n_days": 1826,
+   "nse": 0.7707850488300585
+  },
+  {
+   "target": "01464290",
+   "donor": "01464500",
+   "direction": "downstream",
+   "target_km2": 60.864720592896,
+   "donor_km2": 211.084030992384,
+   "abs_log_ratio": 1.2436025990967037,
+   "n_days": 1826,
+   "nse": 0.8447992908383812
+  },
+  {
+   "target": "01474500",
+   "donor": "01473500",
+   "direction": "upstream",
+   "target_km2": 4902.847492866048,
+   "donor_km2": 4558.37907419136,
+   "abs_log_ratio": 0.07284906317712549,
+   "n_days": 1826,
+   "nse": 0.9907419610267832
+  },
+  {
+   "target": "01474500",
+   "donor": "01472000",
+   "direction": "upstream",
+   "target_km2": 4902.847492866048,
+   "donor_km2": 2970.7163625553917,
+   "abs_log_ratio": 0.5010130340799522,
+   "n_days": 1826,
+   "nse": 0.8848353691801654
+  },
+  {
+   "target": "01512500",
+   "donor": "01505810",
+   "direction": "upstream",
+   "target_km2": 3840.952367628288,
+   "donor_km2": 1186.2145545338878,
+   "abs_log_ratio": 1.1749531580237471,
+   "n_days": 1826,
+   "nse": 0.92634598810255
+  },
+  {
+   "target": "01512500",
+   "donor": "01507000",
+   "direction": "upstream",
+   "target_km2": 3840.952367628288,
+   "donor_km2": 1535.862949429248,
+   "abs_log_ratio": 0.9166279431402066,
+   "n_days": 1826,
+   "nse": 0.94133657971813
+  },
+  {
+   "target": "01512500",
+   "donor": "01505000",
+   "direction": "upstream",
+   "target_km2": 3840.952367628288,
+   "donor_km2": 681.1668730183679,
+   "abs_log_ratio": 1.7296683099601675,
+   "n_days": 1826,
+   "nse": 0.8561454574163151
+  },
+  {
+   "target": "01512500",
+   "donor": "01513500",
+   "direction": "downstream",
+   "target_km2": 3840.952367628288,
+   "donor_km2": 10207.143142834175,
+   "abs_log_ratio": 0.9773674350570715,
+   "n_days": 1826,
+   "nse": 0.9199136604815817
+  },
+  {
+   "target": "01512500",
+   "donor": "01513831",
+   "direction": "downstream",
+   "target_km2": 3840.952367628288,
+   "donor_km2": 10919.389873176575,
+   "abs_log_ratio": 1.044819748083266,
+   "n_days": 1826,
+   "nse": 0.9092292862087751
+  },
+  {
+   "target": "01512500",
+   "donor": "01515000",
+   "direction": "downstream",
+   "target_km2": 3840.952367628288,
+   "donor_km2": 12362.013250633727,
+   "abs_log_ratio": 1.1689079748679645,
+   "n_days": 1826,
+   "nse": 0.8951273130602394
+  },
+  {
+   "target": "01580000",
+   "donor": "01580520",
+   "direction": "downstream",
+   "target_km2": 244.4948776157184,
+   "donor_km2": 424.75805009510395,
+   "abs_log_ratio": 0.5523253546727434,
+   "n_days": 1826,
+   "nse": 0.8530663389915908
+  },
+  {
+   "target": "02032250",
+   "donor": "02034000",
+   "direction": "downstream",
+   "target_km2": 199.429084495872,
+   "donor_km2": 1717.162117152768,
+   "abs_log_ratio": 2.152969568332179,
+   "n_days": 1826,
+   "nse": 0.629078581567876
+  },
+  {
+   "target": "02032250",
+   "donor": "02032515",
+   "direction": "downstream",
+   "target_km2": 199.429084495872,
+   "donor_km2": 670.806920577024,
+   "abs_log_ratio": 1.2130226398458541,
+   "n_days": 1826,
+   "nse": 0.9221829361457679
+  },
+  {
+   "target": "02039500",
+   "donor": "02040000",
+   "direction": "downstream",
+   "target_km2": 782.176409321472,
+   "donor_km2": 1877.7413799935998,
+   "abs_log_ratio": 0.875744637479805,
+   "n_days": 1826,
+   "nse": 0.3865392040583151
+  },
+  {
+   "target": "02098206",
+   "donor": "02096500",
+   "direction": "upstream",
+   "target_km2": 4379.669894578175,
+   "donor_km2": 1569.532794863616,
+   "abs_log_ratio": 1.026195362829266,
+   "n_days": 1826,
+   "nse": -1.467183275734791
+  },
+  {
+   "target": "02098206",
+   "donor": "02096960",
+   "direction": "upstream",
+   "target_km2": 4379.669894578175,
+   "donor_km2": 3302.2348406784,
+   "abs_log_ratio": 0.2823738913060537,
+   "n_days": 1826,
+   "nse": -2.0742028507353427
+  },
+  {
+   "target": "02098206",
+   "donor": "02102500",
+   "direction": "downstream",
+   "target_km2": 4379.669894578175,
+   "donor_km2": 8971.718814203903,
+   "abs_log_ratio": 0.7171039207837454,
+   "n_days": 1826,
+   "nse": 0.5024066636694953
+  },
+  {
+   "target": "0210166029",
+   "donor": "02101726",
+   "direction": "downstream",
+   "target_km2": 19.21771177869312,
+   "donor_km2": 177.9321831800832,
+   "abs_log_ratio": 2.2255701420490146,
+   "n_days": 1826,
+   "nse": 0.7593133165824052
+  },
+  {
+   "target": "02208487",
+   "donor": "02208493",
+   "direction": "downstream",
+   "target_km2": 8.831859456245759,
+   "donor_km2": 70.4476766011392,
+   "abs_log_ratio": 2.0765046820065263,
+   "n_days": 1826,
+   "nse": 0.3526620667704575
+  },
+  {
+   "target": "02240500",
+   "donor": "02238500",
+   "direction": "upstream",
+   "target_km2": 3540.513746829312,
+   "donor_km2": 2276.599548985344,
+   "abs_log_ratio": 0.4415889390387725,
+   "n_days": 1826,
+   "nse": -2.4223738879209904
+  },
+  {
+   "target": "02240500",
+   "donor": "02239000",
+   "direction": "upstream",
+   "target_km2": 3540.513746829312,
+   "donor_km2": 2636.607896322048,
+   "abs_log_ratio": 0.29477863961348144,
+   "n_days": 1826,
+   "nse": -1.8292777432425131
+  },
+  {
+   "target": "02240500",
+   "donor": "02238000",
+   "direction": "upstream",
+   "target_km2": 3540.513746829312,
+   "donor_km2": 1678.312295497728,
+   "abs_log_ratio": 0.746483140371675,
+   "n_days": 1826,
+   "nse": -2.2892513829136143
+  },
+  {
+   "target": "02240500",
+   "donor": "02240000",
+   "direction": "upstream",
+   "target_km2": 3540.513746829312,
+   "donor_km2": 3097.6257799618556,
+   "abs_log_ratio": 0.13363590221337257,
+   "n_days": 1826,
+   "nse": 0.7925842126641705
+  },
+  {
+   "target": "02240500",
+   "donor": "02244040",
+   "direction": "downstream",
+   "target_km2": 3540.513746829312,
+   "donor_km2": 17042.121766010878,
+   "abs_log_ratio": 1.5714161875954131,
+   "n_days": 1606,
+   "nse": -3.625149820572446
+  },
+  {
+   "target": "02255600",
+   "donor": "02256500",
+   "direction": "downstream",
+   "target_km2": 155.39928662015998,
+   "donor_km2": 805.4863023144959,
+   "abs_log_ratio": 1.6454483499571333,
+   "n_days": 1826,
+   "nse": 0.6180786068233683
+  },
+  {
+   "target": "02336526",
+   "donor": "02336517",
+   "direction": "upstream",
+   "target_km2": 34.7058406785024,
+   "donor_km2": 19.787509162967037,
+   "abs_log_ratio": 0.5618571037784367,
+   "n_days": 703,
+   "nse": 0.8771115351277354
+  },
+  {
+   "target": "02344500",
+   "donor": "02344396",
+   "direction": "upstream",
+   "target_km2": 704.476766011392,
+   "donor_km2": 414.39809765376,
+   "abs_log_ratio": 0.5306282510621705,
+   "n_days": 1826,
+   "nse": 0.44215777325430794
+  },
+  {
+   "target": "02344500",
+   "donor": "02344350",
+   "direction": "upstream",
+   "target_km2": 704.476766011392,
+   "donor_km2": 328.928490012672,
+   "abs_log_ratio": 0.7616149798374059,
+   "n_days": 1826,
+   "nse": 0.15331121829795447
+  },
+  {
+   "target": "02344500",
+   "donor": "02344872",
+   "direction": "downstream",
+   "target_km2": 704.476766011392,
+   "donor_km2": 2056.450559606784,
+   "abs_log_ratio": 1.0712813949511384,
+   "n_days": 1826,
+   "nse": 0.8524123741832922
+  },
+  {
+   "target": "02344500",
+   "donor": "02346180",
+   "direction": "downstream",
+   "target_km2": 704.476766011392,
+   "donor_km2": 3159.7854946099196,
+   "abs_log_ratio": 1.5008040714313047,
+   "n_days": 1826,
+   "nse": 0.8061269961796894
+  },
+  {
+   "target": "02346180",
+   "donor": "02344872",
+   "direction": "upstream",
+   "target_km2": 3159.7854946099196,
+   "donor_km2": 2056.450559606784,
+   "abs_log_ratio": 0.42952267648016645,
+   "n_days": 1826,
+   "nse": 0.9606907259209415
+  },
+  {
+   "target": "02346180",
+   "donor": "02344396",
+   "direction": "upstream",
+   "target_km2": 3159.7854946099196,
+   "donor_km2": 414.39809765376,
+   "abs_log_ratio": 2.031432322493475,
+   "n_days": 1826,
+   "nse": -0.10886040661007468
+  },
+  {
+   "target": "02346180",
+   "donor": "02347500",
+   "direction": "downstream",
+   "target_km2": 3159.7854946099196,
+   "donor_km2": 4791.4780041216,
+   "abs_log_ratio": 0.4163347803450684,
+   "n_days": 1826,
+   "nse": 0.959530314688794
+  },
+  {
+   "target": "02347500",
+   "donor": "02344872",
+   "direction": "upstream",
+   "target_km2": 4791.4780041216,
+   "donor_km2": 2056.450559606784,
+   "abs_log_ratio": 0.8458574568252349,
+   "n_days": 1826,
+   "nse": 0.8992437981400426
+  },
+  {
+   "target": "02347500",
+   "donor": "02349605",
+   "direction": "downstream",
+   "target_km2": 4791.4780041216,
+   "donor_km2": 7562.76528218112,
+   "abs_log_ratio": 0.45639797718995695,
+   "n_days": 1826,
+   "nse": 0.30957640737924885
+  },
+  {
+   "target": "02358789",
+   "donor": "02359000",
+   "direction": "downstream",
+   "target_km2": 1201.754483195904,
+   "donor_km2": 2022.7807141724159,
+   "abs_log_ratio": 0.5206905976134306,
+   "n_days": 1826,
+   "nse": 0.8417661243742807
+  },
+  {
+   "target": "02450180",
+   "donor": "02450000",
+   "direction": "upstream",
+   "target_km2": 1261.324209733632,
+   "donor_km2": 927.215743500288,
+   "abs_log_ratio": 0.3077311366818894,
+   "n_days": 1219,
+   "nse": 0.7615886305705173
+  },
+  {
+   "target": "02450180",
+   "donor": "02453500",
+   "direction": "downstream",
+   "target_km2": 1261.324209733632,
+   "donor_km2": 4962.417219403776,
+   "abs_log_ratio": 1.369730835448216,
+   "n_days": 1819,
+   "nse": 0.6122788023467272
+  },
+  {
+   "target": "03022540",
+   "donor": "03022554",
+   "direction": "downstream",
+   "target_km2": 80.5486302314496,
+   "donor_km2": 118.10345783132159,
+   "abs_log_ratio": 0.38269989733515203,
+   "n_days": 1812,
+   "nse": 0.11679642453681527
+  },
+  {
+   "target": "03056000",
+   "donor": "03051000",
+   "direction": "upstream",
+   "target_km2": 3074.315886968832,
+   "donor_km2": 1074.84506578944,
+   "abs_log_ratio": 1.0509058743789697,
+   "n_days": 1826,
+   "nse": -0.6477120899919337
+  },
+  {
+   "target": "03056000",
+   "donor": "03054500",
+   "direction": "upstream",
+   "target_km2": 3074.315886968832,
+   "donor_km2": 2380.1990733987836,
+   "abs_log_ratio": 0.2558982722539811,
+   "n_days": 1826,
+   "nse": -0.5537223815004666
+  },
+  {
+   "target": "03056000",
+   "donor": "03057000",
+   "direction": "downstream",
+   "target_km2": 3074.315886968832,
+   "donor_km2": 3540.513746829312,
+   "abs_log_ratio": 0.14118944211428158,
+   "n_days": 1826,
+   "nse": 0.9425318025232466
+  },
+  {
+   "target": "03198000",
+   "donor": "03193000",
+   "direction": "upstream",
+   "target_km2": 27099.045598445566,
+   "donor_km2": 21717.05030516736,
+   "abs_log_ratio": 0.22140082912373812,
+   "n_days": 1826,
+   "nse": 0.9625916295516334
+  },
+  {
+   "target": "03227500",
+   "donor": "03221646",
+   "direction": "upstream",
+   "target_km2": 4219.090631737344,
+   "donor_km2": 2719.4875158528,
+   "abs_log_ratio": 0.43917616545047605,
+   "n_days": 1826,
+   "nse": 0.8735261058938887
+  },
+  {
+   "target": "03227500",
+   "donor": "03219500",
+   "direction": "upstream",
+   "target_km2": 4219.090631737344,
+   "donor_km2": 1468.523258560512,
+   "abs_log_ratio": 1.055362304874293,
+   "n_days": 1826,
+   "nse": 0.7734571731390332
+  },
+  {
+   "target": "03227500",
+   "donor": "03221000",
+   "direction": "upstream",
+   "target_km2": 4219.090631737344,
+   "donor_km2": 2538.18834812928,
+   "abs_log_ratio": 0.5081690369374275,
+   "n_days": 1826,
+   "nse": 0.840664725026465
+  },
+  {
+   "target": "03227500",
+   "donor": "03229610",
+   "direction": "downstream",
+   "target_km2": 4219.090631737344,
+   "donor_km2": 5884.452986683392,
+   "abs_log_ratio": 0.3326941712389969,
+   "n_days": 1826,
+   "nse": 0.9510142329581751
+  },
+  {
+   "target": "03227500",
+   "donor": "03230700",
+   "direction": "downstream",
+   "target_km2": 4219.090631737344,
+   "donor_km2": 8331.991750950912,
+   "abs_log_ratio": 0.6804829186369814,
+   "n_days": 1826,
+   "nse": 0.8416435591473943
+  },
+  {
+   "target": "03227500",
+   "donor": "03231500",
+   "direction": "downstream",
+   "target_km2": 4219.090631737344,
+   "donor_km2": 9968.864236683263,
+   "abs_log_ratio": 0.8598470446817009,
+   "n_days": 1826,
+   "nse": 0.7862945373084225
+  },
+  {
+   "target": "03282000",
+   "donor": "03280000",
+   "direction": "upstream",
+   "target_km2": 6881.5984091627515,
+   "donor_km2": 2851.5769094799357,
+   "abs_log_ratio": 0.8809788090371335,
+   "n_days": 1462,
+   "nse": 0.8538940461083487
+  },
+  {
+   "target": "03282000",
+   "donor": "03282290",
+   "direction": "downstream",
+   "target_km2": 6881.5984091627515,
+   "donor_km2": 8337.171727171584,
+   "abs_log_ratio": 0.19187308553899474,
+   "n_days": 1825,
+   "nse": 0.8759563010871052
+  },
+  {
+   "target": "03282000",
+   "donor": "03282060",
+   "direction": "downstream",
+   "target_km2": 6881.5984091627515,
+   "donor_km2": 7210.526899175424,
+   "abs_log_ratio": 0.04669107569449677,
+   "n_days": 1826,
+   "nse": 0.9958330682052385
+  },
+  {
+   "target": "03282000",
+   "donor": "03282120",
+   "direction": "downstream",
+   "target_km2": 6881.5984091627515,
+   "donor_km2": 7552.405329739776,
+   "abs_log_ratio": 0.09301514736873535,
+   "n_days": 944,
+   "nse": 0.9628210092457276
+  },
+  {
+   "target": "03294500",
+   "donor": "03292494",
+   "direction": "upstream",
+   "target_km2": 236129.2160193331,
+   "donor_km2": 235814.45476428396,
+   "abs_log_ratio": 0.0013338935182540617,
+   "n_days": 1823,
+   "nse": 0.9840164485469102
+  },
+  {
+   "target": "03324095",
+   "donor": "03323000",
+   "direction": "upstream",
+   "target_km2": 2843.8069451489278,
+   "donor_km2": 1377.873674698752,
+   "abs_log_ratio": 0.7246021327278315,
+   "n_days": 883,
+   "nse": 0.7726547537486071
+  },
+  {
+   "target": "03324095",
+   "donor": "03322900",
+   "direction": "upstream",
+   "target_km2": 2843.8069451489278,
+   "donor_km2": 1173.264613982208,
+   "abs_log_ratio": 0.8853534965864419,
+   "n_days": 883,
+   "nse": 0.7480944478631673
+  },
+  {
+   "target": "03324095",
+   "donor": "03327500",
+   "direction": "downstream",
+   "target_km2": 2843.8069451489278,
+   "donor_km2": 6956.708064362496,
+   "abs_log_ratio": 0.894562755013707,
+   "n_days": 877,
+   "nse": 0.7746319125717882
+  },
+  {
+   "target": "03324095",
+   "donor": "03324112",
+   "direction": "downstream",
+   "target_km2": 2843.8069451489278,
+   "donor_km2": 2926.68656467968,
+   "abs_log_ratio": 0.028727289636910427,
+   "n_days": 856,
+   "nse": 0.9840151948562933
+  },
+  {
+   "target": "03324095",
+   "donor": "03329000",
+   "direction": "downstream",
+   "target_km2": 2843.8069451489278,
+   "donor_km2": 9787.565068959744,
+   "abs_log_ratio": 1.2359690812800133,
+   "n_days": 883,
+   "nse": 0.8204964239629378
+  },
+  {
+   "target": "03324095",
+   "donor": "03325000",
+   "direction": "downstream",
+   "target_km2": 2843.8069451489278,
+   "donor_km2": 4579.098979074048,
+   "abs_log_ratio": 0.4763586211281128,
+   "n_days": 883,
+   "nse": 0.9020427479798709
+  },
+  {
+   "target": "03333450",
+   "donor": "03334000",
+   "direction": "downstream",
+   "target_km2": 378.13826410905597,
+   "donor_km2": 1025.635291693056,
+   "abs_log_ratio": 0.9978075895461441,
+   "n_days": 1826,
+   "nse": 0.7458640861873038
+  },
+  {
+   "target": "03333450",
+   "donor": "03333700",
+   "direction": "downstream",
+   "target_km2": 378.13826410905597,
+   "donor_km2": 631.957098921984,
+   "abs_log_ratio": 0.5135616035848655,
+   "n_days": 1826,
+   "nse": 0.9335899590458647
+  },
+  {
+   "target": "03352500",
+   "donor": "03351710",
+   "direction": "upstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 569.2275868896461,
+   "abs_log_ratio": 0.30446644048662636,
+   "n_days": 1493,
+   "nse": 0.9765151371301398
+  },
+  {
+   "target": "03352500",
+   "donor": "03351500",
+   "direction": "upstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 437.70799064678397,
+   "abs_log_ratio": 0.5671947715823309,
+   "n_days": 1826,
+   "nse": 0.9063283817988074
+  },
+  {
+   "target": "03352500",
+   "donor": "03353611",
+   "direction": "downstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 4915.797433417728,
+   "abs_log_ratio": 1.8514624926644687,
+   "n_days": 1798,
+   "nse": 0.8609779779792555
+  },
+  {
+   "target": "03352500",
+   "donor": "03353000",
+   "direction": "downstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 4234.63056039936,
+   "abs_log_ratio": 1.7023045968259494,
+   "n_days": 1826,
+   "nse": 0.8722770091654577
+  },
+  {
+   "target": "03352500",
+   "donor": "03352953",
+   "direction": "downstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 4200.960714964992,
+   "abs_log_ratio": 1.694321748169954,
+   "n_days": 1826,
+   "nse": 0.8383317183087813
+  },
+  {
+   "target": "03352500",
+   "donor": "03352875",
+   "direction": "downstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 821.0262309765119,
+   "abs_log_ratio": 0.061808287371876124,
+   "n_days": 1826,
+   "nse": 0.9603489432786124
+  },
+  {
+   "target": "03352500",
+   "donor": "03354000",
+   "direction": "downstream",
+   "target_km2": 771.8164568801279,
+   "donor_km2": 6329.930941661184,
+   "abs_log_ratio": 2.1042978337860814,
+   "n_days": 1826,
+   "nse": 0.8223539706042055
+  },
+  {
+   "target": "03353420",
+   "donor": "03353415",
+   "direction": "upstream",
+   "target_km2": 12.1729441185792,
+   "donor_km2": 8.78005969403904,
+   "abs_log_ratio": 0.326732587323654,
+   "n_days": 1782,
+   "nse": 0.8581018004469262
+  },
+  {
+   "target": "03497300",
+   "donor": "03498500",
+   "direction": "downstream",
+   "target_km2": 274.53873969561596,
+   "donor_km2": 696.7068016803839,
+   "abs_log_ratio": 0.931272285489772,
+   "n_days": 1826,
+   "nse": 0.7955970452513859
+  },
+  {
+   "target": "03497300",
+   "donor": "03498850",
+   "direction": "downstream",
+   "target_km2": 274.53873969561596,
+   "donor_km2": 776.9964331008,
+   "abs_log_ratio": 1.040343380544134,
+   "n_days": 1826,
+   "nse": 0.798948450859711
+  },
+  {
+   "target": "03584045",
+   "donor": "03584600",
+   "direction": "downstream",
+   "target_km2": 971.2455413759999,
+   "donor_km2": 4674.92853915648,
+   "abs_log_ratio": 1.5713898447965706,
+   "n_days": 1826,
+   "nse": 0.7326823725904534
+  },
+  {
+   "target": "03604400",
+   "donor": "03604000",
+   "direction": "upstream",
+   "target_km2": 1818.1716534558718,
+   "donor_km2": 1157.7246853201918,
+   "abs_log_ratio": 0.4513748094122423,
+   "n_days": 1825,
+   "nse": 0.6803939574011418
+  },
+  {
+   "target": "04065650",
+   "donor": "04066030",
+   "direction": "downstream",
+   "target_km2": 1007.505374920704,
+   "donor_km2": 8262.062071971839,
+   "abs_log_ratio": 2.104196852160444,
+   "n_days": 1826,
+   "nse": 0.7942014453798653
+  },
+  {
+   "target": "04065650",
+   "donor": "04065722",
+   "direction": "downstream",
+   "target_km2": 1007.505374920704,
+   "donor_km2": 7510.965519974399,
+   "abs_log_ratio": 2.008886672356119,
+   "n_days": 1826,
+   "nse": 0.7832352179091637
+  },
+  {
+   "target": "04065650",
+   "donor": "04066003",
+   "direction": "downstream",
+   "target_km2": 1007.505374920704,
+   "donor_km2": 8132.562666455039,
+   "abs_log_ratio": 2.0883987352838527,
+   "n_days": 1826,
+   "nse": 0.8031526190313389
+  },
+  {
+   "target": "04065650",
+   "donor": "04066800",
+   "direction": "downstream",
+   "target_km2": 1007.505374920704,
+   "donor_km2": 9582.9560082432,
+   "abs_log_ratio": 2.2525087550138694,
+   "n_days": 1826,
+   "nse": 0.7858514648710837
+  },
+  {
+   "target": "04078500",
+   "donor": "04079000",
+   "direction": "downstream",
+   "target_km2": 994.5554343690239,
+   "donor_km2": 5853.37312935936,
+   "abs_log_ratio": 1.7724775396786048,
+   "n_days": 1826,
+   "nse": 0.593816468083889
+  },
+  {
+   "target": "04084445",
+   "donor": "04082400",
+   "direction": "upstream",
+   "target_km2": 15410.4292564992,
+   "donor_km2": 13752.83686588416,
+   "abs_log_ratio": 0.11379938430369085,
+   "n_days": 1785,
+   "nse": 0.329915612319453
+  },
+  {
+   "target": "04084445",
+   "donor": "04073500",
+   "direction": "upstream",
+   "target_km2": 15410.4292564992,
+   "donor_km2": 3574.1835922636797,
+   "abs_log_ratio": 1.461307720388425,
+   "n_days": 1826,
+   "nse": 0.7073055579843445
+  },
+  {
+   "target": "04084445",
+   "donor": "040851385",
+   "direction": "downstream",
+   "target_km2": 15410.4292564992,
+   "donor_km2": 16394.62473842688,
+   "abs_log_ratio": 0.06190901659854646,
+   "n_days": 1823,
+   "nse": 0.8617243767342615
+  },
+  {
+   "target": "04087240",
+   "donor": "04087220",
+   "direction": "upstream",
+   "target_km2": 492.09774096383995,
+   "donor_km2": 127.4274150285312,
+   "abs_log_ratio": 1.3511304486622235,
+   "n_days": 1820,
+   "nse": -0.6572369435720864
+  },
+  {
+   "target": "04087240",
+   "donor": "040872342",
+   "direction": "upstream",
+   "target_km2": 492.09774096383995,
+   "donor_km2": 336.69845434368,
+   "abs_log_ratio": 0.3794896217049037,
+   "n_days": 464,
+   "nse": 0.5311051985840397
+  },
+  {
+   "target": "04087240",
+   "donor": "04087234",
+   "direction": "upstream",
+   "target_km2": 492.09774096383995,
+   "donor_km2": 328.928490012672,
+   "abs_log_ratio": 0.40283698570189475,
+   "n_days": 1553,
+   "nse": 0.8228526260413842
+  },
+  {
+   "target": "04108660",
+   "donor": "04107850",
+   "direction": "upstream",
+   "target_km2": 5050.4768151552,
+   "donor_km2": 3962.68180881408,
+   "abs_log_ratio": 0.24256163717131127,
+   "n_days": 1280,
+   "nse": 0.9032943384882464
+  },
+  {
+   "target": "04112500",
+   "donor": "04111379",
+   "direction": "upstream",
+   "target_km2": 919.44577916928,
+   "donor_km2": 422.168061984768,
+   "abs_log_ratio": 0.7783675886686534,
+   "n_days": 1826,
+   "nse": 0.94065696292599
+  },
+  {
+   "target": "04112500",
+   "donor": "04114000",
+   "direction": "downstream",
+   "target_km2": 919.44577916928,
+   "donor_km2": 3587.13353281536,
+   "abs_log_ratio": 1.361337629146023,
+   "n_days": 1826,
+   "nse": 0.8557106218821289
+  },
+  {
+   "target": "04112500",
+   "donor": "04113000",
+   "direction": "downstream",
+   "target_km2": 919.44577916928,
+   "donor_km2": 3185.68537571328,
+   "abs_log_ratio": 1.2426516588910472,
+   "n_days": 1826,
+   "nse": 0.8495524658158432
+  },
+  {
+   "target": "04184500",
+   "donor": "04185318",
+   "direction": "downstream",
+   "target_km2": 533.5375507292159,
+   "donor_km2": 1458.1633061191678,
+   "abs_log_ratio": 1.0054034593501093,
+   "n_days": 1826,
+   "nse": 0.7566520349747178
+  },
+  {
+   "target": "04184500",
+   "donor": "04185000",
+   "direction": "downstream",
+   "target_km2": 533.5375507292159,
+   "donor_km2": 1061.8951252377599,
+   "abs_log_ratio": 0.6882809909087724,
+   "n_days": 1826,
+   "nse": 0.7538963268987728
+  },
+  {
+   "target": "04230500",
+   "donor": "04230380",
+   "direction": "upstream",
+   "target_km2": 530.9475626188799,
+   "donor_km2": 102.30453035827199,
+   "abs_log_ratio": 1.646709307231332,
+   "n_days": 1826,
+   "nse": -0.5009256774710025
+  },
+  {
+   "target": "05207600",
+   "donor": "05200510",
+   "direction": "upstream",
+   "target_km2": 7381.466114457599,
+   "donor_km2": 1579.8927473049598,
+   "abs_log_ratio": 1.5416153160953394,
+   "n_days": 1269,
+   "nse": -0.6791472900369411
+  },
+  {
+   "target": "05207600",
+   "donor": "05211000",
+   "direction": "downstream",
+   "target_km2": 7381.466114457599,
+   "donor_km2": 8728.25993183232,
+   "abs_log_ratio": 0.1675937500837112,
+   "n_days": 1826,
+   "nse": 0.750332821337784
+  },
+  {
+   "target": "05325000",
+   "donor": "05316770",
+   "direction": "upstream",
+   "target_km2": 38590.8228440064,
+   "donor_km2": 24837.98597812224,
+   "abs_log_ratio": 0.4406403240560665,
+   "n_days": 1826,
+   "nse": 0.7642018920276551
+  },
+  {
+   "target": "05355250",
+   "donor": "05331580",
+   "direction": "upstream",
+   "target_km2": 121470.4423747584,
+   "donor_km2": 96088.5588934656,
+   "abs_log_ratio": 0.23440070583884418,
+   "n_days": 1226,
+   "nse": 0.9556575350494246
+  },
+  {
+   "target": "05355250",
+   "donor": "05344500",
+   "direction": "upstream",
+   "target_km2": 121470.4423747584,
+   "donor_km2": 116031.46734305279,
+   "abs_log_ratio": 0.0458095360312942,
+   "n_days": 1226,
+   "nse": 0.9753482546851915
+  },
+  {
+   "target": "05355250",
+   "donor": "05331000",
+   "direction": "upstream",
+   "target_km2": 121470.4423747584,
+   "donor_km2": 95311.56246036479,
+   "abs_log_ratio": 0.24251983027734855,
+   "n_days": 1226,
+   "nse": 0.9629907814237597
+  },
+  {
+   "target": "05406469",
+   "donor": "05406457",
+   "direction": "upstream",
+   "target_km2": 26.158879914393598,
+   "donor_km2": 29.525864457830398,
+   "abs_log_ratio": 0.12107793155323604,
+   "n_days": 1825,
+   "nse": -12.875838912713936
+  },
+  {
+   "target": "05406469",
+   "donor": "05406479",
+   "direction": "downstream",
+   "target_km2": 26.158879914393598,
+   "donor_km2": 68.8936837349376,
+   "abs_log_ratio": 0.9683757919404397,
+   "n_days": 1824,
+   "nse": -4.179727630691769
+  },
+  {
+   "target": "05406469",
+   "donor": "05406500",
+   "direction": "downstream",
+   "target_km2": 26.158879914393598,
+   "donor_km2": 118.10345783132159,
+   "abs_log_ratio": 1.5073722926731266,
+   "n_days": 1825,
+   "nse": -9.66369273992682
+  },
+  {
+   "target": "05427850",
+   "donor": "05427718",
+   "direction": "upstream",
+   "target_km2": 295.258644578304,
+   "donor_km2": 190.62312492072957,
+   "abs_log_ratio": 0.43755342265966496,
+   "n_days": 1826,
+   "nse": -0.1061412433755653
+  },
+  {
+   "target": "05427850",
+   "donor": "05428500",
+   "direction": "downstream",
+   "target_km2": 295.258644578304,
+   "donor_km2": 608.6472059289599,
+   "abs_log_ratio": 0.7233870657496634,
+   "n_days": 1826,
+   "nse": -0.46658098480611976
+  },
+  {
+   "target": "05427850",
+   "donor": "05429700",
+   "direction": "downstream",
+   "target_km2": 295.258644578304,
+   "donor_km2": 1054.125160906752,
+   "abs_log_ratio": 1.2726147370480996,
+   "n_days": 1826,
+   "nse": -0.33446044970775257
+  },
+  {
+   "target": "05427850",
+   "donor": "05429500",
+   "direction": "downstream",
+   "target_km2": 295.258644578304,
+   "donor_km2": 846.9261120798719,
+   "abs_log_ratio": 1.0537617225027578,
+   "n_days": 1826,
+   "nse": -0.4869746756951512
+  },
+  {
+   "target": "05427850",
+   "donor": "05430175",
+   "direction": "downstream",
+   "target_km2": 295.258644578304,
+   "donor_km2": 1341.613841154048,
+   "abs_log_ratio": 1.5137767938649878,
+   "n_days": 1826,
+   "nse": -0.20073040910557327
+  },
+  {
+   "target": "05485605",
+   "donor": "05485640",
+   "direction": "downstream",
+   "target_km2": 160.579262840832,
+   "donor_km2": 240.09189782814718,
+   "abs_log_ratio": 0.4022340875267179,
+   "n_days": 1826,
+   "nse": 0.9412953638392855
+  },
+  {
+   "target": "05529000",
+   "donor": "05527800",
+   "direction": "upstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 318.56853757132797,
+   "abs_log_ratio": 1.0739196760777383,
+   "n_days": 1826,
+   "nse": 0.49155569077156647
+  },
+  {
+   "target": "05529000",
+   "donor": "05528000",
+   "direction": "upstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 600.877241597952,
+   "abs_log_ratio": 0.4393666597838457,
+   "n_days": 1826,
+   "nse": 0.8821527761329326
+  },
+  {
+   "target": "05529000",
+   "donor": "05528100",
+   "direction": "upstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 707.066754121728,
+   "abs_log_ratio": 0.27663223626519595,
+   "n_days": 1826,
+   "nse": 0.9522762957058664
+  },
+  {
+   "target": "05529000",
+   "donor": "05530100",
+   "direction": "downstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 1045.8371989536768,
+   "abs_log_ratio": 0.1148156744285815,
+   "n_days": 1826,
+   "nse": 0.9868165883755369
+  },
+  {
+   "target": "05529000",
+   "donor": "05537980",
+   "direction": "downstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 3890.162141724672,
+   "abs_log_ratio": 1.4284488008739245,
+   "n_days": 1826,
+   "nse": -1.1298761678067413
+  },
+  {
+   "target": "05529000",
+   "donor": "05533600",
+   "direction": "downstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 1787.3507949428736,
+   "abs_log_ratio": 0.6507324831764005,
+   "n_days": 1826,
+   "nse": 0.7684698304893336
+  },
+  {
+   "target": "05529000",
+   "donor": "05532500",
+   "direction": "downstream",
+   "target_km2": 932.39571972096,
+   "donor_km2": 1631.6925095116799,
+   "abs_log_ratio": 0.5596157879354228,
+   "n_days": 1826,
+   "nse": 0.8331211153125107
+  },
+  {
+   "target": "05532500",
+   "donor": "05530100",
+   "direction": "upstream",
+   "target_km2": 1631.6925095116799,
+   "donor_km2": 1045.8371989536768,
+   "abs_log_ratio": 0.44480011350684123,
+   "n_days": 1826,
+   "nse": 0.8725982571309948
+  },
+  {
+   "target": "05532500",
+   "donor": "05528000",
+   "direction": "upstream",
+   "target_km2": 1631.6925095116799,
+   "donor_km2": 600.877241597952,
+   "abs_log_ratio": 0.9989824477192684,
+   "n_days": 1826,
+   "nse": 0.5883103505981531
+  },
+  {
+   "target": "05532500",
+   "donor": "05528100",
+   "direction": "upstream",
+   "target_km2": 1631.6925095116799,
+   "donor_km2": 707.066754121728,
+   "abs_log_ratio": 0.8362480242006185,
+   "n_days": 1826,
+   "nse": 0.686410106066558
+  },
+  {
+   "target": "05532500",
+   "donor": "05537980",
+   "direction": "downstream",
+   "target_km2": 1631.6925095116799,
+   "donor_km2": 3890.162141724672,
+   "abs_log_ratio": 0.8688330129385018,
+   "n_days": 1826,
+   "nse": -0.5470867446715044
+  },
+  {
+   "target": "05532500",
+   "donor": "05533600",
+   "direction": "downstream",
+   "target_km2": 1631.6925095116799,
+   "donor_km2": 1787.3507949428736,
+   "abs_log_ratio": 0.0911166952409778,
+   "n_days": 1826,
+   "nse": 0.899960388583647
+  },
+  {
+   "target": "05591700",
+   "donor": "05592000",
+   "direction": "downstream",
+   "target_km2": 290.07866835763195,
+   "donor_km2": 2729.8474682941437,
+   "abs_log_ratio": 2.2418488578062132,
+   "n_days": 1826,
+   "nse": -0.017930255726332778
+  },
+  {
+   "target": "05597000",
+   "donor": "05599490",
+   "direction": "downstream",
+   "target_km2": 2051.270583386112,
+   "donor_km2": 5591.784330215423,
+   "abs_log_ratio": 1.0028390387003816,
+   "n_days": 1826,
+   "nse": 0.8901733439944118
+  },
+  {
+   "target": "06036650",
+   "donor": "06027600",
+   "direction": "upstream",
+   "target_km2": 24755.106358591485,
+   "donor_km2": 20095.717748097024,
+   "abs_log_ratio": 0.20852504024415416,
+   "n_days": 508,
+   "nse": 0.9462943157742951
+  },
+  {
+   "target": "06036650",
+   "donor": "06054500",
+   "direction": "downstream",
+   "target_km2": 24755.106358591485,
+   "donor_km2": 37920.015923429375,
+   "abs_log_ratio": 0.4264473120553787,
+   "n_days": 1826,
+   "nse": -0.09126752909097258
+  },
+  {
+   "target": "06327500",
+   "donor": "06329500",
+   "direction": "downstream",
+   "target_km2": 172832.4965908316,
+   "donor_km2": 178965.58843610727,
+   "abs_log_ratio": 0.03487064632212373,
+   "n_days": 1826,
+   "nse": 0.9740612569705119
+  },
+  {
+   "target": "06430850",
+   "donor": "06431500",
+   "direction": "downstream",
+   "target_km2": 72.0016694673408,
+   "donor_km2": 427.34803820544,
+   "abs_log_ratio": 1.7809094532039893,
+   "n_days": 1826,
+   "nse": -9.54520175590801
+  },
+  {
+   "target": "06449500",
+   "donor": "06449100",
+   "direction": "upstream",
+   "target_km2": 2675.4577179770877,
+   "donor_km2": 1572.1227829739519,
+   "abs_log_ratio": 0.5316936780601402,
+   "n_days": 1784,
+   "nse": 0.3810026324651372
+  },
+  {
+   "target": "06449500",
+   "donor": "06450500",
+   "direction": "downstream",
+   "target_km2": 2675.4577179770877,
+   "donor_km2": 4011.891582910464,
+   "abs_log_ratio": 0.40514237129723024,
+   "n_days": 1784,
+   "nse": 0.22282638226230422
+  },
+  {
+   "target": "06486000",
+   "donor": "06601200",
+   "direction": "downstream",
+   "target_km2": 814810.2595117056,
+   "donor_km2": 818954.2404882432,
+   "abs_log_ratio": 0.005072934151194143,
+   "n_days": 1826,
+   "nse": 0.9798360792172404
+  },
+  {
+   "target": "06718550",
+   "donor": "06719505",
+   "direction": "downstream",
+   "target_km2": 155.39928662015998,
+   "donor_km2": 1020.455315472384,
+   "abs_log_ratio": 1.8820063470758333,
+   "n_days": 1816,
+   "nse": -0.28359488710840086
+  },
+  {
+   "target": "06864000",
+   "donor": "06862700",
+   "direction": "upstream",
+   "target_km2": 18039.267188490237,
+   "donor_km2": 14918.33151553536,
+   "abs_log_ratio": 0.18996013252396912,
+   "n_days": 1826,
+   "nse": -0.03223320269162677
+  },
+  {
+   "target": "06864000",
+   "donor": "06863000",
+   "direction": "upstream",
+   "target_km2": 18039.267188490237,
+   "donor_km2": 15625.398269657087,
+   "abs_log_ratio": 0.14365320777314425,
+   "n_days": 1826,
+   "nse": 0.2647619408003896
+  },
+  {
+   "target": "06864000",
+   "donor": "06862850",
+   "direction": "upstream",
+   "target_km2": 18039.267188490237,
+   "donor_km2": 15047.830921052158,
+   "abs_log_ratio": 0.18131703636794919,
+   "n_days": 1826,
+   "nse": 0.0556562844770776
+  },
+  {
+   "target": "06864000",
+   "donor": "06864500",
+   "direction": "downstream",
+   "target_km2": 18039.267188490237,
+   "donor_km2": 19632.10987634688,
+   "abs_log_ratio": 0.08461559242251146,
+   "n_days": 1823,
+   "nse": -0.24379621415282005
+  },
+  {
+   "target": "06869500",
+   "donor": "06868850",
+   "direction": "upstream",
+   "target_km2": 7303.76647114752,
+   "donor_km2": 6604.4696813568,
+   "abs_log_ratio": 0.1006435257796875,
+   "n_days": 1826,
+   "nse": 0.7398248678853048
+  },
+  {
+   "target": "06891080",
+   "donor": "06891000",
+   "direction": "upstream",
+   "target_km2": 151514.304454656,
+   "donor_km2": 151410.70493024256,
+   "abs_log_ratio": 0.0006839945547109872,
+   "n_days": 1826,
+   "nse": 0.988971700606674
+  },
+  {
+   "target": "06891080",
+   "donor": "06889000",
+   "direction": "upstream",
+   "target_km2": 151514.304454656,
+   "donor_km2": 146904.1256182579,
+   "abs_log_ratio": 0.030899872013938866,
+   "n_days": 1826,
+   "nse": 0.9146596590409661
+  },
+  {
+   "target": "06891080",
+   "donor": "06888990",
+   "direction": "upstream",
+   "target_km2": 151514.304454656,
+   "donor_km2": 146816.06602250648,
+   "abs_log_ratio": 0.03149948757252832,
+   "n_days": 1826,
+   "nse": 0.9029534081139755
+  },
+  {
+   "target": "06891080",
+   "donor": "06892350",
+   "direction": "downstream",
+   "target_km2": 151514.304454656,
+   "donor_km2": 154767.32952123802,
+   "abs_log_ratio": 0.021242849942260056,
+   "n_days": 1826,
+   "nse": 0.9205076512859173
+  },
+  {
+   "target": "06891080",
+   "donor": "06892518",
+   "direction": "downstream",
+   "target_km2": 151514.304454656,
+   "donor_km2": 155360.43679850496,
+   "abs_log_ratio": 0.025067776729080594,
+   "n_days": 1826,
+   "nse": 0.81946749710789
+  },
+  {
+   "target": "06891080",
+   "donor": "06893000",
+   "direction": "downstream",
+   "target_km2": 151514.304454656,
+   "donor_km2": 1253813.2442136575,
+   "abs_log_ratio": 2.113264742707838,
+   "n_days": 1826,
+   "nse": -0.0012200494447123233
+  },
+  {
+   "target": "06904010",
+   "donor": "06903400",
+   "direction": "upstream",
+   "target_km2": 1916.59120164864,
+   "donor_km2": 471.377836081152,
+   "abs_log_ratio": 1.40264349912142,
+   "n_days": 1825,
+   "nse": -2.4943269046376564
+  },
+  {
+   "target": "06904010",
+   "donor": "06903900",
+   "direction": "upstream",
+   "target_km2": 1916.59120164864,
+   "donor_km2": 1421.9034725744639,
+   "abs_log_ratio": 0.29855174468868484,
+   "n_days": 1825,
+   "nse": 0.668472797606913
+  },
+  {
+   "target": "06904010",
+   "donor": "06904500",
+   "direction": "downstream",
+   "target_km2": 1916.59120164864,
+   "donor_km2": 3548.28371116032,
+   "abs_log_ratio": 0.6159158326239551,
+   "n_days": 1825,
+   "nse": 0.25131872278462064
+  },
+  {
+   "target": "07010082",
+   "donor": "07010086",
+   "direction": "downstream",
+   "target_km2": 15.047830921052158,
+   "donor_km2": 94.53456602726399,
+   "abs_log_ratio": 1.837731689724626,
+   "n_days": 1826,
+   "nse": 0.7494075096197093
+  },
+  {
+   "target": "07047950",
+   "donor": "07047932",
+   "direction": "upstream",
+   "target_km2": 2035.730654724096,
+   "donor_km2": 473.967824191488,
+   "abs_log_ratio": 1.4574706395877857,
+   "n_days": 1544,
+   "nse": 0.7959464204780045
+  },
+  {
+   "target": "07047950",
+   "donor": "07047942",
+   "direction": "upstream",
+   "target_km2": 2035.730654724096,
+   "donor_km2": 1385.64363902976,
+   "abs_log_ratio": 0.3846900455332,
+   "n_days": 1826,
+   "nse": 0.8642698479407702
+  },
+  {
+   "target": "07074850",
+   "donor": "07074500",
+   "direction": "upstream",
+   "target_km2": 53094.756261888,
+   "donor_km2": 51540.763395686394,
+   "abs_log_ratio": 0.02970515441391591,
+   "n_days": 1826,
+   "nse": 0.9027908263476178
+  },
+  {
+   "target": "07074850",
+   "donor": "07076750",
+   "direction": "downstream",
+   "target_km2": 53094.756261888,
+   "donor_km2": 58015.733671526395,
+   "abs_log_ratio": 0.08863607271663171,
+   "n_days": 1826,
+   "nse": 0.9370615112358948
+  },
+  {
+   "target": "07159100",
+   "donor": "07160000",
+   "direction": "downstream",
+   "target_km2": 40945.12203630182,
+   "donor_km2": 44045.337804374016,
+   "abs_log_ratio": 0.0729868248495501,
+   "n_days": 1826,
+   "nse": -1.03217311525998
+  },
+  {
+   "target": "07170500",
+   "donor": "07166500",
+   "direction": "upstream",
+   "target_km2": 7490.245615091711,
+   "donor_km2": 2833.446992707584,
+   "abs_log_ratio": 0.9721076002967288,
+   "n_days": 1826,
+   "nse": 0.7572924189046475
+  },
+  {
+   "target": "07170500",
+   "donor": "07170990",
+   "direction": "downstream",
+   "target_km2": 7490.245615091711,
+   "donor_km2": 8655.740264742912,
+   "abs_log_ratio": 0.14462112587668377,
+   "n_days": 1826,
+   "nse": 0.9220545229358127
+  },
+  {
+   "target": "07170500",
+   "donor": "07171000",
+   "direction": "downstream",
+   "target_km2": 7490.245615091711,
+   "donor_km2": 9282.517387444223,
+   "abs_log_ratio": 0.21453119081616573,
+   "n_days": 1826,
+   "nse": 0.8524429762671468
+  },
+  {
+   "target": "07187000",
+   "donor": "07187600",
+   "direction": "downstream",
+   "target_km2": 1105.924923113472,
+   "donor_km2": 6340.290894102528,
+   "abs_log_ratio": 1.7462426304035923,
+   "n_days": 1826,
+   "nse": 0.6570064231216681
+  },
+  {
+   "target": "07187000",
+   "donor": "07188000",
+   "direction": "downstream",
+   "target_km2": 1105.924923113472,
+   "donor_km2": 6516.410085605376,
+   "abs_log_ratio": 1.7736416045917065,
+   "n_days": 1826,
+   "nse": 0.6099362033318834
+  },
+  {
+   "target": "071912213",
+   "donor": "07191179",
+   "direction": "upstream",
+   "target_km2": 422.168061984768,
+   "donor_km2": 266.76877536460796,
+   "abs_log_ratio": 0.4590212125771267,
+   "n_days": 1825,
+   "nse": 0.9628951624907339
+  },
+  {
+   "target": "071912213",
+   "donor": "07191220",
+   "direction": "upstream",
+   "target_km2": 422.168061984768,
+   "donor_km2": 341.87843056435196,
+   "abs_log_ratio": 0.2109482782203915,
+   "n_days": 1825,
+   "nse": 0.9829092843108691
+  },
+  {
+   "target": "071912213",
+   "donor": "07191160",
+   "direction": "upstream",
+   "target_km2": 422.168061984768,
+   "donor_km2": 231.803935875072,
+   "abs_log_ratio": 0.5995115755259526,
+   "n_days": 1825,
+   "nse": 0.9545297419256852
+  },
+  {
+   "target": "071912213",
+   "donor": "07191288",
+   "direction": "downstream",
+   "target_km2": 422.168061984768,
+   "donor_km2": 929.805731610624,
+   "abs_log_ratio": 0.7895721876815166,
+   "n_days": 1825,
+   "nse": 0.8201359642103176
+  },
+  {
+   "target": "07241800",
+   "donor": "07241550",
+   "direction": "upstream",
+   "target_km2": 36272.78348525568,
+   "donor_km2": 35677.086219878394,
+   "abs_log_ratio": 0.01655905367309366,
+   "n_days": 1826,
+   "nse": 0.7738701479973807
+  },
+  {
+   "target": "07263012",
+   "donor": "07261500",
+   "direction": "upstream",
+   "target_km2": 2478.618621591552,
+   "donor_km2": 1061.8951252377599,
+   "abs_log_ratio": 0.8476462317546007,
+   "n_days": 1826,
+   "nse": -2.9049606050019707
+  },
+  {
+   "target": "07263012",
+   "donor": "07263115",
+   "direction": "downstream",
+   "target_km2": 2478.618621591552,
+   "donor_km2": 2740.2074207354876,
+   "abs_log_ratio": 0.10033222096529033,
+   "n_days": 801,
+   "nse": 0.8858975881791228
+  },
+  {
+   "target": "07285400",
+   "donor": "07285500",
+   "direction": "downstream",
+   "target_km2": 621.5971464806399,
+   "donor_km2": 4014.4815710208,
+   "abs_log_ratio": 1.8653712865713012,
+   "n_days": 1445,
+   "nse": 0.18286059816007472
+  },
+  {
+   "target": "07364185",
+   "donor": "07364200",
+   "direction": "downstream",
+   "target_km2": 2874.88680247296,
+   "donor_km2": 3074.315886968832,
+   "abs_log_ratio": 0.06706910030328812,
+   "n_days": 1826,
+   "nse": 0.9245781706813532
+  },
+  {
+   "target": "08019200",
+   "donor": "08018500",
+   "direction": "upstream",
+   "target_km2": 5850.783141249024,
+   "donor_km2": 3514.6138657259517,
+   "abs_log_ratio": 0.5096458566331343,
+   "n_days": 1826,
+   "nse": 0.7293100848329164
+  },
+  {
+   "target": "08019200",
+   "donor": "08020450",
+   "direction": "downstream",
+   "target_km2": 5850.783141249024,
+   "donor_km2": 7622.335008718847,
+   "abs_log_ratio": 0.2645072317654695,
+   "n_days": 841,
+   "nse": -0.5867727844828301
+  },
+  {
+   "target": "08019200",
+   "donor": "08020000",
+   "direction": "downstream",
+   "target_km2": 5850.783141249024,
+   "donor_km2": 7228.656815947776,
+   "abs_log_ratio": 0.21147771706831878,
+   "n_days": 1826,
+   "nse": 0.9008236794014314
+  },
+  {
+   "target": "08053500",
+   "donor": "08053430",
+   "direction": "upstream",
+   "target_km2": 1035.9952441343999,
+   "donor_km2": 714.3446207117721,
+   "abs_log_ratio": 0.37175232424800597,
+   "n_days": 1826,
+   "nse": 0.6514323640589335
+  },
+  {
+   "target": "08053500",
+   "donor": "08055560",
+   "direction": "downstream",
+   "target_km2": 1035.9952441343999,
+   "donor_km2": 6570.799835922432,
+   "abs_log_ratio": 1.8472730124913002,
+   "n_days": 1826,
+   "nse": 0.12448077465504648
+  },
+  {
+   "target": "08053500",
+   "donor": "08055000",
+   "direction": "downstream",
+   "target_km2": 1035.9952441343999,
+   "donor_km2": 1825.94161778688,
+   "abs_log_ratio": 0.5667332557042868,
+   "n_days": 1826,
+   "nse": -0.02270205091518651
+  },
+  {
+   "target": "08053500",
+   "donor": "08055500",
+   "direction": "downstream",
+   "target_km2": 1035.9952441343999,
+   "donor_km2": 6368.780763316224,
+   "abs_log_ratio": 1.8160454951082106,
+   "n_days": 1826,
+   "nse": 0.055495811448529775
+  },
+  {
+   "target": "08063460",
+   "donor": "08063100",
+   "direction": "upstream",
+   "target_km2": 1890.69132054528,
+   "donor_km2": 862.4660407418879,
+   "abs_log_ratio": 0.784902044161993,
+   "n_days": 1826,
+   "nse": 0.13681487803844838
+  },
+  {
+   "target": "08104700",
+   "donor": "0810464660",
+   "direction": "upstream",
+   "target_km2": 642.317051363328,
+   "donor_km2": 543.89750317056,
+   "abs_log_ratio": 0.16632121544751352,
+   "n_days": 1826,
+   "nse": -166.70295848167015
+  },
+  {
+   "target": "08104700",
+   "donor": "08105700",
+   "direction": "downstream",
+   "target_km2": 642.317051363328,
+   "donor_km2": 1911.4112254279678,
+   "abs_log_ratio": 1.0905150784354902,
+   "n_days": 1826,
+   "nse": 0.36354615309808835
+  },
+  {
+   "target": "08104900",
+   "donor": "08105700",
+   "direction": "downstream",
+   "target_km2": 344.468418674688,
+   "donor_km2": 1911.4112254279678,
+   "abs_log_ratio": 1.7135946963787188,
+   "n_days": 1826,
+   "nse": -0.001034901926134868
+  },
+  {
+   "target": "08169845",
+   "donor": "08169792",
+   "direction": "upstream",
+   "target_km2": 5358.685400285183,
+   "donor_km2": 5068.606731927552,
+   "abs_log_ratio": 0.055652710349466734,
+   "n_days": 1826,
+   "nse": -0.579220845040558
+  },
+  {
+   "target": "08169845",
+   "donor": "08173900",
+   "direction": "downstream",
+   "target_km2": 5358.685400285183,
+   "donor_km2": 9039.058505072639,
+   "abs_log_ratio": 0.5228363374509298,
+   "n_days": 1825,
+   "nse": 0.5730073219031042
+  },
+  {
+   "target": "08174200",
+   "donor": "08174600",
+   "direction": "downstream",
+   "target_km2": 354.828371116032,
+   "donor_km2": 1191.39453075456,
+   "abs_log_ratio": 1.211245563655016,
+   "n_days": 1826,
+   "nse": -1.296215745289393
+  },
+  {
+   "target": "08175800",
+   "donor": "08176500",
+   "direction": "downstream",
+   "target_km2": 12779.001336397823,
+   "donor_km2": 13462.758197526528,
+   "abs_log_ratio": 0.05212391811213357,
+   "n_days": 1826,
+   "nse": 0.7666175458447974
+  },
+  {
+   "target": "08185065",
+   "donor": "08185000",
+   "direction": "upstream",
+   "target_km2": 792.536361762816,
+   "donor_km2": 709.656742232064,
+   "abs_log_ratio": 0.11045699556431061,
+   "n_days": 1826,
+   "nse": 0.7364830220485473
+  },
+  {
+   "target": "08185065",
+   "donor": "08183978",
+   "direction": "upstream",
+   "target_km2": 792.536361762816,
+   "donor_km2": 419.578073874432,
+   "abs_log_ratio": 0.6359887667199967,
+   "n_days": 1824,
+   "nse": -0.05959050511030828
+  },
+  {
+   "target": "08185065",
+   "donor": "08184050",
+   "direction": "upstream",
+   "target_km2": 792.536361762816,
+   "donor_km2": 525.767586398208,
+   "abs_log_ratio": 0.41037912291059353,
+   "n_days": 1824,
+   "nse": -0.0018225837018084334
+  },
+  {
+   "target": "08185065",
+   "donor": "08185500",
+   "direction": "downstream",
+   "target_km2": 792.536361762816,
+   "donor_km2": 1722.3420933734399,
+   "abs_log_ratio": 0.7762019387034733,
+   "n_days": 1826,
+   "nse": -0.031181000239252077
+  },
+  {
+   "target": "08189300",
+   "donor": "08189500",
+   "direction": "downstream",
+   "target_km2": 528.357574508544,
+   "donor_km2": 1787.0917961318398,
+   "abs_log_ratio": 1.2185716037470886,
+   "n_days": 1826,
+   "nse": -3.744755405296946
+  },
+  {
+   "target": "08361000",
+   "donor": "08359500",
+   "direction": "upstream",
+   "target_km2": 76275.1498493952,
+   "donor_km2": 73814.66114457599,
+   "abs_log_ratio": 0.03278982282299097,
+   "n_days": 1825,
+   "nse": -0.6126292745902451
+  },
+  {
+   "target": "08361000",
+   "donor": "08358400",
+   "direction": "upstream",
+   "target_km2": 76275.1498493952,
+   "donor_km2": 71742.6706563072,
+   "abs_log_ratio": 0.06126149690430291,
+   "n_days": 1826,
+   "nse": -0.46330718349405364
+  },
+  {
+   "target": "08406000",
+   "donor": "08405350",
+   "direction": "upstream",
+   "target_km2": 1002.325398700032,
+   "donor_km2": 823.616219086848,
+   "abs_log_ratio": 0.19637331024960503,
+   "n_days": 1052,
+   "nse": -0.03559952613305328
+  },
+  {
+   "target": "08406000",
+   "donor": "08405400",
+   "direction": "upstream",
+   "target_km2": 1002.325398700032,
+   "donor_km2": 924.6257553899519,
+   "abs_log_ratio": 0.08068891125014287,
+   "n_days": 1057,
+   "nse": -0.006004828372330184
+  },
+  {
+   "target": "08406000",
+   "donor": "08405500",
+   "direction": "upstream",
+   "target_km2": 1002.325398700032,
+   "donor_km2": 960.885588934656,
+   "abs_log_ratio": 0.04222263042234675,
+   "n_days": 1075,
+   "nse": 0.5541752365971997
+  },
+  {
+   "target": "09132500",
+   "donor": "09136100",
+   "direction": "downstream",
+   "target_km2": 1359.7437579264,
+   "donor_km2": 2509.698478915584,
+   "abs_log_ratio": 0.6128663492991426,
+   "n_days": 1826,
+   "nse": 0.803920682611714
+  },
+  {
+   "target": "09132500",
+   "donor": "09134100",
+   "direction": "downstream",
+   "target_km2": 1359.7437579264,
+   "donor_km2": 1926.951154089984,
+   "abs_log_ratio": 0.3486427722414682,
+   "n_days": 615,
+   "nse": -0.07640535117811287
+  },
+  {
+   "target": "09177000",
+   "donor": "09172500",
+   "direction": "upstream",
+   "target_km2": 3884.9821655039996,
+   "donor_km2": 800.3063260938239,
+   "abs_log_ratio": 1.579879110192556,
+   "n_days": 1826,
+   "nse": -4.800922116005245
+  },
+  {
+   "target": "09177000",
+   "donor": "09174600",
+   "direction": "upstream",
+   "target_km2": 3884.9821655039996,
+   "donor_km2": 1924.361165979648,
+   "abs_log_ratio": 0.7025243423725421,
+   "n_days": 1826,
+   "nse": 0.5790953218856598
+  },
+  {
+   "target": "09177000",
+   "donor": "09179450",
+   "direction": "downstream",
+   "target_km2": 3884.9821655039996,
+   "donor_km2": 10738.090705453056,
+   "abs_log_ratio": 1.0166789059054238,
+   "n_days": 1826,
+   "nse": 0.8384987256769539
+  },
+  {
+   "target": "09177000",
+   "donor": "09180000",
+   "direction": "downstream",
+   "target_km2": 3884.9821655039996,
+   "donor_km2": 11862.145545338879,
+   "abs_log_ratio": 1.1162338900179292,
+   "n_days": 1826,
+   "nse": 0.794354850295301
+  },
+  {
+   "target": "09185100",
+   "donor": "09183500",
+   "direction": "upstream",
+   "target_km2": 367.778311667712,
+   "donor_km2": 69.4116813570048,
+   "abs_log_ratio": 1.6674251700844498,
+   "n_days": 1826,
+   "nse": -9.109623233849682
+  },
+  {
+   "target": "09185100",
+   "donor": "09183600",
+   "direction": "upstream",
+   "target_km2": 367.778311667712,
+   "donor_km2": 71.4836718452736,
+   "abs_log_ratio": 1.6380112848781563,
+   "n_days": 1826,
+   "nse": -2.943317855273061
+  },
+  {
+   "target": "09237450",
+   "donor": "09239500",
+   "direction": "downstream",
+   "target_km2": 533.5375507292159,
+   "donor_km2": 1468.523258560512,
+   "abs_log_ratio": 1.012483134938171,
+   "n_days": 1825,
+   "nse": -38.57225938391369
+  },
+  {
+   "target": "09237450",
+   "donor": "09240020",
+   "direction": "downstream",
+   "target_km2": 533.5375507292159,
+   "donor_km2": 1546.2229018705918,
+   "abs_log_ratio": 1.0640409446030212,
+   "n_days": 615,
+   "nse": -79.19171890637621
+  },
+  {
+   "target": "09237450",
+   "donor": "09237500",
+   "direction": "downstream",
+   "target_km2": 533.5375507292159,
+   "donor_km2": 590.517289156608,
+   "abs_log_ratio": 0.10146946016485978,
+   "n_days": 1825,
+   "nse": 0.5657604539909997
+  },
+  {
+   "target": "09302000",
+   "donor": "09295100",
+   "direction": "upstream",
+   "target_km2": 9816.05493817344,
+   "donor_km2": 7018.867779010559,
+   "abs_log_ratio": 0.33541738420272554,
+   "n_days": 1826,
+   "nse": 0.97656406489879
+  },
+  {
+   "target": "09302000",
+   "donor": "09295000",
+   "direction": "upstream",
+   "target_km2": 9816.05493817344,
+   "donor_km2": 6845.338575618048,
+   "abs_log_ratio": 0.3604513834721828,
+   "n_days": 1826,
+   "nse": 0.9656584101469124
+  },
+  {
+   "target": "09306200",
+   "donor": "09306222",
+   "direction": "downstream",
+   "target_km2": 1310.5339838300158,
+   "donor_km2": 1688.672247939072,
+   "abs_log_ratio": 0.25350789263918744,
+   "n_days": 1795,
+   "nse": 0.901661156957952
+  },
+  {
+   "target": "09306200",
+   "donor": "09306290",
+   "direction": "downstream",
+   "target_km2": 1310.5339838300158,
+   "donor_km2": 6552.669919150079,
+   "abs_log_ratio": 1.6094379124341005,
+   "n_days": 1799,
+   "nse": -38.8992975894208
+  },
+  {
+   "target": "09444000",
+   "donor": "09442681",
+   "direction": "upstream",
+   "target_km2": 4281.250346385408,
+   "donor_km2": 870.236005072896,
+   "abs_log_ratio": 1.59323593785782,
+   "n_days": 1815,
+   "nse": 0.6587143126403465
+  },
+  {
+   "target": "09444000",
+   "donor": "09444500",
+   "direction": "downstream",
+   "target_km2": 4281.250346385408,
+   "donor_km2": 7163.907113189375,
+   "abs_log_ratio": 0.5148104144036793,
+   "n_days": 1826,
+   "nse": 0.759860208851688
+  },
+  {
+   "target": "09486500",
+   "donor": "09482000",
+   "direction": "upstream",
+   "target_km2": 9072.728350507008,
+   "donor_km2": 4356.360001585152,
+   "abs_log_ratio": 0.7336361826645936,
+   "n_days": 1826,
+   "nse": 0.16904269235634084
+  },
+  {
+   "target": "09486500",
+   "donor": "09481740",
+   "direction": "upstream",
+   "target_km2": 9072.728350507008,
+   "donor_km2": 3133.88561350656,
+   "abs_log_ratio": 1.0629993846067,
+   "n_days": 1826,
+   "nse": 0.2941044429045804
+  },
+  {
+   "target": "09486500",
+   "donor": "09482500",
+   "direction": "upstream",
+   "target_km2": 9072.728350507008,
+   "donor_km2": 5754.953581166592,
+   "abs_log_ratio": 0.45521205299791156,
+   "n_days": 1826,
+   "nse": 0.42220973871325274
+  },
+  {
+   "target": "09486500",
+   "donor": "09486520",
+   "direction": "downstream",
+   "target_km2": 9072.728350507008,
+   "donor_km2": 9430.146709733375,
+   "abs_log_ratio": 0.038638624977946484,
+   "n_days": 1826,
+   "nse": 0.7874271155313929
+  },
+  {
+   "target": "09512500",
+   "donor": "09512450",
+   "direction": "upstream",
+   "target_km2": 1515.1430445465598,
+   "donor_km2": 453.24791930879996,
+   "abs_log_ratio": 1.2068258733083426,
+   "n_days": 1825,
+   "nse": 0.3177132560227458
+  },
+  {
+   "target": "09512500",
+   "donor": "09512800",
+   "direction": "downstream",
+   "target_km2": 1515.1430445465598,
+   "donor_km2": 2877.476790583296,
+   "abs_log_ratio": 0.6414039424077735,
+   "n_days": 1826,
+   "nse": -0.1382484790837859
+  },
+  {
+   "target": "10140700",
+   "donor": "10137300",
+   "direction": "upstream",
+   "target_km2": 862.4660407418879,
+   "donor_km2": 239.05590258401278,
+   "abs_log_ratio": 1.2830983484716374,
+   "n_days": 467,
+   "nse": -1.1613434210803493
+  },
+  {
+   "target": "10140700",
+   "donor": "10140100",
+   "direction": "upstream",
+   "target_km2": 862.4660407418879,
+   "donor_km2": 836.566159638528,
+   "abs_log_ratio": 0.030490166757787204,
+   "n_days": 1826,
+   "nse": 0.9202808795771952
+  },
+  {
+   "target": "10140700",
+   "donor": "10137500",
+   "direction": "upstream",
+   "target_km2": 862.4660407418879,
+   "donor_km2": 354.828371116032,
+   "abs_log_ratio": 0.888161564152319,
+   "n_days": 1826,
+   "nse": 0.24028774980625378
+  },
+  {
+   "target": "10140700",
+   "donor": "10141000",
+   "direction": "downstream",
+   "target_km2": 862.4660407418879,
+   "donor_km2": 5389.765257609216,
+   "abs_log_ratio": 1.8324613364131908,
+   "n_days": 1826,
+   "nse": 0.4146390859103801
+  },
+  {
+   "target": "10174500",
+   "donor": "10183500",
+   "direction": "downstream",
+   "target_km2": 880.5959575142399,
+   "donor_km2": 2929.276552790016,
+   "abs_log_ratio": 1.2019118585059136,
+   "n_days": 1826,
+   "nse": 0.227346661349075
+  },
+  {
+   "target": "10328500",
+   "donor": "10328450",
+   "direction": "upstream",
+   "target_km2": 2020.1907260620799,
+   "donor_km2": 543.89750317056,
+   "abs_log_ratio": 1.3121863889661687,
+   "n_days": 615,
+   "nse": -15.481303077032461
+  },
+  {
+   "target": "10328500",
+   "donor": "10329000",
+   "direction": "downstream",
+   "target_km2": 2020.1907260620799,
+   "donor_km2": 2667.6877536460797,
+   "abs_log_ratio": 0.27802016154004405,
+   "n_days": 616,
+   "nse": 0.814128903177638
+  },
+  {
+   "target": "11042400",
+   "donor": "11044300",
+   "direction": "downstream",
+   "target_km2": 339.288442454016,
+   "donor_km2": 1605.7926284083198,
+   "abs_log_ratio": 1.5545221548379857,
+   "n_days": 1826,
+   "nse": -1.1326789782917874
+  },
+  {
+   "target": "11042400",
+   "donor": "11046000",
+   "direction": "downstream",
+   "target_km2": 339.288442454016,
+   "donor_km2": 1872.5614037729279,
+   "abs_log_ratio": 1.7082118989576132,
+   "n_days": 1826,
+   "nse": -4.7164650575192315
+  },
+  {
+   "target": "11042400",
+   "donor": "11044000",
+   "direction": "downstream",
+   "target_km2": 339.288442454016,
+   "donor_km2": 1522.913008877568,
+   "abs_log_ratio": 1.5015296246974754,
+   "n_days": 1826,
+   "nse": -0.3850000126387916
+  },
+  {
+   "target": "11069500",
+   "donor": "11070500",
+   "direction": "downstream",
+   "target_km2": 367.778311667712,
+   "donor_km2": 1872.5614037729279,
+   "abs_log_ratio": 1.627582164557504,
+   "n_days": 1826,
+   "nse": 0.04876227539683864
+  },
+  {
+   "target": "11069500",
+   "donor": "11070210",
+   "direction": "downstream",
+   "target_km2": 367.778311667712,
+   "donor_km2": 945.34566027264,
+   "abs_log_ratio": 0.9440702959812307,
+   "n_days": 1826,
+   "nse": -0.0782986110789583
+  },
+  {
+   "target": "11069500",
+   "donor": "11070365",
+   "direction": "downstream",
+   "target_km2": 367.778311667712,
+   "donor_km2": 1450.39334178816,
+   "abs_log_ratio": 1.3721097261279342,
+   "n_days": 1826,
+   "nse": 0.07963044399309638
+  },
+  {
+   "target": "11109395",
+   "donor": "11109800",
+   "direction": "downstream",
+   "target_km2": 160.0612652187648,
+   "donor_km2": 1100.7449468928,
+   "abs_log_ratio": 1.928185804460772,
+   "n_days": 542,
+   "nse": -409.39273921404816
+  },
+  {
+   "target": "11109395",
+   "donor": "11109600",
+   "direction": "downstream",
+   "target_km2": 160.0612652187648,
+   "donor_km2": 963.475577044992,
+   "abs_log_ratio": 1.7949904898095015,
+   "n_days": 722,
+   "nse": -7.464003953158777
+  },
+  {
+   "target": "11119940",
+   "donor": "11120000",
+   "direction": "downstream",
+   "target_km2": 16.5759239061504,
+   "donor_km2": 48.950775285350396,
+   "abs_log_ratio": 1.0828639316999704,
+   "n_days": 1804,
+   "nse": 0.4578900330734229
+  },
+  {
+   "target": "11237700",
+   "donor": "11237500",
+   "direction": "upstream",
+   "target_km2": 59.569726537727995,
+   "donor_km2": 59.310727726694395,
+   "abs_log_ratio": 0.004357305368955626,
+   "n_days": 1734,
+   "nse": 0.0703144733863007
+  },
+  {
+   "target": "11237700",
+   "donor": "11238500",
+   "direction": "downstream",
+   "target_km2": 59.569726537727995,
+   "donor_km2": 339.288442454016,
+   "abs_log_ratio": 1.739703107272002,
+   "n_days": 1734,
+   "nse": 0.2041173999228043
+  },
+  {
+   "target": "11278400",
+   "donor": "11289651",
+   "direction": "downstream",
+   "target_km2": 606.0572178186239,
+   "donor_km2": 3983.4017136967677,
+   "abs_log_ratio": 1.8829170347078878,
+   "n_days": 1826,
+   "nse": 0.22824389845235848
+  },
+  {
+   "target": "11278400",
+   "donor": "11289650",
+   "direction": "downstream",
+   "target_km2": 606.0572178186239,
+   "donor_km2": 3983.4017136967677,
+   "abs_log_ratio": 1.8829170347078878,
+   "n_days": 1826,
+   "nse": 0.0019619644650331614
+  },
+  {
+   "target": "11401112",
+   "donor": "11399500",
+   "direction": "upstream",
+   "target_km2": 1585.072723525632,
+   "donor_km2": 1276.8641383956478,
+   "abs_log_ratio": 0.2162231084696362,
+   "n_days": 1734,
+   "nse": 0.1101913738143171
+  },
+  {
+   "target": "11401112",
+   "donor": "11404500",
+   "direction": "downstream",
+   "target_km2": 1585.072723525632,
+   "donor_km2": 5058.246779486208,
+   "abs_log_ratio": 1.1603896483643528,
+   "n_days": 1734,
+   "nse": -0.8472250706659841
+  },
+  {
+   "target": "11401112",
+   "donor": "11403200",
+   "direction": "downstream",
+   "target_km2": 1585.072723525632,
+   "donor_km2": 4592.048919625728,
+   "abs_log_ratio": 1.0636960235618818,
+   "n_days": 1734,
+   "nse": -1.2629135503926006
+  },
+  {
+   "target": "11401112",
+   "donor": "11404330",
+   "direction": "downstream",
+   "target_km2": 1585.072723525632,
+   "donor_km2": 4957.237243183104,
+   "abs_log_ratio": 1.1402182895005735,
+   "n_days": 1734,
+   "nse": -1.5569236203129235
+  },
+  {
+   "target": "11403200",
+   "donor": "11399500",
+   "direction": "upstream",
+   "target_km2": 4592.048919625728,
+   "donor_km2": 1276.8641383956478,
+   "abs_log_ratio": 1.2799191320315177,
+   "n_days": 1734,
+   "nse": -0.28030269353495796
+  },
+  {
+   "target": "11403200",
+   "donor": "11404500",
+   "direction": "downstream",
+   "target_km2": 4592.048919625728,
+   "donor_km2": 5058.246779486208,
+   "abs_log_ratio": 0.0966936248024711,
+   "n_days": 1734,
+   "nse": 0.6469207190782345
+  },
+  {
+   "target": "11403200",
+   "donor": "11404330",
+   "direction": "downstream",
+   "target_km2": 4592.048919625728,
+   "donor_km2": 4957.237243183104,
+   "abs_log_ratio": 0.07652226593869167,
+   "n_days": 1734,
+   "nse": 0.7669982981962028
+  },
+  {
+   "target": "11403200",
+   "donor": "11407000",
+   "direction": "downstream",
+   "target_km2": 4592.048919625728,
+   "donor_km2": 9386.116911857664,
+   "abs_log_ratio": 0.7149053610886621,
+   "n_days": 1734,
+   "nse": 0.26251809794735403
+  },
+  {
+   "target": "11427760",
+   "donor": "11427500",
+   "direction": "upstream",
+   "target_km2": 227.4009560875008,
+   "donor_km2": 124.06043048509439,
+   "abs_log_ratio": 0.6059459962242014,
+   "n_days": 1734,
+   "nse": 0.3417029724756314
+  },
+  {
+   "target": "11427760",
+   "donor": "11433300",
+   "direction": "downstream",
+   "target_km2": 227.4009560875008,
+   "donor_km2": 1357.153769816064,
+   "abs_log_ratio": 1.7864301836799712,
+   "n_days": 1734,
+   "nse": 0.5916721868178247
+  },
+  {
+   "target": "11444500",
+   "donor": "11443500",
+   "direction": "upstream",
+   "target_km2": 1548.8128899809278,
+   "donor_km2": 1276.8641383956478,
+   "abs_log_ratio": 0.1930815799079416,
+   "n_days": 1734,
+   "nse": 0.14795732888605495
+  },
+  {
+   "target": "11444500",
+   "donor": "11439500",
+   "direction": "upstream",
+   "target_km2": 1548.8128899809278,
+   "donor_km2": 499.86770529484795,
+   "abs_log_ratio": 1.1309005650457462,
+   "n_days": 1734,
+   "nse": 0.6586764777297552
+  },
+  {
+   "target": "11444500",
+   "donor": "11446500",
+   "direction": "downstream",
+   "target_km2": 1548.8128899809278,
+   "donor_km2": 4889.897552314368,
+   "abs_log_ratio": 1.1496825927548144,
+   "n_days": 1734,
+   "nse": 0.42161210106772007
+  },
+  {
+   "target": "11475800",
+   "donor": "11475500",
+   "direction": "upstream",
+   "target_km2": 642.317051363328,
+   "donor_km2": 113.7004780437504,
+   "abs_log_ratio": 1.7315144260838566,
+   "n_days": 457,
+   "nse": 0.8335081907249593
+  },
+  {
+   "target": "11475800",
+   "donor": "11476500",
+   "direction": "downstream",
+   "target_km2": 642.317051363328,
+   "donor_km2": 1390.8236152504319,
+   "abs_log_ratio": 0.7725693483438824,
+   "n_days": 1826,
+   "nse": 0.9734176975961613
+  },
+  {
+   "target": "11510700",
+   "donor": "11507500",
+   "direction": "upstream",
+   "target_km2": 10567.15149017088,
+   "donor_km2": 9867.85470038016,
+   "abs_log_ratio": 0.06846779927746083,
+   "n_days": 1826,
+   "nse": 0.7727879122391336
+  },
+  {
+   "target": "11510700",
+   "donor": "11509500",
+   "direction": "upstream",
+   "target_km2": 10567.15149017088,
+   "donor_km2": 10152.75339251712,
+   "abs_log_ratio": 0.040005334613699206,
+   "n_days": 1826,
+   "nse": 0.9143785853801051
+  },
+  {
+   "target": "11510700",
+   "donor": "11516530",
+   "direction": "downstream",
+   "target_km2": 10567.15149017088,
+   "donor_km2": 11991.64495085568,
+   "abs_log_ratio": 0.12645987968207242,
+   "n_days": 1826,
+   "nse": 0.8200740352622086
+  },
+  {
+   "target": "12114500",
+   "donor": "12117500",
+   "direction": "downstream",
+   "target_km2": 65.78569800253439,
+   "donor_km2": 313.388561350656,
+   "abs_log_ratio": 1.5610413715722504,
+   "n_days": 1826,
+   "nse": 0.48629878961044515
+  },
+  {
+   "target": "12114500",
+   "donor": "12115000",
+   "direction": "downstream",
+   "target_km2": 65.78569800253439,
+   "donor_km2": 105.4125160906752,
+   "abs_log_ratio": 0.4714789184240585,
+   "n_days": 1826,
+   "nse": 0.9701703913762635
+  },
+  {
+   "target": "12114500",
+   "donor": "12116500",
+   "direction": "downstream",
+   "target_km2": 65.78569800253439,
+   "donor_km2": 218.0769988902912,
+   "abs_log_ratio": 1.1984457472237904,
+   "n_days": 1826,
+   "nse": 0.28781817658242326
+  },
+  {
+   "target": "12114500",
+   "donor": "12116400",
+   "direction": "downstream",
+   "target_km2": 65.78569800253439,
+   "donor_km2": 217.3000024571904,
+   "abs_log_ratio": 1.1948764394486697,
+   "n_days": 1826,
+   "nse": -0.0061254664213015175
+  },
+  {
+   "target": "12114500",
+   "donor": "12119000",
+   "direction": "downstream",
+   "target_km2": 65.78569800253439,
+   "donor_km2": 476.55781230182396,
+   "abs_log_ratio": 1.980186583584495,
+   "n_days": 1826,
+   "nse": 0.3566790967042468
+  },
+  {
+   "target": "12114500",
+   "donor": "12117600",
+   "direction": "downstream",
+   "target_km2": 65.78569800253439,
+   "donor_km2": 347.058406785024,
+   "abs_log_ratio": 1.6630906259264207,
+   "n_days": 1826,
+   "nse": 0.4183994909764449
+  },
+  {
+   "target": "12119000",
+   "donor": "12117500",
+   "direction": "upstream",
+   "target_km2": 476.55781230182396,
+   "donor_km2": 313.388561350656,
+   "abs_log_ratio": 0.4191452120122444,
+   "n_days": 1826,
+   "nse": 0.6326531012169915
+  },
+  {
+   "target": "12119000",
+   "donor": "12115000",
+   "direction": "upstream",
+   "target_km2": 476.55781230182396,
+   "donor_km2": 105.4125160906752,
+   "abs_log_ratio": 1.5087076651604363,
+   "n_days": 1826,
+   "nse": -1.4956494777263951
+  },
+  {
+   "target": "12119000",
+   "donor": "12116500",
+   "direction": "upstream",
+   "target_km2": 476.55781230182396,
+   "donor_km2": 218.0769988902912,
+   "abs_log_ratio": 0.7817408363607045,
+   "n_days": 1826,
+   "nse": 0.6880347153754001
+  },
+  {
+   "target": "12119000",
+   "donor": "12116400",
+   "direction": "upstream",
+   "target_km2": 476.55781230182396,
+   "donor_km2": 217.3000024571904,
+   "abs_log_ratio": 0.785310144135825,
+   "n_days": 1826,
+   "nse": 0.4257081517432044
+  },
+  {
+   "target": "12119000",
+   "donor": "12117600",
+   "direction": "upstream",
+   "target_km2": 476.55781230182396,
+   "donor_km2": 347.058406785024,
+   "abs_log_ratio": 0.31709595765807425,
+   "n_days": 1826,
+   "nse": 0.9548330008732487
+  },
+  {
+   "target": "12144500",
+   "donor": "12141300",
+   "direction": "upstream",
+   "target_km2": 971.2455413759999,
+   "donor_km2": 398.858168991744,
+   "abs_log_ratio": 0.8899734235567816,
+   "n_days": 1826,
+   "nse": 0.8568341060601987
+  },
+  {
+   "target": "12144500",
+   "donor": "12149000",
+   "direction": "downstream",
+   "target_km2": 971.2455413759999,
+   "donor_km2": 1561.762830532608,
+   "abs_log_ratio": 0.4749911707567747,
+   "n_days": 1826,
+   "nse": 0.903599933740839
+  },
+  {
+   "target": "12144500",
+   "donor": "12150800",
+   "direction": "downstream",
+   "target_km2": 971.2455413759999,
+   "donor_km2": 3980.8117255864317,
+   "abs_log_ratio": 1.410661717568185,
+   "n_days": 1826,
+   "nse": 0.7988297512947998
+  },
+  {
+   "target": "12457000",
+   "donor": "12459000",
+   "direction": "downstream",
+   "target_km2": 1530.682973208576,
+   "donor_km2": 2589.988110336,
+   "abs_log_ratio": 0.5259392615760389,
+   "n_days": 1826,
+   "nse": 0.9300848678113944
+  },
+  {
+   "target": "12457000",
+   "donor": "12462500",
+   "direction": "downstream",
+   "target_km2": 1530.682973208576,
+   "donor_km2": 3369.574531547136,
+   "abs_log_ratio": 0.789072461106407,
+   "n_days": 1826,
+   "nse": 0.7897309163746826
+  },
+  {
+   "target": "13042500",
+   "donor": "13050500",
+   "direction": "downstream",
+   "target_km2": 1297.584043278336,
+   "donor_km2": 4584.27895529472,
+   "abs_log_ratio": 1.2621287244830102,
+   "n_days": 1826,
+   "nse": -0.08394080488861877
+  },
+  {
+   "target": "13042500",
+   "donor": "13046000",
+   "direction": "downstream",
+   "target_km2": 1297.584043278336,
+   "donor_km2": 2841.2169570385918,
+   "abs_log_ratio": 0.7837283591903654,
+   "n_days": 1826,
+   "nse": 0.6621631626339843
+  },
+  {
+   "target": "13047600",
+   "donor": "13047500",
+   "direction": "upstream",
+   "target_km2": 872.825993183232,
+   "donor_km2": 852.106088300544,
+   "abs_log_ratio": 0.024025179586989836,
+   "n_days": 1825,
+   "nse": 0.691706725237069
+  },
+  {
+   "target": "13047600",
+   "donor": "13046995",
+   "direction": "upstream",
+   "target_km2": 872.825993183232,
+   "donor_km2": 836.566159638528,
+   "abs_log_ratio": 0.04243060712970503,
+   "n_days": 1825,
+   "nse": 0.9698004268699463
+  },
+  {
+   "target": "13047600",
+   "donor": "13050500",
+   "direction": "downstream",
+   "target_km2": 872.825993183232,
+   "donor_km2": 4584.27895529472,
+   "abs_log_ratio": 1.6586518952155132,
+   "n_days": 1825,
+   "nse": -0.1869216809549299
+  },
+  {
+   "target": "13047600",
+   "donor": "13056500",
+   "direction": "downstream",
+   "target_km2": 872.825993183232,
+   "donor_km2": 7562.76528218112,
+   "abs_log_ratio": 2.1592559649099656,
+   "n_days": 1825,
+   "nse": -0.47210855588364553
+  },
+  {
+   "target": "13047600",
+   "donor": "13049500",
+   "direction": "downstream",
+   "target_km2": 872.825993183232,
+   "donor_km2": 1302.7640194990079,
+   "abs_log_ratio": 0.40050723974737745,
+   "n_days": 1821,
+   "nse": 0.6142285533270829
+  },
+  {
+   "target": "13075000",
+   "donor": "13074810",
+   "direction": "upstream",
+   "target_km2": 914.265802948608,
+   "donor_km2": 463.607871750144,
+   "abs_log_ratio": 0.6790822510925417,
+   "n_days": 504,
+   "nse": -0.8544638993962281
+  },
+  {
+   "target": "13075000",
+   "donor": "13075500",
+   "direction": "downstream",
+   "target_km2": 914.265802948608,
+   "donor_km2": 3253.025066582016,
+   "abs_log_ratio": 1.2692192900948471,
+   "n_days": 1825,
+   "nse": -0.14503417621862247
+  },
+  {
+   "target": "13075000",
+   "donor": "13074400",
+   "direction": "downstream",
+   "target_km2": 914.265802948608,
+   "donor_km2": 2758.33733750784,
+   "abs_log_ratio": 1.1042620212102288,
+   "n_days": 639,
+   "nse": -1.8805505313318496
+  },
+  {
+   "target": "13075000",
+   "donor": "13075910",
+   "direction": "downstream",
+   "target_km2": 914.265802948608,
+   "donor_km2": 3379.9344839884798,
+   "abs_log_ratio": 1.307490262823497,
+   "n_days": 1825,
+   "nse": -3.4071746227269033
+  },
+  {
+   "target": "13148500",
+   "donor": "13147900",
+   "direction": "upstream",
+   "target_km2": 802.8963142041599,
+   "donor_km2": 642.317051363328,
+   "abs_log_ratio": 0.22314355131420957,
+   "n_days": 1823,
+   "nse": 0.4479021290193722
+  },
+  {
+   "target": "13269000",
+   "donor": "13213100",
+   "direction": "upstream",
+   "target_km2": 179227.17723525118,
+   "donor_km2": 152032.3020767232,
+   "abs_log_ratio": 0.16456113578957296,
+   "n_days": 1826,
+   "nse": 0.5551580888654729
+  },
+  {
+   "target": "13338500",
+   "donor": "13341050",
+   "direction": "downstream",
+   "target_km2": 3025.1061128724477,
+   "donor_km2": 20657.745168039935,
+   "abs_log_ratio": 1.9211441482535019,
+   "n_days": 1826,
+   "nse": 0.2024664466951942
+  },
+  {
+   "target": "13338500",
+   "donor": "13340000",
+   "direction": "downstream",
+   "target_km2": 3025.1061128724477,
+   "donor_km2": 14263.06452362035,
+   "abs_log_ratio": 1.5507271258743092,
+   "n_days": 1826,
+   "nse": 0.010150984850621936
+  },
+  {
+   "target": "14013000",
+   "donor": "14015000",
+   "direction": "downstream",
+   "target_km2": 154.3632913760256,
+   "donor_km2": 247.86186215915518,
+   "abs_log_ratio": 0.47356272438760455,
+   "n_days": 1826,
+   "nse": 0.802352777514533
+  },
+  {
+   "target": "14013000",
+   "donor": "14013700",
+   "direction": "downstream",
+   "target_km2": 154.3632913760256,
+   "donor_km2": 240.09189782814718,
+   "abs_log_ratio": 0.44171289850050544,
+   "n_days": 1826,
+   "nse": 0.8061728052659229
+  },
+  {
+   "target": "14158790",
+   "donor": "14158798",
+   "direction": "downstream",
+   "target_km2": 40.4038145212416,
+   "donor_km2": 55.425745561190396,
+   "abs_log_ratio": 0.3161200077723143,
+   "n_days": 1825,
+   "nse": -0.27935388518804594
+  },
+  {
+   "target": "14163900",
+   "donor": "14162500",
+   "direction": "upstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 2408.68894261248,
+   "abs_log_ratio": 0.15045723149190665,
+   "n_days": 1826,
+   "nse": 0.6876571814181931
+  },
+  {
+   "target": "14163900",
+   "donor": "14158740",
+   "direction": "upstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 414.39809765376,
+   "abs_log_ratio": 1.9104680024053813,
+   "n_days": 1826,
+   "nse": 0.03297271230201959
+  },
+  {
+   "target": "14163900",
+   "donor": "14158850",
+   "direction": "upstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 476.55781230182396,
+   "abs_log_ratio": 1.7707060600302227,
+   "n_days": 1826,
+   "nse": 0.07165798646446186
+  },
+  {
+   "target": "14163900",
+   "donor": "14163150",
+   "direction": "upstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 2667.6877536460797,
+   "abs_log_ratio": 0.048327736415526845,
+   "n_days": 1826,
+   "nse": 0.7486623825622276
+  },
+  {
+   "target": "14163900",
+   "donor": "14165500",
+   "direction": "downstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 3462.8141035192316,
+   "abs_log_ratio": 0.2125417594627349,
+   "n_days": 1826,
+   "nse": 0.8330035233153488
+  },
+  {
+   "target": "14163900",
+   "donor": "14166000",
+   "direction": "downstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 8857.75933734912,
+   "abs_log_ratio": 1.1517540124174428,
+   "n_days": 1826,
+   "nse": 0.7811539717051144
+  },
+  {
+   "target": "14163900",
+   "donor": "14164900",
+   "direction": "downstream",
+   "target_km2": 2799.7771472732156,
+   "donor_km2": 2952.58644578304,
+   "abs_log_ratio": 0.05314172374933292,
+   "n_days": 1826,
+   "nse": 0.7967929652412473
+  },
+  {
+   "target": "14202000",
+   "donor": "14201340",
+   "direction": "upstream",
+   "target_km2": 1240.604304850944,
+   "donor_km2": 813.256266645504,
+   "abs_log_ratio": 0.4223076115026619,
+   "n_days": 1799,
+   "nse": 0.981871754575557
+  },
+  {
+   "target": "14369500",
+   "donor": "14366000",
+   "direction": "upstream",
+   "target_km2": 1807.811701014528,
+   "donor_km2": 1250.964257292288,
+   "abs_log_ratio": 0.3682024491097997,
+   "n_days": 1818,
+   "nse": 0.8089797277774811
+  },
+  {
+   "target": "14369500",
+   "donor": "14362000",
+   "direction": "upstream",
+   "target_km2": 1807.811701014528,
+   "donor_km2": 582.7473248256,
+   "abs_log_ratio": 1.1321187005579523,
+   "n_days": 1826,
+   "nse": -0.8976793111214054
+  }
+ ]
+}

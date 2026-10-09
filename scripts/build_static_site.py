@@ -190,6 +190,29 @@ def main() -> int:
         # The full station list lives once at dist/stations.json (asset shard owns it).
         (DIST / "stations.json").write_text(json.dumps({"stations": all_stations}, indent=2))
 
+        # The MODERN-1 evidence page, built from the committed benchmarks/m1_*
+        # artifacts. Owned by the asset shard for the same reason stations.json
+        # is, and merge_shards copies everything in the asset shard except
+        # forecasts/ and history/, so it ships without further wiring.
+        # Best-effort: a research page must never be able to fail the deploy of
+        # the live forecast map. But say so loudly if it does -- a handled
+        # failure is a silent failure.
+        # The measured area-ratio transfer skill, read by the click-anywhere
+        # panel. If it is absent the UI says "not yet measured" rather than
+        # quoting a number nobody computed, so this is best-effort.
+        _skill = ROOT / "data" / "river_transfer_skill.json"
+        if _skill.exists():
+            (DIST / "data").mkdir(parents=True, exist_ok=True)
+            shutil.copy2(_skill, DIST / "data" / "river_transfer_skill.json")
+            print("  river_transfer_skill.json shipped")
+
+        try:
+            from scripts.build_benchmarks_page import emit as _emit_benchmarks
+            _emit_benchmarks(DIST)
+            print("  benchmarks.html written")
+        except Exception as exc:
+            print(f"  WARNING: benchmarks page not built: {exc}")
+
     # Slice this shard's portion of the station list. stride = total_shards
     # gives every shard a similar runtime distribution (USGS hot/cold mix).
     if sharded:

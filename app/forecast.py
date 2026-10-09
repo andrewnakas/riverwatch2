@@ -1331,6 +1331,50 @@ def forecast_station(
     except Exception as exc:
         notes.append(f"mblstm failed: {exc}")
 
+    # MODERN-1 research member (2026-10): the `nldasm9` 5-seed ensemble, one of
+    # the three members behind the with-q day-1 median NSE of 0.905829 on 490
+    # CAMELS basins under PERFECT forcing. It is the ONLY member of that roster
+    # whose inputs exist operationally -- the other two need 4-product decoder
+    # forcing or Daymet columns, and Daymet V4R1 is an ANNUAL release.
+    #
+    # Restricted to the 490-basin cohort (data/m1_cohort.json) by the member
+    # itself; the other 9,361 served gauges are out of its domain and it
+    # returns None for them rather than extrapolating silently.
+    #
+    # It needs its OWN forcing fetch: the recipe wants 6 variables including
+    # `vapor_pressure`, which Open-Meteo does not serve under that name and
+    # which `weather.DAILY_VARS` therefore lacks. `app/modern_forcing.py`
+    # fetches `dew_point_2m_mean` in a separate cache namespace (so the
+    # production member's 9,851-gauge cache is not invalidated) and vapour
+    # pressure is derived from it exactly.
+    #
+    # ⚠️ Served on SUBSTITUTED forcing: trained on NLDAS-2 areal, served on
+    # Open-Meteo point. The sampling axis alone measured +0.013004 median peak r
+    # in areal's favour (benchmarks/b0_sampling_verdict_conus404.json). The NSE
+    # cost is unmeasured -- do not label this member's output with 0.905829.
+    # Gated by RW2_ENABLE_MBLSTM_MODERN=1.
+    try:
+        from . import mblstm_modern as _mblstm_modern
+        if _mblstm_modern._is_enabled() and _mblstm_modern.camels_attrs.in_cohort(station_id):
+            from . import modern_forcing as _mf
+            # Derive the window from `history_days`, NOT from `start`: on the
+            # pass-2 path (inputs precomputed by prepare_station_inputs) `start`
+            # is never assigned, and referencing it raised an UnboundLocalError
+            # that this member's own note surfaced.
+            m1_start = today - timedelta(days=history_days)
+            m1_hist = _mf.fetch_history(lat, lon, m1_start, today - timedelta(days=1))
+            m1_fcst = _mf.fetch_forecast(lat, lon, days=horizon + 2)
+            m1_attrs = dict(station_attrs or {})
+            m1_attrs.setdefault("id", station_id)
+            m1_rows = _mblstm_modern.forecast(q_hist, m1_hist, m1_fcst, m1_attrs, horizon)
+            if m1_rows:
+                raw_member_preds["mblstm_modern"] = ([r["q_cfs"] for r in m1_rows], 0)
+            elif _mblstm_modern.last_skip_reason:
+                # A handled failure is a silent failure -- say why it skipped.
+                notes.append(f"mblstm_modern unavailable: {_mblstm_modern.last_skip_reason}")
+    except Exception as exc:
+        notes.append(f"mblstm_modern failed: {exc}")
+
     # v13: NOAA National Water Model (NWM) medium_range_blend → 6th member.
     # Process-based distributed hydrology with channel routing, fundamentally
     # different signal from the ML/zero-shot members. Off by default; enabled
@@ -2213,7 +2257,8 @@ def forecast_station(
     # failure/unavailable note — i.e. it was attempted and didn't make it.
     _MEMBER_ROSTER = (
         "persistence_lag1", "runoff_ridge", "chronos_bolt", "ttm", "timesfm",
-        "timesfm_xreg", "ealstm", "mblstm", "nwm", "nwm_residual", "lgbm_pooled",
+        "timesfm_xreg", "ealstm", "mblstm", "mblstm_modern", "nwm",
+        "nwm_residual", "lgbm_pooled",
     )
     _NOTE_TO_MEMBER = {"ridge": "runoff_ridge"}  # note uses short name
     used_set = set(members_used)

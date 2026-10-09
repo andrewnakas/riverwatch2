@@ -1,0 +1,223 @@
+{
+ "_note": "Canonical values for app/static/river_transfer.js. Produced by tests/test_river_transfer.py::test_emit_js_crosscheck_fixture from analysis/river_transfer.py. The JS must reproduce these to within 1e-6 relative.",
+ "haversine_km": [
+  {
+   "args": [
+    0,
+    0,
+    1,
+    0
+   ],
+   "want": 111.1950802335329
+  },
+  {
+   "args": [
+    60,
+    0,
+    60,
+    1
+   ],
+   "want": 55.597010864896916
+  },
+  {
+   "args": [
+    44.608,
+    -67.935,
+    44.7,
+    -68.0
+   ],
+   "want": 11.449320407581826
+  }
+ ],
+ "point_to_polyline_km": [
+  {
+   "lat": 44.0,
+   "lon": -67.5,
+   "coords": [
+    [
+     -68.0,
+     44.0
+    ],
+    [
+     -67.0,
+     44.0
+    ]
+   ],
+   "want": 0.0
+  },
+  {
+   "lat": 44.1,
+   "lon": -67.5,
+   "coords": [
+    [
+     -68.0,
+     44.0
+    ],
+    [
+     -67.0,
+     44.0
+    ]
+   ],
+   "want": 11.057399999999689
+  },
+  {
+   "lat": 44.0,
+   "lon": -66.0,
+   "coords": [
+    [
+     -68.0,
+     44.0
+    ],
+    [
+     -67.0,
+     44.0
+    ]
+   ],
+   "want": 80.07690657369858
+  }
+ ],
+ "geojson_area_km2": [
+  {
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       0
+      ]
+     ]
+    ]
+   },
+   "want": 12363.718145179933
+  },
+  {
+   "geometry": {
+    "type": "MultiPolygon",
+    "coordinates": [
+     [
+      [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        0
+       ]
+      ]
+     ]
+    ]
+   },
+   "want": 12363.718145179933
+  }
+ ],
+ "cfs_to_mm_per_day": [
+  {
+   "args": [
+    1.0,
+    1.0
+   ],
+   "want": 2.4465755455488
+  },
+  {
+   "args": [
+    50.9,
+    587.93
+   ],
+   "want": 0.21181211244269543
+  }
+ ],
+ "sqmi_to_km2": [
+  {
+   "args": [
+    227.0
+   ],
+   "want": 587.927301046272
+  }
+ ],
+ "transfer_by_area_ratio": [
+  {
+   "series": [
+    100.0,
+    50.0
+   ],
+   "donor_km2": 200.0,
+   "target_km2": 100.0,
+   "want": [
+    50.0,
+    25.0
+   ]
+  }
+ ],
+ "select_donor": [
+  {
+   "candidates": [
+    {
+     "id": "far",
+     "area_km2": 2000.0
+    },
+    {
+     "id": "near",
+     "area_km2": 520.0
+    }
+   ],
+   "target_km2": 500.0,
+   "want": "near"
+  },
+  {
+   "candidates": [
+    {
+     "id": "down",
+     "area_km2": 500.0,
+     "direction": "downstream"
+    },
+    {
+     "id": "up",
+     "area_km2": 440.0,
+     "direction": "upstream"
+    }
+   ],
+   "target_km2": 500.0,
+   "want": "down"
+  },
+  {
+   "candidates": [
+    {
+     "id": "x",
+     "area_km2": 10.0
+    }
+   ],
+   "target_km2": 500.0,
+   "want": null
+  }
+ ]
+}

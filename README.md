@@ -1,17 +1,18 @@
 # RiverWatch2
 
-Live 14-day zero-shot discharge forecasts for ~238 USGS gauges across popular
-USA whitewater + paddler-favored runs — Pacific NW, Cascades, Sierra,
-Mountain West, AK panhandle, Appalachia, Texas Hill Country, NE / Driftless.
-Built from the original 43-station benchmark subset plus a curated
-American-Whitewater-style hot-list (Salmon / MF Salmon / Selway / Lochsa /
-Payette / Roaring Fork / Yampa / Gunnison / Lees Ferry / Rogue / Klamath /
-Trinity / Smith / Stanislaus / Tuolumne / Merced / Cheat / Gauley / French
-Broad / Chattooga / Catskills / Maine, etc).
+Live 14-day discharge forecasts for **9,851 active USGS stream gauges** across the
+US (`data/stations_v15.json`), with deep coverage of paddler-favoured runs — Pacific
+NW, Cascades, Sierra, Mountain West, AK panhandle, Appalachia, Texas Hill Country,
+NE / Driftless.
 
-A Flask app serves a Leaflet map of all sensors. Clicking any marker triggers
-a fresh forecast that runs the following models against live USGS NWIS daily
-discharge and Open-Meteo weather:
+A Leaflet map shows every gauge. **Clicking a marker** gives that gauge's ensemble
+forecast; **clicking anywhere near a river** snaps to the NHD flowline via USGS NLDI,
+delineates the upstream basin, and estimates the runoff there from the nearest
+comparable gauge by drainage-area ratio (reported in mm/day as well as cfs, and
+labelled with the donor and the measured transfer skill).
+
+The ensemble combines the following members against live USGS NWIS daily discharge
+and Open-Meteo weather:
 
 - `persistence_lag1` — naive baseline (yhat = last observed)
 - `runoff_ridge` — Ridge regression on lagged log-discharge + day-of-year +
@@ -22,59 +23,97 @@ discharge and Open-Meteo weather:
 Each member is rolling-validated on the training window and combined into an
 inverse-MAE-weighted ensemble blend.
 
-## 🏆 CAMELS-531 streamflow benchmark (research track)
+## 🏆 Streamflow benchmark — the research track
 
 Beyond the live app, this repo hosts a rainfall–runoff / streamflow-forecasting
-research effort evaluated on the standard **CAMELS-US 531-basin** benchmark
-(temporal split: train 1999–2008, test **1989-10-01 → 1999-09-30**, median NSE
-across all 531 basins — the exact protocol used by the record papers). The core
-model is an encoder–decoder **MB-LSTM** plus a **differentiable HBV** (δHBV)
-hybrid, ensembled per meteorological forcing (Daymet / Maurer / NLDAS).
+research effort on the standard **CAMELS-US** benchmark. The current results are
+from the **MODERN-1** campaign (closed 2026-10-08), trained on 2005-10-01…2014-09-30
+and read once on a held-out test window of **2018-10-01…2025-09-30** across a
+**490-basin** cohort (1,243,864 rows, 5 seeds per member, equal-weight mean).
 
-Two categories, kept strictly separate (they answer different questions):
+**The number to use for anything operational is ≈0.86**, not the benchmark figure.
 
-### 1. Discharge-assimilating (operational) — **day-1 NSE 0.9016, beats the record**
-
-The model RiverWatch actually deploys: it ingests recent **observed discharge**
-(real gauges report live flow), i.e. a 1-day-lag nowcast.
-
-| Model | median NSE (day-1, all 531) | notes |
+| setting | day-1 median NSE | forcing |
 |---|---|---|
-| Nearing et al. 2022 (HESS 26:5493), AR | 0.879 | prior published record, same split |
-| **RiverWatch2 with-q grand ensemble** | **0.9016** | **+0.023 over record, verified on all 531** |
+| with observed discharge assimilated | **0.905829** | perfect (the weather that actually occurred) |
+| without observed discharge (rainfall–runoff only) | **0.834558** | perfect |
+| **with discharge, under real 1-day-ahead GFS forecasts** | **≈0.858** | **real forecast** |
 
-Pooled 0.808, KGE 0.856, mean 0.833, 96.6% of basins > 0.5 NSE. Achieved with a
-3-forcing × 2-seed LSTM ensemble (discharge-assimilated); a wider grand ensemble
-(δHBV + more seeds) is in progress. *(This is a day-1 nowcast — not comparable to
-the no-discharge number below; the two are distinct benchmarks.)*
+The gap between the second-to-last and last rows is the part almost nobody
+publishes: a measured paired penalty of **−0.048033** (CI [−0.059808, −0.039718])
+for using a real weather forecast instead of the observed weather. It is larger
+than every modelling improvement made during the campaign.
 
-### 2. No-observed-discharge (academic rainfall-runoff) — **~0.80 pooled / 0.83 day-1**
+Full 14-lead tables for both settings are on the evidence page, and they decay in
+**opposite directions** — with discharge assimilated skill falls 0.0557 from lead 1
+to lead 14, without it skill *rises* 0.0110. That rise is measured and remains
+**unexplained**.
 
-The strict CAMELS protocol: predict streamflow from weather + static basin
-attributes only (`--no-q-input`). This is the harder, ungauged-style task.
+### Clicking a point with no gauge
 
-| Config | pooled NSE (177-basin screen) | day-1 NSE |
-|---|---|---|
-| Per-forcing LSTM ensemble | 0.786 | 0.816 |
-| + δHBV members (full record recipe) | 0.796 | 0.819 |
-| + forcing-error correction | 0.800 | 0.824 |
-| + record-recipe δHBV (nmul=16 + dyn. BETAET) | **0.801** | **0.829** |
-| Published record (Li/Shen 2025, HESS 29:6829) | 0.83 | — |
+The map also answers "what's the runoff *here*" for a point with no gauge on it. There is
+no model run at that point: USGS NLDI snaps the click to a mapped NHD channel, delineates
+the upstream basin, and the nearest comparable gauge's hydrograph is rescaled by the
+**drainage-area ratio**. The headline is runoff depth in **mm/day**, which is the quantity
+that transfers between catchments of different size.
 
-We faithfully emulated the code-verified record recipe (16 parallel HBV
-components, dynamic BETAET, per-forcing ensembling). Continuous-daily-simulation
-eval (the record's exact protocol) confirms **continuous ≈ pooled ≈ 0.80** — the
-day-1 (0.829) essentially matches the record, but the pooled/continuous number is
-a genuine ~0.02–0.03 short. Every independent literature review found that a
-clean pooled 0.83 *without* observed discharge sits at the field's demonstrated
-ceiling; numbers above it use observed-q (out of protocol), different basin sets,
-or in-sample eval.
+That transfer was measured by doing exactly it between **322 real gauge pairs** on the same
+mainstem (donor's *observed* flow rescaled to the target, scored against the target's own
+record, 2021-2025):
 
-**Full experiment log:** [`benchmarks/EXPERIMENTS.md`](benchmarks/EXPERIMENTS.md)
-(38 pre-registered experiments with gates + verdicts). Key infra: `app/hbv.py`
-(differentiable HBV core), `app/dhbv.py` (δHBV net), `scripts/train_mblstm.py`,
-`scripts/backtest_mblstm.py`, `scripts/combine_dumps.py` (grand-ensemble
-combiner), `scripts/eval_continuous.py` (publication-exact continuous sim).
+| area ratio within | pairs | median NSE | frac > 0.5 |
+|---|---|---|---|
+| 1.25× | 73 | **0.8201** | 0.753 |
+| 2× | 156 | **0.8215** | 0.744 |
+| 4× | 251 | 0.7708 | 0.661 |
+| 10× | 322 | 0.7044 | 0.606 |
+
+The panel always names the donor gauge, the area ratio and the applicable number; beyond
+10× area mismatch it reports nothing rather than extrapolating. Two honest caveats: the
+**mean is −2.16** against a median of 0.70, so a minority of pairs transfer badly; and this
+is *neighbour-transfer* skill, not ungauged-basin model skill — it needs a gauge on the same
+river. Artifacts: `data/river_transfer_skill.json` (what the UI reads),
+`benchmarks/river_transfer_study.json` (all 322 pairs),
+`analysis/measure_area_ratio_transfer.py`.
+
+### ⚠️ What these numbers do not claim
+
+- **0.905829 is not operational skill.** It is perfect-forcing. See the row above.
+- **Neither figure is a first, virgin held-out read.** Both are *second* test reads.
+  `benchmarks/m1_test_reads.log` is append-only and records the earlier ones,
+  including **two retracted records** (0.910438 and 0.843090, withdrawn after an
+  audit found their members were reading precipitation for the *next* day at the
+  step being scored) and one **withdrawn verification** of my own that had
+  reported "no leak" on a case built to contain one.
+- **Not comparable like-for-like to Nearing et al. 2022 (0.879) or to this repo's
+  own legacy 0.836289.** Different decade, cohort and forcing-product set. Context only.
+- **Not "four independent forcing products"** — independent for precipitation and
+  temperature only. gridMET carries NLDAS-2's radiation and humidity (srad slope
+  0.99941, r 0.9996) and nClimGrid's radiation/vapour pressure are byte-identical
+  to gridMET's.
+- **No trimmed-mean figure applies here.** A trimmed mean is undefined for a
+  three-member roster and silently becomes the median (~+0.0016 higher). The record
+  is the equal-weight mean.
+
+**Evidence page:** [`benchmarks.html`](https://andrewnakas.github.io/riverwatch2/benchmarks.html) ·
+**experiment log:** [`benchmarks/EXPERIMENTS.md`](benchmarks/EXPERIMENTS.md) ·
+artifacts `benchmarks/m1_FINAL_{withq,noq}_corrected.json`,
+`m1_{withq,noq}_allleads_test14_FINAL.json`, `m1_decay_day1_nldasm9.json`, plus a
+nine-vector leakage audit under `analysis/m1_leak_*.py`.
+
+Key infra: `scripts/train_mblstm.py` (the member architecture),
+`analysis/l51_withq_score.py` (scoring, with a provenance guard that refuses a dump
+whose checkpoint does not match the named protocol), `app/mblstm.py` (serving),
+`app/hbv.py` / `app/dhbv.py` (the differentiable-HBV hybrid).
+
+### Method discipline
+
+Every difference quoted is a **paired per-basin** delta with a bootstrap interval —
+a difference of medians has overstated an effect in this campaign more than ten
+times. Selection happens on a validation window only; the test window is read once
+and every read is logged, including retracted ones. Scores use every available day
+(a 14-day-stride evaluation frame flattered results by +0.036). Nothing is admitted
+whose confidence interval includes zero.
 
 ## Live demo
 

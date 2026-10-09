@@ -12,6 +12,7 @@ const cluster = L.markerClusterGroup({ maxClusterRadius: 40 });
 map.addLayer(cluster);
 
 const markersById = new Map();
+const stationsById = new Map();   // id -> station record (needed by river_click)
 
 function colorForState(state) {
   if (state === "AK") return "#4cc8ff";
@@ -40,6 +41,7 @@ async function loadStations() {
     m.on("click", () => selectStation(s));
     cluster.addLayer(m);
     markersById.set(s.id, m);
+    stationsById.set(s.id, s);
     bounds.push([s.lat, s.lon]);
   }
   if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
@@ -1290,6 +1292,9 @@ function drawClimatology(canvas, rows) {
 }
 
 async function selectStation(station) {
+  const rc = document.getElementById("river-click");
+  if (rc) { rc.style.display = "none"; rc.innerHTML = ""; }
+  if (window.RiverClick) RiverClick.clearLayers();
   document.getElementById("panel-empty").style.display = "none";
   document.getElementById("panel-content").style.display = "block";
   document.getElementById("station-title").textContent = `${station.id} — ${station.name}`;
@@ -1343,4 +1348,101 @@ if (memberToggle) {
   });
 }
 
-loadStations();
+
+/* ---------------------------------------------------------------------------
+ * Click-anywhere runoff (see app/static/river_click.js).
+ *
+ * The headline is mm/day — runoff depth — because that is the quantity that
+ * transfers between catchments of different size, and it is what "the runoff
+ * at this point" honestly means. cfs is shown alongside it. The donor gauge,
+ * the area ratio and the measured transfer skill are always named: this is an
+ * area-ratio transfer of a neighbour's forecast, not a model run at the click.
+ * ------------------------------------------------------------------------- */
+function renderRiverClick(res) {
+  const el = document.getElementById("river-click");
+  if (!el) return;
+  document.getElementById("panel-content").style.display = "none";
+  document.getElementById("panel-empty").style.display = "none";
+  el.style.display = "block";
+  const f = RiverClick.fmt;
+  const where = `${res.lat.toFixed(4)}, ${res.lon.toFixed(4)}`;
+
+  if (res.state === "loading") {
+    el.innerHTML = `<h2>Ungauged point</h2><p class="muted">${where}</p>
+      <p>Snapping to the nearest mapped channel…</p>`;
+    return;
+  }
+  if (res.state === "no_catchment") {
+    el.innerHTML = `<h2>No mapped channel here</h2><p class="muted">${where}</p>
+      <p>USGS NLDI has no NHD catchment at this point — it is most likely
+      offshore or outside the conterminous US coverage.</p>`;
+    return;
+  }
+  if (res.state === "far_from_river") {
+    el.innerHTML = `<h2>Not near a river</h2><p class="muted">${where}</p>
+      <p>The nearest mapped channel is <strong>${f(res.distance_km, 1)} km</strong>
+      away (the drawn reach). That is further than the
+      ${RiverClick.NEAR_RIVER_KM} km this estimate is meant for, so no runoff is
+      reported — click closer to the blue line.</p>`;
+    return;
+  }
+  if (res.state === "no_area") {
+    el.innerHTML = `<h2>Could not delineate</h2><p class="muted">${where}</p>
+      <p>NLDI returned the reach but no usable upstream basin, so there is no
+      drainage area to scale by.</p>`;
+    return;
+  }
+  if (res.state === "no_donor") {
+    el.innerHTML = `<h2>No comparable gauge</h2><p class="muted">${where}</p>
+      <p>Upstream basin <strong>${f(res.area_km2, 0)} km²</strong>. Of
+      ${res.n_candidates} gauge(s) found along this river, none is within 10× of
+      that area, so a transfer would be extrapolation. Nothing is reported
+      rather than a number that cannot be defended.</p>`;
+    return;
+  }
+  if (res.state === "error") {
+    el.innerHTML = `<h2>Lookup failed</h2><p class="muted">${where}</p>
+      <p>${res.message}</p>`;
+    return;
+  }
+
+  const d = res.donor;
+  const rows = res.rows || [];
+  const head = rows[0] || {};
+  const body = rows.map(r => `<tr><td>${r.date}</td>
+      <td style="text-align:right">${f(r.mm_day, 2)}</td>
+      <td style="text-align:right">${f(r.q_cfs, 1)}</td></tr>`).join("");
+  el.innerHTML = `
+    <h2>Runoff at this point</h2>
+    <p class="muted">${where} · NHD reach ${res.comid} ·
+       ${f(res.distance_km, 2)} km from the click</p>
+    <p style="font-size:22px;margin:6px 0">
+      <strong>${f(head.mm_day, 2)} mm/day</strong>
+      <span class="muted" style="font-size:14px"> · ${f(head.q_cfs, 1)} cfs · tomorrow</span>
+    </p>
+    <p>Upstream basin <strong>${f(res.area_km2, 0)} km²</strong>, delineated by USGS NLDI.</p>
+    <p><strong>How this is derived:</strong> scaled from
+       <a href="#" onclick="selectStationById('${d.id}');return false;">${d.id} — ${d.name}</a>
+       (${d.direction}, ${f(d.area_km2, 0)} km²) by the drainage-area ratio
+       <strong>${f(res.ratio, 2)}×</strong>. ${RiverClick.skillLabel(res.ratio)}.</p>
+    <p class="muted" style="font-size:12px">This is a neighbour's forecast rescaled by
+       area — it assumes the same runoff depth here as at the donor gauge. It adds no
+       new hydrology, and it degrades as the area ratio departs from 1. It is not a
+       model run at this point. Donor issued ${res.issued_at || "—"}.</p>
+    <table class="member-table" style="width:100%;margin-top:8px">
+      <thead><tr><th>date</th><th style="text-align:right">mm/day</th>
+        <th style="text-align:right">cfs</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table>`;
+}
+
+function selectStationById(id) {
+  const s = stationsById.get(id);
+  if (s) { selectStation(s); if (s.lat != null) map.setView([s.lat, s.lon], 10); }
+}
+
+loadStations().then(() => {
+  if (window.RiverClick) {
+    RiverClick.init({ map: map, stationsById: stationsById, onRender: renderRiverClick });
+  }
+});
