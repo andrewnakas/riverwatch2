@@ -29,19 +29,27 @@ SEEDS="501 502 503 504 505"
 say() { echo "[$(date -u +%FT%TZ)] $*" >> "$LOG"; }
 
 # ---- 1. wait for the corpus, keyed on progress -----------------------------
-stall=0; last=-1
-for i in $(seq 1 240); do          # 240 x 90s = 6h ceiling
+# ⛔ The first version aborted after 90 min with no new basin, reasoning that a
+# stalled corpus meant a dead upstream. That threshold was SHORTER THAN THE
+# NATURAL PROGRESS INTERVAL: the upstream advances once per Open-Meteo hourly
+# quota window, and a window whose quota is still pinned legitimately adds
+# nothing, so 90 quiet minutes is one normal window. It duly killed a perfectly
+# healthy wait at 12:51Z.
+#
+# Keying on progress is right; the threshold has to EXCEED the slowest
+# legitimate progress interval. So the real "this will never finish" signal is
+# used instead: the upstream chain is gone while the corpus is incomplete.
+# Elapsed time is only a backstop.
+last=-1
+for i in $(seq 1 480); do          # 480 x 90s = 12h backstop
   n=$(ls "$OM" 2>/dev/null | wc -l | tr -d ' ')
   [ "$n" -ge "$TARGET" ] && { say "corpus complete: $n/$TARGET"; break; }
-  if [ "$n" -eq "$last" ]; then
-    stall=$((stall+1))
-  else
-    stall=0; last=$n
+  if [ "$n" -ne "$last" ]; then
+    last=$n
     say "corpus at $n/$TARGET"
   fi
-  # 90s x 60 = 90min with no new basin at all => the chain upstream is dead
-  if [ "$stall" -ge 60 ]; then
-    say "ABORT: corpus stuck at $n/$TARGET for 90 min"
+  if ! pgrep -f "chain_gate1_o[m]\.sh" > /dev/null; then
+    say "ABORT: upstream chain_gate1_om.sh is not running and corpus is $n/$TARGET"
     exit 1
   fi
   sleep 90
