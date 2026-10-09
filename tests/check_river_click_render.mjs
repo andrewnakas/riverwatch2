@@ -9,7 +9,10 @@
  * never throws or leaks "undefined"/"NaN" into the page. */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-const root = "/Users/nakas/Documents/RiverWatch2/riverwatch2";
+// Derive the repo root from this file, never hardcode it: an absolute path
+// makes the check silently validate ANOTHER checkout (it read the research
+// branch while verifying a port worktree, and passed).
+const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const require = createRequire(import.meta.url);
 globalThis.RiverTransfer = require(root + "/app/static/river_transfer.js");
 globalThis.L = { geoJSON: () => ({ addTo: () => ({}) }) };
@@ -30,6 +33,24 @@ const end = src.indexOf("loadStations().then");
 if (start < 0 || end < 0) { console.log("FAIL: could not locate renderRiverClick"); process.exit(1); }
 // Indirect eval runs in global sloppy scope, so the declarations become globals.
 (0, eval)(src.slice(start, end) + "\n;globalThis.renderRiverClick = renderRiverClick;");
+
+// Populate the measured-skill table from the committed study, with a fetch
+// stub -- no network. Without this _skill stays null, skillLabel() returns
+// "not yet measured" for every case, and the branch that quotes a real NSE at
+// a visitor is never rendered or asserted on.
+const skillJson = JSON.parse(readFileSync(root + "/data/river_transfer_skill.json", "utf8"));
+globalThis.fetch = async (url) => {
+  if (String(url).includes("river_transfer_skill.json"))
+    return { ok: true, json: async () => skillJson };
+  throw new Error("unexpected fetch in an offline check: " + url);
+};
+await globalThis.RiverClick._loadSkill();
+const probe = globalThis.RiverClick.skillLabel(1.427);
+if (!/median NSE 0\.\d{3}/.test(probe)) {
+  console.log("FAIL: skill table did not load; skillLabel() -> " + probe);
+  process.exit(1);
+}
+console.log("skill table loaded -> " + probe);
 
 const cases = [
   ["loading",        { state: "loading", lat: 44.6, lon: -67.9 }],
@@ -62,6 +83,11 @@ for (const [name, res] of cases) {
     if (!/01022500/.test(html)) bad.push("donor not named");
     if (!/1\.43×|1\.43x/.test(html)) bad.push("area ratio not shown");
     if (!/not yet measured|median NSE/.test(html)) bad.push("no skill statement");
+    // A quoted transfer NSE must carry its scope. The number is
+    // observed-to-observed while the panel shows a forecast, so an
+    // unqualified number overstates what was measured.
+    if (/median NSE/.test(html) && !/before the donor's own forecast error/.test(html))
+      bad.push("transfer NSE quoted without its forecast-error scope");
     if (!/adds no\s+new hydrology|no\s+new hydrology/.test(html)) bad.push("no limitation caveat");
     if ((html.match(/<tr>/g) || []).length < 14) bad.push("hydrograph table incomplete");
   }

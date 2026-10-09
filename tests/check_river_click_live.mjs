@@ -14,7 +14,10 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
-const root = "/Users/nakas/Documents/RiverWatch2/riverwatch2";
+// Derive the repo root from this file, never hardcode it: an absolute path
+// makes the check silently validate ANOTHER checkout (it read the research
+// branch while verifying a port worktree, and passed).
+const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 const dist = process.argv[2];
 const require = createRequire(import.meta.url);
 

@@ -88,9 +88,16 @@
     // Use the bin's own label ("1.25x") rather than re-deriving it from the log
     // cut, which rounds 1.25 to "1.3".
     var band = best.label || (Math.exp(best.max_abs_log_ratio).toFixed(1) + "x");
+    // The measurement is observed-to-observed: a donor gauge's OBSERVED flow
+    // rescaled onto the target. What the panel shows beside it is a FORECAST,
+    // so the donor's own forecast error is additional and unmeasured. Say so
+    // here -- data/river_transfer_skill.json carries the same caveat under
+    // `_note`, but nothing reads `_note`, and a caveat in an unread key is not
+    // a disclosure.
     return "measured median NSE " + best.median_nse.toFixed(3) +
            " for area ratios within " + band +
-           " (n=" + best.n_pairs + " gauge pairs)";
+           " (n=" + best.n_pairs + " gauge pairs)" +
+           " \u2014 gauge-to-gauge transfer only, before the donor's own forecast error";
   }
 
   function clearLayers() {
@@ -253,6 +260,11 @@
     skillLabel: skillLabel,
     fmt: fmt,
     _gaugeCandidates: gaugeCandidates,
+    // Exposed for tests/check_river_click_render.mjs: without it the harness
+    // cannot populate _skill, skillLabel() only ever returns "not yet
+    // measured", and the measured branch -- the one that quotes a number at a
+    // visitor -- goes unexercised.
+    _loadSkill: loadSkill,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.RiverClick = api;
