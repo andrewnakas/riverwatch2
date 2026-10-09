@@ -34,7 +34,11 @@ for w in $(seq 1 "$MAX_WINDOWS"); do
   $PY scripts_modern/build_openmeteo_point_corpus.py \
       --subsample 150 --seed 0 \
       --start 2013-09-01 --end 2018-09-30 --sleep 2.5 >> "$LOG" 2>&1
+  rc=$?
   after=$(count)
+  # rc=2 is the builder's "hourly quota exhausted, come back next window" exit.
+  # Anything else non-zero with no progress is treated by the stall check below.
+  [ "$rc" = "2" ] && echo "[chain] window $w hit the quota ceiling (rc=2)" >> "$LOG"
   echo "[chain] window $w done: $before -> $after" >> "$LOG"
   if [ "$after" -ge "$TARGET" ]; then
     echo "[chain] complete: $after/$TARGET" >> "$LOG"
