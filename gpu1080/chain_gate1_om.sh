@@ -19,9 +19,26 @@ OUT=data/modern_corpus/v3/camels_corpus_openmeteo_m3_cohort
 LOG=logs/gate1_om_corpus.log
 PY=gpu1080/.venv/bin/python
 MAX_WINDOWS=10
-STALL_LIMIT=2          # consecutive windows with zero new basins -> give up
+# 3, not 2: a window that runs before the hourly quota has actually reset makes
+# zero progress LEGITIMATELY, so a limit of 2 conflates "not yet reset" with
+# "permanently broken" and would abort a healthy chain. Three consecutive
+# zero-progress windows is >3h of nothing, which really is a fault.
+# ⚠️ Measured: FAILED requests appear to count against the quota too, so the
+# pre-short-circuit version (352 wasted requests per window) kept the quota
+# pinned and starved its own next window.
+STALL_LIMIT=3
 
 count() { ls "$OUT" 2>/dev/null | wc -l | tr -d ' '; }
+
+# Wait before the FIRST window when asked. Restarting mid-exhaustion otherwise
+# burns a window immediately: it spends ~24 requests against a quota that has
+# not reset and banks a spurious stall. Not needed for correctness now that
+# STALL_LIMIT tolerates quiet windows, but it stops the waste.
+INITIAL_SLEEP="${INITIAL_SLEEP:-0}"
+if [ "$INITIAL_SLEEP" -gt 0 ] 2>/dev/null; then
+  echo "[$(date -u +%FT%TZ)] [chain] initial wait ${INITIAL_SLEEP}s for the next quota window" >> "$LOG"
+  sleep "$INITIAL_SLEEP"
+fi
 
 stalls=0
 for w in $(seq 1 "$MAX_WINDOWS"); do
