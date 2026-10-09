@@ -4242,3 +4242,52 @@ predicting T. Unentitled by construction.
 Registered for that read: the corrected roster's test1 lands **0.890 … 0.910**. Both arms of the
 no-q record also retract, and the no-q replacement must be rebuilt on `fused4mfix3` before it has a
 number — `lstm_fused4md4fix3` is staged in `queue_m1g_noq.sh` and unrun.
+
+---
+
+## §GATE 1 — WHAT OPEN-METEO POINT FORCING COSTS `nldasm9` (registered 2026-10-09, before any score)
+
+**Why this gate exists.** `app/mblstm_modern.py` now serves the MODERN-1 member `nldasm9` on the
+live site. The member was trained on **NLDAS-2 areal** forcing and is served **Open-Meteo point**
+forcing, which differs on two axes at once: product (NLDAS-2 vs ERA5-family) and sampling
+(basin-mean vs gauge pixel). The sampling axis alone measured **+0.013004** median peak r in
+areal's favour on a matched pair (screen B0, `benchmarks/b0_sampling_verdict_conus404.json`), i.e.
+point forcing is the weaker input. The cost in NSE is unmeasured, so until this gate is read the
+served member must be labelled as running on substituted forcing and must never carry 0.905829.
+
+**Instrument.** `scripts_modern/build_openmeteo_point_corpus.py` builds
+`camels_corpus_openmeteo_m3_cohort` by taking each basin's existing NLDAS areal corpus file and
+replacing **only its six forcing columns** with Open-Meteo values for the same dates. `date` and
+`q_cfs` are copied verbatim, so day set, discharge and row count are identical and forcing is the
+only thing that varies. This is deliberately the same design as screen B0 — whose first run was
+void precisely because its two corpora differed in more than one way.
+
+**Protocol.** `nldasm9`, 5 seeds (501-505), equal-weight mean, readout `(ylo+yhi)/2`, scored on
+**val1** (2014-10-01…2018-09-30). Val, not test: this is a serving-architecture question and the
+test window has already been read twice. Encoder context means forcing is fetched from 2013-09-01.
+
+**Sample.** A fixed random **150 of the 490** cohort basins, `--subsample 150 --seed 0`, declared
+here before any number is read. 490 basins × ~1,800 days × 7 variables exhausts Open-Meteo's
+hourly quota (measured: 5 ok, 152 throttled at full rate).
+
+**Statistic.** Paired per-basin median ΔNSE (Open-Meteo point − NLDAS-2 areal) with a 5000-draw
+bootstrap CI over basins, plus breadth. Paired only — a difference of medians has overstated an
+effect in this campaign more than ten times, most recently by 1.9× in screen B0.
+
+**Predicted band: −0.08 … −0.01. STOP at −0.12.**
+Derivation: a whole forcing-product swap cost **−0.017036** at Gate A on a like-for-like window,
+and the sampling change is worth about one more product on the coupling screen, so the two together
+should land in the low tens of thousandths — bounded below by the possibility that ERA5-family
+precipitation is materially worse than NLDAS-2's CPC gauge analysis over these basins.
+
+**Decision table, fixed now:**
+
+| outcome | action |
+|---|---|
+| Δ ≥ −0.03 | **Serve from Open-Meteo.** No near-real-time NLDAS areal pipeline is needed; the member ships as-is with its measured discount stated. |
+| −0.12 < Δ < −0.03 | Serve from Open-Meteo, but label the member with its **measured as-served** skill, and schedule the areal provider as the follow-on. |
+| Δ ≤ −0.12 | The member does **not** ship on point forcing. Build the areal provider first. |
+
+**Falsifier for my own framing:** if Δ is *positive* (point forcing beats the areal corpus the
+model trained on), then either the corpus swap is not doing what I think or B0's conclusion does
+not transfer to NSE, and the result must be labelled unexplained rather than banked as good news.

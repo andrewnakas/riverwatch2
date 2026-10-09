@@ -1,0 +1,37 @@
+{
+ "_note": "MODERN-1 Gate 1 Part B. Bars fixed in PREREG_v2.md before the run.",
+ "years": [
+  2015,
+  2025
+ ],
+ "n_basins": 489,
+ "results": {
+  "camels": {
+   "median_peak_r": 0.39593761459774357,
+   "mean_peak_r": 0.3663856686311373,
+   "delta_vs_camels": 0.0,
+   "modal_peak_lag": 0,
+   "modal_share": 0.9141104294478528,
+   "n": 489,
+   "verdict": "reference"
+  },
+  "point": {
+   "median_peak_r": 0.3452869868267923,
+   "mean_peak_r": 0.33354405855699976,
+   "delta_vs_camels": -0.05065062777095125,
+   "modal_peak_lag": 1,
+   "modal_share": 0.6748466257668712,
+   "n": 489,
+   "verdict": "ABANDON"
+  },
+  "areal": {
+   "median_peak_r": 0.3487938864089434,
+   "mean_peak_r": 0.33921535836528743,
+   "delta_vs_camels": -0.047143728188800194,
+   "modal_peak_lag": 1,
+   "modal_share": 0.6462167689161554,
+   "n": 489,
+   "verdict": "ABANDON"
+  }
+ }
+}

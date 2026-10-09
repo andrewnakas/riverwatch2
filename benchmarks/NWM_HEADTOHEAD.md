@@ -47,6 +47,15 @@ on real issued forecasts.
 
 Headlines:
 
+> **Context, so this is not read as a general claim.** This table is a win against
+> *bias-corrected NWM medium-range* on this 229-gauge panel. It is **not** evidence
+> of beating every operational system: on **shared** MultiMet forcings the comparison
+> against Google Flood Hub was a **tie — 0.623 vs 0.624**. The measured edge in this
+> repo is **discharge assimilation plus forcing quality**, not the network
+> architecture. Where our own forcings are used the margin is large, and that margin
+> is partly the forcings, not the model.
+
+
 - **RW2 beats bias-corrected NWM at every one of 14 leads** on station-median
   MAE, with win rates 82–100% of stations.
 - **Bias-corrected NWM's median NSE goes negative from lead 5** — beyond

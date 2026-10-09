@@ -9164,3 +9164,71 @@ the 2018-10-01…2025-09-30 window over 490 basins, and roughly **0.86** under r
 forecast forcing (0.905829 − 0.048033, where the decay was measured on `nldasm9` and the sparse
 forecast frame supports only the delta). ⚠️ Both records are **second** test reads — see the three
 caveats recorded with the final numbers above.
+
+---
+
+## 🔬 SCREEN B0 — POINT vs AREAL FORCING SAMPLING (2026-10-09, zero GPU)
+
+**Why**: the deployed Pages member serves **Open-Meteo point** forcing at the gauge coordinate
+(`app/forecast.py` → `app/weather.py`, point queries), while `app/` has no areal path at all
+(`grep -rln "exactextract|basin_weights|areal" app/` → nothing). Before funding areal serving
+plumbing, measure whether basin-mean forcing carries more streamflow signal than a gauge-pixel sample.
+
+**Registered before either run** (plan `~/.claude/plans/synchronous-floating-dove.md` §R5):
+areal − point median peak r ≥ **+0.005** ⇒ fund · **0…+0.005** ⇒ fund, flagged · **≤ 0** ⇒ the areal
+half is dead and serving proceeds on point forcing with a documented reason. Falsifier 2: positive but
+**not** rank-correlated with `slope_mean` (Spearman ≤ +0.15) ⇒ the orographic mechanism is wrong and the
+result must be labelled **unexplained**, not banked.
+
+Instrument: `scripts_modern/screen_products_referee.py`'s arithmetic — `peak_k corr(precip[t], relative
+dQ[t+k])`, k ∈ −2…+2 — imported unchanged by the new `analysis/b0_sampling_verdict.py`, which adds the
+**paired** per-basin delta, a 5000-draw bootstrap CI, breadth, and the `slope_mean` stratification.
+
+### ⛔ RUN 1 WAS THE WRONG INSTRUMENT — confounded, and it reversed the mechanism
+
+`camels_corpus_daymet_modern` (point) vs `camels_corpus_daymet_modern_areal`, 489 cohort basins,
+2015-2025. Paired **+0.003608** [+0.002364, +0.005214], breadth 0.626, Spearman(Δ, slope) **−0.2401**,
+steep tercile **−0.001759** [−0.003839, −0.000144].
+
+⛔ **Do not cite this as a sampling contrast.** The two corpora come from **different pipelines**: the
+point one from `scripts_modern/extend_corpus_daymet.py` via the **ORNL single-pixel REST API**, the areal
+one from `scripts_modern/build_daymet_areal_modern.py` via **NASA Hyrax DAP4 gridded V4R1**. The delta
+therefore mixes sampling geometry with a delivery-pipeline and version change (see
+[[modern-daymet-corpus-is-POINT-SAMPLED-mismatch]], which also records 3 silently missing leap-year
+Dec-31 rows in the point corpus). The pipeline difference **dominated the sampling effect and inverted
+its terrain signature.**
+
+### ✅ RUN 2, THE CONTROLLED PAIR — FUND, and the mechanism holds
+
+`camels_corpus_conus404_v2` (areal) vs `camels_corpus_conus404_POINTSAMPLED_DO_NOT_USE` — same source,
+same variables, same period, built as a matched pair. 375 cohort basins, 1981-2010.
+
+| stratum | paired median Δ (areal − point) | CI95 | breadth |
+|---|---|---|---|
+| **all 375** | **+0.013004** | [+0.010883, +0.014501] | **0.883** |
+| flat (slope 0.82–10.48) | +0.008132 | [+0.006353, +0.011172] | 0.928 |
+| mid (10.57–49.54) | +0.014633 | [+0.012461, +0.016910] | 0.920 |
+| **steep (49.87–169.65)** | **+0.015259** | [+0.011174, +0.018166] | 0.800 |
+
+⇒ **+0.013004 clears the +0.005 fund bar with breadth 0.883. Areal serving is FUNDED.**
+
+⭐ **The difference of medians read +0.024393 against a paired +0.013004 — overstated by 1.9×.** The
+11th time in this campaign. Quote paired, always.
+
+⚠️ **The mechanism is supported but only at the group level.** The tercile ordering is monotone and
+increasing, steep/flat = **1.88×**, every CI excluding zero — consistent with orographic averaging (a
+gauge sits at the catchment low point, so a point sample is the warmest, driest part of a steep basin).
+But Spearman(Δ, slope_mean) = **+0.0954**, *below* the registered +0.15. ⇒ slope predicts the **stratum**
+and is a **noisy per-basin predictor**. Report both numbers; do not claim per-basin targeting by slope.
+
+⚠️ **This is a coupling screen, not a skill measurement.** It measures single-product precip–streamflow
+coupling, not NSE and not ensemble value — the same screen failed maurer at −0.0292 and maurer shipped
+with positive LOO. **Do not convert +0.013 peak r into an NSE claim.**
+
+⭐ **Magnitude in context**: +0.013 on this screen against the measured **encoder** product channel of
++0.003487 and **decoder** channel of +0.013106. So the sampling fix is worth about as much as a whole
+extra forcing product in the decoder, and ~3.7× one in the encoder — which reorders the serving backlog
+in favour of areal plumbing and the decoder, and away from a second encoder product.
+
+Artifacts: `benchmarks/b0_point_vs_areal_referee.json`, `benchmarks/b0_sampling_verdict.json`
+(confounded run 1, retained so the confound is reproducible), `benchmarks/b0_sampling_verdict_conus404.json`.

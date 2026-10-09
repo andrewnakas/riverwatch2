@@ -1,0 +1,86 @@
+{
+ "_note": "Skill of the map's drainage-area-ratio transfer, measured observed-to-observed between gauges NLDI places on the same mainstem. This is the TRANSFER step only -- it excludes the donor's forecast error, and it is NOT ungauged-model skill. Per-pair rows live in benchmarks/river_transfer_study.json.",
+ "generated_utc": "2026-10-09T11:07:30.958961+00:00",
+ "window": [
+  "2021-01-01",
+  "2025-12-31"
+ ],
+ "method": "Q_target = Q_donor * (A_target / A_donor); NSE vs target observed",
+ "n_gauges_sampled": 220,
+ "overall": {
+  "n_pairs": 322,
+  "median_nse": 0.7043519635413158,
+  "mean_nse": -2.1601230389300965,
+  "frac_above_0": 0.7515527950310559,
+  "frac_above_0.5": 0.6055900621118012,
+  "p25": 0.004009219561430355,
+  "p75": 0.8732941437031652
+ },
+ "bins": [
+  {
+   "n_pairs": 73,
+   "median_nse": 0.8200740352622086,
+   "mean_nse": -1.8408401097944735,
+   "frac_above_0": 0.8493150684931506,
+   "frac_above_0.5": 0.7534246575342466,
+   "p25": 0.5541752365971997,
+   "p75": 0.9444817421765379,
+   "max_abs_log_ratio": 0.22314355131420976,
+   "label": "1.25x"
+  },
+  {
+   "n_pairs": 156,
+   "median_nse": 0.8214633306517964,
+   "mean_nse": -0.5698986074538676,
+   "frac_above_0": 0.8397435897435898,
+   "frac_above_0.5": 0.7435897435897436,
+   "p25": 0.44646604007810614,
+   "p75": 0.934481142175543,
+   "max_abs_log_ratio": 0.6931471805599453,
+   "label": "2x"
+  },
+  {
+   "n_pairs": 251,
+   "median_nse": 0.7707850488300585,
+   "mean_nse": -0.8328411554759143,
+   "frac_above_0": 0.7848605577689243,
+   "frac_above_0.5": 0.6613545816733067,
+   "p25": 0.19593453730932253,
+   "p75": 0.9031238733011109,
+   "max_abs_log_ratio": 1.3862943611198906,
+   "label": "4x"
+  },
+  {
+   "n_pairs": 322,
+   "median_nse": 0.7043519635413158,
+   "mean_nse": -2.1601230389300965,
+   "frac_above_0": 0.7515527950310559,
+   "frac_above_0.5": 0.6055900621118012,
+   "p25": 0.004009219561430355,
+   "p75": 0.8732941437031652,
+   "max_abs_log_ratio": 2.302585092994046,
+   "label": "10x"
+  }
+ ],
+ "by_direction": {
+  "upstream": {
+   "n_pairs": 141,
+   "median_nse": 0.6880347153754001,
+   "mean_nse": -1.158869206493755,
+   "frac_above_0": 0.75177304964539,
+   "frac_above_0.5": 0.6028368794326241,
+   "p25": 0.03297271230201959,
+   "p75": 0.9027908263476178
+  },
+  "downstream": {
+   "n_pairs": 181,
+   "median_nse": 0.7458640861873038,
+   "mean_nse": -2.940105306187137,
+   "frac_above_0": 0.7513812154696132,
+   "frac_above_0.5": 0.6077348066298343,
+   "p25": 0.0019619644650331614,
+   "p75": 0.8524123741832922
+  }
+ },
+ "n_pairs_scored": 322
+}
