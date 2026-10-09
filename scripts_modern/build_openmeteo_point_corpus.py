@@ -67,6 +67,11 @@ def main() -> int:
     ap.add_argument("--start", default="", help="clip the window, e.g. 2013-09-01")
     ap.add_argument("--end", default="", help="clip the window, e.g. 2018-09-30")
     ap.add_argument("--retries", type=int, default=4)
+    # Once the hourly quota is gone, EVERY remaining basin fails, and retrying
+    # each one through its own backoff burns ~75s x the rest of the list (~110
+    # min measured) for nothing. Bail out instead so the caller can sleep until
+    # the next window. Exit code 2 means exactly that, and is not a fatal error.
+    ap.add_argument("--max-consecutive-failures", type=int, default=6)
     ap.add_argument("--sleep", type=float, default=1.2, help="politeness delay between API calls")
     ap.add_argument("--limit", type=int, default=0)
     # A fixed random subsample keeps the Open-Meteo request budget survivable
@@ -91,6 +96,8 @@ def main() -> int:
         ids = ids[: a.limit]
 
     done = skipped = failed = 0
+    consec_fail = 0
+    quota_exhausted = False
     for i, gid in enumerate(ids, 1):
         dst = out_dir / f"{gid}.csv.gz"
         if dst.exists():
@@ -147,7 +154,16 @@ def main() -> int:
         if om is None or not len(om):
             print(f"[{i}/{len(ids)}] {gid} FAIL empty after {a.retries} attempts", flush=True)
             failed += 1
+            consec_fail += 1
+            if consec_fail >= a.max_consecutive_failures:
+                print(f"\nSTOP: {consec_fail} consecutive failures -- the hourly quota is "
+                      f"exhausted. Bailing out so the caller can wait for the next window "
+                      f"instead of failing through the remaining "
+                      f"{len(ids) - i} basins.", flush=True)
+                quota_exhausted = True
+                break
             continue
+        consec_fail = 0
 
         om = om.copy()
         om["vapor_pressure"] = _sat_vp_pa(om[mf.DEW_VAR].to_numpy(dtype="float64"))
@@ -196,7 +212,11 @@ def main() -> int:
         print(f"[{i}/{len(ids)}] {gid} ok rows={written} cov={cov:.3f}", flush=True)
         time.sleep(a.sleep)
 
-    print(f"\ndone={done} skipped={skipped} failed={failed} -> {out_dir}", flush=True)
+    have = len(list(out_dir.glob("*.csv.gz")))
+    print(f"\ndone={done} skipped={skipped} failed={failed} have={have}/{len(ids)} "
+          f"-> {out_dir}", flush=True)
+    if quota_exhausted:
+        return 2            # not fatal: "come back next hour"
     return 0 if done else 1
 
 
