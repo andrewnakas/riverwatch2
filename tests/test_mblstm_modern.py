@@ -4,6 +4,14 @@ Offline and fast: a tiny checkpoint built with the modern recipe's cfg shape, no
 network, no real weights. These run inside the pages.yml `test` job, which hard-
 gates the deploy, so they must not touch USGS or Open-Meteo.
 
+The pages.yml `test` job installs no torch (`pip install pytest numpy pandas
+scikit-learn lightgbm requests flask`), and the serving path imports torch
+lazily so the member just no-ops there. Building a checkpoint needs it, so
+`_ckpt` skips rather than fails -- see tests/test_mblstm.py, which skips its
+whole module for the same reason. The guard sits in `_ckpt` instead of at module
+scope so the cohort-gate, skip-reason and hook-contract tests, which need no
+torch, keep running on the deploy gate.
+
 The behaviours under test are the ones that would otherwise fail SILENTLY:
   * serving a station outside the 490-basin cohort (extrapolation),
   * serving with a forcing channel absent, which norm_wx would turn into "the
@@ -51,7 +59,8 @@ def _cfg(**over):
 
 
 def _ckpt(tmp_path, name="m1.pt", **over):
-    import torch
+    torch = pytest.importorskip(
+        "torch", reason="building a checkpoint needs torch; the Pages CI runner is torch-free")
     cfg = _cfg(**over)
     model = mblstm.build_model(cfg)
     p = tmp_path / name
