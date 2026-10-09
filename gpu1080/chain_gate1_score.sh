@@ -41,7 +41,8 @@ say() { echo "[$(date -u +%FT%TZ)] $*" >> "$LOG"; }
 # used instead: the upstream chain is gone while the corpus is incomplete.
 # Elapsed time is only a backstop.
 last=-1
-for i in $(seq 1 480); do          # 480 x 90s = 12h backstop
+for i in $(seq 1 1200); do         # 1200 x 90s = 30h backstop: the upstream now
+                                   # waits for a DAILY quota reset, so 12h was short
   n=$(ls "$OM" 2>/dev/null | wc -l | tr -d ' ')
   [ "$n" -ge "$TARGET" ] && { say "corpus complete: $n/$TARGET"; break; }
   if [ "$n" -ne "$last" ]; then
