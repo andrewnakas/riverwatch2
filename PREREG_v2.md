@@ -4291,3 +4291,58 @@ precipitation is materially worse than NLDAS-2's CPC gauge analysis over these b
 **Falsifier for my own framing:** if Δ is *positive* (point forcing beats the areal corpus the
 model trained on), then either the corpus swap is not doing what I think or B0's conclusion does
 not transfer to NSE, and the result must be labelled unexplained rather than banked as good news.
+
+---
+
+# GATE 2 — what the NLDAS-2 LATENCY GAP costs, registered 2026-10-10 before any number
+
+**Written after GATE 1 read −0.059534 and after measuring that NLDAS-2 publication latency is
+5 days** (today−0…−4 return a 1,119-byte HTML page; today−5 and older return ~1.8 MB HDF
+granules — and note a plain HEAD probe returns `HTTP 200` for *every* day, so this must be
+measured on the body, not the status).
+
+**The question.** An areal serving provider cannot supply the newest 4 days of the member's
+365-day encoder context. Those days would have to be filled from Open-Meteo point. GATE 1 priced
+substituting *all* 365 days at −0.059534. **What does substituting only the newest 4 cost?**
+If it is small, areal-with-point-fill recovers most of GATE 1's loss and the provider is worth
+building. If it is large, the recent days dominate and the areal route buys much less than
+−0.059534 suggests.
+
+**Design.** Strictly one variable. Both arms use the same 5 checkpoints (s501–505), the same
+`val1` rows, the same 150 seed-0 cohort basins, and the same NLDAS-2 areal corpus. The treatment
+arm overwrites **only the 6 forcing channels** of encoder rows `t0−3 … t0` with the Open-Meteo
+point corpus values for those same dates, through the same scaler. Discharge and mask channels are
+untouched. The control arm is the EXISTING `g1nl_` dump — no new baseline is produced, so the
+control cannot drift.
+
+⚠️ This is necessarily a **per-window** substitution, not a corpus swap: the same calendar day is
+point-sourced when it is fresh and areal once NLDAS catches up, so no single spliced series can
+represent it. That is why it needs a loader option rather than a second corpus directory.
+
+**Statistic.** Paired per-basin median NSE delta (treatment − control), lead 1, with a 5,000-draw
+paired bootstrap CI over basins, plus breadth. Paired only — a difference of medians has overstated
+an effect in this campaign more than ten times.
+
+**Predicted band: −0.020 … −0.002. STOP at −0.030.**
+Derivation: 4 of 365 encoder days are substituted, so a uniform-sensitivity model would predict
+≈ −0.0007; recency for a day-1 forecast is far stronger than uniform, which is why the band sits
+an order of magnitude above that. Bounded above by the fact that this is the **with-q** member —
+observed discharge is assimilated up to t0 and may already carry the antecedent-wetness signal the
+missing forcing days would have supplied.
+
+**Decision table, fixed now:**
+
+| outcome | action |
+|---|---|
+| Δ > −0.010 | **Build the areal provider.** Point-filling the newest 4 days costs less than a sixth of GATE 1's full substitution, so areal serving recovers most of the −0.059534. |
+| −0.030 < Δ ≤ −0.010 | Build it, but the fill needs a better source than Open-Meteo point for the newest days (e.g. the provider's own short-range GFS analysis). Re-gate the fill choice. |
+| Δ ≤ −0.030 | **Do not build it on this design.** The newest days dominate, so areal-with-point-fill recovers little of GATE 1's loss; reconsider — serve on point with the label, or find a low-latency areal source. |
+
+**Falsifier for my own framing:** if Δ ≥ 0 — point-filling the newest 4 days *helps* — then either
+the splice is not doing what I think or recency is not what drives GATE 1's loss. That must be
+labelled unexplained and debugged, not banked as good news. My causal claims in this project have
+been overturned 20+ times.
+
+**Pre-committed sanity check before the number is read:** the treatment dump must differ from the
+control on >0 rows and the two must share the identical `(station_id, t0)` grid. A splice that
+silently no-ops would produce Δ = 0.000000 and look like a clean pass.
