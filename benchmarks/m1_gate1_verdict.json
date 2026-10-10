@@ -1,0 +1,32 @@
+{
+ "_note": "GATE 1: the cost of serving nldasm9 on Open-Meteo point forcing instead of the NLDAS-2 areal forcing it was trained on. Same checkpoints, same rows, forcing is the only difference. Registered in PREREG_v2.md \u00a7GATE 1.",
+ "frame": "val1",
+ "member": "nldasm9",
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "protocol": "modern-v3-9yr",
+ "rows_joined": 217153,
+ "basins": 150,
+ "median_nse_areal_trained_on": 0.8936953283991611,
+ "median_nse_point_as_served": 0.8086593898958421,
+ "paired_delta_point_minus_areal": -0.0595344589878411,
+ "ci95": [
+  -0.0839106068765077,
+  -0.03835835590277631
+ ],
+ "breadth": 0.08666666666666667,
+ "registered_band": [
+  -0.08,
+  -0.01
+ ],
+ "registered_stop": -0.12,
+ "in_registered_band": true,
+ "verdict": "SERVE, LABELLED \u2014 ship on point forcing but label the member with its measured as-served skill, and schedule the areal provider",
+ "my_framing_falsified": false,
+ "falsified_note": ""
+}

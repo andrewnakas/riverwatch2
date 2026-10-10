@@ -57,7 +57,11 @@ def main() -> int:
     a = ap.parse_args()
     os.chdir(ROOT)
 
-    seeds = [s.strip() for s in a.seeds.split(",") if s.strip()]
+    # INTs, not strings: l51.load_member filters with
+    #   int(f.split("_s")[-1].split("_")[0]) in seeds
+    # so a list of strings matches NOTHING and it exits "no dumps for member".
+    # Every other caller passes ints (l51_withq_score.py:197, l53_arfamily_map.py:71).
+    seeds = [int(s) for s in a.seeds.split(",") if s.strip()]
     areal = l51.load_member(a.member, a.frame, seeds=seeds, protocol=a.protocol,
                             prefix=a.areal_prefix)
     point = l51.load_member(a.member, a.frame, seeds=seeds, protocol=a.protocol,
@@ -68,12 +72,45 @@ def main() -> int:
     if m.empty:
         print("ABORT: the two dumps share no (station_id, t0) rows")
         return 1
+    # Both arms carry their own `truth`, so the merge suffixes them to
+    # truth_x/truth_y and l51.per_basin -- which reads df.truth -- raises.
+    #
+    # They are the same observations, but NOT bit-identical: the dumps store
+    # discharge as float32 and the two arms reach it by different arithmetic
+    # paths, so 43% of rows differ by a few float32 ULPs (1569.999878 vs
+    # 1570.0, 73.000031 vs 73.0). Measured bound over 217,153 rows: max
+    # |diff| = 0.015624 cfs, against a median flow of 61.3 and a max of
+    # 67,700 -- i.e. 2 ULPs at the top of the range, hydrologically nothing.
+    # An exact-equality assert is therefore TIGHTER THAN THE STORED PRECISION
+    # and takes the wrong branch; the tolerance is tied to float32 spacing at
+    # the data's own magnitude instead.
+    #
+    # Then score BOTH arms against ONE truth. The choice cannot matter at
+    # 0.0156 cfs, but it makes the contrast strictly one-variable (forcing)
+    # and the delta exactly reproducible.
+    import numpy as _np
+    _ta = m.truth_x.to_numpy(float)
+    _tp = m.truth_y.to_numpy(float)
+    _d = _np.abs(_ta - _tp)
+    _dmax = float(_np.nanmax(_d))
+    _tol = 4.0 * float(_np.spacing(_np.float32(_np.nanmax(_np.abs(_ta)))))
+    if _dmax > _tol:
+        print(f"ABORT: the two arms disagree on truth beyond float32 precision "
+              f"(max |diff| = {_dmax:.6g} > tol {_tol:.6g}) -- that is a target "
+              f"revision or a bad join, not storage noise")
+        return 1
+    print(f"  truth agreement: max |diff| = {_dmax:.6g} cfs (tol {_tol:.6g}, "
+          f"float32 storage noise); scoring both arms on the areal arm's truth")
+    m = m.drop(columns=["truth_y"]).rename(columns={"truth_x": "truth"})
 
     nse_a = l51.per_basin(m, ["areal"])
     nse_p = l51.per_basin(m, ["point"])
     common = sorted(set(nse_a.index) & set(nse_p.index))
-    sa = nse_a.loc[common, "areal"]
-    sp = nse_p.loc[common, "point"]
+    # l51.per_basin returns a pd.Series indexed by station_id (not a frame),
+    # so there is no column axis to index -- .loc[common, "areal"] raises
+    # "Too many indexers".
+    sa = nse_a.loc[common]
+    sp = nse_p.loc[common]
     delta, lo, hi, breadth, n = l51.paired_ci(sp, sa)      # point MINUS areal
 
     med_a, med_p = float(sa.median()), float(sp.median())
