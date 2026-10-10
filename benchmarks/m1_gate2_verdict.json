@@ -1,0 +1,50 @@
+{
+ "_note": "GATE 2: the cost of an AREAL serving provider that cannot supply the newest 4 days of the 365-day encoder context (NLDAS-2 publication latency is 5 days), so those days are point-filled. Same checkpoints, same rows; only the newest encoder forcing days differ. PREREG_v2.md #GATE 2.",
+ "frame": "val1",
+ "member": "nldasm9",
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "protocol": "modern-v3-9yr",
+ "splice_recent_days": 4,
+ "rows_joined": 217153,
+ "rows_moved": 216952,
+ "basins": 150,
+ "median_nse_areal_control": 0.8936953283991611,
+ "median_nse_spliced_treatment": 0.8575537523189201,
+ "paired_delta_spliced_minus_areal": -0.004018177634188769,
+ "ci95": [
+  -0.007396350167453103,
+  -0.0019625893495204827
+ ],
+ "breadth": 0.2866666666666667,
+ "registered_band": [
+  -0.02,
+  -0.002
+ ],
+ "registered_stop": -0.03,
+ "in_registered_band": true,
+ "gate1_full_substitution": -0.059534,
+ "fraction_of_gate1_loss_recovered_by_areal": 0.9325061706892067,
+ "difference_of_medians": -0.036141576080241045,
+ "gate1_difference_of_medians": -0.085036,
+ "fraction_recovered_on_difference_of_medians": 0.5749849936469138,
+ "_statistics_disagree": "the paired median and the difference of medians disagree by ~9x; the typical basin barely moves while a left tail drags the cohort median level. Decision uses the REGISTERED paired statistic; any published cohort headline must use the level.",
+ "per_basin_delta_tail": {
+  "n_worse_than_-0.05": 24,
+  "n_worse_than_-0.20": 1,
+  "p05": -0.09047771332226595,
+  "p25": -0.026604527382333515,
+  "p75": 0.000734931024760882,
+  "p95": 0.029723239417494614,
+  "min": -0.8743632836675665,
+  "mean": -0.02144948907917905
+ },
+ "verdict": "BUILD THE AREAL PROVIDER -- point-filling the newest 4 days costs less than a sixth of GATE 1's full substitution, so areal serving recovers most of -0.059534",
+ "my_framing_falsified": false,
+ "falsified_note": ""
+}
