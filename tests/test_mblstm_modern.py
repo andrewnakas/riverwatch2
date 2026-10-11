@@ -341,3 +341,37 @@ def test_hook_gates_on_cohort_before_fetching():
     i_gate = hook.index("in_cohort")
     i_fetch = hook.index("fetch_history")
     assert i_gate < i_fetch, "cohort gate must precede the forcing fetch"
+
+
+def test_hook_caps_the_forcing_window_it_requests():
+    """`history_days` defaults to TRAIN_LOOKBACK_DAYS (36,500 = 100 years).
+
+    Uncapped, the hook asked the Open-Meteo archive for a window starting in
+    ~1926. That is an HTTP 400, `_cached_or_fetch` swallows it into an empty
+    frame, and the member then refused on EVERY cohort basin while reporting
+    "forcing channels missing" -- a message that names `vapor_pressure` and
+    sends debugging at the wrong thing entirely.
+
+    The member reads only CONTEXT_DAYS, so the request must be bounded by it
+    (plus slack for a stale gauge, since the encoder window ends at the last
+    USGS observation rather than at today) and clamped at LOOKBACK_FLOOR like
+    the two older fetch paths in this file already are.
+    """
+    hook = _modern_hook_source(code_only=True)
+    assert "CONTEXT_DAYS" in hook, "the cap must be tied to what the member reads"
+    assert re.search(r"min\(\s*history_days", hook), \
+        "the window must be the MINIMUM of history_days and the member's need"
+    assert "LOOKBACK_FLOOR" in hook, "the floor the sibling fetch paths apply"
+
+
+def test_the_capped_window_is_not_wider_than_the_member_can_use():
+    """Pin the arithmetic, not just the presence of a cap: a cap of, say,
+    36,500 would satisfy the source check above and still be the bug."""
+    from app import forecast as fc
+    from app import mblstm_modern as mm
+
+    capped = min(fc.TRAIN_LOOKBACK_DAYS, mm.CONTEXT_DAYS + fc.M1_WINDOW_SLACK_DAYS)
+    assert capped == mm.CONTEXT_DAYS + fc.M1_WINDOW_SLACK_DAYS
+    assert capped <= 500, f"requesting {capped} days for a 365-day encoder"
+    # ...and it must still cover the encoder window plus a stale gauge.
+    assert capped >= mm.CONTEXT_DAYS + 30

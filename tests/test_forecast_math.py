@@ -4,6 +4,7 @@ transform pair, q-scale, and inverse-MAE^2 blend weighting.
 These functions have no I/O and drive every member's output, so they are the
 highest-value things to pin against regression (AUDIT Phase 2)."""
 import math
+import re
 
 import numpy as np
 import pandas as pd
@@ -124,3 +125,47 @@ def test_anchor_decay_zero_disables_anchoring():
     pred = [140.0, 150.0, 160.0]
     assert _anchor_to_observed(pred, q_obs=100.0, decay_h=0) == pred
     assert _anchor_to_observed(pred, q_obs=100.0, decay_h=-1) == pred
+
+
+# ---------------------------------------------------------------------------
+# The snap-to-winner branch must not hand weight to an unmeasured member.
+#
+# `rolling_mae[...]` is assigned for exactly nine members. `mblstm`, `ealstm`
+# and `mblstm_modern` write into `members` but never get an entry, so when the
+# snap branch spread its 10% over `members.keys()` they each collected
+# 0.1/len(others) of the headline blend with no measured skill behind them.
+# Verified live before the fix: forecasts/01052500.json carried
+# `weights_strategy: "snap_to:lgbm_pooled"`.
+#
+# The branch is inline in `forecast_station`, so this is a source contract --
+# the same mechanism tests/test_mblstm_modern.py uses to pin its hook.
+# ---------------------------------------------------------------------------
+
+def _snap_branch_source() -> str:
+    """Comment lines are dropped, so prose that merely NAMES the old broken
+    expression cannot trip the check (the mistake this helper was written to
+    survive) -- mirroring tests/test_mblstm_modern.py's `code_only`."""
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "app" / "forecast.py").read_text()
+    i = src.index("# Decisive winner: 90% on it")
+    j = src.index("weights_strategy = f\"snap_to:", i)
+    block = src[i:j]
+    return "\n".join(l for l in block.splitlines() if not l.lstrip().startswith("#"))
+
+
+def test_snap_to_winner_spreads_only_over_measured_members():
+    branch = _snap_branch_source()
+    assert "valid_mae" in branch, \
+        "the 10% must be spread over members with a measured MAE"
+    assert not re.search(r"members\.keys\(\)", branch), \
+        "spreading over members.keys() gives weight to unmeasured members"
+
+
+def test_valid_mae_requires_a_finite_positive_measured_mae():
+    """The set the snap branch now draws from must itself be the measured one,
+    or the fix above is cosmetic."""
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "app" / "forecast.py").read_text()
+    i = src.index("valid_mae = {")
+    decl = src[i:src.index("if len(valid_mae)", i)]
+    assert "math.isfinite" in decl and "> 0" in decl and "in members" in decl

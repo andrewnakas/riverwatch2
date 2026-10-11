@@ -96,6 +96,10 @@ warnings.filterwarnings("ignore", category=UserWarning)
 HORIZON_DAYS = 14
 TRAIN_LOOKBACK_DAYS = 36500  # 100 years (capped); USGS goes back this far for many gauges
 LOOKBACK_FLOOR = date(1900, 1, 1)  # never request data before this regardless of lookback
+# MODERN-1 reads a 365-day encoder window ending at the last USGS observation,
+# not at today, so its forcing fetch needs slack for a stale gauge. 60 days is
+# well past the point at which the member's own staleness guards refuse.
+M1_WINDOW_SLACK_DAYS = 60
 MAPE_FLOOR_CFS = 1.0  # avoid blowup near zero-flow days
 LAGS = [1, 2, 3, 5, 7, 14, 30, 60]
 PRECIP_WINDOWS = [1, 3, 7, 14, 30]
@@ -1361,7 +1365,20 @@ def forecast_station(
             # pass-2 path (inputs precomputed by prepare_station_inputs) `start`
             # is never assigned, and referencing it raised an UnboundLocalError
             # that this member's own note surfaced.
-            m1_start = today - timedelta(days=history_days)
+            # ...and CAP it. `history_days` defaults to TRAIN_LOOKBACK_DAYS
+            # (36,500 = 100 years), which the two older fetch paths clamp at
+            # LOOKBACK_FLOOR but this one did not. A ~1926 start date is an
+            # archive-API 400, which _cached_or_fetch swallows into an empty
+            # frame, so the member refused on EVERY cohort basin while
+            # reporting "forcing channels missing" -- a message that points at
+            # vapor_pressure and would have sent debugging the wrong way.
+            # The member reads only CONTEXT_DAYS (365); the slack covers a
+            # stale gauge, since the encoder window ends at the last USGS
+            # observation rather than at today.
+            m1_days = min(history_days, _mblstm_modern.CONTEXT_DAYS + M1_WINDOW_SLACK_DAYS)
+            m1_start = today - timedelta(days=m1_days)
+            if m1_start < LOOKBACK_FLOOR:
+                m1_start = LOOKBACK_FLOOR
             m1_hist = _mf.fetch_history(lat, lon, m1_start, today - timedelta(days=1))
             m1_fcst = _mf.fetch_forecast(lat, lon, days=horizon + 2)
             m1_attrs = dict(station_attrs or {})
@@ -1766,7 +1783,13 @@ def forecast_station(
         runner_mae = ranked[1][1]
         if runner_mae > 0 and (runner_mae - best_mae) / runner_mae >= 0.30:
             # Decisive winner: 90% on it, 10% spread evenly to keep some safety.
-            others = [n for n in members.keys() if n != best_name]
+            # The 10% goes only to members with a MEASURED rolling MAE. Drawing
+            # it from members.keys() handed weight to members that never get a
+            # rolling_mae entry at all (mblstm, ealstm, and -- once enabled --
+            # mblstm_modern), so a member whose skill has never been measured on
+            # this station could reach the headline blend through this branch.
+            # A member with no measured MAE gets no weight.
+            others = [n for n in valid_mae.keys() if n != best_name]
             weights = {best_name: 0.9}
             for n in others:
                 weights[n] = 0.1 / max(1, len(others))
