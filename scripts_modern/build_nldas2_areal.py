@@ -35,10 +35,25 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
+# These are module globals so the CLI can rebind them (see `_bind_paths`).
+# Defaults are EXACTLY the historical values, so every existing invocation --
+# gpu1080/chain_nldas4b.sh, chain_fuse4.sh, chain_m1_backfill.sh -- behaves
+# identically with no new flags.
+#
+# ⚠️ WHY --out EXISTS. `OUT` used to be an unconditional constant, and
+# gpu1080/chain_nldas4b.sh:14-20 calls that "THE REAL HAZARD": an
+# `--assemble-only` over a narrower span silently overwrites the verified
+# 1980-2025 corpus with a shorter one, and exits 0. A smoke test could not be
+# run anywhere else.
 ROOT = Path("/home/nakas/riverwatch2")
 WEIGHTS = ROOT / "data/modern_corpus/nldas_basin_weights.pkl"
 CKPT = ROOT / "data/modern_corpus/_nldas_monthly"
 OUT = ROOT / "data/modern_corpus/camels_corpus_nldas_modern_areal"
+QSTORE = ROOT / "data/modern_corpus/q_store"
+#: Set from --through-date. Days after this are not fetched, and a month that
+#: is therefore incomplete is checkpointed under a DIFFERENT name so it can
+#: never be mistaken for a complete one.
+THROUGH = None
 # ⛔ 2026-09-23: the on-prem host below returns **HTTP 410 Service Permanently
 # Retired** for EVERY year (verified on 1980 and on 2014, which this pipeline had
 # previously built successfully). GES DISC retired its on-premises OPeNDAP and
@@ -180,8 +195,34 @@ def do_hour(args):
     return (y, m, d, h, out)
 
 
+def month_days(y, m):
+    """Days of this month to build, honouring --through-date.
+
+    `build_month` raises on any day without all 24 hours, so the current month
+    (and any month clipped by --through-date) cannot be built at all without
+    this: the day enumeration has to stop where the data stops.
+    """
+    nd = calendar.monthrange(y, m)[1]
+    if THROUGH is not None and (y, m) == (THROUGH.year, THROUGH.month):
+        nd = min(nd, THROUGH.day)
+    return nd
+
+
+def month_is_partial(y, m):
+    return month_days(y, m) < calendar.monthrange(y, m)[1]
+
+
 def month_ckpt(y, m):
-    return CKPT / f"nldas_{y}{m:02d}.npz"
+    """Where this month's reduction lives.
+
+    A clipped month gets `.partial.npz`, NOT `.npz`. `build_month` skips any
+    month whose checkpoint exists and `assemble` treats a missing checkpoint as
+    fatal, so a partial month stored under the complete name would be silently
+    frozen as complete forever -- the corpus would simply end mid-month and
+    every later run would skip it.
+    """
+    suffix = "partial.npz" if month_is_partial(y, m) else "npz"
+    return CKPT / f"nldas_{y}{m:02d}.{suffix}"
 
 
 def build_month(y, m, W, workers, workdir):
@@ -189,7 +230,7 @@ def build_month(y, m, W, workers, workdir):
     if cp.exists():
         return "skip", 0
     basins = W[0]
-    ndays = calendar.monthrange(y, m)[1]
+    ndays = month_days(y, m)
     acc = {}   # (day) -> {var: [24 arrays]}
     tasks = [(y, m, d, h, workdir, W) for d in range(1, ndays + 1) for h in range(24)]
     got = 0
@@ -255,12 +296,29 @@ def build_month(y, m, W, workers, workdir):
     return "ok", got
 
 
-def assemble(y0, y1):
-    """Merge monthly checkpoints into per-basin CSVs (Daymet corpus schema)."""
+def month_range(m0, m1):
+    """Inclusive (year, month) list from two (year, month) pairs."""
+    out, y, m = [], m0[0], m0[1]
+    while (y, m) <= (m1[0], m1[1]):
+        out.append((y, m))
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    return out
+
+
+def assemble(y0, y1, months=None):
+    """Merge monthly checkpoints into per-basin CSVs (Daymet corpus schema).
+
+    `months` is an explicit inclusive ((y,m),(y,m)) range. Without it the span
+    is every month of every year in [y0,y1], which CANNOT work for the current
+    year: a 2026 assemble demanded 2026-11 and 2026-12 and refused because
+    they do not exist yet. Partway through any year that made the corpus
+    un-assemblable at all.
+    """
     COLS = ["date", "q_cfs", "temperature_2m_mean", "temperature_2m_max",
             "temperature_2m_min", "precipitation_sum", "shortwave_radiation_sum",
             "vapor_pressure"]
-    months = [(y, m) for y in range(y0, y1 + 1) for m in range(1, 13)]
+    months = month_range(*months) if months else [
+        (y, m) for y in range(y0, y1 + 1) for m in range(1, 13)]
     missing = [f"{y}{m:02d}" for y, m in months if not month_ckpt(y, m).exists()]
     if missing:
         log(f"cannot assemble - {len(missing)} months missing: {missing[:6]}")
@@ -290,7 +348,7 @@ def assemble(y0, y1):
     # discharge: reuse the Daymet corpus column (same USGS source, already masked)
     # MODERN-1: read the authoritative USGS DV store (1980->today), not the Daymet
     # corpus -- that corpus has no discharge before 2015 (see build_q_store.py).
-    DAY = ROOT / "data/modern_corpus/q_store"
+    DAY = QSTORE
     OUT.mkdir(parents=True, exist_ok=True)
     n_ok = 0
     for i, bs in enumerate(basins):
@@ -329,7 +387,7 @@ def assemble(y0, y1):
 
 
 def assert_q_store_covers(y0: int, y1: int, store: Path, n_expected: int = 0,
-                          sample: int = 12) -> None:
+                          sample: int = 12, end_date: str = "") -> None:
     """MODERN-1 GUARD. The defect this exists for: the discharge reader used to point
     at a corpus that began in 2015, so a 1980-2013 build wrote forcings with a blank
     q_cfs on every row and still exited 0. Verify the store spans the build, on real
@@ -340,7 +398,12 @@ def assert_q_store_covers(y0: int, y1: int, store: Path, n_expected: int = 0,
     files = sorted(store.glob("*.csv.gz"))[:sample]
     if not files:
         raise SystemExit(f"GUARD FAIL: discharge store {store} is empty")
-    need_lo, need_hi = f"{y0}-01-01", f"{y1}-12-31"
+    # `need_hi` used to be f"{y1}-12-31" unconditionally, so a build whose span
+    # ends mid-year demanded discharge that will not exist until the following
+    # January -- and this guard runs BEFORE --assemble-only is honoured, so it
+    # blocked assembling even an already-fetched span.
+    need_lo = f"{y0}-01-01"
+    need_hi = end_date or f"{y1}-12-31"
     for p in files:
         with gzip.open(p, "rt") as fh:
             fh.readline()
@@ -366,13 +429,61 @@ def main():
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--assemble-only", action="store_true")
     ap.add_argument("--months", default="", help="YYYYMM,YYYYMM (smoke test)")
+    # --- paths. Defaults reproduce the historical constants exactly, so every
+    # existing chain script is unaffected by their existence.
+    ap.add_argument("--root", default="", help="repo root; also moves weights/ckpt/out/qstore")
+    ap.add_argument("--out", default="", help="per-basin CSV dir. SMOKE-TEST TARGET: "
+                    "without this, --assemble-only overwrites the verified corpus")
+    ap.add_argument("--ckpt-dir", default="", help="monthly .npz cache dir")
+    ap.add_argument("--weights", default="", help="basin weight pickle")
+    ap.add_argument("--qstore", default="", help="discharge store dir")
+    # --- span control
+    ap.add_argument("--through-date", default="", help="YYYY-MM-DD; do not fetch past this "
+                    "day. Required for the current month: build_month raises on any day "
+                    "without 24 hours, and NLDAS-2 publishes at today-5")
+    ap.add_argument("--assemble-start", default="", help="YYYY-MM inclusive")
+    ap.add_argument("--assemble-end", default="", help="YYYY-MM inclusive")
+    ap.add_argument("--n-expected", type=int, default=-1,
+                    help="q_store file count the guard demands (default 671, or 0 with --months)")
     a = ap.parse_args()
 
-    assert_q_store_covers(a.start_year, a.end_year,
-                          ROOT / "data/modern_corpus/q_store",
-                          n_expected=0 if a.months else 671)
+    global ROOT, WEIGHTS, CKPT, OUT, QSTORE, THROUGH
+    if a.root:
+        ROOT = Path(a.root).expanduser().resolve()
+        WEIGHTS = ROOT / "data/modern_corpus/nldas_basin_weights.pkl"
+        CKPT = ROOT / "data/modern_corpus/_nldas_monthly"
+        OUT = ROOT / "data/modern_corpus/camels_corpus_nldas_modern_areal"
+        QSTORE = ROOT / "data/modern_corpus/q_store"
+    if a.weights:
+        WEIGHTS = Path(a.weights).expanduser()
+    if a.ckpt_dir:
+        CKPT = Path(a.ckpt_dir).expanduser()
+    if a.out:
+        OUT = Path(a.out).expanduser()
+    if a.qstore:
+        QSTORE = Path(a.qstore).expanduser()
+    if a.through_date:
+        THROUGH = dt.date.fromisoformat(a.through_date)
+        log(f"through-date {THROUGH} (months past it are clipped and "
+            f"checkpointed as .partial.npz)")
+    log(f"paths: out={OUT} ckpt={CKPT} qstore={QSTORE}")
+
+    asm = None
+    if a.assemble_start or a.assemble_end:
+        if not (a.assemble_start and a.assemble_end):
+            raise SystemExit("--assemble-start and --assemble-end go together")
+        y0, m0 = (int(x) for x in a.assemble_start.split("-"))
+        y1, m1 = (int(x) for x in a.assemble_end.split("-"))
+        asm = ((y0, m0), (y1, m1))
+
+    n_exp = a.n_expected if a.n_expected >= 0 else (0 if a.months else 671)
+    # The guard's end date: the real end of the span being built, not an
+    # implied 31 December.
+    guard_end = a.through_date or (f"{a.assemble_end}-28" if a.assemble_end else "")
+    assert_q_store_covers(a.start_year, a.end_year, QSTORE,
+                          n_expected=n_exp, end_date=guard_end)
     if a.assemble_only:
-        return assemble(a.start_year, a.end_year)
+        return assemble(a.start_year, a.end_year, months=asm)
 
     W = load_weights()
     log(f"weights: {len(W[0])} basins")
