@@ -673,6 +673,27 @@ function renderForecast(payload) {
         <td>${fmtPct(mape7.ensemble_blend)}</td>
         <td>${fmtPct(mape14.ensemble_blend)}</td>
       </tr>` : "";
+  // The MODERN-1 research member is deliberately NOT in payload.weights -- it
+  // carries no blend weight until its live skill is measured -- so it cannot
+  // come from the Object.entries(weights) rows above. It is sourced from
+  // members_used and rendered like ensembleRow, with its measured
+  // substituted-forcing caveat beside it. A member a visitor can see has to
+  // carry that caveat where the visitor is looking.
+  const modernServed = (payload.members_used || []).includes("mblstm_modern");
+  const modernNote = (typeof MemberNotes !== "undefined")
+    ? MemberNotes.memberLabel("mblstm_modern", { served: modernServed })
+    : "";
+  const modernRow = modernServed ? `
+      <tr class="ensemble-row">
+        <td>mblstm_modern</td>
+        <td>—</td>
+        <td>${fmtNumber(payload.rolling_mae?.mblstm_modern)}</td>
+        <td>${fmtNumber(mae7.mblstm_modern)}</td>
+        <td>${fmtNumber(mae14.mblstm_modern)}</td>
+        <td>—</td><td>—</td><td>—</td>
+      </tr>
+      ${modernNote ? `<tr><td colspan="8" class="muted" style="font-size:12px;line-height:1.45">
+        <b>mblstm_modern</b> — ${modernNote}</td></tr>` : ""}` : "";
   document.getElementById("member-table").innerHTML = `
     <table>
       <thead><tr>
@@ -680,7 +701,7 @@ function renderForecast(payload) {
         <th>MAE (cfs)</th><th>MAE @ 7d</th><th>MAE @ 14d</th>
         <th>MAPE</th><th>MAPE @ 7d</th><th>MAPE @ 14d</th>
       </tr></thead>
-      <tbody>${rows}${ensembleRow}</tbody>
+      <tbody>${rows}${ensembleRow}${modernRow}</tbody>
     </table>
     <details class="mae-explainer">
       <summary>What am I looking at? (FAQ)</summary>
@@ -1444,5 +1465,7 @@ function selectStationById(id) {
 loadStations().then(() => {
   if (window.RiverClick) {
     RiverClick.init({ map: map, stationsById: stationsById, onRender: renderRiverClick });
+    // Absent sidecar is fine: the label then says "not yet measured".
+    if (typeof MemberNotes !== "undefined") MemberNotes.loadLabel();
   }
 });

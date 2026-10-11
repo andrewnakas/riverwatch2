@@ -50,6 +50,7 @@ ARTIFACTS = {
     "noq_leads": "m1_noq_allleads_test14_FINAL.json",
     "decay": "m1_decay_day1_nldasm9.json",
     "sampling": "b0_sampling_verdict_conus404.json",
+    "gate1": "m1_gate1_verdict.json",
     "transfer": "river_transfer_study.json",
 }
 
@@ -72,6 +73,17 @@ _FORBIDDEN_CLAIMS = [
      "Independent for precipitation and temperature only. gridMET carries NLDAS-2's "
      "radiation and humidity (srad slope 0.99941, r 0.9996), and nClimGrid's radiation "
      "and vapour pressure are byte-identical to gridMET's."),
+    ("The model this site serves does not run on the forcing it was measured on.",
+     "It trained on NLDAS-2 basin-average forcing and is served Open-Meteo "
+     "forcing sampled at the gauge coordinate. That substitution was measured "
+     "at a paired −0.059534 median NSE (CI [−0.083911, −0.038358]), with "
+     "91.3% of basins degrading. Everything served by it carries that, and no "
+     "number on this page is its served skill."),
+    ("−0.059534 and −0.048033 must not be added together.",
+     "The forcing substitution and the real-forecast decay were measured on "
+     "different frames against different baselines. Their additivity is "
+     "unmeasured, so a combined “operational” figure built by adding them "
+     "would be a claim nobody has tested."),
     ("No “trimmed mean” figure is quoted for this roster.",
      "A trimmed mean is undefined for three members — dropping the max and min leaves "
      "one value — so it silently becomes the median, about +0.0016 higher. The record "
@@ -254,6 +266,7 @@ def build_html(a: dict) -> str:
     decay = a.get("decay") or {}
     wl, nl = a.get("withq_leads") or {}, a.get("noq_leads") or {}
     samp = a.get("sampling") or {}
+    g1 = a.get("gate1") or {}
 
     perfect = wq.get("headline")
     delta = decay.get("paired_delta")
@@ -291,6 +304,39 @@ it must not be converted into an NSE claim. And the difference of medians read
 {_f(samp.get('difference_of_medians'))} against the paired {_f(samp.get('paired_median_delta'))},
 overstating it by about 1.9× — which is why every number on this page is a paired
 per-basin difference with a bootstrap interval.</p>"""
+
+    gate1_block = ""
+    if g1:
+        fr = g1.get("frame", "?")
+        nb = g1.get("basins", "?")
+        br = g1.get("breadth")
+        degrade = (1.0 - br) * 100.0 if isinstance(br, (int, float)) else None
+        gate1_block = f"""
+<h2>What the served model runs on, and what that costs</h2>
+<p>The member this site actually serves — <code>{_esc(g1.get('member', 'nldasm9'))}</code>,
+{len(g1.get('seeds') or [])} seeds — was trained on <strong>NLDAS-2 basin-average</strong>
+forcing. Operationally it is fed <strong>Open-Meteo forcing sampled at the gauge
+coordinate</strong>, because that is what exists in near-real time. Those differ on two
+axes at once: the product and the sampling.</p>
+<p>That substitution was measured before the model was switched on, on
+{_esc(nb)} basins of the {_esc(fr)} window with the same {len(g1.get('seeds') or [])} checkpoints in
+both arms, so forcing is the only thing that varies: paired median
+<strong>{_f(g1.get('paired_delta_point_minus_areal'))}</strong> NSE
+(CI [{_f((g1.get('ci95') or [None])[0])}, {_f((g1.get('ci95') or [None, None])[1])}]),
+breadth {_f(br, 3)}{f" — so {degrade:.1f}% of basins get worse" if degrade is not None else ""}.
+A broad, consistent loss across almost every basin is what weaker input looks like; a
+registration or extraction bug would hit a subset and leave the rest alone.</p>
+<p class="muted">Two things this does <em>not</em> say. The as-served arm read
+{_f(g1.get('median_nse_point_as_served'))} on that sample, but that is {_esc(fr)} on
+{_esc(nb)} basins while the record is the test window on 490 — so it is not
+&ldquo;the served model&rsquo;s skill&rdquo;, and the transferable quantity the
+pre-registration defines is the <em>difference</em>, not either arm&rsquo;s level. And it
+must not be added to the forecast-forcing decay above: different frames, different
+baselines, additivity unmeasured.</p>
+<p class="muted">The fix is a basin-average forcing provider rather than a better
+point sample, and it is already priced: the unavoidable gap left by the source's
+publication latency costs a paired &minus;0.004018, so the provider recovers most of
+this. Until it lands, the served member carries this label and no blend weight.</p>"""
 
     return f"""<!doctype html>
 <html lang="en"><head>
@@ -378,6 +424,7 @@ independently generated day-1 output to {cross if cross is not None else '—'} 
 discharge) and {cross_n if cross_n is not None else '—'} (without). Two separate code
 paths, same answer — the cheapest proof that the headline and the table describe one model.</p>
 
+{gate1_block}
 {samp_block}
 
 {transfer_block}

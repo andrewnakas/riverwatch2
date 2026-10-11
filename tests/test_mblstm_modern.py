@@ -335,12 +335,40 @@ def test_hook_reports_why_it_skipped():
 
 
 def test_hook_gates_on_cohort_before_fetching():
-    """Fetching forcing for all 9,851 served gauges to then discard 9,361 of
-    them would be ~19x wasted API traffic per build."""
-    hook = _modern_hook_source()
+    """Reading forcing for all 9,851 served gauges to then discard 9,361 of
+    them would be wasted work on every build -- API traffic when the hook
+    fetches, and 9,851 file reads when it uses the published table.
+
+    The checkpoint load is also a gate: when the checkpoints cannot be loaded
+    the member must say so, not spend the I/O first and then emit a refusal
+    shaped like a forcing problem.
+    """
+    hook = _modern_hook_source(code_only=True)
     i_gate = hook.index("in_cohort")
-    i_fetch = hook.index("fetch_history")
-    assert i_gate < i_fetch, "cohort gate must precede the forcing fetch"
+    i_load = hook.index("_try_load")
+    reads = [hook.index(tok) for tok in ("load_table", "fetch_history") if tok in hook]
+    assert reads, "the hook must read forcing somehow"
+    assert i_gate < min(reads), "cohort gate must precede the forcing read"
+    assert i_load < min(reads), "checkpoint load must precede the forcing read"
+
+
+def test_hook_prefers_the_published_table():
+    """The table is how 64 build shards get forcing from one pre-matrix job,
+    and it is where NLDAS-2 areal forcing lands later -- same path, same
+    schema, so the serving code does not change again."""
+    hook = _modern_hook_source(code_only=True)
+    assert "load_table" in hook
+    assert hook.index("load_table") < hook.index("fetch_history"), \
+        "the table is the primary source; the live fetch is the dev fallback"
+
+
+def test_one_table_serves_both_encoder_and_decoder():
+    """Two sources with disjoint date ranges is what put decoder lead 1 at the
+    training mean on any gauge 2+ days stale: the member's decoder window
+    starts at last_q_date+1 while the forecast endpoint starts at today."""
+    hook = _modern_hook_source(code_only=True)
+    assert re.search(r"m1_hist\s*=\s*m1_fcst\s*=\s*m1_tab", hook), \
+        "the single continuous table must serve as both windows"
 
 
 def test_hook_caps_the_forcing_window_it_requests():
@@ -375,3 +403,46 @@ def test_the_capped_window_is_not_wider_than_the_member_can_use():
     assert capped <= 500, f"requesting {capped} days for a 365-day encoder"
     # ...and it must still cover the encoder window plus a stale gauge.
     assert capped >= mm.CONTEXT_DAYS + 30
+
+
+# ---------------------------------------------------------------------------
+# Window coverage: the guard that turns a silent training-mean substitution
+# into a refusal. `norm_wx` does nan_to_num(nan=0.0) on z-scores, so every day
+# the forcing source fails to cover is served AS THE TRAINING MEAN, and
+# `_missing_channels` cannot see it because it reads the frame before the
+# reindex and only flags a wholly non-finite column.
+# ---------------------------------------------------------------------------
+
+def test_window_coverage_measures_after_the_reindex():
+    import pandas as pd
+    from app.mblstm_modern import _window_coverage
+
+    idx = pd.date_range("2026-01-01", periods=10, freq="D")
+    # Only 6 of the 10 window days exist in the source.
+    src = pd.DataFrame({"precipitation_sum": [1.0] * 6}, index=idx[:6])
+    win = src.reindex(idx)
+    cov = _window_coverage(win, ["precipitation_sum"])
+    assert cov["precipitation_sum"] == 0.6
+
+    # An absent column is zero coverage, not a KeyError.
+    assert _window_coverage(win, ["vapor_pressure"])["vapor_pressure"] == 0.0
+
+
+def test_a_thin_encoder_window_is_refused_not_averaged():
+    """The threshold has to sit between 'a few substituted days' (GATE 2
+    measured 4 of 365 at -0.004018 paired, i.e. survivable) and 'a tenth of
+    the window is the training mean' (not survivable)."""
+    from app.mblstm_modern import ENC_MIN_COVERAGE, CONTEXT_DAYS
+
+    assert 0.9 < ENC_MIN_COVERAGE < 1.0
+    tolerated = (1.0 - ENC_MIN_COVERAGE) * CONTEXT_DAYS
+    assert tolerated >= 4, "must tolerate the 4 days GATE 2 priced"
+    assert tolerated <= 20, "must not tolerate a month of training-mean days"
+
+
+def test_the_earliest_decoder_leads_must_be_real():
+    """Lead 1 is the only lead with a published skill number and the first one
+    a stale gauge destroys, so it may never run on the training mean."""
+    from app.mblstm_modern import DEC_STRICT_LEADS
+
+    assert DEC_STRICT_LEADS >= 1

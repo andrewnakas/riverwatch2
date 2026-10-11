@@ -145,6 +145,37 @@ def _ensure_vapor_pressure(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+#: Minimum fraction of the 365-day encoder window that must be real data per
+#: channel. GATE 2 measured that point-filling the newest 4 days costs paired
+#: -0.004018, so a handful of substituted days is survivable; a tenth of the
+#: window silently sitting at the training mean is not.
+ENC_MIN_COVERAGE = 0.98
+#: Decoder leads whose forcing must be real. Lead 1 is the only lead with a
+#: published skill number, and it is the one a stale gauge destroys first.
+DEC_STRICT_LEADS = 3
+
+
+def _window_coverage(win: pd.DataFrame, cols: list[str]) -> dict[str, float]:
+    """Finite fraction per channel, measured on the REINDEXED window.
+
+    `_missing_channels` looks at the frame as fetched and only flags a column
+    that is entirely non-finite. That is not enough: the window is built by
+    `reindex` onto an exact date range, so any date the source does not cover
+    appears as NaN here and `norm_wx` turns it into 0 -- i.e. the TRAINING
+    MEAN -- with no error anywhere. This measures what the model will actually
+    consume, after the reindex, which is the only place the hole is visible.
+    """
+    out = {}
+    n = max(len(win), 1)
+    for c in cols:
+        if c not in win.columns:
+            out[c] = 0.0
+            continue
+        v = pd.to_numeric(win[c], errors="coerce").to_numpy(dtype=np.float64)
+        out[c] = float(np.isfinite(v).sum()) / n
+    return out
+
+
 def _missing_channels(frame: pd.DataFrame, cols: list[str]) -> list[str]:
     """Columns that are absent, or present but entirely non-finite."""
     if frame is None or not len(frame):
@@ -159,11 +190,13 @@ def _missing_channels(frame: pd.DataFrame, cols: list[str]) -> list[str]:
 
 
 def _try_load() -> bool:
-    global _models, _cfg, _load_failed
+    global _models, _cfg, _load_failed, _load_reason
     if _models is not None or _load_failed:
         return _models is not None
     paths = _ckpt_paths()
     if not paths or not all(p.exists() for p in paths):
+        missing = [p.name for p in paths if not p.exists()] or ["(no paths configured)"]
+        _load_reason = f"checkpoints absent: {','.join(missing)}"
         _load_failed = True
         return False
     try:
@@ -181,8 +214,14 @@ def _try_load() -> bool:
             else:
                 # Seeds must share the input and normalization recipe or the
                 # ensemble mean is over models that saw different inputs.
+                # `head`/`dec_q` would fail load_state_dict anyway, but
+                # `context`, `enc_lead` and `dec_lead` change NO tensor shape,
+                # so a seed trained with a different one would silently join
+                # the ensemble mean and its effect be read as a measurement.
                 for k in ("enc_vars", "dec_vars", "static_feats", "hidden",
-                          "horizon", "q_transform", "quantiles"):
+                          "horizon", "q_transform", "quantiles",
+                          "head", "context", "dec_q", "no_q_input",
+                          "enc_lead", "dec_lead"):
                     if c.get(k) != cfg.get(k):
                         raise ValueError(f"{ckpt.name}: cfg[{k!r}] differs across seeds")
             m = _mb.build_model(cfg)
@@ -191,7 +230,8 @@ def _try_load() -> bool:
             models.append(m)
         _models, _cfg = models, cfg
         return True
-    except Exception:
+    except Exception as exc:
+        _load_reason = f"{type(exc).__name__}: {exc}"
         _load_failed = True
         return False
 
@@ -208,12 +248,21 @@ def forecast(
     `static_attrs` must carry the station id under "id" or "site_no"; the
     cohort gate needs it and the contract has no separate argument for it.
     """
-    if not _is_enabled() or not _try_load():
+    global last_skip_reason
+    # Reset FIRST. This used to happen inside the `try` below, i.e. AFTER the
+    # early return -- so a station that bailed here inherited the previous
+    # station's reason and the caller noted something untrue about it.
+    last_skip_reason = None
+    if not _is_enabled():
+        return None
+    if not _try_load():
+        # The six reasons in `_cfg_is_servable` used to be raised into a bare
+        # `except Exception` and vanish, leaving a corrupt checkpoint and an
+        # absent torch indistinguishable.
+        last_skip_reason = _load_reason or "checkpoints did not load"
         return None
     cfg = _cfg or {}
     try:
-        global last_skip_reason
-        last_skip_reason = None
         attrs_in = static_attrs or {}
         sid = str(attrs_in.get("id") or attrs_in.get("site_no") or "")
         if not sid or not camels_attrs.in_cohort(sid):
@@ -256,6 +305,15 @@ def forecast(
         last_date = q["date"].iloc[-1]
         idx = pd.date_range(last_date - pd.Timedelta(days=CONTEXT_DAYS - 1), last_date, freq="D")
         wx_win = wx.set_index("date").reindex(idx)
+        cov_e = _window_coverage(wx_win, cfg["enc_vars"])
+        thin_e = {c: round(f, 4) for c, f in cov_e.items() if f < ENC_MIN_COVERAGE}
+        if thin_e:
+            last_skip_reason = (
+                f"encoder window {idx[0].date()}..{idx[-1].date()} is not covered: "
+                + ", ".join(f"{c} {f:.1%}" for c, f in sorted(thin_e.items()))
+                + f" (need {ENC_MIN_COVERAGE:.0%}). Serving those days would put "
+                  "them at the training mean, not refuse.")
+            return None
         q_win = q.set_index("date")["q_cfs"].reindex(idx).to_numpy(dtype=np.float64)
 
         qv = np.clip(q_win, 0.0, None)
@@ -282,6 +340,17 @@ def forecast(
             wf = wf.set_index("date").reindex(fut_idx)
         else:
             wf = pd.DataFrame(index=fut_idx)
+        n_strict = min(DEC_STRICT_LEADS, horizon)
+        cov_d = _window_coverage(wf.iloc[:n_strict], cfg["dec_vars"])
+        thin_d = {c: round(f, 4) for c, f in cov_d.items() if f < 1.0}
+        if thin_d:
+            last_skip_reason = (
+                f"decoder leads 1-{n_strict} ({fut_idx[0].date()}..) lack forcing: "
+                + ", ".join(f"{c} {f:.0%}" for c, f in sorted(thin_d.items()))
+                + ". The forecast source does not reach the day after the last "
+                  "observation, so the earliest -- and only published -- lead "
+                  "would run on the training mean.")
+            return None
         dec_wx = _mb.norm_wx(wf.reset_index(drop=True), cfg["dec_vars"], cfg)
         dec_doy = _mb._doy_sincos(pd.Series(fut_idx))
         lead = (np.arange(1, horizon + 1, dtype=np.float32) / float(cfg["horizon"]))[:, None]

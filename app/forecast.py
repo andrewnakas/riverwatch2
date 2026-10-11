@@ -1359,7 +1359,14 @@ def forecast_station(
     # Gated by RW2_ENABLE_MBLSTM_MODERN=1.
     try:
         from . import mblstm_modern as _mblstm_modern
-        if _mblstm_modern._is_enabled() and _mblstm_modern.camels_attrs.in_cohort(station_id):
+        # The cohort gate comes FIRST, and the checkpoint load second, before
+        # any forcing I/O: 9,361 of the 9,851 served gauges are out of this
+        # member's domain, and when the checkpoints cannot be loaded at all the
+        # member would otherwise spend that I/O only to emit a refusal shaped
+        # like a forcing problem.
+        if (_mblstm_modern._is_enabled()
+                and _mblstm_modern.camels_attrs.in_cohort(station_id)
+                and _mblstm_modern._try_load()):
             from . import modern_forcing as _mf
             # Derive the window from `history_days`, NOT from `start`: on the
             # pass-2 path (inputs precomputed by prepare_station_inputs) `start`
@@ -1379,8 +1386,19 @@ def forecast_station(
             m1_start = today - timedelta(days=m1_days)
             if m1_start < LOOKBACK_FLOOR:
                 m1_start = LOOKBACK_FLOOR
-            m1_hist = _mf.fetch_history(lat, lon, m1_start, today - timedelta(days=1))
-            m1_fcst = _mf.fetch_forecast(lat, lon, days=horizon + 2)
+            # Prefer the pre-built table (one pre-matrix CI job maintains it for
+            # all 64 shards, and it is where NLDAS-2 areal forcing will land).
+            # ONE continuous frame serves as both encoder and decoder forcing:
+            # the member reindexes each window out of what it is handed, so a
+            # single table removes the stale-gauge hole that two endpoints with
+            # disjoint date ranges produced at decoder lead 1.
+            m1_tab = _mf.load_table(station_id)
+            if m1_tab is not None:
+                m1_hist = m1_fcst = m1_tab
+            else:
+                m1_hist = _mf.fetch_history(lat, lon, m1_start, today - timedelta(days=1))
+                m1_fcst = _mf.fetch_forecast(
+                    lat, lon, days=horizon + 2, past_days=M1_WINDOW_SLACK_DAYS)
             m1_attrs = dict(station_attrs or {})
             m1_attrs.setdefault("id", station_id)
             m1_rows = _mblstm_modern.forecast(q_hist, m1_hist, m1_fcst, m1_attrs, horizon)

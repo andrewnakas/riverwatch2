@@ -8,6 +8,11 @@ data/cache/
 # v14.5c: SNODAS extracts are produced fresh by the workflow's pre-build
 # `snodas-extract` job and shipped to shards via artifact. No need to track.
 data/snodas_extracts/
+# MODERN-1 forcing table: maintained by the m1-forcing CI job and published to
+# the m1-forcing-archive orphan branch, never to main. (The orphan push still
+# works because `git rm -rf --cached . && git clean -fd` drops this file from
+# the working tree on that branch.)
+data/m1_forcing/
 benchmarks/results_*.json
 # pinned baselines (e.g. baseline_v1.json) are kept in version control
 # v15.1: NWM residual models are large pickled LightGBM bundles — once

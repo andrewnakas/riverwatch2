@@ -108,7 +108,16 @@ def fetch_history(lat: float, lon: float, start: date, end: date,
 
 
 def fetch_forecast(lat: float, lon: float, days: int = 14,
-                   *, max_age_hours: int = 3) -> pd.DataFrame:
+                   *, max_age_hours: int = 3, past_days: int = 0) -> pd.DataFrame:
+    """Forecast rows, optionally with `past_days` of recent analysis prepended.
+
+    WHY `past_days`: `mblstm_modern` builds its decoder window from the GAUGE's
+    last observation (`last_q_date + 1 ... + horizon`), not from today. The
+    forecast endpoint starts at today, so on a gauge that is 2+ days stale the
+    earliest decoder rows fall in the PAST, reindex to NaN, and `norm_wx` turns
+    them into the training mean -- silently, and at the only lead with a
+    published skill number. Asking for a few past days closes that hole.
+    """
     today = date.today()
     end = today + timedelta(days=days)
     params = {
@@ -116,5 +125,67 @@ def fetch_forecast(lat: float, lon: float, days: int = 14,
         "daily": ",".join(DAILY_VARS), "forecast_days": str(min(max(days, 1), 16)),
         "timezone": "UTC",
     }
+    if past_days > 0:
+        params["past_days"] = str(min(past_days, 92))
     url = weather.FORECAST_URL + "?" + urlencode(params)
-    return _cached_or_fetch(url, _cache_path(lat, lon, today, end, "fcst"), max_age_hours)
+    start_key = today - timedelta(days=past_days)
+    return _cached_or_fetch(url, _cache_path(lat, lon, start_key, end, "fcst"), max_age_hours)
+
+
+# --------------------------------------------------------------------------
+# The pre-built forcing table.
+#
+# One interface, two backends. The Pages build cannot fetch per-station at
+# serve time: it sets RW2_NO_FETCH=1, and this module's cache key embeds the
+# literal (start, end) pair, so `end = today-1` mints a new filename every day
+# and the cache can never warm. Instead a single pre-matrix CI job maintains a
+# per-basin table incrementally and hands all 64 shards one artifact, the way
+# `snodas-extract` already does.
+#
+# The table is ALSO the drop-in point for NLDAS-2 areal forcing, which is the
+# measured fix for Gate 1's -0.059534. Same path, same schema, same reader --
+# only the producer changes, and the `src` column records which rows came from
+# where so the public label can say so honestly.
+# --------------------------------------------------------------------------
+
+TABLE_DIR = Path(__file__).resolve().parents[1] / "data" / "m1_forcing"
+
+#: What the member actually consumes, in the units the checkpoint was fitted on
+#: (degC, mm, MJ m-2 d-1, Pa). `vapor_pressure` is stored already derived, so
+#: `mblstm_modern._ensure_vapor_pressure()` no-ops on it.
+TABLE_COLS = [
+    "temperature_2m_mean", "temperature_2m_max", "temperature_2m_min",
+    "precipitation_sum", "shortwave_radiation_sum", "vapor_pressure",
+]
+
+
+def table_path(station_id: str) -> Path:
+    return TABLE_DIR / f"{station_id}.csv.gz"
+
+
+def load_table(station_id: str) -> pd.DataFrame | None:
+    """The basin's forcing table, or None when it has not been published.
+
+    Returns ONE continuous frame spanning history and forecast. `mblstm_modern`
+    reindexes its encoder and decoder windows out of whatever it is handed, so
+    the same frame serves as both `wx_hist` and `wx_fcst` -- which is precisely
+    what removes the stale-gauge decoder hole described in `fetch_forecast`.
+
+    Absent is fine and must stay fine: the member then refuses with a reason
+    rather than serving a hole.
+    """
+    p = table_path(station_id)
+    if not p.exists():
+        return None
+    try:
+        df = pd.read_csv(p, compression="gzip")
+    except Exception:
+        return None
+    if "date" not in df.columns or df.empty:
+        return None
+    df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+    df = df.dropna(subset=["date"])
+    for c in TABLE_COLS:
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
+    return df.sort_values("date").reset_index(drop=True)

@@ -75,6 +75,25 @@ jobs:
       - name: Run unit tests
         run: python -m pytest tests/ -q
 
+      # The JS mirrors of CI-gated maths (and the public copy that quotes a
+      # measured number at a visitor) have node checks, and until now NOTHING
+      # ran them -- their own headers say "not part of the pytest gate", and
+      # pytest only collects test_*.py. They need no package.json and no
+      # install: every import is a node builtin. ~15 seconds.
+      # check_river_click_live.mjs is excluded on purpose: it needs network and
+      # a built dist/ directory.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run JS cross-checks
+        run: |
+          set -e
+          for f in tests/check_*.mjs; do
+            case "$f" in *_live.mjs) echo "skip $f (needs network + dist/)"; continue;; esac
+            echo "--- $f"
+            node "$f"
+          done
+
   # v14.5c: refresh SNODAS gridded SWE/melt extracts once per build, before
   # the matrix shards fan out. The build steps run with RW2_NO_FETCH=1 so they
   # rely entirely on the extracts dir being up-to-date. Fetching here keeps
@@ -124,8 +143,118 @@ jobs:
           retention-days: 1
           if-no-files-found: warn
 
+  # MODERN-1 forcing table. The served member (`app/mblstm_modern.py`) needs 6
+  # daily channels over a 365-day encoder window for its 490 cohort basins, and
+  # it CANNOT fetch them in the shards: this workflow sets RW2_NO_FETCH=1, and
+  # `modern_forcing`'s cache key embeds the literal (start,end) pair so
+  # `end = today-1` mints a new filename every day and the cache never warms.
+  # 64 shards on a per-shard actions/cache have nowhere to warm one either.
+  #
+  # So this is the snodas-extract pattern: one pre-matrix job keeps a per-basin
+  # table incrementally on an orphan branch and hands all 64 shards one
+  # artifact. It is also exactly where NLDAS-2 areal forcing will land -- same
+  # path, same schema -- which is the measured fix for GATE 1's -0.059534.
+  #
+  # A SIBLING of snodas-extract, not a successor: both need only `test`, so the
+  # critical path grows by this job's own runtime rather than by the sum.
+  # continue-on-error so a throttled Open-Meteo degrades the member to a
+  # labelled refusal instead of blocking the deploy.
+  m1-forcing:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install minimal forcing deps
+        run: pip install numpy pandas
+      - name: Restore forcing table from m1-forcing-archive branch (if it exists)
+        run: |
+          set -e
+          mkdir -p data/m1_forcing
+          if git ls-remote --exit-code --heads origin m1-forcing-archive; then
+            git fetch origin m1-forcing-archive --depth=1
+            git worktree add /tmp/m1-forcing m1-forcing-archive
+            if [ -d /tmp/m1-forcing/data/m1_forcing ]; then
+              cp -r /tmp/m1-forcing/data/m1_forcing/* data/m1_forcing/ 2>/dev/null || true
+            fi
+            git worktree remove /tmp/m1-forcing --force
+            echo "restored $(ls data/m1_forcing | wc -l) per-basin forcing files"
+          else
+            echo "m1-forcing-archive does not exist yet - cold start, expect several runs"
+          fi
+      - name: Refresh the forcing table
+        run: |
+          set +e
+          python scripts/build_m1_forcing.py
+          rc=$?
+          set -e
+          # Exit 2 is the registered "budget gone, come back next window" code.
+          # A cold start is ~490 basins x 365 days x 7 variables, which is more
+          # than one day of Open-Meteo's weighted free tier, so the first runs
+          # genuinely bail part-way and resume by file existence.
+          if [ "$rc" = "2" ]; then
+            echo "::notice::Open-Meteo budget exhausted this window; resuming next run"
+          elif [ "$rc" != "0" ]; then
+            echo "::error::build_m1_forcing.py failed with rc=$rc"
+            exit "$rc"
+          fi
+          echo "coverage: $(ls data/m1_forcing/*.csv.gz 2>/dev/null | wc -l)/490 cohort basins"
+      - name: Upload forcing artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-forcing
+          path: data/m1_forcing
+          retention-days: 1
+          if-no-files-found: warn
+      - name: Push forcing table to m1-forcing-archive branch
+        run: |
+          set -e
+          if [ -z "$(ls data/m1_forcing 2>/dev/null)" ]; then
+            echo "::warning::no forcing files produced; nothing to archive"
+            exit 0
+          fi
+          mv data/m1_forcing /tmp/m1_forcing_payload
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          # SINGLE-COMMIT orphan branch, force-pushed. Gzipped files do not
+          # delta in git, so accumulating history here would add ~7 MB per run
+          # to the pack forever. The table is a snapshot of current state, not
+          # a record, so one commit is all it ever needs.
+          git checkout --orphan m1-forcing-archive-tmp
+          git rm -rf --cached . >/dev/null 2>&1 || true
+          git clean -fdx -e /tmp >/dev/null 2>&1 || true
+          mkdir -p data/m1_forcing
+          cp -r /tmp/m1_forcing_payload/* data/m1_forcing/
+          cat > README.md <<'EOF'
+          # m1-forcing-archive
+
+          Per-basin daily forcing for the MODERN-1 served member, maintained by
+          the `m1-forcing` job in `.github/workflows/pages.yml` and consumed by
+          `app/modern_forcing.load_table()`.
+
+          `data/m1_forcing/{gauge_id}.csv.gz`:
+          `date` + temperature_2m_mean/_max/_min (degC), precipitation_sum (mm),
+          shortwave_radiation_sum (MJ/m2/day), vapor_pressure (Pa), `src`.
+
+          `src` records the provenance of each row. `om_point` is Open-Meteo at
+          the gauge coordinate, which GATE 1 measured costs -0.059534 paired
+          median NSE against the NLDAS-2 areal forcing the member trained on.
+
+          Single commit, force-pushed each run: this is current state, not a
+          history. The forecast record lives elsewhere.
+          EOF
+          git add data/m1_forcing README.md
+          git commit -q -m "m1-forcing-archive: $(date -u +%Y-%m-%dT%H:%MZ), $(ls data/m1_forcing/*.csv.gz | wc -l) basins"
+          git push --force origin m1-forcing-archive-tmp:m1-forcing-archive
+          echo "::notice::pushed m1-forcing-archive"
+
   build:
-    needs: snodas-extract
+    needs: [snodas-extract, m1-forcing]
     runs-on: ubuntu-latest
     timeout-minutes: 350  # cold 30yr backfill can take hours; subsequent runs are 1-day deltas
     strategy:
@@ -143,6 +272,16 @@ jobs:
         with:
           name: snodas-extracts
           path: data/snodas_extracts
+
+      # Absent is fine: the member then refuses with a reason rather than
+      # serving a hole, and the shard's own failure gate ignores it because a
+      # member returning None is not a station failure.
+      - name: Download MODERN-1 forcing table
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: m1-forcing
+          path: data/m1_forcing
 
       - uses: actions/setup-python@v5
         with:
@@ -225,6 +364,25 @@ jobs:
           # RW2_FCST_MODEL pin: that product was never measured. Ensemble API
           # load is ~154 calls/shard (per-runner IPs), well inside fair use.
           RW2_MBLSTM_FCST: "ecmwf_ens"
+          # MODERN-1 research member (`nldasm9`, 5 seeds), the only member of
+          # the with-q record roster whose inputs exist operationally.
+          #
+          # ⚠️ SERVED ON SUBSTITUTED FORCING, and that is measured, not
+          # guessed: it trained on NLDAS-2 areal (basin-mean) forcing and is
+          # served Open-Meteo point forcing at the gauge coordinate, which
+          # GATE 1 priced at a paired -0.059534 median NSE
+          # (CI [-0.083911,-0.038358], breadth 0.0867, so 91.3% of basins
+          # degrade) -- benchmarks/m1_gate1_verdict.json. Gate 1's registered
+          # branch for that range is "serve, but label it with the measured
+          # as-served skill", which is why the label ships with this flag.
+          #
+          # ⛔ Do NOT add that -0.059534 to the -0.048033 real-forecast decay:
+          # different frames, additivity unmeasured.
+          #
+          # It carries NO blend weight -- it is drawn, labelled and archived,
+          # but it does not move the headline until its live skill has been
+          # measured on forecasts this site actually issued.
+          RW2_ENABLE_MBLSTM_MODERN: "1"
         run: |
           python scripts/build_static_site.py \
             --shard-id ${{ matrix.shard }} \

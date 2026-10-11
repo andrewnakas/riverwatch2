@@ -257,3 +257,77 @@ def test_shipped_skill_file_matches_what_the_ui_reads():
     # provenance artifact, not here.
     assert "pairs" not in d, "per-pair rows must stay in benchmarks/river_transfer_study.json"
     assert p.stat().st_size < 20000
+
+
+# ---------------------------------------------------------------------------
+# The served member runs on forcing it was not trained on, and the page has to
+# say so. Before this section existed the strings "substitut", "Open-Meteo"
+# and "NLDAS-2" appeared ZERO times -- which was fine only while the member
+# was dark, and became a false impression the moment it was switched on.
+# ---------------------------------------------------------------------------
+
+GATE1_FIXTURE = {
+    "member": "nldasm9",
+    "seeds": [501, 502, 503, 504, 505],
+    "frame": "val1",
+    "basins": 150,
+    "rows_joined": 217153,
+    "protocol": "modern-v3-9yr",
+    "median_nse_areal_trained_on": 0.8936953283991611,
+    "median_nse_point_as_served": 0.8086593898958421,
+    "paired_delta_point_minus_areal": -0.0595344589878411,
+    "ci95": [-0.0839106068765077, -0.03835835590277631],
+    "breadth": 0.08666666666666667,
+}
+
+
+def _html_with_gate1():
+    a = dict(MIN_ARTIFACTS)
+    a["gate1"] = GATE1_FIXTURE
+    return bp.build_html(a)
+
+
+def test_gate1_section_names_both_forcings_and_the_cost():
+    html = _html_with_gate1()
+    assert "NLDAS-2" in html
+    assert "Open-Meteo" in html
+    assert "0.059534" in html, "the measured substitution cost must be stated"
+    assert "150" in html and "val1" in html, "the frame must travel with the number"
+
+
+def test_gate1_section_absent_when_artifact_missing():
+    """Mirrors the transfer/sampling contract: a research artifact that is not
+    present omits its section rather than failing the build, because this page
+    ships from inside the site build and must never block a deploy."""
+    html = bp.build_html(dict(MIN_ARTIFACTS))
+    assert "What the served model runs on" not in html
+
+
+def test_the_as_served_level_is_never_presented_as_the_members_skill():
+    """0.808659 is val1 on 150 basins; the record is the test window on 490.
+    Quoting it bare would swap a validation figure for a test one, so wherever
+    it appears the sentence has to carry its frame."""
+    html = _html_with_gate1()
+    i = html.find("0.808")
+    assert i != -1, "the as-served arm is reported"
+    window = html[max(0, i - 400): i + 400]
+    assert "150" in window and "490" in window, \
+        "the as-served level must be qualified by its frame in the same breath"
+
+
+def test_the_two_discounts_are_never_summed():
+    """-0.059534 and -0.048033 were measured on different frames against
+    different baselines. Their additivity is unmeasured, so a page that shows
+    their sum -- or a headline derived from it -- is making an untested claim."""
+    html = _html_with_gate1()
+    for forbidden in ("0.1076", "0.10757", "0.798", "0.7975"):
+        assert forbidden not in html, f"page shows the composed figure {forbidden}"
+    assert "additivity" in html, "the page must say why they cannot be added"
+
+
+def test_gate1_numbers_are_derived_not_hardcoded():
+    """Perturb the artifact; the page must move with it."""
+    a = dict(MIN_ARTIFACTS)
+    a["gate1"] = dict(GATE1_FIXTURE, paired_delta_point_minus_areal=-0.0123456)
+    html = bp.build_html(a)
+    assert "0.012346" in html or "0.012345" in html
