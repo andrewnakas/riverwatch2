@@ -4346,3 +4346,113 @@ been overturned 20+ times.
 **Pre-committed sanity check before the number is read:** the treatment dump must differ from the
 control on >0 rows and the two must share the identical `(station_id, t0)` grid. A splice that
 silently no-ops would produce Δ = 0.000000 and look like a clean pass.
+
+---
+
+# GATE 3 — MAY THE MEMBER SERVE BASINS IT WAS NOT TRAINED ON?
+
+**Registered 2026-10-11, before any out-of-cohort number has been produced.**
+Nothing below may be revised after seeing a result; a rule that turns out wrong
+is recorded as a deviation, not edited.
+
+## The question
+
+`nldasm9` trained on the **490-basin cohort** (`cfg["n_stations"] = 490`) and
+`app/mblstm_modern.py` refuses every other gauge by design — the cohort gate is
+one line, and the module's own comment calls it a DOMAIN gate. The served site
+covers 9,851 gauges, so the member answers 5% of them.
+
+Measured 2026-10-11, and this is why the question is worth asking at all:
+
+| | |
+|---|---|
+| CAMELS basins with all 27 Addor statics | **671** (a fixed Zenodo table; this is a hard ceiling, not a lookup that can be widened) |
+| of those, outside the 490 cohort | **181** |
+| of those, already in `data/stations_v15.json` | **160** |
+| of those, **servable today** (≥90% of the last 365 d of discharge, gauge current to 2026-10-06) | **135** |
+
+All 671 are already in the NLDAS-2 areal corpus and already have the 27
+statics, so this costs **no statics derivation, no new polygons and no new
+basin weights**. 41 of the 181 were 531-candidates dropped only for
+*test-window* discharge coverage — an **evaluation** rule, not a serving
+constraint — and 140 were never candidates, being outside the 531 benchmark
+subset.
+
+⚠️ The architecture does not bound this: `enc_in = len(enc_vars) + 2 + 2 +
+len(static_feats)` = 37, with **no station embedding**. So nothing structural
+stops the member running on these basins. The question is purely whether it is
+any good on them, and it must be measured rather than assumed — this project
+has overturned 20+ of its own causal claims.
+
+## Protocol
+
+- Member `nldasm9`, seeds 501-505, equal-weight **mean**, readout
+  **(ylo+yhi)/2**. **No retraining**: the question is transfer, not fit.
+- Forcing: **NLDAS-2 areal**, the product the member trained on. Do **not**
+  combine this with a forcing swap — GATE 1's instrument note records why two
+  corpora differing in more than one way measure neither difference.
+- Frame: **val1**, 2014-10-01…2018-09-30, **stride 1, all days**. Val, not
+  test: this is a serving-domain question and the test window has been read
+  twice. A stride subsample flattered this project's own numbers by +0.036.
+- Treatment set: the **135 servable out-of-cohort basins** above, fixed by that
+  measurement and listed in `data/m1_domain_candidates.json` before any score.
+- Control: the **490 cohort basins** on the same window, same checkpoints.
+
+## Statistics
+
+**(a) THE DECIDING STATISTIC — out-of-cohort median NSE, with a 5,000-draw
+bootstrap CI over basins.** ⚠️ This is a **difference of levels between two
+disjoint basin sets**, i.e. unpaired, and it is unpaired *by necessity*: an
+out-of-cohort basin has no in-cohort counterpart. This project's standing rule
+against differences of medians governs designs where pairing is **available**
+(where it has overstated an effect more than ten times, most recently by 1.9×).
+This is not one of those; the deviation is recorded here, in advance.
+
+**(b) ALSO REPORTED, and this one IS paired** — per-basin ΔNSE of the member
+against **persistence** on the same out-of-cohort rows, with a bootstrap CI and
+breadth. This answers the question that actually licenses serving: is the model
+better than nothing *at these gauges*.
+
+In-cohort references, both already on the record:
+member solo day-1 **test1** 0.869798 · member **val1** areal arm **0.893695**
+(150 cohort basins, `benchmarks/m1_gate1_verdict.json`). The control arm in (a)
+supplies a 490-basin val1 figure on identical rows.
+
+## Predicted band: out-of-cohort median NSE **0.82 … 0.89**. STOP below **0.75**.
+
+Derivation. These basins keep three of the four things that make the in-cohort
+number what it is: their own 27 statics, their own areal forcing, and — the big
+one — **their own observed discharge assimilated up to t0**, since this is the
+with-q arm. Only membership of the training set is missing. So the expected
+cost is well short of a true ungauged-basin problem, whose analogue here is
+this repo's own area-ratio transfer median of **0.7044**; and the 41 basins the
+cohort rule dropped measured *easier* than those it kept (−0.027/−0.029/−0.037,
+three members agreeing in sign), which pushes the same way. The band's top is
+the in-cohort val1 level; its floor allows roughly twice GATE 1's −0.0595 of
+degradation before the route is abandoned.
+
+## Decision table, fixed now
+
+| outcome | action |
+|---|---|
+| median ≥ **0.86** AND paired Δ vs persistence ≥ +0.10 with CI excluding 0 AND breadth ≥ 0.80 | **Serve all 135, labelled out-of-cohort with their own measured median.** Cohort coverage goes 490 → 625. |
+| **0.78** ≤ median < 0.86 | **Serve, labelled out-of-cohort, and quote the out-of-cohort median — never the cohort one.** The UI must mark these basins as a distinct tier. |
+| **0.75** ≤ median < 0.78 | Serve **only** basins passing a pre-declared per-basin screen (own-basin val1 NSE ≥ 0.70). ⚠️ That is an in-sample selection on val and must be labelled as such on every such basin. |
+| median < 0.75 | **STOP. Do not serve outside the cohort.** |
+
+## Falsifier for my own framing
+
+If the out-of-cohort median lands **at or above** the in-cohort control, then
+either the cohort rule happened to select harder basins or the out-of-cohort
+set is systematically easier (smaller, less regulated). That must be reported
+as **unexplained** and checked against basin area and regulation before being
+banked as good news — not treated as evidence that domain transfer is free.
+
+## What the UI must do differently, whatever the outcome
+
+An out-of-cohort basin gets its **own tier and its own number**, carried in the
+published artifact rather than in app code: never 0.905829, never 0.869798,
+never the cohort median. Plus a line stating the basin sits outside the member's
+training cohort. In the third branch, a basin failing the per-basin screen is
+**absent**, not shown with a caveat — which is the contract the cohort gate
+already has today (it returns no number at all rather than a hedged one).
