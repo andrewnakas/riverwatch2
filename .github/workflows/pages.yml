@@ -190,7 +190,7 @@ jobs:
       - name: Refresh the forcing table
         run: |
           set +e
-          python scripts/build_m1_forcing.py
+          python scripts/build_m1_forcing.py --max-seconds 1500
           rc=$?
           set -e
           # Exit 2 is the registered "budget gone, come back next window" code.

@@ -200,6 +200,11 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--shuffle-seed", default=os.environ.get("GITHUB_RUN_ID", "0"),
                     help="sorted order is geographic, so a truncated run must not be sorted")
+    ap.add_argument("--max-seconds", type=int, default=0,
+                    help="stop cleanly after N seconds (0 = no limit). MUST be set "
+                         "well inside the CI job timeout: the publish steps only run "
+                         "after this script returns, so a run killed by the timeout "
+                         "persists NOTHING and the cold start repeats forever")
     a = ap.parse_args()
 
     cohort = load_cohort(Path(a.cohort))
@@ -222,7 +227,19 @@ def main() -> int:
 
     n_ok = n_skip = n_fail = 0
     consec = 0
+    t_start = time.time()
     for i, sid in enumerate(todo, 1):
+        # TIME BUDGET. A cold start is ~490 basins x 425 days x 7 variables and
+        # does not fit in one CI job; measured at roughly 4-7 s per basin, 490
+        # of them overruns a 45-minute job. Stopping cleanly here lets the
+        # upload and orphan-branch push run, so the next build RESUMES from
+        # what this one managed. Being killed by the job timeout instead would
+        # publish nothing and repeat the cold start every single build.
+        if a.max_seconds and (time.time() - t_start) > a.max_seconds:
+            log(f"TIME BUDGET reached after {i - 1} basins "
+                f"({n_ok} written, {n_skip} already fresh, {n_fail} failed). "
+                f"Publishing what is done; the next run resumes.")
+            break
         tail = existing_tail(sid)
         if tail is not None and tail >= fresh_bar:
             n_skip += 1
