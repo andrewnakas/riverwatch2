@@ -464,6 +464,62 @@ jobs:
           git commit -m "v14.2 nwm-archive: snapshot ${ISSUED}"
           git push origin nwm-archive
 
+      # MODERN-1 served-forecast archive. This is what makes "the model is
+      # live" something that can later be checked: each build appends what it
+      # actually served, and scripts/score_m1_live.py joins it against USGS
+      # observations as they arrive. Until this exists, every skill figure the
+      # site can quote comes from a research window.
+      #
+      # A SEPARATE orphan branch, deliberately. scripts/train_nwm_residual.py
+      # rglob's every *.csv.gz under archive/, so m1 rows placed anywhere under
+      # the nwm-archive tree would be silently ingested by the NWM residual
+      # learner with the wrong schema.
+      #
+      # if: always() + continue-on-error: an archive push must never be able to
+      # block a deploy.
+      - name: Snapshot MODERN-1 served forecasts to m1-archive branch
+        if: always()
+        continue-on-error: true
+        run: |
+          set -e
+          # ⚠️ The NWM snapshot step above ends while checked out on the
+          # `nwm-archive` orphan branch, whose tree has no `scripts/` at all.
+          # Without this restore, `python scripts/snapshot_m1_archive.py` would
+          # fail to find its own script on every run and this archive would
+          # silently never be written -- a handled failure reporting success.
+          # Untracked payload dirs (archive_staging_m1/) survive the checkout.
+          git checkout --force "$GITHUB_SHA" -- . 2>/dev/null || git checkout --force "$GITHUB_SHA"
+          test -f scripts/snapshot_m1_archive.py || {
+            echo "::error::could not restore the build tree; not archiving"; exit 1; }
+          python scripts/snapshot_m1_archive.py || {
+            echo "nothing to snapshot (member may be serving no basins yet)"; exit 0; }
+          if [ ! -d archive_m1 ] || [ -z "$(find archive_m1 -name '*.csv.gz' -print -quit)" ]; then
+            echo "no archive file produced; skipping branch push"
+            exit 0
+          fi
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          mv archive_m1 /tmp/rw2_m1_payload
+          if git ls-remote --exit-code --heads origin m1-archive; then
+            git fetch origin m1-archive --depth=1
+            git checkout m1-archive
+          else
+            git checkout --orphan m1-archive
+            git rm -rf --cached . || true
+            git clean -fd
+          fi
+          mkdir -p archive_m1
+          cp -r /tmp/rw2_m1_payload/* archive_m1/
+          git add archive_m1
+          if git diff --cached --quiet; then
+            echo "no archive changes to commit"
+            exit 0
+          fi
+          ISSUED=$(date -u +%Y-%m-%d)
+          git commit -m "m1-archive: served forecasts ${ISSUED}"
+          git push origin m1-archive
+          echo "::notice::pushed m1-archive for ${ISSUED}"
+
   deploy:
     needs: merge
     runs-on: ubuntu-latest

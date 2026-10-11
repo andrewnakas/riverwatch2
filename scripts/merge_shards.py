@@ -24,6 +24,8 @@ DIST = ROOT / "dist"
 # dist/ so they never reach the Pages artifact. The snapshot job picks this
 # up and pushes a single daily parquet to the nwm-archive orphan branch.
 ARCHIVE_STAGING = ROOT / "archive_staging"
+# MODERN-1 served-forecast rows, same route as the NWM ones.
+ARCHIVE_STAGING_M1 = ROOT / "archive_staging_m1"
 
 
 def main() -> int:
@@ -58,7 +60,9 @@ def main() -> int:
         return 1
     for item in asset_shard.iterdir():
         # v14.2: _nwm_raw is staged outside dist/ so it doesn't ship to Pages.
-        if item.name in {"forecasts", "history", "_nwm_raw"} or item.name.startswith("index_summary_shard_"):
+        # _nwm_raw and _m1_fcst are staged OUTSIDE dist/ so they do not ship
+        # to Pages. Forgetting one here publishes the raw archive CSVs.
+        if item.name in {"forecasts", "history", "_nwm_raw", "_m1_fcst"} or item.name.startswith("index_summary_shard_"):
             continue
         dst = DIST / item.name
         if item.is_dir():
@@ -82,6 +86,21 @@ def main() -> int:
                 shutil.copy2(f, ARCHIVE_STAGING / f.name)
                 nwm_files_collected += 1
     print(f"  nwm raw shard files collected: {nwm_files_collected} → {ARCHIVE_STAGING}")
+
+    # 1c) MODERN-1 served-forecast rows, for the verification archive.
+    if ARCHIVE_STAGING_M1.exists():
+        shutil.rmtree(ARCHIVE_STAGING_M1)
+    ARCHIVE_STAGING_M1.mkdir(parents=True)
+    m1_files_collected = 0
+    for sd in shard_dirs:
+        d = sd / "_m1_fcst"
+        if not d.exists():
+            continue
+        for f in d.iterdir():
+            if f.suffix == ".gz":
+                shutil.copy2(f, ARCHIVE_STAGING_M1 / f.name)
+                m1_files_collected += 1
+    print(f"  m1 forecast shard files collected: {m1_files_collected} → {ARCHIVE_STAGING_M1}")
 
     # 2) Forecast JSONs from every shard
     total_forecasts = 0

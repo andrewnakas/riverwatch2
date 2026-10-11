@@ -13,6 +13,10 @@ data/snodas_extracts/
 # works because `git rm -rf --cached . && git clean -fd` drops this file from
 # the working tree on that branch.)
 data/m1_forcing/
+# MODERN-1 served-forecast archive: staged outside dist/ by merge_shards.py and
+# published to the m1-archive orphan branch, never to main.
+archive_staging_m1/
+archive_m1/
 benchmarks/results_*.json
 # pinned baselines (e.g. baseline_v1.json) are kept in version control
 # v15.1: NWM residual models are large pickled LightGBM bundles — once

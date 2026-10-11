@@ -44,6 +44,27 @@ from app.gages2 import enrich_station_attrs, coverage_summary as gages2_coverage
 # RW2_STATIONS_FILE still overrides for local dev / benchmarks (fall back
 # to data/stations_40_enriched.json if you need the legacy 1893 set).
 STATIONS_PATH = Path(os.environ.get("RW2_STATIONS_FILE") or (ROOT / "data" / "stations_v15.json"))
+
+# MODERN-1 verification archive. Bumped when the row schema changes, and
+# stamped into every row so a later backfill can always tell which generation
+# of the pipeline produced it (the lesson snapshot_nwm_archive.py records).
+M1_ARCHIVE_SCHEMA = "m1-fcst-1"
+
+
+def _load_m1_cohort() -> set:
+    """The 490 basins the MODERN-1 member serves; empty set disables archiving.
+
+    Archiving all 9,851 gauges would be 20x the rows for no gain -- the member
+    only ever runs on the cohort, and the other two series are archived solely
+    to give it a paired comparison on identical rows.
+    """
+    try:
+        return set(json.loads((ROOT / "data" / "m1_cohort.json").read_text())["cohort"])
+    except Exception:
+        return set()
+
+
+_m1_cohort = _load_m1_cohort()
 SRC_TEMPLATE = ROOT / "app" / "templates" / "index.html"
 SRC_STATIC = ROOT / "app" / "static"
 DIST = ROOT / "dist"
@@ -258,6 +279,7 @@ def main() -> int:
     # branch. Tuple per row: (issued_date, station_id, target_date, horizon_day,
     # q_cfs_raw, q_cfs_obs_today, bias_scale_used).
     nwm_raw_rows: list[tuple] = []
+    m1_rows: list = []
     t0 = time.time()
 
     # v13.2: 2-pass build. Pass 1 collects fetched + feature-engineered inputs
@@ -378,6 +400,35 @@ def main() -> int:
             data["has_history_file"] = _emit_history(sid)
             (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), indent=2))
             successes += 1
+            # MODERN-1 verification archive. Nothing in this project scores
+            # the forecasts this site actually ISSUED against what the rivers
+            # then did -- only the NWM raw curve was ever archived -- so every
+            # skill number on /benchmarks comes from a research window. These
+            # rows are what turns "it is live" into evidence.
+            #
+            # Three series on IDENTICAL (station, target_date, horizon) keys,
+            # because a paired comparison needs identical rows: the member, the
+            # headline blend it is NOT part of, and persistence as the floor.
+            # Cohort-only, so this is 490 x 14 x 3 rows per build, not 9,851.
+            if _m1_cohort and sid in _m1_cohort:
+                issued = f.issued_at[:10]
+                qmap = (f.member_quantiles or {}).get("mblstm_modern") or []
+                qby = {str(r.get("date")): r for r in qmap}
+                for series, pts in (("mblstm_modern", (f.members or {}).get("mblstm_modern")),
+                                    ("ensemble_blend", f.blend),
+                                    ("persistence_lag1", (f.members or {}).get("persistence_lag1"))):
+                    if not pts:
+                        continue
+                    for h_idx, pt in enumerate(pts, start=1):
+                        td = str(pt.get("date"))
+                        qq = qby.get(td) if series == "mblstm_modern" else None
+                        m1_rows.append((
+                            issued, sid, td, h_idx, series,
+                            pt.get("q_cfs"),
+                            (qq or {}).get("q_lo"), (qq or {}).get("q_hi"),
+                            M1_ARCHIVE_SCHEMA,
+                        ))
+
             # v14.2: capture the raw NWM curve for the snapshot job.
             if f.nwm_raw_forecast:
                 issued = f.issued_at[:10]  # YYYY-MM-DD
@@ -454,6 +505,22 @@ def main() -> int:
                         "bias_scale_used"])
             w.writerows(nwm_raw_rows)
         print(f"v14.2: wrote {len(nwm_raw_rows)} NWM raw rows → {out_path}")
+
+    # MODERN-1 served-forecast rows, for the verification archive. Written
+    # under dist/ so the merge job can collect them from the shard artifact,
+    # then moved OUT of dist/ before the Pages upload -- the same route the
+    # NWM rows take, and the reason merge_shards.py has a skip set.
+    if m1_rows:
+        import csv, gzip
+        m1_dir = DIST / "_m1_fcst"
+        m1_dir.mkdir(parents=True, exist_ok=True)
+        out_path = m1_dir / f"shard_{args.shard_id}.csv.gz"
+        with gzip.open(out_path, "wt", newline="") as gz:
+            w = csv.writer(gz)
+            w.writerow(["issued_date", "station_id", "target_date", "horizon_day",
+                        "series", "q_cfs", "q_lo_raw", "q_hi_raw", "schema_version"])
+            w.writerows(m1_rows)
+        print(f"wrote {len(m1_rows)} MODERN-1 forecast rows → {out_path}")
     if sharded:
         (DIST / f"index_summary_shard_{args.shard_id}.json").write_text(json.dumps(summary, indent=2))
     else:

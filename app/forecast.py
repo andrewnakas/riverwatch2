@@ -410,6 +410,16 @@ class StationForecast:
     # derived from each member's holdout predictions vs truth. Empty dict
     # means RW2_PER_MEMBER_BIAS_OFF=1 was set or no member had enough preds.
     member_bias_scales: Dict[str, float] = field(default_factory=dict)
+    # The MODERN-1 member's own predictive quantiles, kept so the verification
+    # archive can score the BAND and not just the point. The member computes
+    # q_lo/q_med/q_hi and the served point is (q_lo+q_hi)/2 -- the record's
+    # readout -- but everything except the point used to be thrown away here,
+    # which left a quantile head's intervals permanently unscored.
+    # ⚠️ These are the member's RAW quantiles: no per-member bias scale and no
+    # anchoring to the last observation has been applied, while the served
+    # curve in `members[...]` has both. Coverage computed from them is the
+    # model's own calibration, not the calibration of what was displayed.
+    member_quantiles: Dict[str, List[dict]] = field(default_factory=dict)
     # AUDIT (Phase 1): data-freshness + degradation transparency. These let a
     # consumer tell a fresh, full-ensemble forecast apart from one issued off a
     # stale gauge or with members silently dropped — previously indistinguishable.
@@ -1230,6 +1240,9 @@ def forecast_station(
     # the v14.1 NWM bias correction to every member. Tuple is
     # (raw_pred_list, anchor_decay_h).
     raw_member_preds: Dict[str, tuple] = {}
+    # Per-member predictive quantiles, for the verification archive. Only the
+    # MODERN-1 member has a quantile head today.
+    member_quantiles: Dict[str, List[dict]] = {}
 
     persist = persistence_forecast(q_hist, horizon)
     # persistence is by definition q_obs_last for all h, so anchor is a no-op
@@ -1404,6 +1417,10 @@ def forecast_station(
             m1_rows = _mblstm_modern.forecast(q_hist, m1_hist, m1_fcst, m1_attrs, horizon)
             if m1_rows:
                 raw_member_preds["mblstm_modern"] = ([r["q_cfs"] for r in m1_rows], 0)
+                member_quantiles["mblstm_modern"] = [
+                    {"date": r["date"], "q_lo": r.get("q_lo"),
+                     "q_med": r.get("q_med"), "q_hi": r.get("q_hi")}
+                    for r in m1_rows]
             elif _mblstm_modern.last_skip_reason:
                 # A handled failure is a silent failure -- say why it skipped.
                 notes.append(f"mblstm_modern unavailable: {_mblstm_modern.last_skip_reason}")
@@ -2360,6 +2377,7 @@ def forecast_station(
         ),
         nwm_bias_scale_used=nwm_bs_used,
         member_bias_scales=dict(member_bias_scales),
+        member_quantiles=dict(member_quantiles),
         _v14_4_panel=v14_4_panel,
     )
 
