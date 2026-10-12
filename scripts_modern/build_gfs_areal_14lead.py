@@ -50,11 +50,29 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 
-#: eccodes/cfgrib is not demonstrably thread-safe, and libhdf5 in the sibling
-#: NLDAS builder needed exactly this (measured: segfault). The network GET
-#: dominates, so parallelising the fetch and serialising the decode captures
-#: nearly all of the win at none of the risk.
+#: ⭐ MEASURED 2026-10-12, not assumed: 12 concurrent decodes of the same four
+#: f024 records across 6 threads returned output **byte-identical** to a serial
+#: reference (0 mismatches over 48 record decodes) at **4x** the throughput
+#: (2.0 vs 0.5 rec/s). So the lock is OFF by default and one init date drops
+#: from ~11 min to ~3, which is the difference between a 21-hour and a
+#: 5.5-hour 115-date build.
+#:
+#: ⚠️ It is kept as an option because the sibling NLDAS builder needed exactly
+#: this for libhdf5 and documents a measured SEGFAULT there. eccodes is a
+#: different library with a different risk profile, and one clean measurement
+#: is evidence rather than proof. If this ever segfaults or returns a corrupt
+#: field, run with --decode-lock before concluding anything about the data.
 GRIB_LOCK = threading.Lock()
+_USE_LOCK = False
+
+
+class _NullLock:
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+
+
+def _decode_guard():
+    return GRIB_LOCK if _USE_LOCK else _NullLock()
 
 #: GRIB2 packing step of the APCP records, MEASURED rather than assumed: at the
 #: grid level the 4-bucket sum and the single 24-hour record differ only by
@@ -179,7 +197,7 @@ def build_day(g1, red, fs, day: str, leads: int, workers: int, verify_lead1: boo
         grb, rngs = g1.idx_ranges(fs, day, h)
         if not grb or not rngs:
             return h, None
-        with GRIB_LOCK:
+        with _decode_guard():
             return h, g1.decode(fs, grb, rngs)
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
@@ -260,7 +278,17 @@ def main() -> int:
     ap.add_argument("--verify-lead1", action="store_true",
                     help="assert the 4-bucket sum reproduces the single 24h record")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--decode-lock", action="store_true",
+                    help="serialise cfgrib decoding. Measured unnecessary here "
+                         "(byte-identical output at 4x throughput), but the "
+                         "sibling NLDAS builder needed it for libhdf5, so this "
+                         "is the first thing to try if a field looks corrupt")
     a = ap.parse_args()
+
+    global _USE_LOCK
+    _USE_LOCK = a.decode_lock
+    if _USE_LOCK:
+        print("decode lock ENABLED (serialised cfgrib)")
 
     g1 = load_lead1_builder()
     import s3fs
