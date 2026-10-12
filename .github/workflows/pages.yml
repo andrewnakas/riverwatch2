@@ -190,7 +190,11 @@ jobs:
       - name: Refresh the forcing table
         run: |
           set +e
-          python scripts/build_m1_forcing.py --max-seconds 1500
+          # 2100s = 35 min inside a 45-min job, leaving 10 for the label
+          # rebuild, the artifact upload and the orphan push. Measured from a
+          # real run: ~13 s per basin written from a GitHub runner (0 failures,
+          # so this is latency, not quota), so 1500s reached only 186 of 490.
+          python scripts/build_m1_forcing.py --max-seconds 2100
           rc=$?
           set -e
           # Exit 2 is the registered "budget gone, come back next window" code.
