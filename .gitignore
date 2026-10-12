@@ -36,3 +36,7 @@ data/mblstm/corpus_sources.json
 dist/
 .DS_Store
 *.egg-info/
+
+# MODERN-1 forecast-forcing history: published to the m1-archive orphan
+# branch beside the forecast archive, never to main.
+archive_m1_forcing/

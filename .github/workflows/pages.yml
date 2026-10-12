@@ -443,6 +443,21 @@ jobs:
       # branch so we accumulate (issued_date, target_date, q_cfs_raw)
       # tuples for a future residual learner. Best-effort — failures here
       # never block the Pages deploy.
+      # The forcing the member was DRIVEN by, for a decoder-product gate that
+      # is otherwise impossible: areal GFS can be rebuilt from S3 for any past
+      # date, but Open-Meteo's forecast cannot, and m1-forcing-archive is
+      # force-pushed, so yesterday's forecast rows vanish when today's land.
+      # Downloaded here rather than snapshotted in the m1-forcing job so every
+      # push to m1-archive comes from ONE job and cannot race -- and BEFORE
+      # the snapshot steps, because each of those checks out an orphan branch
+      # and an artifact landing in that tree is a different thing entirely.
+      - name: Download MODERN-1 forcing table (for the forcing snapshot)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: m1-forcing
+          path: data/m1_forcing
+
       - name: Snapshot NWM raw forecasts to nwm-archive branch
         if: always()
         continue-on-error: true
@@ -509,6 +524,10 @@ jobs:
             echo "::error::could not restore the build tree; not archiving"; exit 1; }
           python scripts/snapshot_m1_archive.py || {
             echo "nothing to snapshot (member may be serving no basins yet)"; exit 0; }
+          # Best-effort: the forecast forcing this build ran on. A failure here
+          # must not cost us the forecast archive, which is the primary payload.
+          python scripts/snapshot_m1_forcing_history.py || \
+            echo "::warning::no forecast forcing archived this run"
           if [ ! -d archive_m1 ] || [ -z "$(find archive_m1 -name '*.csv.gz' -print -quit)" ]; then
             echo "no archive file produced; skipping branch push"
             exit 0
@@ -516,6 +535,7 @@ jobs:
           git config user.name "riverwatch2-bot"
           git config user.email "treesixtyweather@gmail.com"
           mv archive_m1 /tmp/rw2_m1_payload
+          [ -d archive_m1_forcing ] && mv archive_m1_forcing /tmp/rw2_m1_forcing_payload || true
           if git ls-remote --exit-code --heads origin m1-archive; then
             git fetch origin m1-archive --depth=1
             git checkout m1-archive
@@ -526,7 +546,11 @@ jobs:
           fi
           mkdir -p archive_m1
           cp -r /tmp/rw2_m1_payload/* archive_m1/
-          git add archive_m1
+          if [ -d /tmp/rw2_m1_forcing_payload ]; then
+            mkdir -p archive_m1_forcing
+            cp -r /tmp/rw2_m1_forcing_payload/* archive_m1_forcing/
+          fi
+          git add archive_m1 archive_m1_forcing 2>/dev/null || git add archive_m1
           if git diff --cached --quiet; then
             echo "no archive changes to commit"
             exit 0
