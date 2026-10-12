@@ -204,6 +204,18 @@ jobs:
             exit "$rc"
           fi
           echo "coverage: $(ls data/m1_forcing/*.csv.gz 2>/dev/null | wc -l)/490 cohort basins"
+      # Regenerate the public label from the forcing that was actually just
+      # published. The label names the forcing the member runs on and quotes
+      # the gate that measured THAT configuration, so if it is not rebuilt
+      # here it drifts the moment the areal provider changes the mix -- and a
+      # label quoting GATE 1's -0.059534 while 98% of the window is the
+      # trained-on product overstates the discount. A stale label is a false
+      # impression even when its number was once correct.
+      - name: Rebuild the served-member label from the published forcing
+        run: |
+          set -e
+          python scripts/build_m1_label.py
+          git --no-pager diff --stat -- data/m1_served_skill.json || true
       - name: Upload forcing artifact
         uses: actions/upload-artifact@v4
         with:

@@ -1,5 +1,5 @@
 {
-  "schema_version": "m1-label-1",
+  "schema_version": "m1-label-2",
   "member": "nldasm9",
   "seeds": [
     501,
@@ -8,21 +8,29 @@
     504,
     505
   ],
-  "trained_on": "NLDAS-2 basin-mean (areal) forcing",
+  "trained_on": "NLDAS-2 basin-average (areal) forcing",
+  "forcing_observed": {
+    "sampled_basins": 0,
+    "rows": 0,
+    "by_src": {},
+    "areal_fraction": 0.0
+  },
+  "live_measured": null,
+  "blend_weight": 0.0,
   "served_on": "Open-Meteo point forcing at the gauge coordinate",
-  "substitution_delta_nse": -0.0595344589878411,
-  "substitution_ci95": [
+  "governing_gate": "GATE 1",
+  "encoder_substitution_delta": -0.0595344589878411,
+  "encoder_substitution_ci95": [
     -0.0839106068765077,
     -0.03835835590277631
   ],
-  "substitution_breadth": 0.08666666666666667,
-  "substitution_frame": {
+  "encoder_substitution_breadth": 0.08666666666666667,
+  "encoder_substitution_level": null,
+  "encoder_substitution_frame": {
     "name": "val1",
     "n_basins": 150,
     "rows": 217153,
     "protocol": "modern-v3-9yr"
   },
-  "live_measured": null,
-  "blend_weight": 0.0,
-  "_note": "The served member runs on SUBSTITUTED forcing: it trained on NLDAS-2 areal and is served Open-Meteo point, measured at a paired -0.059534 median NSE on val1/150 basins, with 91.3% of basins degrading. Neither arm's level is the served member's skill, and this delta must not be added to the -0.048033 real-forecast decay: different frames, additivity unmeasured. The member carries no blend weight until its live skill is measured on issued forecasts."
+  "_note": "The served member runs on SUBSTITUTED forcing: trained on NLDAS-2 areal, served Open-Meteo point, measured at a paired -0.059534 median NSE on val1/150 basins, with 91.3% of basins degrading. Neither arm's level is the member's skill, and this delta must not be added to the -0.048033 real-forecast decay: different frames, additivity unmeasured. The member carries no blend weight until its live skill is measured."
 }

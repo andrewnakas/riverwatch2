@@ -51,6 +51,7 @@ ARTIFACTS = {
     "decay": "m1_decay_day1_nldasm9.json",
     "sampling": "b0_sampling_verdict_conus404.json",
     "gate1": "m1_gate1_verdict.json",
+    "gate2": "m1_gate2_verdict.json",
     "transfer": "river_transfer_study.json",
 }
 
@@ -73,12 +74,19 @@ _FORBIDDEN_CLAIMS = [
      "Independent for precipitation and temperature only. gridMET carries NLDAS-2's "
      "radiation and humidity (srad slope 0.99941, r 0.9996), and nClimGrid's radiation "
      "and vapour pressure are byte-identical to gridMET's."),
-    ("The model this site serves does not run on the forcing it was measured on.",
-     "It trained on NLDAS-2 basin-average forcing and is served Open-Meteo "
-     "forcing sampled at the gauge coordinate. That substitution was measured "
-     "at a paired −0.059534 median NSE (CI [−0.083911, −0.038358]), with "
-     "91.3% of basins degrading. Everything served by it carries that, and no "
-     "number on this page is its served skill."),
+    ("No figure on this page is what the served model scores in production.",
+     "Every figure here was measured on a research window. The served member "
+     "runs on basin-average forcing for most of its encoder context and on "
+     "substituted forcing for the newest days and the whole forecast horizon, "
+     "and what that combination is worth on the gauges this site serves has "
+     "not been measured yet. The forecasts it issues are being archived so "
+     "that it can be."),
+    ("A substitution figure describes one configuration, not the model.",
+     "−0.059534 was the cost of substituting the WHOLE encoder window, which "
+     "is what was served before the basin-average provider existed. "
+     "−0.004018 is the cost of substituting only the newest days, which is "
+     "what is served now. Quoting the first once the second applies overstates "
+     "the discount, and quoting either without its frame overstates its reach."),
     ("−0.059534 and −0.048033 must not be added together.",
      "The forcing substitution and the real-forecast decay were measured on "
      "different frames against different baselines. Their additivity is "
@@ -104,6 +112,17 @@ def load_artifacts(bench_dir: Path = BENCH) -> dict:
             except Exception:
                 pass
     log = bench_dir / "m1_test_reads.log"
+    # The served member's label, which encodes the forcing configuration that
+    # is actually live. Without it this page can only describe the
+    # configuration that was true when someone last edited it -- and it was
+    # already wrong once, describing point forcing after the areal provider
+    # had landed.
+    _lbl = ROOT / "data" / "m1_served_skill.json"
+    if _lbl.exists():
+        try:
+            out["served_label"] = json.loads(_lbl.read_text())
+        except Exception:
+            pass
     out["test_reads"] = parse_test_reads(log.read_text()) if log.exists() else []
     return out
 
@@ -267,6 +286,8 @@ def build_html(a: dict) -> str:
     wl, nl = a.get("withq_leads") or {}, a.get("noq_leads") or {}
     samp = a.get("sampling") or {}
     g1 = a.get("gate1") or {}
+    g2 = a.get("gate2") or {}
+    lbl = a.get("served_label") or {}
 
     perfect = wq.get("headline")
     delta = decay.get("paired_delta")
@@ -307,36 +328,70 @@ per-basin difference with a bootstrap interval.</p>"""
 
     gate1_block = ""
     if g1:
-        fr = g1.get("frame", "?")
-        nb = g1.get("basins", "?")
-        br = g1.get("breadth")
-        degrade = (1.0 - br) * 100.0 if isinstance(br, (int, float)) else None
-        gate1_block = f"""
-<h2>What the served model runs on, and what that costs</h2>
-<p>The member this site actually serves — <code>{_esc(g1.get('member', 'nldasm9'))}</code>,
-{len(g1.get('seeds') or [])} seeds — was trained on <strong>NLDAS-2 basin-average</strong>
-forcing. Operationally it is fed <strong>Open-Meteo forcing sampled at the gauge
-coordinate</strong>, because that is what exists in near-real time. Those differ on two
-axes at once: the product and the sampling.</p>
-<p>That substitution was measured before the model was switched on, on
-{_esc(nb)} basins of the {_esc(fr)} window with the same {len(g1.get('seeds') or [])} checkpoints in
-both arms, so forcing is the only thing that varies: paired median
+        on_areal = (lbl.get("governing_gate") == "GATE 2") and bool(g2)
+        fr = (g2 if on_areal else g1).get("frame", "?")
+        nb = (g2 if on_areal else g1).get("basins", "?")
+        nseeds = len(g1.get("seeds") or [])
+        areal_pct = (lbl.get("forcing_observed") or {}).get("areal_fraction")
+        if on_areal:
+            served_line = (
+                "Operationally it is now fed <strong>that same basin-average "
+                "forcing</strong>"
+                + (f" for about {areal_pct * 100:.0f}% of each encoder window"
+                   if isinstance(areal_pct, float) and areal_pct > 0 else "")
+                + ". Only the newest few days cannot come from it \u2014 NLDAS-2 "
+                "publishes with a five-day lag \u2014 and those are filled from "
+                "Open-Meteo at the gauge coordinate.")
+            cost = f"""<p>The cost of that remaining substitution was measured before the
+provider was built, on {_esc(nb)} basins of the {_esc(fr)} window with the same {nseeds}
+checkpoints in both arms: paired median
+<strong>{_f(g2.get('paired_delta_spliced_minus_areal'))}</strong> NSE
+(CI [{_f((g2.get('ci95') or [None])[0])}, {_f((g2.get('ci95') or [None, None])[1])}]).</p>
+<p class="muted">⚠️ That paired figure is not the whole story, and the honest version is
+less flattering. On the cohort <em>level</em> the same substitution shifts the median by
+<strong>{_f(g2.get('difference_of_medians'))}</strong> \u2014 roughly nine times the
+paired delta \u2014 because the damage concentrates in the basins that were already
+hard. Basin-average forcing recovers {_f(100 * (g2.get('fraction_of_gate1_loss_recovered_by_areal') or 0), 1)}% of
+the full-substitution loss on the paired statistic but only about 57% on the level.
+Any cohort headline should use the level.</p>
+<p class="muted">Before the provider existed, the whole window was substituted, which was
+measured at a paired <strong>{_f(g1.get('paired_delta_point_minus_areal'))}</strong> with
+{_f((1 - (g1.get('breadth') or 0)) * 100, 1)}% of basins degrading. That number described
+what was served then; it does not describe what is served now.</p>"""
+        else:
+            served_line = (
+                "Operationally it is fed <strong>Open-Meteo forcing sampled at the "
+                "gauge coordinate</strong>, because that is what exists in near-real "
+                "time. Those differ on two axes at once: the product and the sampling.")
+            cost = f"""<p>That substitution was measured before the model was switched on,
+on {_esc(nb)} basins of the {_esc(fr)} window with the same {nseeds} checkpoints in both
+arms, so forcing is the only thing that varies: paired median
 <strong>{_f(g1.get('paired_delta_point_minus_areal'))}</strong> NSE
 (CI [{_f((g1.get('ci95') or [None])[0])}, {_f((g1.get('ci95') or [None, None])[1])}]),
-breadth {_f(br, 3)}{f" — so {degrade:.1f}% of basins get worse" if degrade is not None else ""}.
-A broad, consistent loss across almost every basin is what weaker input looks like; a
-registration or extraction bug would hit a subset and leave the rest alone.</p>
-<p class="muted">Two things this does <em>not</em> say. The as-served arm read
-{_f(g1.get('median_nse_point_as_served'))} on that sample, but that is {_esc(fr)} on
-{_esc(nb)} basins while the record is the test window on 490 — so it is not
-&ldquo;the served model&rsquo;s skill&rdquo;, and the transferable quantity the
-pre-registration defines is the <em>difference</em>, not either arm&rsquo;s level. And it
-must not be added to the forecast-forcing decay above: different frames, different
-baselines, additivity unmeasured.</p>
-<p class="muted">The fix is a basin-average forcing provider rather than a better
-point sample, and it is already priced: the unavoidable gap left by the source's
-publication latency costs a paired &minus;0.004018, so the provider recovers most of
-this. Until it lands, the served member carries this label and no blend weight.</p>"""
+breadth {_f(g1.get('breadth'), 3)} \u2014 so {_f((1 - (g1.get('breadth') or 0)) * 100, 1)}%
+of basins get worse. A broad, consistent loss across almost every basin is what weaker
+input looks like; a registration or extraction bug would hit a subset and leave the rest
+alone.</p>"""
+
+        gate1_block = f"""
+<h2>What the served model runs on, and what that costs</h2>
+<p>The member this site actually serves \u2014 <code>{_esc(g1.get('member', 'nldasm9'))}</code>,
+{nseeds} seeds \u2014 was trained on <strong>NLDAS-2 basin-average</strong> forcing.
+{served_line}</p>
+{cost}
+<p class="muted">Two things none of this says. The as-served arm of the full-substitution
+measurement read {_f(g1.get('median_nse_point_as_served'))} on its sample, but that is
+{_esc(g1.get('frame', 'validation'))} on {_esc(g1.get('basins', '?'))} basins while the
+record is the test window on 490 \u2014 so it is not &ldquo;the served
+model&rsquo;s skill&rdquo;, and the transferable quantity the pre-registration defines is
+the <em>difference</em>, not either arm&rsquo;s level. And none of these deltas may be
+added to the forecast-forcing decay above: different frames, different baselines,
+additivity unmeasured.</p>
+<p class="muted">The 14-day forecast the member emits is driven by a forecast weather
+product in every configuration ever measured, and neither of these gates covers that.
+The served member also carries no blend weight: it is shown and archived, but it does not
+move the headline forecast until its own skill has been measured on forecasts this site
+issued.</p>"""
 
     return f"""<!doctype html>
 <html lang="en"><head>

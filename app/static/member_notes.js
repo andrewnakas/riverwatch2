@@ -50,21 +50,32 @@
       return "not run at this gauge — outside its " +
              "490-basin cohort, or its forcing was unavailable";
     }
-    var fr = _label.substitution_frame || {};
-    var degrade = (1 - (_label.substitution_breadth || 0)) * 100;
+    // Schema v2 renamed these and added the cohort LEVEL; v1 keys are still
+    // read so an older sidecar cannot blank the label.
+    var delta = _label.encoder_substitution_delta;
+    if (delta == null) delta = _label.substitution_delta_nse;
+    var fr = _label.encoder_substitution_frame || _label.substitution_frame || {};
+    var level = _label.encoder_substitution_level;
     var live = _label.live_measured;
+    if (delta == null) {
+      return "research model, served on substituted forcing \u2014 discount not yet published";
+    }
     var s = "trained on " + (_label.trained_on || "a different product") +
             ", served here on " + (_label.served_on || "substituted forcing") +
-            ". That substitution was measured to cost " +
-            fmtDelta(_label.substitution_delta_nse) + " NSE (" +
-            (fr.n_basins || "?") + "-basin " + (fr.name || "validation") +
-            " sample, " + degrade.toFixed(0) + "% of basins degrade).";
+            ". The substituted part was measured to cost " + fmtDelta(delta) +
+            " NSE (" + (fr.n_basins || "?") + "-basin " +
+            (fr.name || "validation") + " sample";
+    // A level shift must travel WITH the paired figure: areal forcing recovers
+    // 93.3% of the point-forcing loss paired but only 57.5% on the level, so
+    // the paired number alone overstates the fix.
+    if (level != null) s += "; " + fmtDelta(level) + " on the cohort level";
+    s += ").";
     // Never quote a research level as the served skill, and never imply the
     // substitution cost and the forecast-decay cost add.
     s += live == null
       ? " Its own served skill is not yet measured."
       : " Measured on issued forecasts: " + live.headline + ".";
-    s += " Display only — it carries no blend weight.";
+    s += " Display only \u2014 it carries no blend weight.";
     return s;
   }
 

@@ -331,3 +331,15 @@ def test_gate1_numbers_are_derived_not_hardcoded():
     a["gate1"] = dict(GATE1_FIXTURE, paired_delta_point_minus_areal=-0.0123456)
     html = bp.build_html(a)
     assert "0.012346" in html or "0.012345" in html
+
+
+def test_no_forbidden_claim_title_contains_an_escapable_character():
+    """`test_every_forbidden_claim_is_stated` compares the RAW title against the
+    rendered HTML, so a title containing `'`, `&`, `<` or `>` is escaped on the
+    page and the assertion fails for a reason that looks like a missing
+    disclaimer. That cost a debugging cycle; this makes the real cause explicit
+    at the point the claim is written."""
+    for title, body in bp._FORBIDDEN_CLAIMS:
+        for ch in ("'", "&", "<", ">", '"'):
+            assert ch not in title, (
+                f"claim title contains {ch!r}, which _esc() will escape: {title!r}")

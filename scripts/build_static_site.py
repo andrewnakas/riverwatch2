@@ -230,7 +230,12 @@ def main() -> int:
         # The served member's measured substituted-forcing label, read by
         # app/static/member_notes.js. Same contract: absent is fine and the UI
         # then says "not yet measured" instead of quoting a research number.
-        _m1 = ROOT / "data" / "m1_served_skill.json"
+        # Prefer the copy that came with the forcing artifact: it was built
+        # from the forcing THIS run published, whereas the committed copy is
+        # only as fresh as the last commit. A label that disagrees with the
+        # forcing it describes is a false impression.
+        _m1_side = ROOT / "data" / "m1_forcing" / "_served_skill.json"
+        _m1 = _m1_side if _m1_side.exists() else (ROOT / "data" / "m1_served_skill.json")
         if _m1.exists():
             (DIST / "data").mkdir(parents=True, exist_ok=True)
             shutil.copy2(_m1, DIST / "data" / "m1_served_skill.json")
