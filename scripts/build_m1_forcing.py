@@ -85,11 +85,24 @@ def load_latlon(path: Path) -> dict[str, tuple[float, float]]:
 
 
 def existing_tail(sid: str) -> date | None:
-    """The newest date already stored for this basin, or None."""
+    """How current the OBSERVED part of this basin's table is.
+
+    ⚠️ Deliberately ignores rows dated in the future. The table carries ~16
+    forecast days, so `max(date)` is always about two weeks ahead and a
+    freshness test against it would call every table fresh FOREVER -- the
+    table would be written once and never refreshed again, going stale while
+    looking perfect. That is exactly what would have happened to the 625
+    areal-seeded tables.
+
+    Returns the newest row at or before today, which is the quantity
+    freshness actually depends on.
+    """
     df = mf.load_table(sid)
     if df is None or df.empty:
         return None
-    return max(df["date"])
+    today = date.today()
+    past = [d for d in df["date"] if d <= today]
+    return max(past) if past else None
 
 
 def derive_vp(df: pd.DataFrame) -> pd.DataFrame:
@@ -191,13 +204,20 @@ def main() -> int:
     ap.add_argument("--past-days", type=int, default=10,
                     help="recent analysis days prepended to the forecast call, so a "
                          "stale gauge's earliest decoder rows are not NaN")
-    ap.add_argument("--fresh-within-days", type=int, default=1,
-                    help="skip a basin whose table already reaches today-N")
+    ap.add_argument("--fresh-within-days", type=int, default=0,
+                    help="skip a basin whose OBSERVED tail already reaches today-N. "
+                         "0 means refresh daily, which is what a forecast product "
+                         "needs and is affordable now the request is incremental")
+    ap.add_argument("--overlap-days", type=int, default=5,
+                    help="days of archive re-fetched behind the existing tail; the "
+                         "archive revises its most recent values")
     ap.add_argument("--retries", type=int, default=4)
     ap.add_argument("--sleep", type=float, default=0.6, help="politeness delay between basins")
     ap.add_argument("--max-consecutive-failures", type=int, default=6,
                     help="bail the window; failed requests still cost budget")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--only", default="", help="comma-separated basin ids; for "
+                    "debugging one basin without waiting for the shuffle to reach it")
     ap.add_argument("--shuffle-seed", default=os.environ.get("GITHUB_RUN_ID", "0"),
                     help="sorted order is geographic, so a truncated run must not be sorted")
     ap.add_argument("--max-seconds", type=int, default=0,
@@ -214,6 +234,12 @@ def main() -> int:
         log(f"WARNING: {len(missing_meta)} cohort basins have no lat/lon: {missing_meta[:5]}")
     todo = [s for s in cohort if s in latlon]
 
+    if a.only:
+        want = {x.strip() for x in a.only.split(",") if x.strip()}
+        unknown = want - set(todo)
+        if unknown:
+            log(f"WARNING: not in the cohort or lacking lat/lon: {sorted(unknown)}")
+        todo = [s for s in todo if s in want]
     random.Random(str(a.shuffle_seed)).shuffle(todo)
     if a.limit:
         todo = todo[:a.limit]
@@ -245,7 +271,18 @@ def main() -> int:
             n_skip += 1
             continue
         lat, lon = latlon[sid]
-        fresh = fetch_basin(lat, lon, start, today, horizon_days=a.horizon_days,
+        # ⭐ REQUEST ONLY WHAT IS MISSING. Open-Meteo weights a request by
+        # days x variables, so re-pulling all 425 days to refresh one made a
+        # refresh cost as much as a cold start -- which is why a daily refresh
+        # of 490 basins looked unaffordable. A table whose observed tail is
+        # recent needs only the days since that tail (plus a few days of
+        # overlap, because the archive revises its most recent values), and the
+        # forecast call is cheap at ~16 days.
+        if tail is not None:
+            b_start = max(start, tail - timedelta(days=a.overlap_days))
+        else:
+            b_start = start
+        fresh = fetch_basin(lat, lon, b_start, today, horizon_days=a.horizon_days,
                             past_days=a.past_days, retries=a.retries, sleep_s=a.sleep)
         if fresh is None:
             n_fail += 1
