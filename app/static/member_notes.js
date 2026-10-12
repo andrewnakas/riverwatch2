@@ -75,6 +75,10 @@
     s += live == null
       ? " Its own served skill is not yet measured."
       : " Measured on issued forecasts: " + live.headline + ".";
+    // An extrapolation warning is a correction to the number just quoted, so
+    // it must appear beside it. A caveat living only in an unread JSON key is
+    // not a disclosure -- that mistake was already made once here.
+    if (_label.extrapolation_warning) s += " \u26a0 " + _label.extrapolation_warning;
     s += " Display only \u2014 it carries no blend weight.";
     return s;
   }

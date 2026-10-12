@@ -75,6 +75,23 @@ check("GATE 2: ALSO quotes the level 0.0361", a.includes("0.0361"), a);
 check("GATE 2: says it is served on the trained-on product", /trained on/.test(a), a);
 check("GATE 2: does NOT quote GATE 1's 0.0595", !a.includes("0.0595"), a);
 
+// --- 4b. the extrapolation warning must reach the rendered copy.
+MN._setLabel({
+  schema_version: "m1-label-2", trained_on: "NLDAS-2 basin-average (areal) forcing",
+  served_on: "mostly the trained-on product",
+  governing_gate: "GATE 2",
+  encoder_substitution_delta: g2.paired_delta_spliced_minus_areal,
+  encoder_substitution_level: g2.difference_of_medians,
+  encoder_substitution_frame: { name: g2.frame, n_basins: g2.basins },
+  extrapolation_warning: "The newest basin-average day is 11 days old, but the gate that priced this configuration substituted only 4. Its delta is therefore an extrapolation here, and the true cost is likely larger.",
+  live_measured: null,
+});
+const warn = MN.memberLabel("mblstm_modern", { served: true });
+check("extrapolation warning is RENDERED, not just stored",
+  /extrapolation/.test(warn), warn);
+check("warning appears beside the number it corrects",
+  warn.indexOf("0.0040") < warn.indexOf("extrapolation"), warn);
+
 // --- 5. the forbidden figures, unreachable from either configuration.
 for (const [tag, s] of [["GATE 1", p], ["GATE 2", a]]) {
   check(`${tag}: never the perfect-forcing record`, !s.includes("0.9058"), s);

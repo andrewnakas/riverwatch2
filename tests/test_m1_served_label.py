@@ -168,3 +168,86 @@ def test_every_consumer_resolves_through_the_one_function():
         # and must not hand-build the artifact path alongside it
         assert '"_served_skill.json"' not in src, \
             f"{rel} hand-builds the artifact path instead of resolving it"
+
+
+# ---------------------------------------------------------------------------
+# GATE 2 priced exactly FOUR substituted trailing days, which is what NLDAS-2's
+# 5-day publication latency forces. If the areal append stops, that gap grows
+# by a day per day while the overall areal FRACTION barely moves (one row in
+# ~440) -- so the fraction alone would keep looking healthy while the quoted
+# delta quietly became an extrapolation. The label has to notice.
+# ---------------------------------------------------------------------------
+
+def _build_with_gap(gap_days: int, tmp_path):
+    """A table whose newest areal row is `gap_days` old."""
+    import gzip, csv
+    from datetime import date, timedelta
+    sand = tmp_path
+    (sand / "scripts").mkdir(parents=True, exist_ok=True)
+    (sand / "scripts" / "build_m1_label.py").write_text(BUILDER.read_text())
+    (sand / "benchmarks").mkdir(parents=True, exist_ok=True)
+    for n in ("m1_gate1_verdict.json", "m1_gate2_verdict.json"):
+        src = ROOT / "benchmarks" / n
+        if src.exists():
+            (sand / "benchmarks" / n).write_text(src.read_text())
+    td = sand / "data" / "m1_forcing"
+    td.mkdir(parents=True, exist_ok=True)
+    cols = ["temperature_2m_mean", "temperature_2m_max", "temperature_2m_min",
+            "precipitation_sum", "shortwave_radiation_sum", "vapor_pressure"]
+    today = date.today()
+    newest_areal = today - timedelta(days=gap_days)
+    with gzip.open(td / "00000001.csv.gz", "wt", newline="") as gz:
+        w = csv.writer(gz)
+        w.writerow(["date"] + cols + ["src"])
+        for i in range(400, 0, -1):
+            d = newest_areal - timedelta(days=i - 1)
+            w.writerow([d.isoformat()] + [1.0] * 6 + ["nldas_areal"])
+        for i in range(1, gap_days + 1):
+            d = newest_areal + timedelta(days=i)
+            w.writerow([d.isoformat()] + [1.0] * 6 + ["om_point"])
+    r = subprocess.run([sys.executable, "scripts/build_m1_label.py"], cwd=sand,
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    return json.loads((sand / "data" / "m1_served_skill.json").read_text())
+
+
+def test_within_the_measured_gap_there_is_no_warning(tmp_path):
+    if not GATE2.exists():
+        pytest.skip("gate 2 verdict absent")
+    lab = _build_with_gap(4, tmp_path)
+    fo = lab["forcing_observed"]
+    assert fo["days_since_newest_areal_median"] == 4
+    assert fo["within_what_gate2_measured"] is True
+    assert lab.get("extrapolation_warning") is None
+
+
+def test_beyond_the_measured_gap_the_label_says_it_is_extrapolating(tmp_path):
+    """The quoted delta stops being supported once the gap exceeds what the
+    gate spliced, and the label must not keep quoting it silently."""
+    if not GATE2.exists():
+        pytest.skip("gate 2 verdict absent")
+    lab = _build_with_gap(11, tmp_path)
+    fo = lab["forcing_observed"]
+    assert fo["days_since_newest_areal_median"] == 11
+    assert fo["within_what_gate2_measured"] is False
+    w = lab.get("extrapolation_warning")
+    assert w and "extrapolation" in w
+    assert "11" in w and "4" in w, "the warning must name both numbers"
+    assert lab["_note"].startswith("⚠"), "the note must lead with the warning"
+    # The overall fraction is still ~97%, which is exactly why it cannot be
+    # the thing that triggers the warning.
+    assert fo["areal_fraction"] > 0.9
+
+
+def test_the_gap_is_measured_even_when_nothing_point_fills_it(tmp_path):
+    """A table that simply STOPS after its last areal day has no trailing run
+    of point rows, and an earlier version of this metric scored it 0 -- i.e.
+    perfectly fresh while being days short."""
+    if not GATE2.exists():
+        pytest.skip("gate 2 verdict absent")
+    import gzip, csv
+    from datetime import date, timedelta
+    lab = _build_with_gap(0, tmp_path)   # no point rows at all
+    assert lab["forcing_observed"]["days_since_newest_areal_median"] == 0
+    lab2 = _build_with_gap(9, tmp_path / "b")
+    assert lab2["forcing_observed"]["days_since_newest_areal_median"] == 9

@@ -42,6 +42,7 @@ import glob
 import gzip
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,26 +55,57 @@ SCHEMA_VERSION = "m1-label-2"
 #: Above this areal fraction of the encoder window, GATE 2 is the gate that
 #: describes the served configuration rather than GATE 1.
 AREAL_MAJORITY = 0.5
+#: GATE 2 spliced exactly this many trailing encoder days with point forcing.
+#: Beyond it, the gate's delta is an extrapolation and the label must say so.
+GATE2_SUBSTITUTED_DAYS = 4
 
 
 def measure_forcing(limit: int = 40) -> dict:
-    """The src mix of the published tables. Empty when nothing is published."""
+    """The src mix of the published tables, and -- the number that actually
+    matters -- how many of the OBSERVED days at the end of the window are
+    substituted.
+
+    GATE 2 measured exactly FOUR point-filled days, which is what NLDAS-2's
+    5-day publication latency forces. If the areal append stops, that count
+    grows by one per day while the overall areal fraction barely moves (one row
+    in ~440), so the fraction alone would keep looking healthy while the label
+    quietly became an extrapolation beyond what was measured.
+    """
     counts: dict[str, int] = {}
     n_files = 0
+    recent_sub: list[int] = []
+    today = date.today().isoformat()
     for p in sorted(glob.glob(str(TABLES / "*.csv.gz")))[:limit]:
         try:
             with gzip.open(p, "rt", newline="") as fh:
-                for r in csv.DictReader(fh):
-                    counts[r.get("src") or "unknown"] = counts.get(r.get("src") or "unknown", 0) + 1
+                rows = list(csv.DictReader(fh))
         except Exception:
             continue
+        for r in rows:
+            counts[r.get("src") or "unknown"] = counts.get(r.get("src") or "unknown", 0) + 1
+        # Days between the newest AREAL row and today. Not the trailing run of
+        # point rows: a table that simply STOPS after its last areal day has no
+        # trailing point run at all, and would score 0 here while being days
+        # short -- the same mistake as testing freshness against max(date).
+        # What matters is how much of the recent past areal does not cover,
+        # whether the remainder is point-filled or missing.
+        areal_dates = [r["date"] for r in rows
+                       if r.get("src") == "nldas_areal" and (r.get("date") or "") <= today]
+        if areal_dates:
+            newest = date.fromisoformat(max(areal_dates))
+            recent_sub.append((date.today() - newest).days)
         n_files += 1
     total = sum(counts.values())
+    med_sub = int(sorted(recent_sub)[len(recent_sub) // 2]) if recent_sub else None
     return {
         "sampled_basins": n_files,
         "rows": total,
         "by_src": counts,
         "areal_fraction": (counts.get("nldas_areal", 0) / total) if total else 0.0,
+        "days_since_newest_areal_median": med_sub,
+        "gate2_measured_substituted_days": GATE2_SUBSTITUTED_DAYS,
+        "within_what_gate2_measured": (med_sub is not None
+                                       and med_sub <= GATE2_SUBSTITUTED_DAYS),
     }
 
 
@@ -114,7 +146,17 @@ def build(g1: dict, g2: dict | None, mix: dict) -> dict:
                                  "areal provider landed"),
             "fraction_recovered_paired": g2.get("fraction_of_gate1_loss_recovered_by_areal"),
         }
+        gap = mix.get("days_since_newest_areal_median")
+        within = mix.get("within_what_gate2_measured")
+        label["extrapolation_warning"] = None if within else (
+            f"The newest basin-average day is {gap} days old, but the gate that "
+            f"priced this configuration substituted only {GATE2_SUBSTITUTED_DAYS}. "
+            "Its delta is therefore an extrapolation here, and the true cost is "
+            "likely larger. Refresh the basin-average provider."
+        )
         label["_note"] = (
+            "" if within else
+            f"⚠️ {label['extrapolation_warning']} " ) + (
             "The served member now runs on the forcing it was trained on for "
             f"{areal:.0%} of its encoder window. The remainder -- the newest days, "
             "which NLDAS-2 has not published -- is Open-Meteo point, measured at a "
