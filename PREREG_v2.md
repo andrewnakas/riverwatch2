@@ -4456,3 +4456,115 @@ never the cohort median. Plus a line stating the basin sits outside the member's
 training cohort. In the third branch, a basin failing the per-basin screen is
 **absent**, not shown with a caveat — which is the contract the cohort gate
 already has today (it returns no number at all rather than a hedged one).
+
+---
+
+# GATE 4 — WHICH FORECAST PRODUCT SHOULD DRIVE THE DECODER?
+
+**Registered 2026-10-12, before either arm exists in comparable form.** The
+archive that makes it possible started on this date, so no number can have been
+seen. Nothing below may be revised after a result; a rule that turns out wrong
+is recorded as a deviation.
+
+## The question
+
+The member's encoder now runs on the NLDAS-2 **areal** forcing it was trained
+on (GATE 1 → GATE 2). Its **decoder** — forecast days 1-14, the part that is
+actually a forecast — runs on **Open-Meteo point forecast** forcing, and
+nothing has ever measured that choice. The alternative now exists:
+`scripts_modern/build_gfs_areal_14lead.py` produces **areal GFS** forcing for
+all 14 leads, with the record selection validated structurally and against the
+lead-1 single-record path (see below).
+
+⚠️ **Neither gate so far covers this.** GATE 1 and GATE 2 are about the
+**encoder**. The −0.048033 day-1 decay measured *perfect → areal-GFS forecast*
+forcing, i.e. it priced forecast error against observation; it did not compare
+two forecast products. So this is a new question, not a restatement.
+
+## ⚠️ I do not know the sign, and I am registering that
+
+Two mechanisms point opposite ways, which is why this is worth measuring rather
+than assuming:
+
+- **Toward areal GFS:** it matches the **sampling** the member trained on
+  (basin-average, not gauge-pixel), and screen B0 measured basin-average over
+  point at paired **+0.013004** median peak r. The −0.048033 decay was itself
+  produced on areal GFS, so it is the regime whose cost is already known.
+- **Toward Open-Meteo point:** its forecast is not raw GFS — it blends
+  ECMWF/ICON/GFS and is plausibly the better *weather* forecast. A better
+  forecast on the wrong sampling may beat a worse forecast on the right one.
+
+⇒ **Two-sided question. No directional prediction is registered**, which is the
+honest position and means a result in either direction is informative rather
+than a refutation of my framing. What IS registered is that the magnitude
+should be comparable to the sampling contrast, i.e. **|Δ| ≤ 0.030** at lead 1;
+anything larger means one arm is broken rather than merely worse.
+
+## Protocol — strictly one variable
+
+- Member `nldasm9`, seeds 501-505, equal-weight **mean**, readout
+  `(ylo+yhi)/2`. **No retraining.**
+- **Encoder forcing identical in both arms** (NLDAS-2 areal). Only the 14
+  decoder columns differ. This is the GATE 1 instrument design, for the reason
+  recorded there: two corpora differing in more than one way measure neither
+  difference.
+- Init dates: those where **both** products exist. Open-Meteo point forecast
+  comes from `archive_m1_forcing/` (captured per build from 2026-10-12; it
+  **cannot** be reconstructed afterwards, which is why the archive had to exist
+  before this gate could be registered). Areal GFS is rebuilt from S3 for those
+  same dates.
+- Leads: **1 is the headline** (the only lead with a published figure); all 14
+  reported alongside.
+- Scored on the served cohort, **all days present**, never a stride subsample.
+
+**Minimum sample before reading: 30 init dates** — one per build day. At ~490
+basins that is ~14,700 paired basin-days at lead 1. ⛔ Reading earlier is
+forbidden; a thin sample here would be the "median over a handful of
+basin-days" mistake the live scorer already refuses to make.
+
+## Statistic
+
+Paired per-basin median ΔNSE (areal GFS − Open-Meteo point) on **identical**
+`(station, init_date, target_date)` rows, with a 5,000-draw bootstrap CI over
+basins, plus breadth. Paired only. A difference of medians has overstated an
+effect in this project more than ten times, most recently by 1.9×, and the
+areal encoder swap itself read 93.3% paired against ~57% on the level.
+
+## Decision table, fixed now
+
+| outcome | action |
+|---|---|
+| Δ ≥ **+0.005**, CI excludes 0 | **Switch the decoder to areal GFS.** It needs no credentials (anonymous S3), so this is a CI job, not a user action. |
+| \|Δ\| < 0.005, or CI includes 0 | **Keep Open-Meteo point.** It is already wired, already current, and a null does not justify a second fetch pipeline. Record the null. |
+| Δ ≤ **−0.005**, CI excludes 0 | **Keep Open-Meteo point and record that the better weather model beat the better sampling** — which would be the first measurement in this project where product quality outranks sampling, and would qualify screen B0's conclusion. |
+| \|Δ\| > **0.030** either way | **STOP.** One arm is broken, not worse. Re-check the areal GFS record selection and the archived point rows before interpreting anything. |
+
+## What has already been validated about the areal GFS arm
+
+Not a prediction — measured before this gate was written, so the arm cannot be
+blamed for an unexamined build:
+
+- The 14-lead schema is **derivable**: all 56 six-hourly steps exist to f336 and
+  every lead day tiles exactly with four disjoint 6-hour accumulation buckets
+  (`scripts_modern/probe_gfs_f336_idx.py`, index-only, zero GRIB bytes).
+- Precipitation selection is **structural**: require `acc` with `b − a == 6`,
+  then assert the four windows tile `24(L−1)…24L`. A run-total has `a == 0` and
+  `b > 6` and cannot satisfy it, so the double-count that once produced a
+  **300 mm/day** basin maximum is impossible rather than avoided.
+- The **lead-1 regression** holds: the 4-bucket sum reproduces the single
+  24-hour record to within GRIB packing, which was itself measured — 100% of
+  differing grid cells at integer multiples of exactly **0.0625 mm**, two
+  distinct values, max multiple 2.00, mean difference −5.6e-03 mm.
+- Per-lead physical bounds and `tmin ≤ tmean ≤ tmax` are asserted on every
+  lead day of every init date.
+
+## Falsifier for my own framing
+
+If the paired delta is **indistinguishable from zero with a tight CI** across
+all 14 leads, then decoder forcing *product* does not matter at the scored step
+— which would contradict this project's own finding that product COUNT at the
+decoder carries ~3.8× what it carries in the encoder. That must be recorded as
+**unexplained**, not banked as "Open-Meteo is fine", and checked against
+whether the two arms genuinely differ on the rows scored (a silent no-op splice
+would read exactly this way, and did once before — GATE 2 needed a
+216,952-of-217,153-rows-moved check to rule it out).
