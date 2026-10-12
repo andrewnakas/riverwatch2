@@ -138,3 +138,33 @@ def test_label_stays_small_enough_to_ship_per_page():
     if not LABEL.exists():
         pytest.skip("label absent")
     assert LABEL.stat().st_size < 4096
+
+
+# ---------------------------------------------------------------------------
+# Two copies of the label can exist and disagree. Resolution must be in ONE
+# place: it was briefly duplicated with different rules, and the live site then
+# showed a /benchmarks page quoting GATE 1 beside a forecast panel quoting
+# GATE 2 -- for the same member, in the same build.
+# ---------------------------------------------------------------------------
+
+def test_the_artifact_copy_wins_over_the_committed_one(tmp_path, monkeypatch):
+    import importlib
+    from app import modern_forcing as mf
+    importlib.reload(mf)
+    monkeypatch.setattr(mf, "TABLE_DIR", tmp_path / "m1_forcing")
+    (tmp_path / "m1_forcing").mkdir(parents=True)
+    (tmp_path / mf.LABEL_NAME).write_text("{}")
+    assert mf.label_path().name == mf.LABEL_NAME, "committed copy when no artifact copy"
+    (tmp_path / "m1_forcing" / "_served_skill.json").write_text("{}")
+    assert mf.label_path().parent.name == "m1_forcing", "artifact copy must win"
+
+
+def test_every_consumer_resolves_through_the_one_function():
+    """A consumer that builds the path itself will drift the moment the two
+    copies differ, which is exactly what happened."""
+    for rel in ("scripts/build_benchmarks_page.py", "scripts/build_static_site.py"):
+        src = (ROOT / rel).read_text()
+        assert "label_path" in src, f"{rel} does not use the resolver"
+        # and must not hand-build the artifact path alongside it
+        assert '"_served_skill.json"' not in src, \
+            f"{rel} hand-builds the artifact path instead of resolving it"

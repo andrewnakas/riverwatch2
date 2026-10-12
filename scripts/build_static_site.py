@@ -234,8 +234,8 @@ def main() -> int:
         # from the forcing THIS run published, whereas the committed copy is
         # only as fresh as the last commit. A label that disagrees with the
         # forcing it describes is a false impression.
-        _m1_side = ROOT / "data" / "m1_forcing" / "_served_skill.json"
-        _m1 = _m1_side if _m1_side.exists() else (ROOT / "data" / "m1_served_skill.json")
+        from app.modern_forcing import label_path as _label_path
+        _m1 = _label_path()
         if _m1.exists():
             (DIST / "data").mkdir(parents=True, exist_ok=True)
             shutil.copy2(_m1, DIST / "data" / "m1_served_skill.json")

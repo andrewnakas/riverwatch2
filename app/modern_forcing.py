@@ -163,6 +163,23 @@ def table_path(station_id: str) -> Path:
     return TABLE_DIR / f"{station_id}.csv.gz"
 
 
+#: The served member's public label. TWO copies can exist and they can disagree:
+#:   - `data/m1_forcing/_served_skill.json` travels with the forcing artifact,
+#:     rebuilt by the CI job from the forcing it just published.
+#:   - `data/m1_served_skill.json` is committed, and is only as fresh as the
+#:     last commit.
+#: The artifact copy wins. This is a single function because it was briefly
+#: duplicated with different rules in build_static_site.py and
+#: build_benchmarks_page.py, and the live site then showed a panel quoting one
+#: gate beside a page quoting the other.
+LABEL_NAME = "m1_served_skill.json"
+
+
+def label_path() -> Path:
+    side = TABLE_DIR / "_served_skill.json"
+    return side if side.exists() else (TABLE_DIR.parent / LABEL_NAME)
+
+
 def load_table(station_id: str) -> pd.DataFrame | None:
     """The basin's forcing table, or None when it has not been published.
 

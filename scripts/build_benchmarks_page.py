@@ -117,7 +117,15 @@ def load_artifacts(bench_dir: Path = BENCH) -> dict:
     # configuration that was true when someone last edited it -- and it was
     # already wrong once, describing point forcing after the areal provider
     # had landed.
-    _lbl = ROOT / "data" / "m1_served_skill.json"
+    # Resolve through the ONE resolver: the artifact copy (rebuilt by CI from
+    # the forcing it published) wins over the committed one. Reading the
+    # committed copy here while build_static_site.py read the artifact copy
+    # put a GATE 1 page beside a GATE 2 panel on the live site.
+    try:
+        from app.modern_forcing import label_path as _label_path
+        _lbl = _label_path()
+    except Exception:
+        _lbl = ROOT / "data" / "m1_served_skill.json"
     if _lbl.exists():
         try:
             out["served_label"] = json.loads(_lbl.read_text())
