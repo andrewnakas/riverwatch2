@@ -215,6 +215,48 @@ jobs:
       # label quoting GATE 1's -0.059534 while 98% of the window is the
       # trained-on product overstates the discount. A stale label is a false
       # impression even when its number was once correct.
+      # NLDAS-2 areal forcing for the days it has published. This is the
+      # permanent fix for the drift the label reports: without it the areal
+      # window ages a day per day and the quoted GATE 2 delta becomes an
+      # extrapolation (the label says so, which is the point).
+      #
+      # SKIPS CLEANLY when the secrets are absent, so the pipeline is correct
+      # either way and adding EARTHDATA_USER / EARTHDATA_PASS is the only
+      # action needed to turn it on. No credentials are baked in and nothing
+      # here fails the build.
+      #
+      # Needs only numpy + netCDF4 and the ~141 KB weight pickle; the areal
+      # reduction is precomputed, so no geopandas and no exactextract.
+      - name: Append NLDAS-2 areal forcing (skipped without Earthdata secrets)
+        continue-on-error: true
+        env:
+          EARTHDATA_USER: ${{ secrets.EARTHDATA_USER }}
+          EARTHDATA_PASS: ${{ secrets.EARTHDATA_PASS }}
+        run: |
+          set -u
+          if [ -z "${EARTHDATA_USER:-}" ] || [ -z "${EARTHDATA_PASS:-}" ]; then
+            echo "::notice::EARTHDATA_USER/EARTHDATA_PASS not set - skipping the"
+            echo "areal append. The forcing table keeps its existing areal rows and"
+            echo "point-fills the newest days; the served label reports the gap and"
+            echo "warns once it exceeds what GATE 2 measured."
+            exit 0
+          fi
+          if [ ! -f data/nldas_basin_weights.pkl ]; then
+            echo "::warning::data/nldas_basin_weights.pkl absent - cannot reduce"
+            echo "granules to basin means. Commit it (force-add past .gitignore)."
+            exit 0
+          fi
+          printf 'machine urs.earthdata.nasa.gov login %s password %s\n' \
+            "$EARTHDATA_USER" "$EARTHDATA_PASS" > "$HOME/.netrc"
+          chmod 600 "$HOME/.netrc"
+          pip install --quiet netCDF4 xarray
+          python scripts_modern/nldas_areal_append.py \
+            --archive-dir data/m1_forcing \
+            --weights data/nldas_basin_weights.pkl \
+            --basins data/m1_cohort.json \
+            --days 8 --workers 4 || echo "::warning::areal append failed this run"
+          rm -f "$HOME/.netrc"
+
       - name: Rebuild the served-member label from the published forcing
         run: |
           set -e
