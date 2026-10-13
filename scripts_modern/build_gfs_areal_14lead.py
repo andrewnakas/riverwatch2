@@ -101,6 +101,10 @@ GRIB_APCP_PACKING_MM = 0.0625
 #: the double-count this check exists for produced a 300 mm/day basin maximum.
 LEAD1_TOL_MM = 2.5 * GRIB_APCP_PACKING_MM
 
+class _TransientStep(RuntimeError):
+    """A step that could not be READ, as opposed to one that does not exist."""
+
+
 WIN_RE = re.compile(r"^(\d+)-(\d+) (hour|day) (acc|ave|max|min)")
 
 
@@ -201,22 +205,43 @@ def build_day(g1, red, fs, day: str, leads: int, workers: int, verify_lead1: boo
         one place. The decode is serialised behind GRIB_LOCK; the GET inside it
         dominates, so the pool still buys nearly all of the parallelism.
         """
+        # ⚠️ g1.idx_ranges swallows ANY exception and returns (None, None),
+        # so a network failure is indistinguishable from a step that does not
+        # exist. That is not academic: a transient S3 storm made three dates
+        # report "56 of 56 steps unavailable" when S3 in fact held all 270
+        # pgrb2.0p25 objects for each -- I nearly recorded them as missing
+        # data. Probe the .idx read directly so the two are separable.
+        try:
+            fs.cat(f"{g1.B}/gfs.{day}/00/atmos/"
+                   f"gfs.t00z.pgrb2.0p25.f{h:03d}.idx")
+        except Exception as exc:
+            raise _TransientStep(f"f{h:03d}: idx unreadable: "
+                                 f"{type(exc).__name__}") from exc
         grb, rngs = g1.idx_ranges(fs, day, h)
         if not grb or not rngs:
-            return h, None
+            return h, None          # genuinely no wanted records at this step
         with _decode_guard():
             return h, g1.decode(fs, grb, rngs)
 
+    transient: list[str] = []
     with ThreadPoolExecutor(max_workers=workers) as ex:
         futs = {ex.submit(fetch, h): h for h in hours}
         for fu in as_completed(futs):
-            h, out = fu.result()
+            try:
+                h, out = fu.result()
+            except _TransientStep as exc:
+                transient.append(str(exc))
+                continue
             if out:
                 recs[h] = out
 
     missing = [h for h in hours if h not in recs]
     if missing:
-        raise RuntimeError(f"{day}: {len(missing)} of {len(hours)} steps unavailable")
+        kind = "TRANSIENT" if transient else "absent"
+        raise RuntimeError(
+            f"{day}: {len(missing)} of {len(hours)} steps {kind}"
+            + (f" ({transient[0]}; {len(transient)} step(s) failed to read)"
+               if transient else " (no wanted records; S3 may not hold this date)"))
 
     frames = []
     for L in range(1, leads + 1):
@@ -290,6 +315,9 @@ def main() -> int:
     ap.add_argument("--verify-lead1", action="store_true",
                     help="assert the 4-bucket sum reproduces the single 24h record")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--retries", type=int, default=3,
+                    help="attempts per init date; S3 failures here are "
+                         "overwhelmingly transient")
     ap.add_argument("--decode-lock", action="store_true",
                     help="serialise cfgrib decoding. Measured unnecessary here "
                          "(byte-identical output at 4x throughput), but the "
@@ -329,10 +357,26 @@ def main() -> int:
         if dst.exists():
             done += 1
             continue
-        try:
-            df = build_day(g1, red, fs, day, a.leads, a.workers, a.verify_lead1)
-        except Exception as exc:
-            print(f"  {day}: FAILED {type(exc).__name__}: {exc}", flush=True)
+        df = None
+        for attempt in range(a.retries):
+            try:
+                df = build_day(g1, red, fs, day, a.leads, a.workers, a.verify_lead1)
+                break
+            except Exception as exc:
+                msg = f"{type(exc).__name__}: {exc}"
+                last = attempt == a.retries - 1
+                # Retry anything that smells transient. 14 of 17 failures in
+                # the first full pass were EndpointConnectionError and three
+                # more were a network storm mis-reported as missing data, so
+                # every one of them was recoverable by simply asking again.
+                if last:
+                    print(f"  {day}: FAILED after {a.retries} attempts: {msg}",
+                          flush=True)
+                else:
+                    print(f"  {day}: attempt {attempt + 1} failed ({msg[:90]}); "
+                          f"retrying", flush=True)
+                    time.sleep(10 * (attempt + 1))
+        if df is None:
             fail += 1
             continue
         want = a.leads * len(red.basins)
