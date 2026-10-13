@@ -42,7 +42,7 @@ import glob
 import gzip
 import json
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,6 +75,10 @@ def measure_forcing(limit: int = 40) -> dict:
     n_files = 0
     recent_sub: list[int] = []
     today = date.today().isoformat()
+    #: The encoder window ends at the last USGS observation, which for daily
+    #: values is normally yesterday. That is the reference GATE 2's count is
+    #: relative to.
+    t0 = date.today() - timedelta(days=1)
     for p in sorted(glob.glob(str(TABLES / "*.csv.gz")))[:limit]:
         try:
             with gzip.open(p, "rt", newline="") as fh:
@@ -83,17 +87,28 @@ def measure_forcing(limit: int = 40) -> dict:
             continue
         for r in rows:
             counts[r.get("src") or "unknown"] = counts.get(r.get("src") or "unknown", 0) + 1
-        # Days between the newest AREAL row and today. Not the trailing run of
-        # point rows: a table that simply STOPS after its last areal day has no
-        # trailing point run at all, and would score 0 here while being days
-        # short -- the same mistake as testing freshness against max(date).
-        # What matters is how much of the recent past areal does not cover,
-        # whether the remainder is point-filled or missing.
+        # Substituted days INSIDE THE ENCODER WINDOW, which is what GATE 2
+        # spliced -- it replaced encoder rows t0-3..t0, four days ending at the
+        # last observation.
+        #
+        # ⚠️ Measured from t0, NOT from today. NLDAS-2's latency is 5 days, so
+        # the best achievable newest-areal date is today-5; the encoder window
+        # ends at the last USGS observation, typically today-1. In that healthy
+        # steady state (today-1) - (today-5) = 4 substituted days, exactly what
+        # GATE 2 priced. An earlier version measured from today, read 5, and
+        # would have raised an extrapolation warning on precisely the
+        # configuration the gate measured -- a warning that fires when nothing
+        # is wrong is worse than none, because it trains the reader to ignore it.
+        #
+        # Not the trailing RUN of point rows either: a table that simply STOPS
+        # after its last areal day has no trailing run and would score 0 while
+        # being days short, the same mistake as testing freshness against
+        # max(date).
         areal_dates = [r["date"] for r in rows
                        if r.get("src") == "nldas_areal" and (r.get("date") or "") <= today]
         if areal_dates:
             newest = date.fromisoformat(max(areal_dates))
-            recent_sub.append((date.today() - newest).days)
+            recent_sub.append(max(0, (t0 - newest).days))
         n_files += 1
     total = sum(counts.values())
     med_sub = int(sorted(recent_sub)[len(recent_sub) // 2]) if recent_sub else None
@@ -102,7 +117,7 @@ def measure_forcing(limit: int = 40) -> dict:
         "rows": total,
         "by_src": counts,
         "areal_fraction": (counts.get("nldas_areal", 0) / total) if total else 0.0,
-        "days_since_newest_areal_median": med_sub,
+        "substituted_encoder_days_median": med_sub,
         "gate2_measured_substituted_days": GATE2_SUBSTITUTED_DAYS,
         "within_what_gate2_measured": (med_sub is not None
                                        and med_sub <= GATE2_SUBSTITUTED_DAYS),
@@ -146,11 +161,12 @@ def build(g1: dict, g2: dict | None, mix: dict) -> dict:
                                  "areal provider landed"),
             "fraction_recovered_paired": g2.get("fraction_of_gate1_loss_recovered_by_areal"),
         }
-        gap = mix.get("days_since_newest_areal_median")
+        gap = mix.get("substituted_encoder_days_median")
         within = mix.get("within_what_gate2_measured")
         label["extrapolation_warning"] = None if within else (
-            f"The newest basin-average day is {gap} days old, but the gate that "
-            f"priced this configuration substituted only {GATE2_SUBSTITUTED_DAYS}. "
+            f"{gap} days of the encoder window are substituted, but the gate "
+            f"that priced this configuration substituted only "
+            f"{GATE2_SUBSTITUTED_DAYS}. "
             "Its delta is therefore an extrapolation here, and the true cost is "
             "likely larger. Refresh the basin-average provider."
         )

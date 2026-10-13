@@ -14,7 +14,7 @@
     "rows": 0,
     "by_src": {},
     "areal_fraction": 0.0,
-    "days_since_newest_areal_median": null,
+    "substituted_encoder_days_median": null,
     "gate2_measured_substituted_days": 4,
     "within_what_gate2_measured": false
   },

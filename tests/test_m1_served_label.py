@@ -211,24 +211,44 @@ def _build_with_gap(gap_days: int, tmp_path):
     return json.loads((sand / "data" / "m1_served_skill.json").read_text())
 
 
-def test_within_the_measured_gap_there_is_no_warning(tmp_path):
+def test_the_healthy_steady_state_does_not_warn(tmp_path):
+    """NLDAS-2's publication latency is 5 days, so the best achievable newest
+    areal date is today-5. The encoder window ends at the last USGS
+    observation, normally today-1. So the healthy steady state has
+    (today-1) - (today-5) = 4 substituted encoder days -- EXACTLY what GATE 2
+    spliced and priced.
+
+    An earlier version measured from today, read 5, and would have warned here.
+    A warning that fires when nothing is wrong is worse than no warning,
+    because it teaches the reader to ignore it."""
     if not GATE2.exists():
         pytest.skip("gate 2 verdict absent")
-    lab = _build_with_gap(4, tmp_path)
+    lab = _build_with_gap(5, tmp_path)
     fo = lab["forcing_observed"]
-    assert fo["days_since_newest_areal_median"] == 4
+    assert fo["substituted_encoder_days_median"] == 4
     assert fo["within_what_gate2_measured"] is True
     assert lab.get("extrapolation_warning") is None
 
 
-def test_beyond_the_measured_gap_the_label_says_it_is_extrapolating(tmp_path):
-    """The quoted delta stops being supported once the gap exceeds what the
-    gate spliced, and the label must not keep quoting it silently."""
+def test_one_day_past_the_measured_gap_warns(tmp_path):
+    """The append falling a single day behind takes the window past what the
+    gate covers, and that is the point at which the quoted delta stops being
+    supported."""
     if not GATE2.exists():
         pytest.skip("gate 2 verdict absent")
-    lab = _build_with_gap(11, tmp_path)
+    lab = _build_with_gap(6, tmp_path)
     fo = lab["forcing_observed"]
-    assert fo["days_since_newest_areal_median"] == 11
+    assert fo["substituted_encoder_days_median"] == 5
+    assert fo["within_what_gate2_measured"] is False
+    assert lab.get("extrapolation_warning")
+
+
+def test_well_beyond_the_gap_the_label_says_it_is_extrapolating(tmp_path):
+    if not GATE2.exists():
+        pytest.skip("gate 2 verdict absent")
+    lab = _build_with_gap(12, tmp_path)
+    fo = lab["forcing_observed"]
+    assert fo["substituted_encoder_days_median"] == 11
     assert fo["within_what_gate2_measured"] is False
     w = lab.get("extrapolation_warning")
     assert w and "extrapolation" in w
@@ -239,15 +259,14 @@ def test_beyond_the_measured_gap_the_label_says_it_is_extrapolating(tmp_path):
     assert fo["areal_fraction"] > 0.9
 
 
-def test_the_gap_is_measured_even_when_nothing_point_fills_it(tmp_path):
+def test_the_count_is_measured_even_when_nothing_point_fills_it(tmp_path):
     """A table that simply STOPS after its last areal day has no trailing run
     of point rows, and an earlier version of this metric scored it 0 -- i.e.
     perfectly fresh while being days short."""
     if not GATE2.exists():
         pytest.skip("gate 2 verdict absent")
-    import gzip, csv
-    from datetime import date, timedelta
-    lab = _build_with_gap(0, tmp_path)   # no point rows at all
-    assert lab["forcing_observed"]["days_since_newest_areal_median"] == 0
-    lab2 = _build_with_gap(9, tmp_path / "b")
-    assert lab2["forcing_observed"]["days_since_newest_areal_median"] == 9
+    lab = _build_with_gap(1, tmp_path)          # newest areal = yesterday = t0
+    assert lab["forcing_observed"]["substituted_encoder_days_median"] == 0
+    lab2 = _build_with_gap(10, tmp_path / "b")
+    assert lab2["forcing_observed"]["substituted_encoder_days_median"] == 9
+
