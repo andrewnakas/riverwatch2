@@ -82,17 +82,24 @@ def _decode_guard():
 #: quantised buckets produces. Measured on gfs.20261001/00z over 1,038,240
 #: cells (scripts_modern/diag_gfs_lead1_packing.py).
 GRIB_APCP_PACKING_MM = 0.0625
-#: Four buckets, each carrying up to half a step of rounding either way, so the
-#: sum can differ from the single record by up to 4 half-steps. Areal averaging
-#: then ATTENUATES this (a weighted mean of +/- steps), so the basin-level
-#: difference is strictly smaller -- 0.0913 mm measured.
+#: The bound, derived properly this time. Each of the four buckets carries a
+#: quantisation error in [-step/2, +step/2], so their SUM carries up to
+#: 4*step/2 = 2 steps. The single 24-hour record carries its OWN error of up to
+#: step/2. So the two can differ by up to **2.5 steps** = 0.15625 mm.
 #:
-#: ⚠️ An earlier version used a flat 0.1 mm and the real run came in at
-#: 0.091278, i.e. it passed by 9%. A tolerance tighter than the stored
-#: precision does not detect a defect, it manufactures one -- the same trap as
-#: the exact-equality truth guard that aborted GATE 1 on float32 storage noise
-#: while blaming the join.
-LEAD1_TOL_MM = 4 * GRIB_APCP_PACKING_MM / 2
+#: ⚠️ TWO WRONG VERSIONS BEFORE THIS ONE, and both failed in the direction that
+#: wastes time:
+#:   * a flat 0.1 mm, which the first real run passed by 9% (0.091278) -- a
+#:     tolerance tighter than the stored precision manufactures defects rather
+#:     than detecting them, the same trap as the exact-equality truth guard
+#:     that aborted GATE 1 on float32 storage noise while blaming the join;
+#:   * then 4*step/2 = 0.125 exactly, which forgot the single record's own
+#:     quantisation and so rejected 10 of 58 init dates at EXACTLY 0.125000 --
+#:     the bound sitting precisely on the achievable maximum, with `>=`.
+#:
+#: 2.5 steps still rejects any selection error by three orders of magnitude:
+#: the double-count this check exists for produced a 300 mm/day basin maximum.
+LEAD1_TOL_MM = 2.5 * GRIB_APCP_PACKING_MM
 
 WIN_RE = re.compile(r"^(\d+)-(\d+) (hour|day) (acc|ave|max|min)")
 
@@ -271,7 +278,12 @@ def main() -> int:
     ap.add_argument("--start", default="")
     ap.add_argument("--end", default="")
     ap.add_argument("--dates", default="", help="comma-separated YYYYMMDD; overrides the range")
-    ap.add_argument("--stride", type=int, default=28)
+    ap.add_argument("--stride", type=int, default=14,
+                    help="14 matches the registered lead-1 artifact exactly "
+                         "(115 dates, 2021-05-01..2025-09-13). The lead-1 "
+                         "builder defaults to 28, which produces 58 -- a "
+                         "DIFFERENT sample, so a screen run on it would not be "
+                         "comparable to benchmarks/m1_gfs_areal_screen.json")
     ap.add_argument("--leads", type=int, default=14)
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--out", default="data/mblstm/gfs_fcst_areal14")
@@ -339,7 +351,11 @@ def main() -> int:
             continue
         done += 1
         print(f"  {day}: ok ({want} rows)", flush=True)
-    print(f"\ndone={done} fail={fail} -> {out}")
+    print(f"\ndone={done} fail={fail} of {len(days)} requested -> {out}")
+    if done != len(days):
+        print(f"⚠️ INCOMPLETE: {len(days) - done} of {len(days)} init dates are "
+              f"missing. Any screen run on this directory is run on a SUBSET, "
+              f"and a subset of a stride sample is not the registered sample.")
     return 0 if fail == 0 else 1
 
 
