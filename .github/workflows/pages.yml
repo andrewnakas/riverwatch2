@@ -514,12 +514,18 @@ jobs:
         run: |
           set -e
           # ⚠️ The NWM snapshot step above ends while checked out on the
-          # `nwm-archive` orphan branch, whose tree has no `scripts/` at all.
-          # Without this restore, `python scripts/snapshot_m1_archive.py` would
-          # fail to find its own script on every run and this archive would
-          # silently never be written -- a handled failure reporting success.
-          # Untracked payload dirs (archive_staging_m1/) survive the checkout.
-          git checkout --force "$GITHUB_SHA" -- . 2>/dev/null || git checkout --force "$GITHUB_SHA"
+          # `nwm-archive` orphan branch, whose tree has no `scripts/` at all,
+          # so this step must restore the build tree before it can run its own
+          # script. Untracked payload dirs (archive_staging_m1/) survive.
+          #
+          # ⛔ It must move HEAD, not just the worktree. The first version used
+          # `git checkout --force "$SHA" -- .`, which rewrote the files while
+          # leaving HEAD on nwm-archive -- so the tree was dirty relative to
+          # HEAD and the later `git checkout m1-archive` aborted with "Please
+          # commit your changes or stash them before you switch branches."
+          # continue-on-error then let the job report success while this
+          # archive silently stopped updating.
+          git checkout --force "$GITHUB_SHA"
           test -f scripts/snapshot_m1_archive.py || {
             echo "::error::could not restore the build tree; not archiving"; exit 1; }
           python scripts/snapshot_m1_archive.py || {
@@ -558,7 +564,15 @@ jobs:
           ISSUED=$(date -u +%Y-%m-%d)
           git commit -m "m1-archive: served forecasts ${ISSUED}"
           git push origin m1-archive
-          echo "::notice::pushed m1-archive for ${ISSUED}"
+          # A push that did not land is indistinguishable from one that did,
+          # under continue-on-error, unless we look. This archive is the only
+          # record of what the site served, so a silent stop is expensive.
+          if git ls-tree -r --name-only origin/m1-archive 2>/dev/null \
+               | grep -q "${ISSUED}.csv.gz"; then
+            echo "::notice::pushed m1-archive for ${ISSUED}"
+          else
+            echo "::warning::m1-archive push did not land ${ISSUED}"
+          fi
 
   deploy:
     needs: merge
