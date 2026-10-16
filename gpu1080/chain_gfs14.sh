@@ -21,7 +21,12 @@ echo "expecting $EXPECTED init dates"
 nice -n 10 gpu1080/.venv/bin/python scripts_modern/build_gfs_areal_14lead.py \
   --start 2021-05-01 --end 2025-09-17 --stride 14 --leads 14 --workers 8 \
   --verify-lead1 --out data/mblstm/gfs_fcst_areal14
-echo "[$(date -u +%T)] builder exited rc=$?"
+RC=$?
+# $? must be read BEFORE anything else runs. The previous line was
+#   echo "[$(date -u +%T)] builder exited rc=$?"
+# and the $(date) substitution runs first, so $? reported DATE's status --
+# it printed "rc=0" over a builder that had died on a NameError traceback.
+echo "[$(date -u +%T)] builder exited rc=$RC"
 
 # ⚠️ THE GATE MUST ASSERT COMPLETENESS, NOT JUST VALIDATE WHAT EXISTS.
 # The previous version printed "FILE GATE: PASS" over 48 files when 115 were
