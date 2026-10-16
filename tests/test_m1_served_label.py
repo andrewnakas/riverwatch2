@@ -102,9 +102,25 @@ def test_gate2_label_carries_the_level_not_just_the_paired_delta(tmp_path):
 
 
 def test_the_shipped_label_matches_its_own_builder():
-    """If this fails, the shipped label was hand-edited or left stale."""
+    """If this fails, the shipped label was hand-edited or left stale.
+
+    ⚠️ The COMMITTED label is a table-free PLACEHOLDER. `data/m1_forcing/` is
+    gitignored, so a clean checkout -- including the CI test job, which runs
+    before the m1-forcing job -- measures zero basins and the builder therefore
+    emits the GATE 1 branch. The label consumers actually read is rebuilt in
+    the m1-forcing job from the published tables and rides the shard artifact
+    as `data/m1_forcing/_served_skill.json`, which `modern_forcing.label_path()`
+    prefers precisely for this reason.
+    So this comparison is only meaningful in a table-free checkout; with tables
+    present the two legitimately differ and the test says so rather than
+    failing. It is pinned below that the placeholder cannot be mistaken for a
+    served label.
+    """
     if not LABEL.exists():
         pytest.skip("label not generated in this checkout")
+    if list((ROOT / "data" / "m1_forcing").glob("*.csv.gz")):
+        pytest.skip("checkout carries forcing tables, so the committed "
+                    "table-free placeholder legitimately differs")
     sys.path.insert(0, str(ROOT))
     import importlib.util
     spec = importlib.util.spec_from_file_location("_lbl", BUILDER)
@@ -178,8 +194,16 @@ def test_every_consumer_resolves_through_the_one_function():
 # delta quietly became an extrapolation. The label has to notice.
 # ---------------------------------------------------------------------------
 
-def _build_with_gap(gap_days: int, tmp_path):
-    """A table whose newest areal row is `gap_days` old."""
+def _build_with_gap(gap_days: int, tmp_path, *, dec_leads=14, built_days_ago=0):
+    """A table whose newest areal row is `gap_days` old.
+
+    ⭐ Defaults to a GENUINELY healthy table: a full 16-lead decoder tail and a
+    build recorded today. The fixture originally wrote neither, which was fine
+    only while the label could not see them -- once it could, this fixture
+    stopped describing the healthy steady state it is named for and the
+    no-warning test failed correctly. A fixture that omits what the artifact
+    must carry tests the absence, not the state.
+    """
     import gzip, csv
     from datetime import date, timedelta
     sand = tmp_path
@@ -202,9 +226,23 @@ def _build_with_gap(gap_days: int, tmp_path):
         for i in range(400, 0, -1):
             d = newest_areal - timedelta(days=i - 1)
             w.writerow([d.isoformat()] + [1.0] * 6 + ["nldas_areal"])
-        for i in range(1, gap_days + 1):
+        # Point-filled observed days, ending at t0 = today-1 (the last USGS
+        # observation). NOT at today: a real table has one row per date, and
+        # writing today here duplicated the first decoder lead and inflated the
+        # horizon count by one.
+        for i in range(1, gap_days):
             d = newest_areal + timedelta(days=i)
             w.writerow([d.isoformat()] + [1.0] * 6 + ["om_point"])
+        # The decoder tail: lead 1 is the day after the last observation, which
+        # for a table ending at today-1 is TODAY.
+        for i in range(dec_leads):
+            d = today + timedelta(days=i)
+            w.writerow([d.isoformat()] + [1.0] * 6 + ["om_point"])
+    if built_days_ago is not None:
+        (td / "_built.json").write_text(json.dumps({
+            "schema_version": 1,
+            "built": {"00000001": (today - timedelta(days=built_days_ago)).isoformat()},
+        }))
     r = subprocess.run([sys.executable, "scripts/build_m1_label.py"], cwd=sand,
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
@@ -270,3 +308,57 @@ def test_the_count_is_measured_even_when_nothing_point_fills_it(tmp_path):
     lab2 = _build_with_gap(10, tmp_path / "b")
     assert lab2["forcing_observed"]["substituted_encoder_days_median"] == 9
 
+
+
+def test_a_frozen_table_warns_end_to_end(tmp_path):
+    """The live defect of 2026-10-16, through the real script.
+
+    The table was five days stale and carried 11 of 16 decoder leads while its
+    areal FRACTION read 96.3% -- so the mix, the governing gate and the served
+    coverage all looked healthy. Both facts have to reach the public label from
+    an actual run of the builder, not just from its functions.
+    """
+    if not GATE2.exists():
+        pytest.skip("gate 2 verdict absent")
+    lab = _build_with_gap(5, tmp_path, dec_leads=11, built_days_ago=5)
+    fo = lab["forcing_observed"]
+    assert fo["decoder_leads_median"] == 11
+    assert fo["decoder_horizon_short"] is True
+    assert fo["forcing_age_days_median"] == 5
+    assert fo["forcing_stale"] is True
+    w = lab.get("extrapolation_warning") or ""
+    assert "TRAINING MEAN" in w and "STALE FORECAST" in w
+    # The substitution gap itself is still inside what GATE 2 measured, so this
+    # warning is carried entirely by the two new checks.
+    assert fo["substituted_encoder_days_median"] == 4
+
+
+def test_an_unrecorded_build_date_warns(tmp_path):
+    """Absence must fail safe. An unrecorded build time was exactly what made
+    the freeze invisible."""
+    if not GATE2.exists():
+        pytest.skip("gate 2 verdict absent")
+    lab = _build_with_gap(5, tmp_path, dec_leads=14, built_days_ago=None)
+    assert lab["forcing_observed"]["forcing_stale"] is True
+    assert "unrecorded time" in (lab.get("extrapolation_warning") or "")
+
+
+def test_the_committed_label_is_recognisable_as_a_placeholder():
+    """It quotes GATE 1's -0.059534, which is the discount for serving on point
+    forcing THROUGHOUT -- roughly fifteen times the -0.004018 the live areal
+    configuration actually costs. Harmless only because nothing reads it when
+    the artifact copy is present, so the two facts that make it harmless are
+    pinned here: it is visibly table-free, and the resolver prefers the artifact.
+    """
+    if not LABEL.exists():
+        pytest.skip("label absent")
+    shipped = json.loads(LABEL.read_text())
+    fo = shipped["forcing_observed"]
+    if fo.get("sampled_basins"):
+        pytest.skip("this checkout's label was built with tables present")
+    assert fo["sampled_basins"] == 0 and fo["areal_fraction"] == 0.0, \
+        "a placeholder must be visibly empty, not look like a measurement"
+    src = (ROOT / "app" / "modern_forcing.py").read_text()
+    assert "def label_path()" in src
+    assert "return side if side.exists()" in src, \
+        "the artifact copy must win over the committed placeholder"

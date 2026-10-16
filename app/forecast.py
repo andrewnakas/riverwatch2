@@ -1421,6 +1421,14 @@ def forecast_station(
                     {"date": r["date"], "q_lo": r.get("q_lo"),
                      "q_med": r.get("q_med"), "q_hi": r.get("q_hi")}
                     for r in m1_rows]
+                # A SHORT horizon is a degradation, not a refusal, and it was
+                # invisible until it was measured live: the member drops the
+                # leads whose forcing is missing rather than serving them at the
+                # training mean, so the series simply ends early -- which a
+                # reader would otherwise read as the model declining to forecast.
+                if _mblstm_modern.last_degrade_reason:
+                    notes.append("mblstm_modern degraded: "
+                                 f"{_mblstm_modern.last_degrade_reason}")
             elif _mblstm_modern.last_skip_reason:
                 # A handled failure is a silent failure -- say why it skipped.
                 notes.append(f"mblstm_modern unavailable: {_mblstm_modern.last_skip_reason}")

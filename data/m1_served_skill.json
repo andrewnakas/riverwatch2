@@ -16,7 +16,13 @@
     "areal_fraction": 0.0,
     "substituted_encoder_days_median": null,
     "gate2_measured_substituted_days": 4,
-    "within_what_gate2_measured": false
+    "within_what_gate2_measured": false,
+    "decoder_leads_median": null,
+    "decoder_leads_expected": 14,
+    "forcing_age_days_median": null,
+    "forcing_age_basins": 0,
+    "decoder_horizon_short": false,
+    "forcing_stale": true
   },
   "live_measured": null,
   "blend_weight": 0.0,

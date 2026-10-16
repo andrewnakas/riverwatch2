@@ -120,6 +120,11 @@ _DEWPOINT_COLS = ("dew_point_2m_mean", "dewpoint_2m_mean", "dew_point_2m")
 _RH_COLS = ("relative_humidity_2m_mean", "relativehumidity_2m_mean")
 
 last_skip_reason: Optional[str] = None
+#: Set when the member SERVED but served less than the full horizon. Distinct
+#: from last_skip_reason, which means it served nothing: a degradation that
+#: reuses the refusal channel either looks like a refusal or gets dropped, and
+#: both lose the one fact a reader needs -- how many leads are real.
+last_degrade_reason: str | None = None
 
 
 def _sat_vp_pa(t_c):
@@ -248,11 +253,12 @@ def forecast(
     `static_attrs` must carry the station id under "id" or "site_no"; the
     cohort gate needs it and the contract has no separate argument for it.
     """
-    global last_skip_reason
+    global last_skip_reason, last_degrade_reason
     # Reset FIRST. This used to happen inside the `try` below, i.e. AFTER the
     # early return -- so a station that bailed here inherited the previous
     # station's reason and the caller noted something untrue about it.
     last_skip_reason = None
+    last_degrade_reason = None
     if not _is_enabled():
         return None
     if not _try_load():
@@ -297,6 +303,13 @@ def forecast(
         q_tf = cfg.get("q_transform", "linear")
         stats = _mb.q_norm_stats(q["q_cfs"].to_numpy(dtype=np.float64), transform=q_tf)
         if stats is None:
+            # The last reasonless refusal in this function. It fires on a
+            # degenerate discharge history -- all-NaN, or zero variance, which
+            # a long-regulated or long-dry gauge really can have -- and until
+            # 2026-10-16 it was indistinguishable from the member being off.
+            last_skip_reason = (
+                f"discharge history is degenerate over {len(q)} days "
+                f"({q_tf} transform): no usable normalisation statistics")
             return None
         mu_q, sd_q = stats
 
@@ -341,6 +354,25 @@ def forecast(
         else:
             wf = pd.DataFrame(index=fut_idx)
         n_strict = min(DEC_STRICT_LEADS, horizon)
+        # ⚠️ HOW FAR THE DECODER FORCING ACTUALLY REACHES. The strict gate below
+        # only ever looked at leads 1-3, so a table that stopped short served
+        # every remaining lead at the TRAINING MEAN and said nothing: measured
+        # live on 2026-10-16, the published table carried 10 of 16 leads and
+        # leads 11-16 were model output driven by zero-filled z-scores, drawn on
+        # the page as forecast. Counted contiguously from lead 1, because that
+        # is the only run a forward decoder consumes without a hole in it.
+        cov_all = [
+            all(np.isfinite(pd.to_numeric(wf[c], errors="coerce").to_numpy(
+                dtype=np.float64)[i])
+                for c in cfg["dec_vars"] if c in wf.columns)
+            and all(c in wf.columns for c in cfg["dec_vars"])
+            for i in range(len(wf))
+        ]
+        n_real = 0
+        for ok in cov_all:
+            if not ok:
+                break
+            n_real += 1
         cov_d = _window_coverage(wf.iloc[:n_strict], cfg["dec_vars"])
         thin_d = {c: round(f, 4) for c, f in cov_d.items() if f < 1.0}
         if thin_d:
@@ -377,6 +409,12 @@ def forecast(
         if np.isfinite(q_obs_max) and q_obs_max > 0:
             q_cfs = np.clip(q_cfs, 0.0, 3.0 * q_obs_max)
         if not np.all(np.isfinite(q_cfs)):
+            # Also a reasonless refusal until 2026-10-16. Non-finite output is
+            # the one failure a reader most needs named, because it points at
+            # the inputs rather than at coverage.
+            last_skip_reason = (
+                f"{int(np.sum(~np.isfinite(q_cfs)))} of {q_cfs.size} predicted "
+                "quantile values are non-finite after de-normalisation")
             return None
 
         nq = len(cfg["quantiles"])
@@ -390,8 +428,32 @@ def forecast(
             # "midhl" -- the record's readout, (ylo + yhi) / 2.
             q_pt = 0.5 * (q_cfs[:, lo_i] + q_cfs[:, hi_i])
 
+        # Emit only the leads with real forcing. A forward LSTM decoder cannot
+        # see a later lead's input when producing an earlier one, so leads
+        # 1..n_real are unaffected by the hole and remain exactly what they
+        # would have been; the leads beyond it are dropped rather than served,
+        # because a training-mean value presented as a 14-day forecast is a
+        # false impression, not a degraded one. The caller zips against
+        # future_dates, so a short series simply ends early.
+        n_emit = max(0, min(horizon, n_real))
+        if n_emit == 0:
+            # Returning an empty list here would be read by the hook as falsy
+            # with no reason set, i.e. as "the member is not enabled". A
+            # refusal has to go through the refusal channel.
+            last_skip_reason = (
+                f"no decoder lead has forcing: the table covers none of "
+                f"{fut_idx[0].date()}..{fut_idx[-1].date()} for "
+                + ", ".join(sorted(cfg["dec_vars"])))
+            return None
+        if n_emit < horizon:
+            last_degrade_reason = (
+                f"served leads 1-{n_emit} of {horizon}: the forcing table ends "
+                f"at {wf.index[n_emit - 1].date()} and the leads beyond it would "
+                "run on the training mean, so they are not served"
+                if n_emit else
+                f"no lead of {horizon} has decoder forcing")
         rows = []
-        for i in range(horizon):
+        for i in range(n_emit):
             d = (last_date + pd.Timedelta(days=i + 1)).date()
             rows.append({
                 "date": d.isoformat(),
@@ -401,5 +463,12 @@ def forecast(
                 "q_med": float(q_cfs[i, med_i]),
             })
         return rows
-    except Exception:
+    except Exception as exc:
+        # ⚠️ A HANDLED FAILURE IS A SILENT FAILURE. This returned a bare None,
+        # so the hook -- which only writes a note when last_skip_reason is set
+        # -- recorded nothing at all, and a member crashing on every station
+        # was indistinguishable from a member that was never enabled. Found by
+        # a test that reported "refused: None": the reason channel existed and
+        # the one path that most needed it did not use it.
+        last_skip_reason = f"{type(exc).__name__}: {exc}"
         return None

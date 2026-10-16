@@ -60,6 +60,41 @@ AREAL_MAJORITY = 0.5
 GATE2_SUBSTITUTED_DAYS = 4
 
 
+#: Leads the site actually serves: `app/forecast.py` HORIZON_DAYS = 14, which
+#: is what `pages.yml` passes as --horizon and what the member is called with.
+#: NOT the 16 the forcing builder fetches -- those two extra days are slack for
+#: a stale gauge (the decoder starts at the day after the last observation, so a
+#: gauge two days behind shifts the whole window), and counting them as required
+#: would warn on a healthy table. A table with fewer than 14 future rows is
+#: serving the TRAINING MEAN at the far leads.
+DECODER_LEADS_EXPECTED = 14
+#: A refresh older than this means the decoder forcing is a stale FORECAST, not
+#: today's. One day of slack covers a run that straddles UTC midnight.
+FORCING_AGE_MAX_DAYS = 1
+
+
+def read_built() -> dict[str, int]:
+    """Days since each basin was last refreshed, from build_m1_forcing.py's
+    sidecar. Absent is reported as unknown, which `forcing_stale` treats as
+    stale -- the safe direction, since the sidecar was introduced precisely
+    because its absence had been indistinguishable from freshness."""
+    p = TABLES / "_built.json"
+    if not p.exists():
+        return {}
+    try:
+        raw = json.loads(p.read_text())
+    except Exception:
+        return {}
+    today_d = date.today()
+    out: dict[str, int] = {}
+    for sid, v in (raw.get("built") or {}).items():
+        try:
+            out[str(sid)] = (today_d - date.fromisoformat(str(v))).days
+        except Exception:
+            continue
+    return out
+
+
 def measure_forcing(limit: int = 40) -> dict:
     """The src mix of the published tables, and -- the number that actually
     matters -- how many of the OBSERVED days at the end of the window are
@@ -74,6 +109,7 @@ def measure_forcing(limit: int = 40) -> dict:
     counts: dict[str, int] = {}
     n_files = 0
     recent_sub: list[int] = []
+    dec_cov: list[int] = []
     today = date.today().isoformat()
     #: The encoder window ends at the last USGS observation, which for daily
     #: values is normally yesterday. That is the reference GATE 2's count is
@@ -109,9 +145,30 @@ def measure_forcing(limit: int = 40) -> dict:
         if areal_dates:
             newest = date.fromisoformat(max(areal_dates))
             recent_sub.append(max(0, (t0 - newest).days))
+        # ⚠️⚠️ HOW MANY OF THE 16 DECODER LEADS THE TABLE ACTUALLY CARRIES.
+        # Measured because the opposite was invisible: on 2026-10-16 the
+        # published table had been frozen for five days by a freshness test a
+        # forecast row could satisfy, so its decoder rows stopped at today+11
+        # and the far leads reindexed to NaN -- which `norm_wx` turns into the
+        # TRAINING MEAN rather than a refusal. Every number on the page looked
+        # healthy. A metric that only ever reads the forcing that IS there
+        # cannot see the horizon that is missing, the same blindness as a file
+        # gate that iterates glob().
+        # Counted against t0, the SAME reference the substitution metric uses,
+        # because the member's decoder starts at the day after the last
+        # observation -- lead 1 is normally TODAY, not tomorrow. Counting rows
+        # strictly after today undercounts the horizon by exactly one lead and
+        # would call a complete table short.
+        t0s = t0.isoformat()
+        fut = [r["date"] for r in rows if (r.get("date") or "") > t0s]
+        dec_cov.append(len(fut))
         n_files += 1
     total = sum(counts.values())
     med_sub = int(sorted(recent_sub)[len(recent_sub) // 2]) if recent_sub else None
+    med_dec = int(sorted(dec_cov)[len(dec_cov) // 2]) if dec_cov else None
+    built = read_built()
+    ages = sorted(built.values())
+    med_age = ages[len(ages) // 2] if ages else None
     return {
         "sampled_basins": n_files,
         "rows": total,
@@ -121,6 +178,15 @@ def measure_forcing(limit: int = 40) -> dict:
         "gate2_measured_substituted_days": GATE2_SUBSTITUTED_DAYS,
         "within_what_gate2_measured": (med_sub is not None
                                        and med_sub <= GATE2_SUBSTITUTED_DAYS),
+        # Decoder leads present in the table, and how old the refresh is. Both
+        # are here so a frozen table reports itself instead of looking perfect.
+        "decoder_leads_median": med_dec,
+        "decoder_leads_expected": DECODER_LEADS_EXPECTED,
+        "forcing_age_days_median": med_age,
+        "forcing_age_basins": len(ages),
+        "decoder_horizon_short": (med_dec is not None
+                                  and med_dec < DECODER_LEADS_EXPECTED),
+        "forcing_stale": (med_age is None or med_age > FORCING_AGE_MAX_DAYS),
     }
 
 
@@ -163,13 +229,38 @@ def build(g1: dict, g2: dict | None, mix: dict) -> dict:
         }
         gap = mix.get("substituted_encoder_days_median")
         within = mix.get("within_what_gate2_measured")
-        label["extrapolation_warning"] = None if within else (
-            f"{gap} days of the encoder window are substituted, but the gate "
-            f"that priced this configuration substituted only "
-            f"{GATE2_SUBSTITUTED_DAYS}. "
-            "Its delta is therefore an extrapolation here, and the true cost is "
-            "likely larger. Refresh the basin-average provider."
-        )
+        # Three separate ways the live configuration can leave what the gates
+        # measured, warned about in one string because a reader acts on the
+        # label as a whole. Each was a real live defect, not a hypothetical:
+        # the gap grew to 7 while the areal append was unauthorised, and the
+        # table froze for five days behind a freshness test a forecast row
+        # satisfied.
+        probs = []
+        if not within:
+            probs.append(
+                f"{gap} days of the encoder window are substituted, but the "
+                f"gate that priced this configuration substituted only "
+                f"{GATE2_SUBSTITUTED_DAYS}, so its delta is an extrapolation "
+                "here and the true cost is likely larger (refresh the "
+                "basin-average provider)")
+        age = mix.get("forcing_age_days_median")
+        if mix.get("forcing_stale"):
+            probs.append(
+                "the published forcing was last refreshed "
+                + (f"{age} days ago" if age is not None else "at an unrecorded time")
+                + ", so the newest encoder days and the whole decoder window "
+                  "are a STALE FORECAST rather than today's -- a configuration "
+                  "no gate has measured")
+        dec = mix.get("decoder_leads_median")
+        if mix.get("decoder_horizon_short"):
+            probs.append(
+                f"the table carries only {dec} of the {DECODER_LEADS_EXPECTED} "
+                "decoder leads, so the remaining leads are served at the "
+                "model's TRAINING MEAN (a missing forcing row is silently "
+                "zero-filled in z-space, not refused)")
+        label["extrapolation_warning"] = None if not probs else (
+            "; and ".join(probs) + ".")
+        within = within and not probs
         label["_note"] = (
             "" if within else
             f"⚠️ {label['extrapolation_warning']} " ) + (

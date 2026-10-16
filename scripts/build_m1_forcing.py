@@ -105,6 +105,62 @@ def existing_tail(sid: str) -> date | None:
     return max(past) if past else None
 
 
+# ⚠️⚠️ FRESHNESS CANNOT BE READ OFF A ROW DATE. `existing_tail` is correct for
+# deciding WHERE TO RESUME A FETCH, and it is wrong as a freshness test, which
+# is what it was used for until 2026-10-16. The table carries ~16 FORECAST
+# rows, so one of them is always dated exactly today; `tail >= today` then held
+# on a table nobody had touched for five days, every basin was skipped on every
+# run, and the published table FROZE -- while reporting a perfectly current
+# newest row. The observed days 10-09..10-15 it served were point FORECASTS
+# issued on 10-11, which is not the configuration GATE 2 priced, and its
+# decoder rows ran out before the horizon so the far leads reindexed to the
+# training mean.
+#
+# The honest key is WHEN THIS BASIN WAS LAST REFRESHED, which no row date can
+# express, so it is recorded out of band. Absent => stale, so a lost sidecar
+# costs one full refresh pass and never a silent freeze.
+BUILT_NAME = "_built.json"
+
+
+def built_path() -> Path:
+    return mf.TABLE_DIR / BUILT_NAME
+
+
+def load_built() -> dict[str, date]:
+    p = built_path()
+    if not p.exists():
+        return {}
+    try:
+        raw = json.loads(p.read_text())
+    except Exception as exc:
+        log(f"WARNING: {p} unreadable ({exc}); treating every basin as stale")
+        return {}
+    out: dict[str, date] = {}
+    for sid, v in (raw.get("built") or {}).items():
+        try:
+            out[str(sid)] = date.fromisoformat(str(v))
+        except Exception:
+            continue
+    return out
+
+
+def save_built(built: dict[str, date]) -> None:
+    """Written after every basin, not at the end.
+
+    A time-budget break mid-pass is the NORMAL exit here, so progress that is
+    only flushed on a clean finish would be lost exactly when it matters.
+    """
+    p = built_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(
+        {"schema_version": 1,
+         "written_at": date.today().isoformat(),
+         "built": {k: v.isoformat() for k, v in sorted(built.items())}},
+        indent=0, sort_keys=True))
+    tmp.replace(p)
+
+
 def derive_vp(df: pd.DataFrame) -> pd.DataFrame:
     """Add `vapor_pressure` from dew point, exactly as the member would.
 
@@ -240,7 +296,18 @@ def main() -> int:
         if unknown:
             log(f"WARNING: not in the cohort or lacking lat/lon: {sorted(unknown)}")
         todo = [s for s in todo if s in want]
+    # ⭐ STALEST FIRST, shuffle only as the TIEBREAK. The time budget stops a
+    # pass part-way by design, so the order decides whether the budget rotates
+    # through every basin or re-rolls a random subset and starves the rest. A
+    # pure shuffle gives a basin no guarantee of ever being refreshed; keying
+    # on the recorded build date makes a partial pass a round-robin. The
+    # shuffle still breaks the (large) ties, which is what keeps a truncated
+    # pass from being geographically biased -- USGS ids run roughly
+    # geographically, and that bias is what made a partial GATE 1 unscoreable.
+    built = load_built()
     random.Random(str(a.shuffle_seed)).shuffle(todo)
+    shuf = {s: i for i, s in enumerate(todo)}
+    todo.sort(key=lambda s: (built.get(s, date(1970, 1, 1)), shuf[s]))
     if a.limit:
         todo = todo[:a.limit]
 
@@ -266,10 +333,13 @@ def main() -> int:
                 f"({n_ok} written, {n_skip} already fresh, {n_fail} failed). "
                 f"Publishing what is done; the next run resumes.")
             break
-        tail = existing_tail(sid)
-        if tail is not None and tail >= fresh_bar:
+        # Freshness from the sidecar; the row date cannot express it (see
+        # BUILT_NAME above -- a forecast row dated today froze the table).
+        was_built = built.get(sid)
+        if was_built is not None and was_built >= fresh_bar:
             n_skip += 1
             continue
+        tail = existing_tail(sid)
         lat, lon = latlon[sid]
         # ⭐ REQUEST ONLY WHAT IS MISSING. Open-Meteo weights a request by
         # days x variables, so re-pulling all 425 days to refresh one made a
@@ -301,11 +371,20 @@ def main() -> int:
             n_fail += 1
             continue
         n_ok += 1
+        built[sid] = today
+        save_built(built)
         if n_ok <= 3 or n_ok % 50 == 0:
             log(f"  [{i}/{len(todo)}] {sid}: {rows} rows, {complete} with all 6 channels")
         time.sleep(a.sleep)
 
     log(f"done: {n_ok} written, {n_skip} already fresh, {n_fail} failed")
+    if built:
+        ages = sorted((today - d).days for d in built.values())
+        log(f"build ages (days): min {ages[0]}, median {ages[len(ages) // 2]}, "
+            f"max {ages[-1]} over {len(ages)} basins")
+    never = [s for s in todo if s not in built]
+    if never:
+        log(f"{len(never)} basins have never been built: {never[:5]}")
     published = len(list(mf.TABLE_DIR.glob("*.csv.gz"))) if mf.TABLE_DIR.exists() else 0
     log(f"table now covers {published}/{len(cohort)} cohort basins")
     return 0
