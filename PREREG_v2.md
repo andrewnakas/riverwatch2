@@ -4498,6 +4498,85 @@ The cohort's own val1 coverage is NOT re-screened to match, because the control
 is the published reference the band was set against; re-screening it would
 change what the comparison means after the fact.
 
+# GATE 2b — THE GAP IS FIVE DAYS, NOT FOUR
+
+**Registered 2026-10-16, before any five-day number exists.** GATE 2's result
+(paired **−0.004018**, level **−0.036142**, 4 substituted days) stands exactly
+as recorded; nothing here revises it. This is a *different configuration*,
+registered because the configuration that is actually served turned out not to
+be the one that was priced.
+
+## Why
+
+GATE 2 spliced **4** encoder days because the recorded NLDAS-2 latency was 5
+days. That figure came from probing **one granule** (hour 0000) per day. The
+reducer needs **all 24 hours** — `build_nldas2_areal.build_month` raises on any
+day with `_n != 24`, correctly, since a 19-hour day would silently become a
+wrong daily mean — and a complete day is not published until about **D+6**.
+
+Measured 2026-10-16 20:13 UTC, running the appender end to end: `2026-10-11`
+had **19/24** hours, with 15/18/19/22/23Z returning the 1,119-byte HTML page.
+The appender committed the two complete days and refused the partial one. Over
+the live 490-basin table the resulting substituted-encoder-day count is
+**median 5** (min 5), against the **4** GATE 2 priced.
+
+So the served configuration sits one day beyond its own gate, permanently, and
+the public label reports an extrapolation on every run. That is the label
+working as designed — but a warning that is always on is a warning the reader
+learns to skip, and the right response is to measure what is served, not to
+soften the label.
+
+## Protocol
+
+Identical to GATE 2 in every respect except the splice depth, so the two are
+comparable and the only thing that varies is the one day:
+
+- Member `nldasm9`, seeds 501-505, equal-weight mean, readout (ylo+yhi)/2.
+- Control: GATE 2's own areal arm (`g1nl_`), reused unchanged so the baseline
+  cannot drift between the two gates.
+- Treatment: replace **only the 6 forcing channels of encoder rows t0−4…t0**
+  (five days) with Open-Meteo point values, per window, through the same scaler.
+- Frame val1, 150 basins, stride 1, all days — the same rows as GATE 2.
+- The pre-committed no-op check runs first: identical `(station_id, t0)` grid,
+  identical truth, and a row-moved count strictly greater than GATE 2's
+  216,952. A splice that silently did nothing would read 0.000000 and look like
+  a clean pass.
+
+## Statistics and the band
+
+Paired per-basin ΔNSE (treatment − control) with a 5,000-draw bootstrap, plus
+the difference of medians reported alongside — never instead.
+
+**Predicted band: paired −0.010 … −0.003. STOP below −0.030.**
+
+Derivation, fixed now: GATE 2 measured −0.004018 for four days and GATE 1
+measured −0.059534 for all 365. Those two points are not enough to fix a shape,
+and the marginal cost of the fifth day is not assumed linear — the four days
+nearest t0 are the most informative for a day-1 forecast, so a fifth day
+further back should cost *less* than the average of the first four
+(−0.001005/day). The band's floor allows roughly twice that average, and the
+STOP is GATE 2's own STOP, unchanged.
+
+## Decision table, fixed now
+
+| outcome | action |
+|---|---|
+| paired ≥ **−0.010** (in band) | **Quote GATE 2b for the served configuration.** The label stops reporting an extrapolation because the number now matches what is served. GATE 2 stays on the record as the four-day measurement. |
+| **−0.030** < paired < **−0.010** | Quote GATE 2b, and say plainly that the fifth day costs more than the first four did per day. Investigate whether the appender can reach today−5 by running later in the UTC day. |
+| paired ≤ **−0.030** | **STOP on the five-day configuration.** The fifth day is not affordable: either close the gap operationally or re-price the member's served skill from scratch. |
+
+## What this gate may NOT be used for
+
+⛔ Its delta may not be added to GATE 1's −0.059534, nor to the −0.048033
+real-forecast decay. Different frames, different baselines, additivity
+unmeasured — the standing rule.
+⛔ Neither arm's **level** is the served member's skill. The transferable
+quantity is the difference, as in GATE 1 and GATE 2.
+⛔ If GATE 2b comes back *better* than GATE 2, that is a contradiction, not good
+news: five days of substitution cannot cost less than four of the same kind on
+the same rows. It would mean the splice did not apply as intended, and the
+no-op check above is what should catch it first.
+
 # GATE 4 — WHICH FORECAST PRODUCT SHOULD DRIVE THE DECODER?
 
 **Registered 2026-10-12, before either arm exists in comparable form.** The
