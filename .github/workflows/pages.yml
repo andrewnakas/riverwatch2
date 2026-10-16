@@ -162,7 +162,10 @@ jobs:
   m1-forcing:
     needs: test
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 60, not 45: the areal append's duration has not been measured yet, and
+    # the failure mode of being killed here is publishing NOTHING -- the
+    # restore, the refresh and the append are all discarded together.
+    timeout-minutes: 60
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -187,27 +190,21 @@ jobs:
           else
             echo "m1-forcing-archive does not exist yet - cold start, expect several runs"
           fi
-      - name: Refresh the forcing table
-        run: |
-          set +e
-          # 2100s = 35 min inside a 45-min job, leaving 10 for the label
-          # rebuild, the artifact upload and the orphan push. Measured from a
-          # real run: ~13 s per basin written from a GitHub runner (0 failures,
-          # so this is latency, not quota), so 1500s reached only 186 of 490.
-          python scripts/build_m1_forcing.py --max-seconds 2100
-          rc=$?
-          set -e
-          # Exit 2 is the registered "budget gone, come back next window" code.
-          # A cold start is ~490 basins x 365 days x 7 variables, which is more
-          # than one day of Open-Meteo's weighted free tier, so the first runs
-          # genuinely bail part-way and resume by file existence.
-          if [ "$rc" = "2" ]; then
-            echo "::notice::Open-Meteo budget exhausted this window; resuming next run"
-          elif [ "$rc" != "0" ]; then
-            echo "::error::build_m1_forcing.py failed with rc=$rc"
-            exit "$rc"
-          fi
-          echo "coverage: $(ls data/m1_forcing/*.csv.gz 2>/dev/null | wc -l)/490 cohort basins"
+      # ⭐ THE AREAL APPEND RUNS BEFORE THE OPEN-METEO REFRESH, deliberately.
+      # The two steps have different shapes. The append is BOUNDED -- a fixed
+      # number of NLDAS-2 granules for the days it has published -- and it is
+      # the step that carries the skill, moving the served configuration out of
+      # GATE 1's -0.059534 regime into GATE 2's -0.004018. The refresh is a
+      # per-basin HTTP latency times however many basins are stale, and it is
+      # resumable BY DESIGN: stalest-first order, a time budget, and a recorded
+      # build date per basin.
+      # Measured 2026-10-16 with the refresh first: it used its full 35-minute
+      # budget and overran it, leaving under ten minutes of a 45-minute job for
+      # the append, the label rebuild, the upload and the orphan push. Losing
+      # time at the end of a resumable rotation costs one slot; losing the
+      # append costs a day of areal currency and the label starts reporting the
+      # gap growing. So the bounded, high-value step goes first and the
+      # resumable one absorbs whatever is left.
       # Regenerate the public label from the forcing that was actually just
       # published. The label names the forcing the member runs on and quotes
       # the gate that measured THAT configuration, so if it is not rebuilt
@@ -246,6 +243,24 @@ jobs:
             echo "granules to basin means. Commit it (force-add past .gitignore)."
             exit 0
           fi
+          # ⚠️ THE SCRIPTS MUST EXIST ON THIS BRANCH, and their absence is a
+          # DEPLOY error, not a transient append failure. Measured 2026-10-16:
+          # both of these lived only on the research branch, so this step ran
+          # `python scripts_modern/nldas_areal_append.py`, got
+          # "No such file or directory", and the `|| echo ::warning::` below
+          # turned it into a warning in a log nobody reads -- for three days,
+          # while the areal window aged a day per day and the public label
+          # faithfully reported a gap growing from 4 to 7 with the cause
+          # invisible. A missing file and a failed NASA fetch are not the same
+          # problem and must not produce the same output.
+          for f in scripts_modern/nldas_areal_append.py \
+                   scripts_modern/build_nldas2_areal.py; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f is missing from this branch. The areal append"
+              echo "cannot run and the served forcing will age one day per day."
+              exit 1
+            fi
+          done
           printf 'machine urs.earthdata.nasa.gov login %s password %s\n' \
             "$EARTHDATA_USER" "$EARTHDATA_PASS" > "$HOME/.netrc"
           chmod 600 "$HOME/.netrc"
@@ -254,9 +269,48 @@ jobs:
             --archive-dir data/m1_forcing \
             --weights data/nldas_basin_weights.pkl \
             --basins data/m1_cohort.json \
-            --days 8 --workers 4 || echo "::warning::areal append failed this run"
+            --days 8 --workers 4
+          RC=$?   # before anything else runs: a $(...) substitution resets $?
           rm -f "$HOME/.netrc"
+          if [ "$RC" != "0" ]; then
+            # A genuine fetch failure IS tolerable -- the table keeps its
+            # existing areal rows and the label reports the growing gap -- so
+            # this stays a warning. It is distinguishable from the deploy error
+            # above, which is the whole point.
+            echo "::warning::areal append exited $RC; the table keeps its"
+            echo "existing areal rows and the label will report the gap"
+          fi
 
+      - name: Refresh the forcing table
+        run: |
+          set +e
+          # ~13 s per basin from a GitHub runner with ZERO failures, so the
+          # cost is HTTP latency -- not quota and not CPU. Served serially that
+          # is ~160 basins per 35-minute budget, i.e. the table could never be
+          # fully fresh however the freshness test was written. Six concurrent
+          # fetches bring a full 490-basin pass well inside 1500 s, which in
+          # turn leaves the bounded areal append (now ahead of this step) and
+          # the three publish steps a large and predictable share of the job.
+          # Writes and the build-date sidecar stay on the main thread; only the
+          # fetches overlap, and serial and concurrent output are pinned
+          # byte-identical in tests/test_m1_forcing_concurrency.py.
+          # The budget remains, because it is what lets a run that cannot
+          # finish still PUBLISH what it managed: a run killed by the job
+          # timeout publishes nothing and repeats the cold start every build.
+          python scripts/build_m1_forcing.py --max-seconds 1500 --workers 6
+          rc=$?
+          set -e
+          # Exit 2 is the registered "budget gone, come back next window" code.
+          # A cold start is ~490 basins x 365 days x 7 variables, which is more
+          # than one day of Open-Meteo's weighted free tier, so the first runs
+          # genuinely bail part-way and resume by file existence.
+          if [ "$rc" = "2" ]; then
+            echo "::notice::Open-Meteo budget exhausted this window; resuming next run"
+          elif [ "$rc" != "0" ]; then
+            echo "::error::build_m1_forcing.py failed with rc=$rc"
+            exit "$rc"
+          fi
+          echo "coverage: $(ls data/m1_forcing/*.csv.gz 2>/dev/null | wc -l)/490 cohort basins"
       - name: Rebuild the served-member label from the published forcing
         run: |
           set -e

@@ -49,6 +49,7 @@ import os
 import random
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -269,6 +270,14 @@ def main() -> int:
                          "archive revises its most recent values")
     ap.add_argument("--retries", type=int, default=4)
     ap.add_argument("--sleep", type=float, default=0.6, help="politeness delay between basins")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="basins fetched CONCURRENTLY. The per-basin cost is "
+                         "HTTP latency, not quota or CPU -- measured ~13 s per "
+                         "basin from a GitHub runner with 0 failures -- so the "
+                         "serial loop covered only ~160 of 490 basins in its "
+                         "35-minute budget and the table could never be fully "
+                         "fresh. Writes stay serial regardless; only the "
+                         "fetches overlap.")
     ap.add_argument("--max-consecutive-failures", type=int, default=6,
                     help="bail the window; failed requests still cost budget")
     ap.add_argument("--limit", type=int, default=0)
@@ -321,24 +330,18 @@ def main() -> int:
     n_ok = n_skip = n_fail = 0
     consec = 0
     t_start = time.time()
-    for i, sid in enumerate(todo, 1):
-        # TIME BUDGET. A cold start is ~490 basins x 425 days x 7 variables and
-        # does not fit in one CI job; measured at roughly 4-7 s per basin, 490
-        # of them overruns a 45-minute job. Stopping cleanly here lets the
-        # upload and orphan-branch push run, so the next build RESUMES from
-        # what this one managed. Being killed by the job timeout instead would
-        # publish nothing and repeat the cold start every single build.
-        if a.max_seconds and (time.time() - t_start) > a.max_seconds:
-            log(f"TIME BUDGET reached after {i - 1} basins "
-                f"({n_ok} written, {n_skip} already fresh, {n_fail} failed). "
-                f"Publishing what is done; the next run resumes.")
-            break
-        # Freshness from the sidecar; the row date cannot express it (see
-        # BUILT_NAME above -- a forecast row dated today froze the table).
+
+    def plan(sid: str):
+        """Everything that must happen BEFORE a fetch, on the main thread.
+
+        Returns None when the basin needs no fetch, else the fetch arguments.
+        Freshness and the resume point are decided here so the worker threads
+        do nothing but I/O -- and so `existing_tail`, which reads a file, is
+        never called concurrently with `merge_and_write`, which writes one.
+        """
         was_built = built.get(sid)
         if was_built is not None and was_built >= fresh_bar:
-            n_skip += 1
-            continue
+            return None
         tail = existing_tail(sid)
         lat, lon = latlon[sid]
         # ⭐ REQUEST ONLY WHAT IS MISSING. Open-Meteo weights a request by
@@ -348,34 +351,82 @@ def main() -> int:
         # recent needs only the days since that tail (plus a few days of
         # overlap, because the archive revises its most recent values), and the
         # forecast call is cheap at ~16 days.
-        if tail is not None:
-            b_start = max(start, tail - timedelta(days=a.overlap_days))
+        b_start = max(start, tail - timedelta(days=a.overlap_days)) if tail is not None else start
+        return (lat, lon, b_start)
+
+    def fetch_one(args):
+        lat, lon, b_start = args
+        return fetch_basin(lat, lon, b_start, today, horizon_days=a.horizon_days,
+                           past_days=a.past_days, retries=a.retries, sleep_s=a.sleep)
+
+    # CHUNKED, not a free-for-all. Results are consumed in submission order, so
+    # "consecutive failures" keeps meaning what it meant serially -- the bail
+    # that stopped ~352 doomed requests per window once the quota was gone.
+    # Chunk = workers, so at most `workers` requests are ever in flight.
+    workers = max(1, int(a.workers))
+    pool = ThreadPoolExecutor(max_workers=workers) if workers > 1 else None
+    i = 0
+    pos = 0
+    while pos < len(todo):
+        if a.max_seconds and (time.time() - t_start) > a.max_seconds:
+            log(f"TIME BUDGET reached after {pos} basins "
+                f"({n_ok} written, {n_skip} already fresh, {n_fail} failed). "
+                f"Publishing what is done; the next run resumes.")
+            break
+        chunk = todo[pos:pos + workers]
+        pos += len(chunk)
+        plans = [(sid, plan(sid)) for sid in chunk]
+        n_skip += sum(1 for _, pl in plans if pl is None)
+        work = [(sid, pl) for sid, pl in plans if pl is not None]
+        if not work:
+            i += len(chunk)
+            continue
+        if pool is None:
+            results = [(sid, fetch_one(pl)) for sid, pl in work]
         else:
-            b_start = start
-        fresh = fetch_basin(lat, lon, b_start, today, horizon_days=a.horizon_days,
-                            past_days=a.past_days, retries=a.retries, sleep_s=a.sleep)
-        if fresh is None:
-            n_fail += 1
-            consec += 1
-            if consec >= a.max_consecutive_failures:
-                log(f"BAIL after {consec} consecutive failures "
-                    f"({n_ok} ok, {n_skip} already fresh, {n_fail} failed). "
-                    f"Budget is probably gone; this is not fatal -- resume next window.")
-                return 2
-            continue
-        consec = 0
-        try:
-            rows, complete = merge_and_write(sid, fresh, keep_days=a.keep_days)
-        except Exception as exc:
-            log(f"  {sid}: publish refused: {exc}")
-            n_fail += 1
-            continue
-        n_ok += 1
-        built[sid] = today
-        save_built(built)
-        if n_ok <= 3 or n_ok % 50 == 0:
-            log(f"  [{i}/{len(todo)}] {sid}: {rows} rows, {complete} with all 6 channels")
-        time.sleep(a.sleep)
+            futs = {pool.submit(fetch_one, pl): sid for sid, pl in work}
+            got = {}
+            for f in as_completed(futs):
+                sid = futs[f]
+                try:
+                    got[sid] = f.result()
+                except Exception as exc:
+                    log(f"  {sid}: fetch raised {type(exc).__name__}: {exc}")
+                    got[sid] = None
+            results = [(sid, got.get(sid)) for sid, _ in work]
+        bail = False
+        for sid, fresh in results:
+            i += 1
+            if fresh is None:
+                n_fail += 1
+                consec += 1
+                if consec >= a.max_consecutive_failures:
+                    log(f"BAIL after {consec} consecutive failures "
+                        f"({n_ok} ok, {n_skip} already fresh, {n_fail} failed). "
+                        f"Budget is probably gone; this is not fatal -- resume "
+                        f"next window.")
+                    bail = True
+                    break
+                continue
+            consec = 0
+            try:
+                rows, complete = merge_and_write(sid, fresh, keep_days=a.keep_days)
+            except Exception as exc:
+                log(f"  {sid}: publish refused: {exc}")
+                n_fail += 1
+                continue
+            n_ok += 1
+            built[sid] = today
+            save_built(built)
+            if n_ok <= 3 or n_ok % 50 == 0:
+                log(f"  [{i}/{len(todo)}] {sid}: {rows} rows, {complete} with "
+                    f"all 6 channels")
+        if bail:
+            if pool is not None:
+                pool.shutdown(wait=False, cancel_futures=True)
+            return 2
+    if pool is not None:
+        pool.shutdown(wait=True)
 
     log(f"done: {n_ok} written, {n_skip} already fresh, {n_fail} failed")
     if built:
