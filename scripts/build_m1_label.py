@@ -116,7 +116,7 @@ def read_built(only: set[str] | None = None) -> dict[str, int]:
     return out
 
 
-def measure_forcing(limit: int = 40) -> dict:
+def measure_forcing(limit: int = 0) -> dict:
     """The src mix of the published tables, and -- the number that actually
     matters -- how many of the OBSERVED days at the end of the window are
     substituted.
@@ -142,7 +142,15 @@ def measure_forcing(limit: int = 40) -> dict:
         return path.rsplit("/", 1)[-1].split(".")[0]
     pick = [p for p in allp if not served or _sid(p) in served]
     n_orphan = len(allp) - len(pick)
-    for p in pick[:limit]:
+    # ⭐ EVERY served table by default, not a sample of 40. These medians drive
+    # a PUBLIC warning, and a 40-of-490 sample is thin for one -- worse, it is
+    # not a random 40: the files are taken in name order while the refresh
+    # rotates stalest-first, so the sample and the refresh order are unrelated
+    # and a partially-refreshed cohort reads as whatever the first 40 names
+    # happen to be. The whole cohort is ~490 files of ~10 KB; reading them all
+    # costs a couple of seconds against a 35-minute job. `limit` survives for
+    # tests.
+    for p in (pick[:limit] if limit else pick):
         try:
             with gzip.open(p, "rt", newline="") as fh:
                 rows = list(csv.DictReader(fh))
