@@ -381,12 +381,52 @@ of basins get worse. A broad, consistent loss across almost every basin is what 
 input looks like; a registration or extraction bug would hit a subset and leave the rest
 alone.</p>"""
 
+        # The horizon the member actually publishes, and the live gap. Both are
+        # read off the label rather than written here, so this follows the
+        # configuration instead of describing one that was true once: a caveat
+        # that stops tracking what is served can be false in the GENEROUS
+        # direction, which is the worst way for a disclosure to be wrong.
+        fo = lbl.get("forcing_observed") or {}
+        dec_med = fo.get("decoder_leads_median")
+        dec_exp = fo.get("decoder_leads_expected")
+        gapd = fo.get("substituted_encoder_days_median")
+        gate2_days = fo.get("gate2_measured_substituted_days")
+        warn = lbl.get("extrapolation_warning")
+        horizon_bits = [
+            "<p class=\"muted\">The member publishes only the lead days it has "
+            "real forcing for. A missing forcing row is not refused by the "
+            "network — the normaliser turns it into the training mean, which "
+            "looks like a forecast and is not one — so when the forcing table "
+            "ends early the series is truncated instead of filled."]
+        if isinstance(dec_med, int) and isinstance(dec_exp, int):
+            horizon_bits.append(
+                f" As published, the table carries <strong>{dec_med}</strong> of "
+                f"the <strong>{dec_exp}</strong> lead days the site serves"
+                + (", so the remaining leads are not shown."
+                   if dec_med < dec_exp else "."))
+        if isinstance(gapd, int) and isinstance(gate2_days, int):
+            horizon_bits.append(
+                f" The newest <strong>{gapd}</strong> encoder days are "
+                f"Open-Meteo-filled against the <strong>{gate2_days}</strong> "
+                f"the gate above measured"
+                + (" — so the delta quoted there is an extrapolation here, "
+                   "and the true cost is likely larger."
+                   if gapd > gate2_days else ", which is the configuration it "
+                   "measured."))
+        horizon_bits.append("</p>")
+        if warn:
+            horizon_bits.append(
+                f"<p class=\"muted\">⚠ Live self-report from the published "
+                f"forcing: {_esc(warn)}</p>")
+        horizon_block = "".join(horizon_bits)
+
         gate1_block = f"""
 <h2>What the served model runs on, and what that costs</h2>
 <p>The member this site actually serves \u2014 <code>{_esc(g1.get('member', 'nldasm9'))}</code>,
 {nseeds} seeds \u2014 was trained on <strong>NLDAS-2 basin-average</strong> forcing.
 {served_line}</p>
 {cost}
+{horizon_block}
 <p class="muted">Two things none of this says. The as-served arm of the full-substitution
 measurement read {_f(g1.get('median_nse_point_as_served'))} on its sample, but that is
 {_esc(g1.get('frame', 'validation'))} on {_esc(g1.get('basins', '?'))} basins while the

@@ -343,3 +343,83 @@ def test_no_forbidden_claim_title_contains_an_escapable_character():
         for ch in ("'", "&", "<", ">", '"'):
             assert ch not in title, (
                 f"claim title contains {ch!r}, which _esc() will escape: {title!r}")
+
+
+#: Mirrors benchmarks/m1_gate2_verdict.json. A literal rather than a read of
+#: the file, matching GATE1_FIXTURE above: these tests check that the PAGE
+#: renders a configuration, and reading the live artifact would make them pass
+#: or fail on whatever is currently committed.
+GATE2_FIXTURE = {
+    "frame": "val1", "member": "nldasm9", "basins": 150,
+    "seeds": [501, 502, 503, 504, 505], "protocol": "modern-v3-9yr",
+    "splice_recent_days": 4,
+    "median_nse_areal_control": 0.8936953283991611,
+    "median_nse_spliced_treatment": 0.8575537523189201,
+    "paired_delta_spliced_minus_areal": -0.004018177634188769,
+    "ci95": [-0.007396350167453103, -0.0019625893495204827],
+    "breadth": 0.2866666666666667,
+    "difference_of_medians": -0.036141576080241045,
+    "fraction_of_gate1_loss_recovered_by_areal": 0.9325061706892067,
+}
+
+
+def _html_with_label(lbl):
+    """The served-configuration block needs gate1, gate2 and the label: the
+    page follows the LIVE gate, so a fixture that omits one describes a
+    different configuration than the one under test."""
+    a = dict(MIN_ARTIFACTS)
+    a["gate1"] = GATE1_FIXTURE
+    a["gate2"] = GATE2_FIXTURE
+    a["served_label"] = lbl
+    return bp.build_html(a)
+
+
+def test_the_page_states_the_horizon_the_member_actually_publishes():
+    """A missing forcing row becomes the TRAINING MEAN in `norm_wx`, not a
+    refusal, so a short forcing table would otherwise put a plausible number on
+    the page as a 14-day forecast. The member truncates instead, and the page
+    has to say so -- and has to say it from the LABEL, so the sentence follows
+    the configuration rather than describing one that was true once.
+
+    Measured live 2026-10-16: 11 of 14 leads, while every other number on the
+    page read healthy.
+    """
+    lbl = {
+        "governing_gate": "GATE 2",
+        "forcing_observed": {
+            "areal_fraction": 0.958,
+            "decoder_leads_median": 11,
+            "decoder_leads_expected": 14,
+            "substituted_encoder_days_median": 7,
+            "gate2_measured_substituted_days": 4,
+        },
+        "extrapolation_warning": "the table carries only 11 of the 14 decoder leads",
+    }
+    html = _html_with_label(lbl)
+    assert "only the lead days it has" in html
+    assert "training mean" in html.lower()
+    assert ">11<" in html and ">14<" in html, "the live lead counts must appear"
+    # The encoder gap, stated against what the gate measured.
+    assert ">7<" in html and ">4<" in html
+    assert "extrapolation here" in html
+    assert "Live self-report" in html
+
+
+def test_the_healthy_configuration_does_not_claim_an_extrapolation():
+    """A caveat that fires when nothing is wrong teaches the reader to skip it."""
+    lbl = {
+        "governing_gate": "GATE 2",
+        "forcing_observed": {
+            "areal_fraction": 0.962,
+            "decoder_leads_median": 14,
+            "decoder_leads_expected": 14,
+            "substituted_encoder_days_median": 4,
+            "gate2_measured_substituted_days": 4,
+        },
+        "extrapolation_warning": None,
+    }
+    html = _html_with_label(lbl)
+    assert "which is the configuration it measured" in html
+    assert "extrapolation here" not in html
+    assert "Live self-report" not in html
+    assert "so the remaining leads are not shown" not in html
