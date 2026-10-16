@@ -150,6 +150,11 @@ def main() -> int:
     ap.add_argument("--through", default="", help="YYYY-MM-DD; default today-5")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--keep-days", type=int, default=425)
+    ap.add_argument("--max-seconds", type=int, default=0,
+                    help="stop cleanly after N seconds (0 = no limit). In CI "
+                         "this step shares a job with the Open-Meteo refresh, "
+                         "so it must stop on its own terms: being killed by the "
+                         "job timeout used to discard every day it had fetched.")
     a = ap.parse_args()
 
     root = Path(a.root).resolve()
@@ -205,52 +210,79 @@ def main() -> int:
     workdir = Path(tempfile.mkdtemp(prefix="nldas_app_", dir=os.environ.get("TMPDIR", "/tmp")))
     mod.preflight(workdir)
 
-    produced = {}
+    cutoff = (date.today() - timedelta(days=a.keep_days)).isoformat()
+    rank = {"om_point": 0, SRC: 1}
+
+    def commit(produced: dict) -> int:
+        """Write one or more fetched days into every basin table.
+
+        ⚠️ CALLED AFTER EACH DAY, not once at the end. Fetching every day into
+        a dict and writing at the end meant a run killed before the write --
+        which in CI is a job timeout, and this step follows a 25-minute refresh
+        -- discarded ALL of its NASA fetching. Worse, it would be killed at the
+        same point every run, so it could never make progress: the gap would
+        grow a day per day forever while the log showed a step that started and
+        was cut off. Committing per day makes the "already areal everywhere"
+        check at the top of this script skip what previous runs managed.
+        """
+        n = 0
+        for sid in ids:
+            tp = arch / f"{sid}.csv.gz"
+            rows = {r["date"]: dict(r) for r in read_table(tp)}
+            bi = index[sid]
+            touched = False
+            for dstr, chans in produced.items():
+                new_row = {"date": dstr, "src": SRC}
+                bad = False
+                for c in COLS:
+                    v = float(chans[c][bi])
+                    if not np.isfinite(v):
+                        bad = True
+                        break
+                    new_row[c] = f"{v:.6g}"
+                if bad:
+                    continue
+                old_row = rows.get(dstr)
+                # FLIP RULE: areal replaces point, never the reverse.
+                if old_row is None or rank.get(new_row["src"], 0) >= rank.get(
+                        old_row.get("src"), 0):
+                    rows[dstr] = new_row
+                    touched = True
+            if not touched:
+                continue
+            keep = [rows[k] for k in sorted(rows) if k >= cutoff]
+            if keep:
+                write_table(tp, keep)
+                n += 1
+        return n
+
+    t_start = time.time()
+    done_days = []
     for d in todo:
+        # Stop CLEANLY rather than be killed. Everything already committed
+        # stays; only the day in flight is lost.
+        if a.max_seconds and (time.time() - t_start) > a.max_seconds:
+            print(f"TIME BUDGET reached after {len(done_days)} of {len(todo)} "
+                  f"days; the days already written stay, the rest resume next "
+                  f"run")
+            break
         try:
-            produced[d.isoformat()] = day_means(mod, d.year, d.month, d.day,
-                                                W, a.workers, workdir)
-            print(f"  {d} ok")
+            chans = day_means(mod, d.year, d.month, d.day, W, a.workers, workdir)
         except Exception as exc:
             # A day that is not published yet, or a transient failure, is not
             # fatal: the point builder keeps that day filled and the next run
             # tries again. Silence here would be the bug.
-            print(f"  {d} SKIPPED: {exc}")
+            print(f"  {d} SKIPPED: {exc}", flush=True)
+            continue
+        n = commit({d.isoformat(): chans})
+        done_days.append(d.isoformat())
+        print(f"  {d} ok -> {n} basin tables updated", flush=True)
 
-    if not produced:
+    if not done_days:
         print("no days produced")
         return 0
-
-    cutoff = (date.today() - timedelta(days=a.keep_days)).isoformat()
-    rank = {"om_point": 0, SRC: 1}
-    n_written = 0
-    for sid in ids:
-        p = arch / f"{sid}.csv.gz"
-        rows = {r["date"]: dict(r) for r in read_table(p)}
-        bi = index[sid]
-        for dstr, chans in produced.items():
-            new = {"date": dstr, "src": SRC}
-            bad = False
-            for c in COLS:
-                v = float(chans[c][bi])
-                if not np.isfinite(v):
-                    bad = True
-                    break
-                new[c] = f"{v:.6g}"
-            if bad:
-                continue
-            old = rows.get(dstr)
-            # FLIP RULE: areal replaces point, never the reverse.
-            if old is None or rank.get(new["src"], 0) >= rank.get(old.get("src"), 0):
-                rows[dstr] = new
-        keep = [rows[k] for k in sorted(rows) if k >= cutoff]
-        if keep:
-            write_table(p, keep)
-            n_written += 1
-
-    areal_days = sorted(produced)
-    print(f"wrote {n_written} basin tables; areal days added/refreshed: "
-          f"{areal_days[0]}..{areal_days[-1]} ({len(areal_days)})")
+    print(f"areal days added/refreshed: {done_days[0]}..{done_days[-1]} "
+          f"({len(done_days)} of {len(todo)} wanted)")
     return 0
 
 
