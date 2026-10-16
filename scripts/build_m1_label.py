@@ -49,6 +49,25 @@ ROOT = Path(__file__).resolve().parents[1]
 GATE1 = ROOT / "benchmarks" / "m1_gate1_verdict.json"
 GATE2 = ROOT / "benchmarks" / "m1_gate2_verdict.json"
 TABLES = ROOT / "data" / "m1_forcing"
+COHORT = ROOT / "data" / "m1_cohort.json"
+
+
+def served_ids() -> set[str]:
+    """The basins the member actually answers: `camels_attrs.in_cohort` gates on
+    this list, so these are the only ones the label describes.
+
+    ⚠️ The published table covers 625 basins, not 490. The extra 135 are the
+    GATE 3 candidates, seeded from the areal corpus and deliberately NOT served
+    yet, and `build_m1_forcing.py` does not refresh them (its todo comes from
+    this same cohort file). Measuring freshness over everything on disk would
+    therefore report the label as permanently stale because of basins nobody is
+    served -- a warning that fires when nothing is wrong, which is the failure
+    this label has already had to fix once.
+    """
+    try:
+        return {str(x) for x in json.loads(COHORT.read_text())["cohort"]}
+    except Exception:
+        return set()
 OUT = ROOT / "data" / "m1_served_skill.json"
 
 SCHEMA_VERSION = "m1-label-2"
@@ -73,7 +92,7 @@ DECODER_LEADS_EXPECTED = 14
 FORCING_AGE_MAX_DAYS = 1
 
 
-def read_built() -> dict[str, int]:
+def read_built(only: set[str] | None = None) -> dict[str, int]:
     """Days since each basin was last refreshed, from build_m1_forcing.py's
     sidecar. Absent is reported as unknown, which `forcing_stale` treats as
     stale -- the safe direction, since the sidecar was introduced precisely
@@ -88,6 +107,8 @@ def read_built() -> dict[str, int]:
     today_d = date.today()
     out: dict[str, int] = {}
     for sid, v in (raw.get("built") or {}).items():
+        if only is not None and str(sid) not in only:
+            continue
         try:
             out[str(sid)] = (today_d - date.fromisoformat(str(v))).days
         except Exception:
@@ -115,7 +136,13 @@ def measure_forcing(limit: int = 40) -> dict:
     #: values is normally yesterday. That is the reference GATE 2's count is
     #: relative to.
     t0 = date.today() - timedelta(days=1)
-    for p in sorted(glob.glob(str(TABLES / "*.csv.gz")))[:limit]:
+    served = served_ids()
+    allp = sorted(glob.glob(str(TABLES / "*.csv.gz")))
+    def _sid(path):
+        return path.rsplit("/", 1)[-1].split(".")[0]
+    pick = [p for p in allp if not served or _sid(p) in served]
+    n_orphan = len(allp) - len(pick)
+    for p in pick[:limit]:
         try:
             with gzip.open(p, "rt", newline="") as fh:
                 rows = list(csv.DictReader(fh))
@@ -166,7 +193,7 @@ def measure_forcing(limit: int = 40) -> dict:
     total = sum(counts.values())
     med_sub = int(sorted(recent_sub)[len(recent_sub) // 2]) if recent_sub else None
     med_dec = int(sorted(dec_cov)[len(dec_cov) // 2]) if dec_cov else None
-    built = read_built()
+    built = read_built(served or None)
     ages = sorted(built.values())
     med_age = ages[len(ages) // 2] if ages else None
     return {
@@ -184,6 +211,11 @@ def measure_forcing(limit: int = 40) -> dict:
         "decoder_leads_expected": DECODER_LEADS_EXPECTED,
         "forcing_age_days_median": med_age,
         "forcing_age_basins": len(ages),
+        # Published but not served: the GATE 3 candidates. Informational, never
+        # a warning -- they are deliberately dark and deliberately unrefreshed.
+        "published_tables": len(allp),
+        "served_tables": len(pick),
+        "unserved_tables": n_orphan,
         "decoder_horizon_short": (med_dec is not None
                                   and med_dec < DECODER_LEADS_EXPECTED),
         "forcing_stale": (med_age is None or med_age > FORCING_AGE_MAX_DAYS),

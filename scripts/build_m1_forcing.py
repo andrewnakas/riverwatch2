@@ -385,6 +385,22 @@ def main() -> int:
     never = [s for s in todo if s not in built]
     if never:
         log(f"{len(never)} basins have never been built: {never[:5]}")
+    # ⚠️ TABLES THIS SCRIPT PUBLISHES BUT NEVER REFRESHES. The todo list comes
+    # from the cohort (490) while the branch carries 625 -- the extra 135 are
+    # the GATE 3 candidates, seeded once from the areal corpus and deliberately
+    # dark. That is fine only while they stay dark: the moment the cohort file
+    # widens to serve them, their forcing must come under refresh too, and a
+    # silently rotting table is precisely what this script was just fixed for.
+    # Said out loud every run so the dependency cannot be forgotten at the one
+    # moment it matters.
+    on_disk = {p.name.split(".")[0]
+               for p in mf.TABLE_DIR.glob("*.csv.gz")} if mf.TABLE_DIR.exists() else set()
+    orphans = sorted(on_disk - set(cohort))
+    if orphans:
+        log(f"NOTE: {len(orphans)} published tables are NOT in the cohort and so "
+            f"are never refreshed by this script ({orphans[:3]}...). They are "
+            f"not served either; widening the cohort REQUIRES widening this "
+            f"script's basin list in the same change.")
     published = len(list(mf.TABLE_DIR.glob("*.csv.gz"))) if mf.TABLE_DIR.exists() else 0
     log(f"table now covers {published}/{len(cohort)} cohort basins")
     return 0

@@ -4459,6 +4459,45 @@ already has today (it returns no number at all rather than a hedged one).
 
 ---
 
+## ADDENDUM 2026-10-16 — the SCOREABLE subset, fixed before any skill number
+
+Not a revision: the registered protocol, band, STOP and decision table above
+are untouched, and **no out-of-cohort skill number exists yet**. This records a
+PREREQUISITE measurement that the registration did not separate, made now so
+that the subset cannot be chosen after seeing a result.
+
+The 135 were selected by a **serving** criterion — ≥90% of the **last 365
+days** of discharge, gauge current to 2026-10-06. Scoring on val1 needs
+something different: discharge inside **2014-10-01…2018-09-30**. Those are
+independent, and they do not agree. Measured against the box's `q_store`:
+
+| | |
+|---|---|
+| of the 135, have a `q_store` file and an areal-corpus file | **135 / 135** |
+| ≥90% of the 1,461 val1 days observed | **130** |
+| 50–90% observed | **2** |
+| <25% observed | **3** — `06154410`, `09480000`, `10348850` |
+
+So the deciding statistic is computed on the **130** basins with ≥90% val1
+coverage. The other five are named here, before any score, with this rule:
+
+- The **2** partial basins (50–90%) are scored and reported **separately**, and
+  are not pooled into the deciding median — a basin contributing a few hundred
+  days to a per-basin median is not comparable to one contributing 1,461, and
+  this project has already been burned by a median whose rows differed between
+  arms (`a-null-must-be-computed-on-the-same-rows`).
+- The **3** unscoreable basins are **gauged recently but not during val1**, so
+  this gate cannot say anything about them in either direction. They therefore
+  **may not be served on the strength of this gate**, whatever it returns.
+  Serving them would be an extrapolation from 130 measured basins to 3
+  unmeasured ones, which is exactly the move the member's own label exists to
+  prevent.
+
+⚠️ The control set is unchanged: the **490** cohort basins on the same window.
+The cohort's own val1 coverage is NOT re-screened to match, because the control
+is the published reference the band was set against; re-screening it would
+change what the comparison means after the fact.
+
 # GATE 4 — WHICH FORECAST PRODUCT SHOULD DRIVE THE DECODER?
 
 **Registered 2026-10-12, before either arm exists in comparable form.** The

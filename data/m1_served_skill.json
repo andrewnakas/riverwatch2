@@ -21,6 +21,9 @@
     "decoder_leads_expected": 14,
     "forcing_age_days_median": null,
     "forcing_age_basins": 0,
+    "published_tables": 0,
+    "served_tables": 0,
+    "unserved_tables": 0,
     "decoder_horizon_short": false,
     "forcing_stale": true
   },
