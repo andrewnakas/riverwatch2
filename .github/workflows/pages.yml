@@ -269,7 +269,7 @@ jobs:
             --archive-dir data/m1_forcing \
             --weights data/nldas_basin_weights.pkl \
             --basins data/m1_cohort.json \
-            --days 8 --workers 4
+            --days 8 --workers 4 --max-seconds 1500
           RC=$?   # before anything else runs: a $(...) substitution resets $?
           rm -f "$HOME/.netrc"
           if [ "$RC" != "0" ]; then
