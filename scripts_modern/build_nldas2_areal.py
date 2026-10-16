@@ -45,7 +45,14 @@ import xarray as xr
 # `--assemble-only` over a narrower span silently overwrites the verified
 # 1980-2025 corpus with a shorter one, and exits 0. A smoke test could not be
 # run anywhere else.
-ROOT = Path("/home/nakas/riverwatch2")
+# Derived, not hardcoded. This was Path("/home/nakas/riverwatch2"), which is
+# correct on the box and nowhere else -- and `nldas_areal_append.py` imports
+# this module to reuse `do_hour`, so the constant travelled to a GitHub runner
+# where that directory does not exist. `do_hour` happens not to read ROOT, so
+# the import survived; nothing guaranteed that, and the next function the
+# appender reuses would have resolved paths under a directory that is not
+# there. On the box this resolves to exactly the old value.
+ROOT = Path(os.environ.get("RW2_ROOT") or Path(__file__).resolve().parents[1])
 WEIGHTS = ROOT / "data/modern_corpus/nldas_basin_weights.pkl"
 CKPT = ROOT / "data/modern_corpus/_nldas_monthly"
 OUT = ROOT / "data/modern_corpus/camels_corpus_nldas_modern_areal"
