@@ -39,13 +39,51 @@ import numpy as np
 import pandas as pd
 
 GFS = "data/mblstm/gfs_fcst_areal14"
-REF = "data/modern_corpus/v3/camels_corpus_gridmetfix3_m3"
+# ⚠️⚠️ THE ARBITER MUST BE THE DERIVED-CALENDAR PRODUCT, AND IT MUST BE THE ONE
+# THE MEMBER IS SERVED ON. This was camels_corpus_gridmetfix3_m3 -- gridMET --
+# and that single line produced twelve "misalignment" failures that belong to
+# the reference, not to the build.
+#
+# Measured 2026-10-17, per basin, median over 671 basins, delta = r@0 - r@-1
+# (positive = aligned at k=0), temperature_2m_max:
+#
+#   lead 1   vs gridMET  +0.04170  ( 99.7% of basins prefer k=0)
+#   lead 1   vs NLDAS-2  +0.05960  (100.0%)
+#   lead 7   vs gridMET  -0.00304  ( 45.5%)   <- the screen's failure
+#   lead 7   vs NLDAS-2  +0.02436  ( 99.3%)   <- cleanly aligned
+#
+# So at the first lead where the old screen failed, the build is aligned
+# against the served product with 99.3% breadth and a CI nowhere near zero.
+#
+# This is a conclusion this project had already reached and I did not apply:
+# gridMET carries an inherited one-day offset, and NLDAS-2 is the right arbiter
+# precisely because it is HOURLY-NATIVE -- our own builder aggregates its hours
+# into calendar days, so its day labelling is DERIVED rather than inherited
+# from someone else's station-reporting convention. Auditing an offset against
+# a product that has its own is how a build gets blamed for its reference.
+#
+# It is also the operationally correct choice regardless: the member's encoder
+# is fed NLDAS-2 areal, so the decoder forcing has to be aligned to THAT, not
+# to a third product neither arm ever sees.
+REF = os.environ.get(
+    "RW2_SCREEN14_REF",
+    "data/modern_corpus/camels_corpus_nldas_modern_areal")
+#: Kept so the gridMET scan can still be run as a SECONDARY cross-check --
+#: a disagreement between the two is informative about the reference, which is
+#: exactly what it turned out to be here. Never the arbiter.
+REF_SECONDARY = "data/modern_corpus/v3/camels_corpus_gridmetfix3_m3"
 VARS = ["precipitation_sum", "temperature_2m_mean", "temperature_2m_max",
         "temperature_2m_min", "shortwave_radiation_sum", "vapor_pressure"]
 KS = (-2, -1, 0, 1, 2)
 
 #: Registered thresholds. The lead-1 screen's own passing values are the
-#: anchor: precip best_k 0, ratio 0.869, r at 0 >= 0.5.
+#: Lead-1 anchor. ⚠️ THE ANCHOR VALUE IS REFERENCE-SPECIFIC and the registered
+#: one (precip ratio 0.869, r@0 >= 0.5) was measured against gridMET. Against
+#: the arbiter the same build reads ratio 1.032 and r@0 0.770 -- better on both
+#: counts, which is further evidence about the reference rather than about the
+#: build. The BAND is wide enough (0.7..1.4) not to be reference-specific, so it
+#: is kept unchanged; only the quoted anchor moves, and it is quoted here with
+#: the product it was measured on so the two cannot be confused again.
 RATIO_LO, RATIO_HI = 0.7, 1.4
 R0_MIN = 0.5
 MONOTONE_TOL = 0.02
