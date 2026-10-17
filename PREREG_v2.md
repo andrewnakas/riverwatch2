@@ -4688,6 +4688,93 @@ allows four times that before the shape is called wrong, and the STOP is GATE
 | any marginal cost outside **−0.004 … 0.000** | Report the shape as **unexplained** and do not extrapolate past the measured rungs. The label keeps quoting the nearest measured rung and keeps its extrapolation warning. |
 | any rung ≤ **−0.030** | **STOP** on that depth: the gap must be closed operationally or the member's served skill re-priced from scratch. |
 
+# 14-LEAD AREAL GFS — VALIDATION SCOPE, measured 2026-10-17
+
+The 14-lead areal GFS build is complete: **115 of 115** registered init dates
+(stride 14, the same sample as the lead-1 artifact), file gate PASS with
+completeness asserted against an independent expectation, and a lead-1
+regression of at most **0.125000 mm** against the **0.15625 mm** tolerance
+derived from GRIB2's 1/16 mm APCP packing step.
+
+**Scope of what the alignment screen validates, stated before any decoder
+number is produced from this artifact:**
+
+| leads | alignment verdict against the served reference |
+|---|---|
+| **1 – 11** | ✅ **validated.** `best_k = 0` for all six channels at every lead, with one exception at lead 10 (`temperature_2m_max`) which the paired per-basin bootstrap classifies as **unresolvable**: k=0 trails by 0.00035, CI [−0.00115, +0.00060] over 671 basins. |
+| **12 – 14** | ⛔ **not validated.** Ten channel-leads show a *resolvable* 1-day preference for k=−1, deficits 0.0013…0.0144 with bootstrap CIs excluding zero. Pooled precipitation r@0 at these leads is 0.104, 0.084, 0.077 — the forecast signal is essentially gone, and the residual timing preference is unexplained. |
+
+⇒ **A decoder-forcing gate built on this artifact may use leads 1–11. It may
+not quote a per-lead number at leads 12–14.** The member's own horizon is 14,
+so this is a real restriction on the product and not a technicality.
+
+## The reference was the bug, and it had been recorded before
+
+The screen first returned 18 failures starting at lead 7. It was validating
+against `camels_corpus_gridmetfix3_m3` — gridMET. Measured per basin, median
+over 671, Δ = r@0 − r@−1 (positive = aligned at k=0), `temperature_2m_max`:
+
+| lead | vs gridMET | vs NLDAS-2 areal (served) |
+|---|---|---|
+| 1 | +0.04170 (99.7% of basins) | **+0.05960 (100.0%)** |
+| 7 | −0.00304 (45.5%) ⬅ the first "failure" | **+0.02436 (99.3%)** |
+| 12 | −0.01196 (33.8%) | −0.00109, CI spans 0 |
+
+Lead-1 precipitation moved with it: **r@0 0.511 → 0.770**, mean ratio
+**0.910 → 1.032**. Two reasons the arbiter had to be NLDAS-2, neither of which
+depends on the outcome: the member's **encoder is fed NLDAS-2 areal**, so the
+decoder forcing must align to that calendar; and GFS-areal and NLDAS-2-areal
+**share the basin-weight reduction**, so the contrast varies only
+forecast-vs-observed, where GFS-vs-gridMET varies product, grid and areal
+method as well.
+
+⚠️ This project had already concluded that NLDAS-2 is the right arbiter because
+its calendar days are **derived** by our own builder rather than inherited, and
+that gridMET carries an inherited offset. I did not apply it when writing a new
+screen. The reference is one line; the mechanism I chased instead was a day's
+work and was **falsified** — a UTC-vs-local day boundary predicts the deficit
+grows westward, and Spearman(longitude, Δ) = −0.043, p = 0.28, with the *west*
+quartile the best-aligned of the four.
+
+## Two registered rules that fail and are THEMSELVES uncalibrated
+
+Reported as failing. **Not relaxed** — a rule rewritten after seeing the result
+it fails is not a rule, and the fix is to calibrate them, which has not been
+done:
+
+1. `lead 11 precip max 211.8 > 1.3x observed 134.2`. This compares the maximum
+   of ~77,000 GFS basin-days to 1.3× the maximum of the same number of observed
+   ones. An extreme order statistic has no stated sampling distribution here,
+   so the factor 1.3 is a guess, and 211.8 mm/day is physically attainable.
+2. `precip r@0 RISES from lead 10 (0.151) to 11 (0.178) by more than 0.02`. The
+   tolerance is 0.02, but the effective sample size of a pooled r over shared
+   init dates is closer to the **115 dates** than to the 77,000 rows, which puts
+   the sampling noise near 0.09 — four times the tolerance. The rule as written
+   cannot distinguish a real rise from noise.
+
+Both need the treatment the argmax rule just received: a bootstrap over the
+unit the sample actually consists of. Until then they stand as failures, and
+the leads 1–11 scope above does not depend on either of them.
+
+## What the calibration changed, and why it was needed
+
+The alignment rule was "the pooled argmax over five lags must be k=0", with no
+notion of whether that argmax is resolvable. It now runs a **paired per-basin
+bootstrap of (r@0 − r@best_k)**, 5,000 draws, basins as the resampling unit,
+and fails only when the whole interval sits below zero. Cases it cannot resolve
+are reported in a **separate list, counted as neither pass nor fail** — a check
+that quietly tolerates what it cannot measure is indistinguishable from one
+that passed, and they are explicitly not evidence of correct alignment either.
+On the gridMET run that reclassified 6 of 18; on the arbiter run, 5 of 15.
+
+⛔ The bookkeeping hypothesis is **falsified**, and that is evidence rather than
+preference: the gridMET deficit was monotone in lead and changed sign at lead
+6/7, while a wrong bucket window or a day-label offset is lead-independent by
+construction and would show at lead 1 — where k=0 won by 0.032. The bucket
+selection is also proven **structurally at build time**: `acc` records with
+`b − a == 6`, asserted to tile `24(L−1)..24L` disjointly, across all 115 dates
+× 14 leads, with `--verify-lead1` reproducing the single 24-hour record.
+
 # GATE 4 — WHICH FORECAST PRODUCT SHOULD DRIVE THE DECODER?
 
 **Registered 2026-10-12, before either arm exists in comparable form.** The
