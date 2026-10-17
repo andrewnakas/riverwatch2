@@ -141,3 +141,47 @@ def test_an_empty_archive_exits_nonzero_rather_than_publishing():
                        capture_output=True, text=True)
     assert r.returncode == 1
     assert not (sand / "benchmarks").exists()
+
+
+# ------------------------------------------------- generations may not be pooled
+
+def test_the_scorer_refuses_to_pool_served_generations():
+    """The archive's schema_version marks the SERVED CONFIGURATION, and on
+    2026-10-17 that changed materially: before it the forcing table was frozen,
+    the newest "observed" encoder days were point forecasts up to five days
+    old, leads past about 11 were served at the model's TRAINING MEAN, and the
+    NLDAS-2 areal append had never run.
+
+    Averaging across that boundary would fold a degraded configuration into the
+    first live skill number -- and the first number is the one that gets
+    quoted. So the scorer reports the mix and refuses, rather than quietly
+    averaging two things that are not the same product.
+    """
+    src = (ROOT / "scripts" / "score_m1_live.py").read_text()
+    assert 'r.get("schema_version")' in src, \
+        "the scorer must READ the archive's generation stamp, not just stamp its own"
+    assert "REFUSING to pool them" in src
+    assert "--allow-mixed-generations" in src
+    assert "--generation" in src
+    # The refusal must be a non-zero exit, not a warning: a warning in a log
+    # nobody reads is how the missing areal-append script cost three days.
+    i = src.index("REFUSING to pool them")
+    assert "return 1" in src[i:i + 400], \
+        "the refusal must exit non-zero, not merely print"
+
+
+def test_mixed_generations_is_opt_in_and_named_as_a_comparison():
+    """The escape hatch exists for a deliberate comparison BETWEEN generations.
+    It must not read like a convenience flag."""
+    src = (ROOT / "scripts" / "score_m1_live.py").read_text()
+    i = src.index("--allow-mixed-generations")
+    blurb = src[i:i + 600]
+    assert "never for a headline" in blurb
+
+
+def test_the_live_scorer_still_stamps_its_own_schema():
+    """Reading the archive's generation must not have displaced the scorer's
+    own output version."""
+    src = (ROOT / "scripts" / "score_m1_live.py").read_text()
+    assert 'SCHEMA = "m1-live-' in src
+    assert '"schema_version": SCHEMA' in src

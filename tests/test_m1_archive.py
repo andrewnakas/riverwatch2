@@ -118,6 +118,21 @@ def test_missing_staging_is_refused_not_silently_ok(sandbox):
     assert r.returncode == 1
 
 
+def _script_schema_version() -> str:
+    """Read the stamp out of the script rather than duplicating the literal.
+
+    This test is about WHERE the stamp is applied, not about which string it
+    is, and the string legitimately changes: it is bumped whenever the served
+    configuration changes, which is the whole reason it exists. A hardcoded
+    copy here would fail every bump and teach nothing.
+    """
+    import re
+    src = (ROOT / "scripts" / "snapshot_m1_archive.py").read_text()
+    m = re.search(r'^SCHEMA_VERSION = "([^"]+)"', src, re.M)
+    assert m, "SCHEMA_VERSION not found in snapshot_m1_archive.py"
+    return m.group(1)
+
+
 def test_schema_version_is_restamped_at_consolidation(sandbox):
     """Stamped here, not at shard-write time, so a backfill can always tell
     which generation of the pipeline produced a row."""
@@ -125,7 +140,21 @@ def test_schema_version_is_restamped_at_consolidation(sandbox):
     _write_shard(sandbox / "archive_staging_m1" / "shard_0.csv.gz", stale)
     _run(sandbox)
     rows = _read(sandbox / "archive_m1" / "2026" / "10" / "2026-10-11.csv.gz")
-    assert {r["schema_version"] for r in rows} == {"m1-fcst-1"}
+    assert {r["schema_version"] for r in rows} == {_script_schema_version()}
+
+
+def test_the_generation_stamp_documents_what_changed():
+    """A version bump that says nothing is a version bump nobody can use. The
+    point of the stamp is that a future scorer can tell a degraded served
+    configuration from a healthy one, which requires the comment to name the
+    difference, not just the date."""
+    src = (ROOT / "scripts" / "snapshot_m1_archive.py").read_text()
+    i = src.index("SCHEMA_VERSION = ")
+    head = src[max(0, i - 2500):i]
+    assert "m1-fcst-1" in head and "m1-fcst-2" in head, \
+        "both generations must be described where the stamp is defined"
+    assert "TRAINING MEAN" in head or "training mean" in head
+    assert "FROZEN" in head or "frozen" in head
 
 
 def test_two_issue_dates_in_one_payload_split(sandbox):

@@ -34,7 +34,7 @@ import glob
 import gzip
 import json
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -112,6 +112,17 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="2000-01-01")
     ap.add_argument("--end", default=date.today().isoformat())
+    ap.add_argument("--generation", default="",
+
+                    help="score only rows carrying this archive "
+
+                         "schema_version, e.g. m1-fcst-2")
+
+    ap.add_argument("--allow-mixed-generations", action="store_true",
+
+                    help="pool rows from different served "
+
+                         "configurations. For a deliberate comparison between generations, never for a headline.")
     ap.add_argument("--horizon", type=int, default=1,
                     help="lead day to score; 1 is the only lead with a published figure")
     ap.add_argument("--out", default=str(OUT))
@@ -123,6 +134,44 @@ def main() -> int:
         return 1
     rows = [r for r in rows if int(r["horizon_day"]) == a.horizon]
     print(f"{len(rows)} archived rows at lead {a.horizon}")
+
+    # ⚠️⚠️ GENERATIONS MAY NOT BE POOLED. The archive stamps a schema_version at
+    # snapshot time precisely so that rows produced under different SERVED
+    # CONFIGURATIONS stay distinguishable, and on 2026-10-17 the configuration
+    # changed materially: before it, the forcing table was frozen, the newest
+    # "observed" encoder days were point forecasts up to five days old, leads
+    # past ~11 were served at the model's TRAINING MEAN, and the areal append
+    # had never run. Scoring across that boundary would fold a degraded
+    # configuration into the first live number -- and the first number is the
+    # one that gets quoted.
+    #
+    # The scorer therefore reports the mix and REFUSES, rather than averaging
+    # two things that are not the same product. --allow-mixed-generations is
+    # for a deliberate comparison BETWEEN generations, never for a headline.
+    gens = Counter(r.get("schema_version") or "unstamped" for r in rows)
+    if len(gens) > 1:
+        print("archived generations present at this lead:")
+        for g, n in sorted(gens.items(), key=lambda kv: -kv[1]):
+            days = sorted({r["issued_date"] for r in rows
+                           if (r.get("schema_version") or "unstamped") == g})
+            print(f"  {g}: {n} rows over {len(days)} issue dates "
+                  f"({days[0]}..{days[-1]})")
+        if not a.allow_mixed_generations:
+            print("REFUSING to pool them -- these are different served "
+                  "configurations, not noise. Re-run with --generation to pick "
+                  "one, or --allow-mixed-generations if the mix IS the "
+                  "question.")
+            return 1
+        print("--allow-mixed-generations: pooling anyway, as asked")
+    if a.generation:
+        before = len(rows)
+        rows = [r for r in rows
+                if (r.get("schema_version") or "unstamped") == a.generation]
+        print(f"generation {a.generation!r}: {len(rows)} of {before} rows")
+        if not rows:
+            print(f"no rows for generation {a.generation!r}; known: "
+                  f"{sorted(gens)}")
+            return 1
 
     # series -> (station, target_date) -> predicted
     pred = defaultdict(dict)

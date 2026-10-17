@@ -46,7 +46,25 @@ ROOT = Path(__file__).resolve().parents[1]
 STAGING = ROOT / "archive_staging_m1"
 ARCHIVE = ROOT / "archive_m1"
 
-SCHEMA_VERSION = "m1-fcst-1"
+#: ⚠️ BUMPED 2026-10-17 from "m1-fcst-1". The stamp exists so a future backfill
+#: can tell GENERATIONS apart, and the served configuration changed materially
+#: on this date, which means rows either side of it are not comparable:
+#:
+#:   m1-fcst-1  (through 2026-10-16) -- the published forcing table was FROZEN,
+#:              its newest "observed" encoder days were point FORECASTS up to
+#:              five days old, its decoder rows ran out at lead 10-12 of 14 and
+#:              the remaining leads were served at the model's TRAINING MEAN
+#:              (a missing forcing row is zero-filled in z-space, not refused),
+#:              and the NLDAS-2 areal append had never once run.
+#:   m1-fcst-2  (from 2026-10-17) -- forcing refreshed every build (build ages
+#:              min/median/max 0 over all 490 basins), the areal append running
+#:              and the areal window within one day of what GATE 2 priced, and
+#:              the member emitting only the leads it has real forcing for.
+#:
+#: Pooling the two would mix a degraded configuration into the first live skill
+#: number, and the first read is the one that gets quoted. `score_m1_live.py`
+#: refuses to pool generations unless explicitly told to.
+SCHEMA_VERSION = "m1-fcst-2"
 HEADER = ["issued_date", "station_id", "target_date", "horizon_day", "series",
           "q_cfs", "q_lo_raw", "q_hi_raw", "schema_version"]
 
