@@ -1,0 +1,70 @@
+{
+ "_note": "Bounds the CPU-vs-GPU and subset-vs-full-corpus differences TOGETHER for GATE 3's two arms. Registered in PREREG_v2.md GATE 3 ADDENDUM 2026-10-17 (ii). May not be used to adjust either arm.",
+ "seed": 501,
+ "frame": "val1",
+ "basins": 8,
+ "rows_joined": 11584,
+ "truth_max_abs_diff": 0.0,
+ "max_abs_nse_diff": 2.481676319998627e-08,
+ "max_abs_pred_diff_cfs": 0.0039064999982656445,
+ "registered_threshold": 0.001,
+ "verdict": "PROCEED AS REGISTERED",
+ "per_basin": [
+  {
+   "station_id": "02027000",
+   "nse_cpu": 0.7714880840452356,
+   "nse_gpu": 0.771488074688066,
+   "d_nse": 9.357169594714776e-09,
+   "max_abs_pred_diff": 0.00027449999993223173
+  },
+  {
+   "station_id": "02027500",
+   "nse_cpu": 0.7947488649574044,
+   "nse_gpu": 0.7947488421348335,
+   "d_nse": 2.2822570833191946e-08,
+   "max_abs_pred_diff": 0.0003050000000257569
+  },
+  {
+   "station_id": "02111500",
+   "nse_cpu": 0.8238226759327038,
+   "nse_gpu": 0.8238226753155349,
+   "d_nse": 6.171688715639334e-10,
+   "max_abs_pred_diff": 0.0006104999997660343
+  },
+  {
+   "station_id": "05584500",
+   "nse_cpu": 0.894927935745828,
+   "nse_gpu": 0.8949279109290648,
+   "d_nse": 2.481676319998627e-08,
+   "max_abs_pred_diff": 0.001831500000662345
+  },
+  {
+   "station_id": "07315700",
+   "nse_cpu": 0.641319656709463,
+   "nse_gpu": 0.641319637161057,
+   "d_nse": 1.9548406005043262e-08,
+   "max_abs_pred_diff": 0.0039064999982656445
+  },
+  {
+   "station_id": "07335700",
+   "nse_cpu": 0.9361908421337842,
+   "nse_gpu": 0.9361908627208403,
+   "d_nse": -2.0587056059895303e-08,
+   "max_abs_pred_diff": 0.0012205000002722954
+  },
+  {
+   "station_id": "09081600",
+   "nse_cpu": 0.9947666978564781,
+   "nse_gpu": 0.9947666969405746,
+   "d_nse": 9.15903464182577e-10,
+   "max_abs_pred_diff": 0.0004885000000740547
+  },
+  {
+   "station_id": "12143600",
+   "nse_cpu": 0.9095545619606857,
+   "nse_gpu": 0.9095545577714994,
+   "d_nse": 4.189186331160499e-09,
+   "max_abs_pred_diff": 0.0007324999996853876
+  }
+ ]
+}
