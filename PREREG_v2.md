@@ -4498,6 +4498,45 @@ The cohort's own val1 coverage is NOT re-screened to match, because the control
 is the published reference the band was set against; re-screening it would
 change what the comparison means after the fact.
 
+## ADDENDUM 2026-10-17 (ii) — the arms are on DIFFERENT DEVICES, and that has to be bounded
+
+Recorded while the treatment arm is still dumping, so it is a stated condition
+rather than a caveat discovered after a number.
+
+GATE 3 compares an out-of-cohort **treatment** arm against an in-cohort
+**control**. The control is not being recomputed — `m1_nldasm9_s50{1..5}_val1`
+already exist, which is most of why this gate is cheap. But they were dumped on
+the **GPU**, and the treatment arm is being dumped on the **CPU**, because the
+1080 is held by an unrelated long-running serving process that will not exit.
+
+So the comparison has a second difference in it besides cohort membership, and
+the deciding statistic is a difference of LEVELS between the arms — exactly the
+shape that cannot absorb a systematic offset. Floating-point accumulation order
+differs between CPU and CUDA kernels, so the arms are not guaranteed
+bit-identical even for the same basin and window.
+
+**The bound, measured before the verdict is read:** re-dump a small set of
+**cohort** basins on the CPU with the same checkpoint and compare them against
+those basins' rows in the existing GPU control.
+
+- If the per-basin NSE difference is at the 1e-6 level, it cannot move a median
+  quoted to three decimals and the gate proceeds as registered, with the bound
+  recorded in the verdict.
+- If it is larger than **0.001** on any basin, the control arm is re-dumped on
+  the CPU before any verdict is computed, so that both arms share a device and
+  cohort membership is once again the only difference.
+
+⚠️ That comparison also carries a second difference — a subset corpus versus
+the full 490-basin one. Per-window computation should not depend on corpus
+membership (the weather scaler comes from the checkpoint's own cfg, and
+`q_norm_stats` is per station from its own history), but "should not" is not a
+measurement. The check therefore bounds the two together, which is sufficient:
+if the combined effect is negligible, neither part of it matters. If it is not,
+they have to be separated before anything is reported.
+
+⛔ Whatever that bound turns out to be, it may not be used to adjust either
+arm. It decides only whether the registered comparison is valid as it stands.
+
 # GATE 2b — WHAT A SUBSTITUTED ENCODER DAY COSTS, PER DAY
 
 *(Registered 2026-10-16 as "the gap is five days, not four"; the title is amended because the gap was then measured at six and the gate was widened to a ladder. The original reasoning is preserved verbatim below, and the amendment that supersedes its single-depth protocol follows it — a heading that outlives its content is the same defect this project's served label exists to prevent.)*
