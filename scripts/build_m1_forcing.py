@@ -254,6 +254,11 @@ def merge_and_write(sid: str, fresh: pd.DataFrame, *, keep_days: int) -> tuple[i
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--cohort", default="data/m1_cohort.json")
+    ap.add_argument("--tier2", default="data/m1_cohort_tier2.json",
+                    help="GATE 3's out-of-cohort SERVED basins, refreshed on "
+                         "exactly the same cadence as the training cohort. "
+                         "Absent is fine (it simply means tier 2 is not "
+                         "deployed); set to '' to refresh tier 1 only.")
     ap.add_argument("--stations", default="data/stations_v15.json")
     ap.add_argument("--keep-days", type=int, default=425,
                     help="rows retained per basin: 365 encoder + slack for a stale gauge")
@@ -293,6 +298,24 @@ def main() -> int:
     a = ap.parse_args()
 
     cohort = load_cohort(Path(a.cohort))
+    # ⚠️ THE BUILDER MUST REFRESH EVERYTHING THAT IS SERVED. This script warned
+    # about exactly this on every run while the 135 GATE 3 candidates sat on
+    # the branch unserved and unrefreshed: "widening the cohort REQUIRES
+    # widening this script's basin list in the same change." GATE 3 passed, 130
+    # of them are now served, and this is that change. A served basin whose
+    # forcing is never refreshed serves a frozen table -- the defect that cost
+    # five days of degraded output before anyone noticed.
+    n_tier1 = len(cohort)
+    if a.tier2:
+        t2 = Path(a.tier2)
+        if t2.exists():
+            extra = [s for s in load_cohort(t2) if s not in set(cohort)]
+            cohort = list(cohort) + extra
+            log(f"serving domain: {n_tier1} tier-1 (trained) + {len(extra)} "
+                f"tier-2 (GATE 3) = {len(cohort)} basins to refresh")
+        else:
+            log(f"no tier-2 file at {t2}; refreshing tier 1 only "
+                f"({n_tier1} basins)")
     latlon = load_latlon(Path(a.stations))
     missing_meta = [s for s in cohort if s not in latlon]
     if missing_meta:

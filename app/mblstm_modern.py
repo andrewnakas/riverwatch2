@@ -271,10 +271,17 @@ def forecast(
     try:
         attrs_in = static_attrs or {}
         sid = str(attrs_in.get("id") or attrs_in.get("site_no") or "")
-        if not sid or not camels_attrs.in_cohort(sid):
+        if not sid or not camels_attrs.in_served_domain(sid):
             # Out of domain -> no number at all. Not recorded as a skip reason:
-            # 9,361 of the 9,851 served gauges are outside the cohort by design
-            # and noting it on each would be pure noise.
+            # the great majority of the 9,851 served gauges are outside this
+            # member's domain by design and noting it on each would be noise.
+            #
+            # ⭐ in_served_domain, not in_cohort: GATE 3 authorised 130 CAMELS
+            # basins the member was NOT trained on, which serve under their own
+            # measured median (0.854214 on val1) rather than the cohort's
+            # (0.876335). `in_cohort` still means "trained on" and is what
+            # decides WHICH number a label quotes, so widening it instead
+            # would have silently re-pointed every caller that picks a figure.
             return None
         if q_hist is None or len(q_hist) < CONTEXT_DAYS:
             last_skip_reason = (f"needs {CONTEXT_DAYS}d discharge history, "

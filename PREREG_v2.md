@@ -4537,6 +4537,66 @@ they have to be separated before anything is reported.
 ⛔ Whatever that bound turns out to be, it may not be used to adjust either
 arm. It decides only whether the registered comparison is valid as it stands.
 
+## RESULT 2026-10-17 — GATE 3 PASSES, IN BAND. Coverage 490 -> 620.
+
+Read after all five treatment dumps completed and after the device bound was
+measured, in that order, as registered.
+
+| | |
+|---|---|
+| out-of-cohort median NSE | **0.854214** [0.838676, 0.895274], 130 basins, 187,914 rows |
+| in-cohort control | **0.876335** [0.862010, 0.888978], 490 basins, 708,266 rows |
+| level gap (out − in) | **−0.022121** |
+| paired Δ vs persistence, out-of-cohort rows | **+0.190881** [+0.073930, +0.302255], breadth **0.823**, 130 basins |
+| persistence's own median on those rows | 0.587763 |
+| registered band 0.82 … 0.89 | **IN BAND** |
+| STOP 0.75 | not approached |
+| falsifier (out ≥ in) | **did not fire** — out-of-cohort is worse, the expected direction |
+
+**Verdict, from the registered decision table: SERVE, LABELLED OUT-OF-COHORT,
+quoting the out-of-cohort median and never the cohort one, with the UI marking
+these basins as a distinct tier.** That is the 0.78 ≤ median < 0.86 row.
+
+⚠️ **Stated because the table is keyed on the point estimate:** 0.854214
+selects this row, but the CI [0.838676, 0.895274] **spans 0.86**, so the data do
+not exclude the row above it. The registration decides on the point estimate and
+that is what was followed; the honest summary is the point estimate *with* its
+interval, and this is not evidence that the top row was wrong.
+
+⭐ The statistic that actually licenses serving is the paired one, and it is
+unambiguous: **+0.190881 against persistence** on the same rows, CI excluding
+zero, breadth 0.823 — the member beats "tomorrow equals today" at 82% of these
+gauges, at basins it was never trained on.
+
+### Deviation recorded: the two partial-coverage basins
+
+The addendum said they would be "scored and reported separately". The first run
+reported `n_scored: 0` for them, correctly — the treatment corpus was built from
+the 130-basin scoreable list, so the dump never covered them. Closed with a
+2-basin dump rather than left as an unexplained zero
+(`benchmarks/m1_gate3_partials.json`):
+
+| basin | val1 NSE | observed days | rows |
+|---|---|---|---|
+| `06408700` | **0.912948** | 1,113 | 1,107 |
+| `07290650` | **0.564878** | 1,092 | 887 |
+
+One well above the 130-basin median and one well below any sensible serving
+bar. With n = 2 that generalises to nothing, which is why they stay out of the
+deciding median **and** out of the served tier — serving them remains a
+separate decision on these per-basin figures.
+
+### What shipped with it
+
+`in_cohort` was deliberately **not** widened: it still means "trained on",
+which is what decides *which* measured number applies, and widening it would
+have silently re-pointed every caller that picks a figure. "May the member run
+here" became `in_served_domain`, and `domain_tier` returns 1 / 2 / 0 explicitly.
+The forcing builder now refreshes tier 2 on the same cadence — its own warning
+had said, on every run for days, that widening the cohort *requires* widening
+its basin list in the same change, and a served basin whose forcing is never
+refreshed serves a frozen table.
+
 # GATE 2b — WHAT A SUBSTITUTED ENCODER DAY COSTS, PER DAY
 
 *(Registered 2026-10-16 as "the gap is five days, not four"; the title is amended because the gap was then measured at six and the gate was widened to a ladder. The original reasoning is preserved verbatim below, and the amendment that supersedes its single-depth protocol follows it — a heading that outlives its content is the same defect this project's served label exists to prevent.)*

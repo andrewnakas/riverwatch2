@@ -25,9 +25,17 @@ from typing import Optional
 ROOT = Path(__file__).resolve().parents[1]
 ATTRS_PATH = ROOT / "data" / "camels_attrs.json"
 COHORT_PATH = ROOT / "data" / "m1_cohort.json"
+#: TIER 2 -- CAMELS basins the member was NOT trained on, authorised by GATE 3
+#: and served under their OWN measured median (0.854214 on val1 over 130
+#: basins) rather than the cohort's. Kept in a SEPARATE file from the training
+#: cohort on purpose: the two have different measured skill, and a single list
+#: would make it impossible for the label to tell a reader which number applies
+#: to the basin in front of them.
+TIER2_PATH = ROOT / "data" / "m1_cohort_tier2.json"
 
 _attrs: Optional[dict] = None
 _cohort: Optional[frozenset] = None
+_tier2: Optional[frozenset] = None
 
 
 def _load_attrs() -> dict:
@@ -56,8 +64,51 @@ def cohort() -> frozenset:
     return _cohort
 
 
+def tier2() -> frozenset:
+    """The GATE 3 out-of-cohort basins the member may serve, labelled.
+
+    Empty on any failure, exactly as `cohort()` is: the fallback must be to
+    serve FEWER basins, never to serve one whose skill was never measured.
+    """
+    global _tier2
+    if _tier2 is None:
+        try:
+            _tier2 = frozenset(json.loads(TIER2_PATH.read_text())["cohort"])
+        except Exception:
+            _tier2 = frozenset()
+    return _tier2
+
+
 def in_cohort(station_id: str) -> bool:
+    """TIER 1 only -- the basins the member was trained on.
+
+    Deliberately unchanged in meaning. Callers that need "may the member run
+    here" want `in_served_domain`; callers that need "was this basin trained
+    on" want this. Widening `in_cohort` to cover tier 2 would have silently
+    re-pointed every existing caller, including the ones that pick which
+    measured number to quote.
+    """
     return str(station_id) in cohort()
+
+
+def in_served_domain(station_id: str) -> bool:
+    """May the member run on this basin at all -- tier 1 or tier 2."""
+    sid = str(station_id)
+    return sid in cohort() or sid in tier2()
+
+
+def domain_tier(station_id: str) -> int:
+    """1 = trained on, 2 = GATE 3 out-of-cohort, 0 = out of domain.
+
+    The number a label quotes depends on this, so it is returned explicitly
+    rather than inferred by the caller from two membership tests.
+    """
+    sid = str(station_id)
+    if sid in cohort():
+        return 1
+    if sid in tier2():
+        return 2
+    return 0
 
 
 def attrs_for(station_id: str) -> dict:

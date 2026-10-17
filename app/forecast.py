@@ -420,6 +420,13 @@ class StationForecast:
     # curve in `members[...]` has both. Coverage computed from them is the
     # model's own calibration, not the calibration of what was displayed.
     member_quantiles: Dict[str, List[dict]] = field(default_factory=dict)
+    # Which measured number applies to THIS basin, per member. Today only
+    # `mblstm_modern` sets it: "in_cohort" for the 490 it was trained on,
+    # "out_of_cohort_gate3" for the 130 GATE 3 authorised, which serve under a
+    # different measured median (0.854214 vs 0.876335). GATE 3's decision table
+    # requires those basins be marked as a distinct tier, and a tier that lives
+    # only in a cohort file nobody ships cannot be marked.
+    member_labels: Dict[str, str] = field(default_factory=dict)
     # AUDIT (Phase 1): data-freshness + degradation transparency. These let a
     # consumer tell a fresh, full-ensemble forecast apart from one issued off a
     # stale gauge or with members silently dropped — previously indistinguishable.
@@ -1243,6 +1250,8 @@ def forecast_station(
     # Per-member predictive quantiles, for the verification archive. Only the
     # MODERN-1 member has a quantile head today.
     member_quantiles: Dict[str, List[dict]] = {}
+    # member -> which measured domain tier this basin is in (see the dataclass).
+    member_labels: Dict[str, str] = {}
 
     persist = persistence_forecast(q_hist, horizon)
     # persistence is by definition q_obs_last for all h, so anchor is a no-op
@@ -1378,7 +1387,7 @@ def forecast_station(
         # member would otherwise spend that I/O only to emit a refusal shaped
         # like a forcing problem.
         if (_mblstm_modern._is_enabled()
-                and _mblstm_modern.camels_attrs.in_cohort(station_id)
+                and _mblstm_modern.camels_attrs.in_served_domain(station_id)
                 and _mblstm_modern._try_load()):
             from . import modern_forcing as _mf
             # Derive the window from `history_days`, NOT from `start`: on the
@@ -1429,6 +1438,24 @@ def forecast_station(
                 if _mblstm_modern.last_degrade_reason:
                     notes.append("mblstm_modern degraded: "
                                  f"{_mblstm_modern.last_degrade_reason}")
+                # WHICH measured number applies to THIS basin. GATE 3's
+                # decision table requires that out-of-cohort basins be marked
+                # as a distinct tier and quoted their own median (0.854214)
+                # and never the cohort's (0.876335). A tier that exists only
+                # in a cohort file nobody ships cannot be marked, so it
+                # travels with the forecast.
+                _tier = _mblstm_modern.camels_attrs.domain_tier(station_id)
+                if _tier == 2:
+                    member_labels["mblstm_modern"] = "out_of_cohort_gate3"
+                    notes.append(
+                        "mblstm_modern is serving this basin OUT OF COHORT: it "
+                        "was not trained here. GATE 3 measured these 130 "
+                        "basins at a median val1 NSE of 0.854214 "
+                        "[0.838676, 0.895274], against 0.876335 for the 490 "
+                        "basins it was trained on -- quote the former for this "
+                        "gauge, never the latter.")
+                elif _tier == 1:
+                    member_labels["mblstm_modern"] = "in_cohort"
             elif _mblstm_modern.last_skip_reason:
                 # A handled failure is a silent failure -- say why it skipped.
                 notes.append(f"mblstm_modern unavailable: {_mblstm_modern.last_skip_reason}")
@@ -2386,6 +2413,7 @@ def forecast_station(
         nwm_bias_scale_used=nwm_bs_used,
         member_bias_scales=dict(member_bias_scales),
         member_quantiles=dict(member_quantiles),
+        member_labels=dict(member_labels),
         _v14_4_panel=v14_4_panel,
     )
 

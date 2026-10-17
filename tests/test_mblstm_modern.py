@@ -335,8 +335,8 @@ def test_hook_reports_why_it_skipped():
 
 
 def test_hook_gates_on_cohort_before_fetching():
-    """Reading forcing for all 9,851 served gauges to then discard 9,361 of
-    them would be wasted work on every build -- API traffic when the hook
+    """Reading forcing for all 9,851 served gauges to then discard the 9,231
+    outside this member's domain would be wasted work on every build -- API traffic when the hook
     fetches, and 9,851 file reads when it uses the published table.
 
     The checkpoint load is also a gate: when the checkpoints cannot be loaded
@@ -344,11 +344,18 @@ def test_hook_gates_on_cohort_before_fetching():
     shaped like a forcing problem.
     """
     hook = _modern_hook_source(code_only=True)
-    i_gate = hook.index("in_cohort")
+    # ⚠️ The gate is `in_served_domain`, not `in_cohort`. GATE 3 authorised 130
+    # basins the member was NOT trained on, so "may it run here" and "was it
+    # trained here" became different questions: `in_cohort` still answers the
+    # second and is what decides which measured median a label quotes. This
+    # test is about the first, so it anchors on the gate the hook actually
+    # calls -- anchoring on the old name passed only until "in_cohort"
+    # appeared anywhere else in the hook, which it now does, below the fetch.
+    i_gate = hook.index("in_served_domain")
     i_load = hook.index("_try_load")
     reads = [hook.index(tok) for tok in ("load_table", "fetch_history") if tok in hook]
     assert reads, "the hook must read forcing somehow"
-    assert i_gate < min(reads), "cohort gate must precede the forcing read"
+    assert i_gate < min(reads), "domain gate must precede the forcing read"
     assert i_load < min(reads), "checkpoint load must precede the forcing read"
 
 
