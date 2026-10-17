@@ -1,0 +1,69 @@
+{
+ "_note": "GATE 3: whether nldasm9 may serve CAMELS basins outside its 490-basin training cohort. Same checkpoints, same areal forcing, same val1 window; only training-set membership differs. The deciding statistic is an UNPAIRED difference of LEVELS between two disjoint basin sets -- pairing does not exist here, and the deviation from this project's standing rule was recorded in advance in PREREG_v2.md. Registered there with its band, STOP and decision table before any number existed; the scoreable subset is fixed in benchmarks/m1_gate3_coverage.json.",
+ "frame": "val1",
+ "member": "nldasm9",
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "protocol": "modern-v3-9yr",
+ "out_of_cohort": {
+  "basins": 130,
+  "rows": 187914,
+  "median_nse": 0.8542135836863427,
+  "ci95": [
+   0.8386759341591457,
+   0.8952737407470195
+  ]
+ },
+ "in_cohort_control": {
+  "basins": 490,
+  "rows": 708266,
+  "median_nse": 0.8763346916541557,
+  "ci95": [
+   0.862010318413304,
+   0.8889783874447578
+  ]
+ },
+ "level_gap_out_minus_in": -0.02212110796781297,
+ "vs_persistence_out_of_cohort": {
+  "delta_member_minus_persistence": 0.19088104920048832,
+  "ci95": [
+   0.07393026062797159,
+   0.302255005041128
+  ],
+  "breadth": 0.823076923076923,
+  "basins": 130,
+  "median_nse_persistence": 0.5877629547314331
+ },
+ "partial_coverage_basins_reported_separately": {
+  "ids": [
+   "06408700",
+   "07290650"
+  ],
+  "n_scored": 0,
+  "median_nse": null,
+  "_why": "25-90% of the val window observed. Never pooled into the deciding median: a basin contributing ~1,100 days is not comparable to one contributing 1,461, and a median whose rows differ between arms has misled this project before."
+ },
+ "unscoreable_basins_may_not_be_served": {
+  "ids": [
+   "06154410",
+   "09480000",
+   "10348850"
+  ],
+  "_why": "gauged recently but not during val1, so this gate can say nothing about them in either direction"
+ },
+ "registered_band": [
+  0.82,
+  0.89
+ ],
+ "in_band": true,
+ "stop_threshold": 0.75,
+ "stopped": false,
+ "falsifier_fired": false,
+ "falsifier_note": null,
+ "verdict": "SERVE, LABELLED OUT-OF-COHORT, quoting the out-of-cohort median and never the cohort one. The UI must mark these basins as a distinct tier."
+}

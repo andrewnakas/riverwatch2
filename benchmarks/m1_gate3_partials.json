@@ -1,0 +1,30 @@
+{
+ "_note": "GATE 3's partial-coverage basins, scored separately and NEVER pooled into the deciding out-of-cohort median. Registered in PREREG_v2.md GATE 3 ADDENDUM 2026-10-16. With n=2 there is no median worth bootstrapping; both basins are reported individually and that is the limit of what they can say.",
+ "frame": "val1",
+ "member": "nldasm9",
+ "seeds": [
+  501,
+  502,
+  503,
+  504,
+  505
+ ],
+ "protocol": "modern-v3-9yr",
+ "basins": [
+  {
+   "station_id": "06408700",
+   "rows": 1107,
+   "val1_nse": 0.9129477556114629,
+   "observed_days_in_val_window": 1113
+  },
+  {
+   "station_id": "07290650",
+   "rows": 887,
+   "val1_nse": 0.5648778257610083,
+   "observed_days_in_val_window": 1092
+  }
+ ],
+ "deciding_median_they_are_excluded_from": 0.8542135836863427,
+ "may_be_served": null,
+ "_may_be_served_why": "Not decided by this artifact. These basins clear the SERVING criterion (recent discharge) but carry only 25-90% of the val window, so their own numbers rest on fewer days than every other basin in the gate. Serving them is a separate decision and must quote these per-basin figures, not the 130-basin median."
+}
