@@ -4498,7 +4498,9 @@ The cohort's own val1 coverage is NOT re-screened to match, because the control
 is the published reference the band was set against; re-screening it would
 change what the comparison means after the fact.
 
-# GATE 2b — THE GAP IS FIVE DAYS, NOT FOUR
+# GATE 2b — WHAT A SUBSTITUTED ENCODER DAY COSTS, PER DAY
+
+*(Registered 2026-10-16 as "the gap is five days, not four"; the title is amended because the gap was then measured at six and the gate was widened to a ladder. The original reasoning is preserved verbatim below, and the amendment that supersedes its single-depth protocol follows it — a heading that outlives its content is the same defect this project's served label exists to prevent.)*
 
 **Registered 2026-10-16, before any five-day number exists.** GATE 2's result
 (paired **−0.004018**, level **−0.036142**, 4 substituted days) stands exactly
@@ -4576,6 +4578,76 @@ quantity is the difference, as in GATE 1 and GATE 2.
 news: five days of substitution cannot cost less than four of the same kind on
 the same rows. It would mean the splice did not apply as intended, and the
 no-op check above is what should catch it first.
+
+## AMENDMENT 2026-10-17 — a LADDER, not a single depth, and why
+
+**No five-day number exists yet; nothing below revises a result.** The protocol
+above is amended before any measurement because the *configuration* it was
+written against was measured again and moved — for the third time, in the same
+direction, by the same kind of mistake.
+
+The sequence, recorded because the pattern matters more than the number:
+
+| what was probed | conclusion drawn | gap it implies |
+|---|---|---|
+| the 0000Z granule of day D | latency 5 days | 4 substituted days (GATE 2) |
+| all 24 hours of day D | a complete day lands at D+6 | 5 (GATE 2b as registered) |
+| which day is complete *right now* | newest complete is today−7 | **6** |
+
+Measured 2026-10-17 06:30 UTC by body size, nine sampled hours per day:
+`2026-10-10` **9/9** real granules, `2026-10-11` **7/9**, `2026-10-12` **3/9**.
+So the newest complete areal day is today−7, the encoder ends at t0 = today−1,
+and the live gap is **6**. The published label read exactly that
+(`substituted_encoder_days_median = 6`) on the 03:49Z build, and the published
+tables agree: newest areal `2026-10-10` for all 490 basins.
+
+⚠️ The lesson is that re-registering a single depth each time the latency is
+found to be one day worse is a losing game — three probes, three answers, each
+generous. So the gate stops chasing the frontier and measures the **marginal
+cost of a substituted day** instead.
+
+### Amended protocol
+
+A ladder of splice depths **5, 6 and 7**, each against GATE 2's same reused
+areal control, on the same 150 basins and the same val1 rows, with everything
+else identical to GATE 2. Depth 4 is already measured (**−0.004018**) and is
+the ladder's first rung, not re-run.
+
+The deciding quantity becomes the **per-day marginal cost** between adjacent
+rungs, reported with the paired delta at each depth and the difference of
+medians alongside — never instead.
+
+**Amended band: the per-day marginal cost between any adjacent rungs must lie
+in −0.004 … 0.000. STOP if any single rung's paired delta is below −0.030.**
+
+Derivation, fixed now. Depth 4 cost −0.004018 over four days, i.e. −0.001005
+per day averaged. Days further from t0 carry less antecedent-wetness
+information, so each additional day should cost **no more** than that average,
+which puts the expected marginal cost between 0 and about −0.001. The band
+allows four times that before the shape is called wrong, and the STOP is GATE
+2's own, unchanged.
+
+### What the ladder buys that a single depth does not
+
+1. The label can quote a **measured** number for whatever the live gap is,
+   including 7, without a new registration each time the frontier moves.
+2. It tests the linearity I explicitly declined to assume above. If the
+   marginal cost *grows* with depth, the cheap days are the ones nearest t0 and
+   closing the gap operationally is worth real effort; if it shrinks, the gap
+   is close to harmless and the appender's cadence does not matter much.
+3. ⛔ A rung that costs **less** than a shallower one is still a contradiction,
+   not good news, and the pre-committed no-op check — a row-moved count that
+   must rise with depth, above GATE 2's 216,952 at depth 4 — is what should
+   catch it before the delta is read.
+
+### Amended decision table
+
+| outcome | action |
+|---|---|
+| every marginal cost in band, and the live-gap rung ≥ **−0.010** | **Quote the live-gap rung.** The label stops reporting an extrapolation because the quoted number matches what is served, and it re-points automatically as the gap moves between measured rungs. |
+| marginal costs in band but the live-gap rung < **−0.010** | Quote the live-gap rung and say plainly that the accumulated substitution now costs more than GATE 2 suggested. Raise the appender's cadence so the frontier is caught the day it completes. |
+| any marginal cost outside **−0.004 … 0.000** | Report the shape as **unexplained** and do not extrapolate past the measured rungs. The label keeps quoting the nearest measured rung and keeps its extrapolation warning. |
+| any rung ≤ **−0.030** | **STOP** on that depth: the gap must be closed operationally or the member's served skill re-priced from scratch. |
 
 # GATE 4 — WHICH FORECAST PRODUCT SHOULD DRIVE THE DECODER?
 
