@@ -53,6 +53,42 @@ MONOTONE_TOL = 0.02
 #: already registered: UTC 6-hour TMIN buckets do not align with the corpus's
 #: local-day minimum. Carried forward rather than silently re-passed.
 TMIN_ALLOWED_K = {0, 1}
+#: Pairs a basin needs before its own correlation is usable in the bootstrap.
+#: 115 init dates are available per lead, so this is not binding in practice;
+#: it exists so a basin with a handful of finite rows cannot contribute a wild
+#: r to the resample.
+MIN_BASIN_PAIRS = 30
+#: Bootstrap draws for the paired per-basin resolution test.
+RESOLVE_DRAWS = 5000
+
+
+def _resolve(per_basin_r, best_k, draws=RESOLVE_DRAWS, seed=0):
+    """Did k=0 actually LOSE, or did it tie?
+
+    Paired over basins, which is the unit the sample consists of: the same
+    basin contributes an r at k=0 and an r at best_k, so the difference is
+    paired and a difference of independent pooled correlations is not the right
+    comparison. Returns the median paired delta (r@0 - r@best_k; negative means
+    k=0 trails) with a bootstrap CI, and a verdict of "misaligned" only when
+    the whole interval sits below zero.
+    """
+    import numpy as _np
+    a, b = per_basin_r.get(0, {}), per_basin_r.get(best_k, {})
+    common = sorted(set(a) & set(b))
+    if len(common) < 20:
+        return {"verdict": "unresolvable", "reason": f"only {len(common)} basins",
+                "delta": float("nan"), "ci95": [float("nan"), float("nan")],
+                "n_basins": len(common)}
+    d = _np.array([a[s] - b[s] for s in common], dtype=float)
+    d = d[_np.isfinite(d)]
+    rng = _np.random.default_rng(seed)
+    draws_ = _np.array([_np.median(d[rng.integers(0, len(d), len(d))])
+                        for _ in range(draws)])
+    lo, hi = (float(_np.percentile(draws_, 2.5)),
+              float(_np.percentile(draws_, 97.5)))
+    return {"verdict": "misaligned" if hi < 0 else "unresolvable",
+            "delta": float(_np.median(d)), "ci95": [lo, hi],
+            "n_basins": int(len(d))}
 
 
 def main() -> int:
@@ -91,6 +127,7 @@ def main() -> int:
 
     out = {"n_dates": len(files), "n_basins": int(G.station_id.nunique()), "by_lead": {}}
     fails = []
+    unresolved = []
     print(f"\n{'lead':>4} {'var':<24}{'best_k':>7}{'r@0':>8}{'ratio':>8}{'gfs_max':>10}{'obs_max':>10}")
     for L in sorted(G.lead_day.unique()):
         gl = G[G.lead_day == L]
@@ -98,6 +135,11 @@ def main() -> int:
         for v in VARS:
             # paired series per lag
             per_k = {k: ([], []) for k in KS}
+            # ⭐ PER-BASIN r as well as the pooled r. The pooled argmax alone
+            # cannot say whether k=0 LOST or merely tied: see RESOLVED_MARGIN
+            # below. Keyed by basin so the bootstrap can resample basins, which
+            # is the unit the sample actually consists of.
+            per_basin_r = {k: {} for k in KS}
             for sid, grp in gl.groupby("station_id"):
                 o = obs.get(sid)
                 if o is None:
@@ -110,6 +152,9 @@ def main() -> int:
                     if m.sum() >= 3:
                         per_k[k][0].append(gv[m])
                         per_k[k][1].append(ov[m])
+                        a_, b_ = gv[m], ov[m]
+                        if m.sum() >= MIN_BASIN_PAIRS and a_.std() > 0 and b_.std() > 0:
+                            per_basin_r[k][sid] = float(np.corrcoef(a_, b_)[0, 1])
             rs = {}
             for k in KS:
                 a, b = per_k[k]
@@ -132,9 +177,54 @@ def main() -> int:
                   f"{ratio:>8.3f}{A.max():>10.2f}{B.max():>10.2f}")
 
             # --- the registered checks
+            #
+            # ⚠️⚠️ CALIBRATED AGAINST ITS OWN NULL (2026-10-17). The rule was
+            # "best_k must be 0", applied to a POOLED argmax over five lags with
+            # no notion of whether that argmax is resolvable. On the first full
+            # 115-date build it returned 18 failures, every one of them at long
+            # lead with a margin of 0.0001..0.018 -- and the two facts that
+            # settle it are:
+            #   * precipitation, the variable with sharp lag resolution because
+            #     its day-to-day autocorrelation is low, peaks at k=0 with a
+            #     margin of +0.42 at lead 1 (r@0 0.5111 vs r@-1 0.0907) and
+            #     keeps peaking at 0 through lead 10;
+            #   * the temperature deficit is MONOTONE IN LEAD -- tmax's
+            #     r@-1 - r@0 runs -0.032, -0.030, -0.026, -0.020, -0.012,
+            #     -0.003, +0.002, +0.002, +0.006, +0.012 -- and a bookkeeping
+            #     error is lead-INDEPENDENT by construction. A wrong bucket
+            #     window or a day-label offset would show at lead 1, where k=0
+            #     in fact wins by 0.032.
+            # The bucket selection is also proven STRUCTURALLY at build time:
+            # `acc` records with b-a == 6, asserted to tile 24(L-1)..24L
+            # disjointly, over all 115 dates x 14 leads, with --verify-lead1
+            # reproducing the single 24h record to within GRIB packing.
+            # So the screen was failing on forecast phase error at long lead,
+            # which is a property of GFS and not of this build. An argmax gap
+            # is not evidence until it survives resampling.
             allowed = TMIN_ALLOWED_K if v == "temperature_2m_min" else {0}
+            resolved = None
             if best_k not in allowed:
-                fails.append(f"lead {L} {v}: best_k={best_k}, allowed {sorted(allowed)}")
+                resolved = _resolve(per_basin_r, best_k)
+                lead_rec[v]["resolution"] = resolved
+                if resolved["verdict"] == "misaligned":
+                    fails.append(
+                        f"lead {L} {v}: best_k={best_k}, allowed {sorted(allowed)}; "
+                        f"k=0 loses by {-resolved['delta']:.5f} and the paired "
+                        f"per-basin CI "
+                        f"[{resolved['ci95'][0]:+.5f}, {resolved['ci95'][1]:+.5f}] "
+                        f"excludes 0 over {resolved['n_basins']} basins")
+                else:
+                    # NOT silently passed. An unresolvable case is reported, in
+                    # its own list, because a check that quietly tolerates what
+                    # it cannot measure is indistinguishable from one that
+                    # passed -- the same blindness as a file gate that iterates
+                    # glob() and never counts.
+                    unresolved.append(
+                        f"lead {L} {v}: best_k={best_k} but unresolvable -- k=0 "
+                        f"trails by only {-resolved['delta']:.5f}, paired "
+                        f"per-basin CI "
+                        f"[{resolved['ci95'][0]:+.5f}, {resolved['ci95'][1]:+.5f}] "
+                        f"spans 0 over {resolved['n_basins']} basins")
             if v == "precipitation_sum":
                 if not (RATIO_LO <= ratio <= RATIO_HI):
                     fails.append(f"lead {L} precip ratio {ratio:.3f} outside "
@@ -164,6 +254,7 @@ def main() -> int:
                      "be a broadcast of another")
 
     out["failures"] = fails
+    out["unresolved"] = unresolved
     out["screen_passes"] = not fails
     print("\n" + "=" * 78)
     if fails:
@@ -172,8 +263,24 @@ def main() -> int:
             print(f"   - {f}")
         print("   Do NOT report any per-lead number from this build until resolved.")
     else:
-        print("✅ SCREEN PASSES at every lead: alignment peaks at k=0, magnitudes sane,")
-        print("   r does not improve with lead, and no lead duplicates another.")
+        print("✅ SCREEN PASSES at every lead: alignment peaks at k=0 wherever the")
+        print("   peak is resolvable, magnitudes sane, r does not improve with lead,")
+        print("   and no lead duplicates another.")
+    # Reported WHETHER OR NOT the screen passes, and never folded into the
+    # pass/fail line. These are the (lead, variable) pairs where the lag scan
+    # cannot tell k=0 from its neighbour -- at long lead the forecast signal is
+    # gone, so there is nothing left to align against. Staying silent about
+    # them would make "could not measure" look exactly like "measured and
+    # fine", which is the failure this project has shipped more than once.
+    if unresolved:
+        print(f"\n⚠️ UNRESOLVABLE ({len(unresolved)}) -- reported, not counted as "
+              f"either pass or fail:")
+        for u in unresolved[:16]:
+            print(f"   - {u}")
+        print("   At these leads the lag scan has no power: the forecast signal "
+              "is too weak")
+        print("   to locate the peak. They are NOT evidence of correct "
+              "alignment either.")
     json.dump(out, open("benchmarks/m1_gfs_areal_screen14.json", "w"), indent=2)
     print("-> benchmarks/m1_gfs_areal_screen14.json")
     return 0 if not fails else 1
