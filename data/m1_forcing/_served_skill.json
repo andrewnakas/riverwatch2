@@ -1,0 +1,58 @@
+{
+  "schema_version": "m1-label-2",
+  "member": "nldasm9",
+  "seeds": [
+    501,
+    502,
+    503,
+    504,
+    505
+  ],
+  "trained_on": "NLDAS-2 basin-average (areal) forcing",
+  "forcing_observed": {
+    "sampled_basins": 490,
+    "rows": 216090,
+    "by_src": {
+      "nldas_areal": 205310,
+      "om_point": 10780
+    },
+    "areal_fraction": 0.9501133786848073,
+    "substituted_encoder_days_median": 6,
+    "gate2_measured_substituted_days": 4,
+    "within_what_gate2_measured": false,
+    "decoder_leads_median": 16,
+    "decoder_leads_expected": 14,
+    "forcing_age_days_median": 0,
+    "forcing_age_basins": 490,
+    "published_tables": 625,
+    "served_tables": 490,
+    "unserved_tables": 135,
+    "decoder_horizon_short": false,
+    "forcing_stale": false
+  },
+  "live_measured": null,
+  "blend_weight": 0.0,
+  "served_on": "NLDAS-2 basin-average (areal) forcing -- the product it was trained on -- for 95% of the encoder window, with the newest days Open-Meteo point-filled because NLDAS-2 publishes at today-5",
+  "governing_gate": "GATE 2",
+  "encoder_substitution_delta": -0.004018177634188769,
+  "encoder_substitution_ci95": [
+    -0.007396350167453103,
+    -0.0019625893495204827
+  ],
+  "encoder_substitution_breadth": 0.2866666666666667,
+  "encoder_substitution_level": -0.036141576080241045,
+  "encoder_substitution_frame": {
+    "name": "val1",
+    "n_basins": 150,
+    "rows": 217153,
+    "protocol": "modern-v3-9yr"
+  },
+  "superseded": {
+    "gate": "GATE 1",
+    "delta": -0.0595344589878411,
+    "what_it_measured": "serving on Open-Meteo point forcing for the WHOLE encoder window, which is what was served before the areal provider landed",
+    "fraction_recovered_paired": 0.9325061706892067
+  },
+  "extrapolation_warning": "6 days of the encoder window are substituted, but the gate that priced this configuration substituted only 4, so its delta is an extrapolation here and the true cost is likely larger (refresh the basin-average provider).",
+  "_note": "\u26a0\ufe0f 6 days of the encoder window are substituted, but the gate that priced this configuration substituted only 4, so its delta is an extrapolation here and the true cost is likely larger (refresh the basin-average provider). The served member now runs on the forcing it was trained on for 95% of its encoder window. The remainder -- the newest days, which NLDAS-2 has not published -- is Open-Meteo point, measured at a paired -0.004018 median NSE (level -0.036142) on val1/150 basins. Quoting the paired figure alone overstates the fix: areal recovers 93.3% of GATE 1's loss paired but only 57.5% on the level. Separately, the 14-day DECODER forcing is a forecast product in every configuration ever measured and neither gate covers it; its closest analogue is the -0.048033 real-forecast decay, a different product on a different frame, which must NOT be added to the above. No figure here is the member's own served skill -- that is still unmeasured, and scripts/score_m1_live.py is what will measure it."
+}
