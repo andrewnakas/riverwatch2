@@ -128,13 +128,17 @@ function fmtTick(ts, step, prevYear) {
 // `showMembers=false` (default) renders only history + blend so the casual
 // reader sees one clean curve. The toggle above the chart flips it to true
 // to expose every ensemble member as a faint dashed line.
-let _fcst = { canvas: null, history: [], members: {}, blend: [], live: [], full: null, range: [0, 1], showMembers: false };
+let _fcst = { canvas: null, history: [], members: {}, blend: [], live: [], full: null, range: [0, 1], showMembers: false, compare: false, quantiles: null, mae: null };
 
-function drawChart(canvas, history, members, blend) {
+function drawChart(canvas, history, members, blend, extra) {
   _fcst.canvas = canvas;
   _fcst.history = history;
   _fcst.members = members;
   _fcst.blend = blend;
+  // Carried so compare mode can draw MODERN-1's interval and label each curve
+  // with its measured error. Optional: an older payload simply has neither.
+  _fcst.quantiles = (extra && extra.quantiles) || null;
+  _fcst.mae = (extra && extra.mae) || null;
   // _fcst.live is updated separately by loadStationLive(); don't reset here
   // because re-draws (zoom, show-members toggle) shouldn't clear the live overlay.
   // v15.10: derive full extent from the *stitched* curve so the x-axis
@@ -181,8 +185,33 @@ async function loadStationLive(siteId) {
 
 function setShowMembers(show) {
   _fcst.showMembers = !!show;
+  if (_fcst.showMembers) _fcst.compare = false;
   _renderForecast();
 }
+
+/* COMPARE MODE: the three-way question a visitor actually asks -- how does the
+ * physics baseline, the ensemble that is actually serving, and the new research
+ * model compare on this river?
+ *
+ * Ten overlapping dashed lines answer that badly, and the default of
+ * history+blend answers it not at all: every member ships in the payload and
+ * none of them was visible without a click, with the new model drawing as an
+ * unnamed grey line because memColors had no entry for it. This draws exactly
+ * three, named, with MODERN-1's own uncertainty band, and the skill table below
+ * states what each one's error actually is -- including that MODERN-1's is not
+ * yet measured, which is the single most important fact about it. */
+function setCompare(on) {
+  _fcst.compare = !!on;
+  if (_fcst.compare) _fcst.showMembers = false;
+  _renderForecast();
+}
+
+//: The three series the comparison is about, in draw order (last on top).
+const COMPARE_SERIES = [
+  { key: "nwm", label: "NWM (physics)", color: "#4cc8ff" },
+  { key: "__blend__", label: "Serving ensemble", color: "#ffd166" },
+  { key: "mblstm_modern", label: "MODERN-1 (research)", color: "#b388ff" },
+];
 
 // v15.10: stitch dv history + iv live + forecast into one continuous curve.
 //
@@ -312,11 +341,38 @@ function _renderForecast() {
   const series = [];
   series.push({ name: "history", color: "#e7ecf3", points: history });
   series.push({ name: "blend", color: "#ffd166", points: blend, dashed: true, width: 3 });
-  if (_fcst.showMembers) {
+  if (_fcst.compare) {
+    const q = _fcst.quantiles || {};
+    const qby = {};
+    (q.mblstm_modern || []).forEach((r) => { qby[String(r.date)] = r; });
+    for (const cs of COMPARE_SERIES) {
+      const pts = cs.key === "__blend__" ? blend : members[cs.key];
+      if (!pts || !pts.length) continue;
+      // MODERN-1 is the only member with a quantile head, so it is the only
+      // one that can show an interval. Attaching it here rather than in the
+      // payload keeps the band out of the other two, which have none.
+      const withBand = (cs.key === "mblstm_modern")
+        ? pts.map((p) => {
+            const r = qby[String(p.date)];
+            return (r && Number.isFinite(r.q_lo) && Number.isFinite(r.q_hi))
+              ? Object.assign({}, p, { band_lo: r.q_lo, band_hi: r.q_hi })
+              : p;
+          })
+        : pts;
+      series.push({
+        name: cs.label, color: cs.color, points: withBand,
+        dashed: cs.key !== "__blend__", width: 3,
+      });
+    }
+  } else if (_fcst.showMembers) {
     const memColors = {
       persistence_lag1: "#5fa0ff", runoff_ridge: "#7be07b", chronos_bolt: "#ff8a4c",
       ttm: "#c994ff", timesfm: "#ff6f91", timesfm_xreg: "#ffb3c1",
       nwm: "#4cc8ff", lgbm_pooled: "#a8e6a3",
+      // These two had no entry and fell through to grey -- including
+      // mblstm_modern, the model this whole track is about, which drew as an
+      // anonymous line among ten.
+      nwm_residual: "#2ec4b6", mblstm_modern: "#b388ff",
     };
     for (const [name, pts] of Object.entries(members)) {
       series.push({ name, color: memColors[name] || "#cccccc", points: pts, dashed: true });
@@ -624,7 +680,8 @@ function renderForecast(payload) {
   // v15.9: clear any previous station's live trace before drawing the new one,
   // then kick off the async fetch and re-render once it lands.
   _fcst.live = [];
-  drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
+  drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend,
+            { quantiles: payload.member_quantiles, mae: payload.rolling_mae });
   setupForecastZoom();
   const liveStationId = payload?.station?.id;
   if (liveStationId) {
@@ -635,7 +692,8 @@ function renderForecast(payload) {
         // v15.10: re-run drawChart so the x-extent picks up any iv days
         // that extend past the dv tail (otherwise the orange tail spills
         // beyond xmax and the now-line is wrong).
-        drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend);
+        drawChart(document.getElementById("chart"), payload.history || [], payload.members || {}, blend,
+                  { quantiles: payload.member_quantiles, mae: payload.rolling_mae });
       }
     });
   }
@@ -1364,6 +1422,53 @@ if (refreshBtn) {
   refreshBtn.style.display = "none";  // not meaningful for static deploy
 }
 
+const compareToggle = document.getElementById("toggle-compare");
+if (compareToggle) {
+  compareToggle.addEventListener("click", () => {
+    const next = !_fcst.compare;
+    setCompare(next);
+    compareToggle.setAttribute("aria-pressed", String(next));
+    compareToggle.textContent = next
+      ? "Hide comparison"
+      : "Compare: NWM vs ensemble vs MODERN-1";
+    const mt = document.getElementById("toggle-members");
+    if (mt) {
+      mt.setAttribute("aria-pressed", "false");
+      mt.textContent = "Show ensemble members";
+    }
+    renderCompareLegend();
+  });
+}
+
+/* The skill table under the comparison. Its most important row is the one
+ * with no number: MODERN-1 carries ZERO blend weight and its served skill has
+ * never been measured, so a visitor comparing three curves has to be told that
+ * two of them have a measured error on this river and the third does not --
+ * otherwise the drawn line implies a standing it has not earned. */
+function renderCompareLegend() {
+  const el = document.getElementById("compare-legend");
+  if (!el) return;
+  if (!_fcst.compare) { el.style.display = "none"; el.innerHTML = ""; return; }
+  const mae = _fcst.mae || {};
+  const rows = COMPARE_SERIES.map((cs) => {
+    const key = cs.key === "__blend__" ? "ensemble_blend" : cs.key;
+    const v = mae[key];
+    const num = Number.isFinite(v)
+      ? `rolling MAE <strong>${v.toFixed(1)}</strong> cfs`
+      : "<strong>no measured error on this river yet</strong>";
+    return `<span style="color:${cs.color}">&#9644;</span> ${cs.label} — ${num}`;
+  });
+  const extra =
+    "MODERN-1 is drawn and archived but carries <strong>zero weight</strong> in " +
+    "the served forecast: it has no measured error here, so nothing has earned " +
+    "it a share. Its benchmark numbers come from a historical window under " +
+    "forcing it does not get in real time — see /benchmarks. The other two are " +
+    "scored by re-running them on past windows of this gauge, which is the same " +
+    "basis for both.";
+  el.innerHTML = rows.join("<br>") + "<br><br>" + extra;
+  el.style.display = "";
+}
+
 const memberToggle = document.getElementById("toggle-members");
 if (memberToggle) {
   memberToggle.addEventListener("click", () => {
@@ -1371,6 +1476,12 @@ if (memberToggle) {
     setShowMembers(next);
     memberToggle.setAttribute("aria-pressed", String(next));
     memberToggle.textContent = next ? "Hide ensemble members" : "Show ensemble members";
+    const ct = document.getElementById("toggle-compare");
+    if (ct && next) {
+      ct.setAttribute("aria-pressed", "false");
+      ct.textContent = "Compare: NWM vs ensemble vs MODERN-1";
+    }
+    renderCompareLegend();
   });
 }
 
