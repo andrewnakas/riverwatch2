@@ -139,3 +139,39 @@ def test_the_appender_records_what_only_it_can_see():
     i = src.index("write_state(arch, wanted, todo, done_days, skipped)")
     j = src.index('print("no days produced")')
     assert i < j, "the state must be written BEFORE the no-days early return"
+
+
+def test_an_absent_upstream_day_falls_back_to_the_tables_own_newest(tmp_path, monkeypatch):
+    """`newest_complete_upstream_day` is None whenever a run produced no day --
+    which is the NORMAL case during a stall, since everything available is
+    already in the table. The live label rendered "no complete day since before
+    this window", which is honest and useless. The table's own newest areal
+    date is the fact a reader wants, and the label already measures it.
+    """
+    state = dict(UPSTREAM_STALLED, newest_complete_upstream_day=None)
+    mix, w = _warn(tmp_path, monkeypatch, gap=7, upstream_state=state)
+    assert mix["newest_areal_day"], "the label must expose the newest areal day"
+    assert "before this window" not in w
+    assert mix["newest_areal_day"] in w, \
+        "the fallback must name the table's own newest areal date"
+
+
+def test_a_day_with_no_hours_is_not_called_partial(tmp_path, monkeypatch):
+    """0 of 24 hours is not a partial day, it is an absent one, and the live
+    label said "its newest partial day 2026-10-14 has only 0 of 24 hours" --
+    a contradiction that misdescribes what upstream has done."""
+    state = dict(UPSTREAM_STALLED,
+                 upstream_frontier_day="2026-10-14",
+                 hours_available_on_skipped_days={"2026-10-14": 0})
+    mix, w = _warn(tmp_path, monkeypatch, gap=7, upstream_state=state)
+    assert "has not appeared at all" in w
+    assert "0 of 24 hours" not in w
+    assert "partial day" not in w
+
+
+def test_a_genuinely_partial_day_still_reports_its_hours(tmp_path, monkeypatch):
+    """The other branch must survive: 13 of 24 really is partial and the hour
+    count is the useful detail."""
+    mix, w = _warn(tmp_path, monkeypatch, gap=7, upstream_state=UPSTREAM_STALLED)
+    assert "13 of 24 hours" in w
+    assert "has not appeared at all" not in w

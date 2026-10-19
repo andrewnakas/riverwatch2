@@ -139,3 +139,27 @@ def test_the_archive_covers_every_served_tier():
     i = src.index("def _load_m1_cohort")
     body = src[i:i + 1400]
     assert "m1_cohort_tier2.json" in body
+
+
+def test_a_newly_added_tier_backfills_itself():
+    """Why tier 2 recovers without a manual backfill, pinned because it is
+    subtle and load-bearing.
+
+    The appender treats a day as done only when it is areal in EVERY requested
+    basin (`have[day] < len(ids)`), not when it is areal in any. So the moment
+    tier 2 entered the basin list, the days tier 1 already had and tier 2
+    lacked -- 2026-10-09 through 2026-10-11, where tier 2 had frozen -- went
+    from "done" to "to do" and get fetched and committed to all 620.
+
+    Had this been `any` rather than `all`, the 130 basins would have stayed
+    permanently point-filled for days the other 490 have areal, and nothing
+    downstream would ever have asked again. The source comment says exactly
+    that, and this makes it a test rather than a hope.
+    """
+    src = (ROOT / "scripts_modern" / "nldas_areal_append.py").read_text()
+    assert "todo = [d for d in wanted if have[d.isoformat()] < len(ids)]" in src, \
+        "a day must be 'done' only when every basin has it areal"
+    i = src.index("have = {d.isoformat(): 0 for d in wanted}")
+    why = src[max(0, i - 500):i]
+    assert "EVERYWHERE" in why or "everywhere" in why
+    assert "permanently point-filled" in why

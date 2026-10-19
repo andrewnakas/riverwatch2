@@ -158,6 +158,7 @@ def measure_forcing(limit: int = 0) -> dict:
     n_files = 0
     recent_sub: list[int] = []
     per_basin_sub: dict[str, int] = {}
+    newest_areal_days: list[date] = []
     dec_cov: list[int] = []
     today = date.today().isoformat()
     #: The encoder window ends at the last USGS observation, which for daily
@@ -214,6 +215,7 @@ def measure_forcing(limit: int = 0) -> dict:
         if areal_dates:
             newest = date.fromisoformat(max(areal_dates))
             gap_days = max(0, (t0 - newest).days)
+            newest_areal_days.append(newest)
             recent_sub.append(gap_days)
             per_basin_sub[_sid(p)] = gap_days
         # ⚠️⚠️ HOW MANY OF THE 16 DECODER LEADS THE TABLE ACTUALLY CARRIES.
@@ -252,6 +254,8 @@ def measure_forcing(limit: int = 0) -> dict:
             by_tier[tier_name] = int(vals[len(vals) // 2])
     worst_tier = max(by_tier.values()) if by_tier else None
     med_dec = int(sorted(dec_cov)[len(dec_cov) // 2]) if dec_cov else None
+    newest_areal_day = (max(newest_areal_days).isoformat()
+                        if newest_areal_days else None)
     built = read_built(served or None)
     ages = sorted(built.values())
     med_age = ages[len(ages) // 2] if ages else None
@@ -271,6 +275,10 @@ def measure_forcing(limit: int = 0) -> dict:
         (med_sub is not None and med_sub <= GATE2_SUBSTITUTED_DAYS),
         # Decoder leads present in the table, and how old the refresh is. Both
         # are here so a frozen table reports itself instead of looking perfect.
+        # The newest areal day actually in the table -- what a reader wants
+        # when upstream produced nothing this run and so reported no "newest
+        # complete day" of its own.
+        "newest_areal_day": newest_areal_day,
         "substituted_encoder_days_by_tier": by_tier,
         "substituted_encoder_days_worst_tier": worst_tier,
         "decoder_leads_median": med_dec,
@@ -350,14 +358,26 @@ def build(g1: dict, g2: dict | None, mix: dict) -> dict:
             hours = (up.get("hours_available_on_skipped_days") or {}).get(
                 frontier) if frontier else None
             if up.get("upstream_is_incomplete") and frontier:
+                # `newest_complete_upstream_day` is None whenever a run
+                # produced no day -- which is the normal case during a stall,
+                # since everything available is already in the table. Falling
+                # back to "before this window" was honest but useless; the
+                # table's own newest areal date is the fact a reader wants,
+                # and the label already measured it.
+                since = newest_up
+                if not since:
+                    newest_areal = mix.get("newest_areal_day")
+                    since = newest_areal or "before this window"
+                # A day with 0 of 24 hours is not "partial", it is absent, and
+                # calling it partial misdescribes what upstream has done.
+                how = (f"has only {hours} of 24 hours"
+                       if hours else "has not appeared at all")
                 cause = (
                     f"; the cause is UPSTREAM, not this pipeline: NLDAS-2 has "
-                    f"published no complete day since "
-                    f"{newest_up or 'before this window'} and its newest "
-                    f"partial day {frontier} has only {hours} of 24 hours, "
-                    f"which the provider correctly refuses to average into a "
-                    f"daily value. Nothing here needs refreshing; the gap "
-                    f"closes when NASA publishes")
+                    f"published no complete day since {since}, and {frontier} "
+                    f"{how}, which the provider correctly refuses to average "
+                    f"into a daily value. Nothing here needs refreshing; the "
+                    f"gap closes when NASA publishes")
             elif up:
                 cause = ("; the areal provider is behind what upstream has "
                          "published and should be refreshed")
