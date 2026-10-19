@@ -193,7 +193,10 @@ def main() -> int:
     ap.add_argument("--archive-dir", default="data/m1_forcing")
     ap.add_argument("--weights", default="data/nldas_basin_weights.pkl")
     ap.add_argument("--basins", default="data/m1_cohort.json",
-                    help="JSON with a 'cohort' or 'servable' list, or a plain list")
+                    help="comma-separated JSON files, each with a 'cohort' or "
+                         "'servable' list (or a plain list). Name EVERY served "
+                         "tier: a tier left out silently freezes at the date it "
+                         "was seeded and no pooled metric will notice.")
     ap.add_argument("--days", type=int, default=10,
                     help="how many days back from today-latency to ensure")
     ap.add_argument("--through", default="", help="YYYY-MM-DD; default today-5")
@@ -220,12 +223,36 @@ def main() -> int:
                else date.today() - timedelta(days=PUBLICATION_LATENCY_DAYS))
     wanted = [through - timedelta(days=i) for i in range(a.days)][::-1]
 
-    raw = json.loads((root / a.basins).read_text()) if (root / a.basins).exists() \
-        else json.loads(Path(a.basins).read_text())
-    if isinstance(raw, dict):
-        ids = raw.get("cohort") or raw.get("servable") or []
-    else:
-        ids = raw
+    # ⚠️⚠️ EVERY SERVED TIER, not just the training cohort. `--basins` took one
+    # path, and after GATE 3 widened the served domain to 620 that path still
+    # named the 490. Measured 2026-10-19: tier-1 basins had an areal gap of 7
+    # days while the 130 tier-2 basins sat at 10 and climbing, frozen at the
+    # date they were seeded, because nothing ever appended to them. GATE 3
+    # measured those basins on FULL areal forcing, so serving them on an
+    # ever-widening point fill is a configuration no gate has priced.
+    #
+    # The pooled label could not see it either: 130 of 620 cannot move a
+    # median, so a tier-specific regression hid behind a healthy-looking
+    # number. Comma-separated so the served domain is named once, here.
+    ids = []
+    for part in str(a.basins).split(","):
+        part = part.strip()
+        if not part:
+            continue
+        cand = root / part
+        path = cand if cand.exists() else Path(part)
+        if not path.exists():
+            print(f"  basin list {part!r} not found; skipping it")
+            continue
+        raw = json.loads(path.read_text())
+        got = (raw.get("cohort") or raw.get("servable") or []) \
+            if isinstance(raw, dict) else raw
+        new_ids = [x for x in got if x not in set(ids)]
+        ids.extend(new_ids)
+        print(f"  {path.name}: {len(new_ids)} basins")
+    if not ids:
+        print(f"ERROR: no basins resolved from {a.basins!r}", file=sys.stderr)
+        return 1
     ids = [str(x) for x in ids]
 
     W = mod.load_weights()

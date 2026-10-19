@@ -24,9 +24,15 @@ module's PURE helpers (`build_model`, `norm_wx`, `static_vector`,
 assembly below mirrors `app/mblstm.py:forecast()` for the quantile head only --
 no cmal, no dhbv, no dec_q -- which is all `nldasm9` needs.
 
-DOMAIN GATE. The member refuses any station outside `data/m1_cohort.json`. It is
-a 490-basin model; the site serves 9,851 gauges and the other 9,361 are out of
-domain. A silent extrapolation is worse than a missing member.
+DOMAIN GATE. The member refuses any station outside its served domain, which is
+TWO tiers: the 490 basins it was trained on (`data/m1_cohort.json`) and the 130
+that GATE 3 authorised and it has never seen (`data/m1_cohort_tier2.json`),
+which serve under their own measured median of 0.854214 rather than the
+cohort's 0.876335. The site serves 9,851 gauges and the other 9,231 are out of
+domain. A silent extrapolation is worse than a missing member -- and quoting the
+wrong tier's number is a quieter version of the same error, which is why
+`in_cohort` still means "trained on" and `in_served_domain` answers "may it run
+here".
 
 STATICS. The 27 Addor CAMELS attributes via `app/camels_attrs.py`, NOT the 14
 GAGES-II features the production member uses. Read from the checkpoint's

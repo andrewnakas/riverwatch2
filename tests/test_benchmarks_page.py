@@ -423,3 +423,71 @@ def test_the_healthy_configuration_does_not_claim_an_extrapolation():
     assert "extrapolation here" not in html
     assert "Live self-report" not in html
     assert "so the remaining leads are not shown" not in html
+
+
+# ------------------------------------------------- the served domain is two tiers
+
+GATE3_FIXTURE = {
+    "out_of_cohort": {"basins": 130, "rows": 187914,
+                      "median_nse": 0.8542135836863427,
+                      "ci95": [0.8386759341591457, 0.8952737407470195]},
+    "in_cohort_control": {"basins": 490, "rows": 708266,
+                          "median_nse": 0.8763346916541557,
+                          "ci95": [0.862010318413304, 0.8889783874447578]},
+    "level_gap_out_minus_in": -0.022121,
+    "vs_persistence_out_of_cohort": {
+        "delta_member_minus_persistence": 0.19088104920048832,
+        "ci95": [0.07393026062797159, 0.302255005041128],
+        "breadth": 0.823076923076923, "basins": 130,
+        "median_nse_persistence": 0.5877629547314331},
+    "in_band": True, "stopped": False, "falsifier_fired": False,
+    "verdict": "SERVE, LABELLED OUT-OF-COHORT",
+}
+
+
+def test_the_page_states_both_tiers_and_their_different_medians():
+    """The member serves 620 basins across two tiers whose measured skill
+    differs by 0.022 NSE. A page quoting one number for "the member this site
+    serves" is simply wrong for 130 of them, and this page exists to be right
+    about exactly that kind of thing."""
+    a = dict(MIN_ARTIFACTS)
+    a["gate3"] = GATE3_FIXTURE
+    html = bp.build_html(a)
+    assert "0.854214" in html, "the out-of-cohort median must be stated"
+    assert "0.876335" in html, "the in-cohort median must be stated beside it"
+    assert "620" in html, "the served domain size must be stated"
+    assert "never trained on" in html
+    assert "Quote the lower figure for those gauges" in html
+    # The licensing statistic, not just the levels.
+    assert "0.190881" in html and "82.3%" in html
+
+
+def test_the_page_states_the_two_honest_limits():
+    """Both were recorded in the registration and both must survive to the
+    page: the decision row was selected on a point estimate whose interval
+    spans the threshold, and this is a val-window number, not a live read."""
+    a = dict(MIN_ARTIFACTS)
+    a["gate3"] = GATE3_FIXTURE
+    html = bp.build_html(a)
+    assert "point estimate" in html
+    assert "do not settle which of" in html
+    assert "not a live read" in html
+    # And the basins deliberately NOT served, with the reason.
+    assert "0.912948" in html and "0.564878" in html
+    assert "generalise" in html or "generalize" in html
+
+
+def test_the_forbidden_claims_include_the_single_number_error():
+    titles = [t for t, _ in bp._FORBIDDEN_CLAIMS]
+    assert any("One number does not cover" in t for t in titles), \
+        "quoting one median for both tiers must be listed as a forbidden claim"
+    body = next(b for t, b in bp._FORBIDDEN_CLAIMS if "One number" in t)
+    assert "0.854214" in body and "0.876335" in body
+
+
+def test_the_gate3_section_is_absent_without_its_artifact():
+    """Mirrors every other research section: a missing artifact omits its
+    section rather than failing the build or inventing a number."""
+    html = bp.build_html(dict(MIN_ARTIFACTS))
+    assert "never trained on" not in html
+    assert "<h1>" in html

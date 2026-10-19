@@ -157,6 +157,7 @@ def measure_forcing(limit: int = 0) -> dict:
     counts: dict[str, int] = {}
     n_files = 0
     recent_sub: list[int] = []
+    per_basin_sub: dict[str, int] = {}
     dec_cov: list[int] = []
     today = date.today().isoformat()
     #: The encoder window ends at the last USGS observation, which for daily
@@ -164,6 +165,12 @@ def measure_forcing(limit: int = 0) -> dict:
     #: relative to.
     t0 = date.today() - timedelta(days=1)
     served = served_ids()
+    def _ids(path):
+        try:
+            return {str(x) for x in json.loads(path.read_text())["cohort"]}
+        except Exception:
+            return set()
+    tier1_ids, tier2_ids = _ids(COHORT), _ids(TIER2)
     allp = sorted(glob.glob(str(TABLES / "*.csv.gz")))
     def _sid(path):
         return path.rsplit("/", 1)[-1].split(".")[0]
@@ -206,7 +213,9 @@ def measure_forcing(limit: int = 0) -> dict:
                        if r.get("src") == "nldas_areal" and (r.get("date") or "") <= today]
         if areal_dates:
             newest = date.fromisoformat(max(areal_dates))
-            recent_sub.append(max(0, (t0 - newest).days))
+            gap_days = max(0, (t0 - newest).days)
+            recent_sub.append(gap_days)
+            per_basin_sub[_sid(p)] = gap_days
         # ⚠️⚠️ HOW MANY OF THE 16 DECODER LEADS THE TABLE ACTUALLY CARRIES.
         # Measured because the opposite was invisible: on 2026-10-16 the
         # published table had been frozen for five days by a freshness test a
@@ -227,6 +236,21 @@ def measure_forcing(limit: int = 0) -> dict:
         n_files += 1
     total = sum(counts.values())
     med_sub = int(sorted(recent_sub)[len(recent_sub) // 2]) if recent_sub else None
+    # ⚠️⚠️ PER TIER AS WELL AS POOLED. A pooled median over a heterogeneous
+    # served domain cannot see a subgroup failure: on 2026-10-19 the 130
+    # tier-2 basins sat at an areal gap of 10 days and climbing -- the areal
+    # append named only the 490-basin cohort, so nothing ever appended to them
+    # -- while the pooled median read tier 1's 7 and looked unremarkable,
+    # because 130 of 620 cannot move a median. The WORST tier is what a reader
+    # needs, since a basin is served from its own tier and not from the
+    # average of both.
+    by_tier: dict[str, int] = {}
+    for tier_name, tier_ids in (("tier1_trained", tier1_ids),
+                                ("tier2_gate3", tier2_ids)):
+        vals = sorted(g for sid, g in per_basin_sub.items() if sid in tier_ids)
+        if vals:
+            by_tier[tier_name] = int(vals[len(vals) // 2])
+    worst_tier = max(by_tier.values()) if by_tier else None
     med_dec = int(sorted(dec_cov)[len(dec_cov) // 2]) if dec_cov else None
     built = read_built(served or None)
     ages = sorted(built.values())
@@ -238,10 +262,17 @@ def measure_forcing(limit: int = 0) -> dict:
         "areal_fraction": (counts.get("nldas_areal", 0) / total) if total else 0.0,
         "substituted_encoder_days_median": med_sub,
         "gate2_measured_substituted_days": GATE2_SUBSTITUTED_DAYS,
-        "within_what_gate2_measured": (med_sub is not None
-                                       and med_sub <= GATE2_SUBSTITUTED_DAYS),
+        # Keyed on the WORST tier: a reader is served from one tier, not from
+        # the average of both, so a pooled pass over a failing subgroup is a
+        # false reassurance.
+        "within_what_gate2_measured": (worst_tier is not None
+                                       and worst_tier <= GATE2_SUBSTITUTED_DAYS)
+        if worst_tier is not None else
+        (med_sub is not None and med_sub <= GATE2_SUBSTITUTED_DAYS),
         # Decoder leads present in the table, and how old the refresh is. Both
         # are here so a frozen table reports itself instead of looking perfect.
+        "substituted_encoder_days_by_tier": by_tier,
+        "substituted_encoder_days_worst_tier": worst_tier,
         "decoder_leads_median": med_dec,
         "decoder_leads_expected": DECODER_LEADS_EXPECTED,
         "forcing_age_days_median": med_age,
@@ -334,11 +365,22 @@ def build(g1: dict, g2: dict | None, mix: dict) -> dict:
                 cause = ("; the cause is unrecorded -- the areal provider has "
                          "not reported its upstream state, so this cannot say "
                          "whether the gap is ours or NASA's")
+            by_tier = mix.get("substituted_encoder_days_by_tier") or {}
+            worst = mix.get("substituted_encoder_days_worst_tier")
+            # Name the tier when they differ, because the pooled median is not
+            # what any individual basin is served on.
+            spread = ""
+            if len(by_tier) > 1 and len(set(by_tier.values())) > 1:
+                spread = (" (by tier: "
+                          + ", ".join(f"{k} {v}" for k, v in sorted(by_tier.items()))
+                          + ", so the figure above is the worst of them and the "
+                            "pooled median would understate it)")
             probs.append(
-                f"{gap} days of the encoder window are substituted, but the "
-                f"gate that priced this configuration substituted only "
-                f"{GATE2_SUBSTITUTED_DAYS}, so its delta is an extrapolation "
-                f"here and the true cost is likely larger{cause}")
+                f"{worst if worst is not None else gap} days of the encoder "
+                f"window are substituted, but the gate that priced this "
+                f"configuration substituted only {GATE2_SUBSTITUTED_DAYS}, so "
+                f"its delta is an extrapolation here and the true cost is "
+                f"likely larger{spread}{cause}")
         age = mix.get("forcing_age_days_median")
         if mix.get("forcing_stale"):
             probs.append(

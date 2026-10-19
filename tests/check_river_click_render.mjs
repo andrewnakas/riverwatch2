@@ -9,10 +9,17 @@
  * never throws or leaks "undefined"/"NaN" into the page. */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 // Derive the repo root from this file, never hardcode it: an absolute path
 // makes the check silently validate ANOTHER checkout (it read the research
 // branch while verifying a port worktree, and passed).
-const root = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+// fileURLToPath, NOT .pathname: a URL pathname is percent-encoded, so any
+// directory with a space in it ("/Volumes/FreeAgent GoFlex Drive/...")
+// yields "FreeAgent%20GoFlex%20Drive" and require() cannot resolve it.
+// CI never hit this because its checkout path has no spaces; a developer
+// machine or an external drive does. check_member_notes_js.mjs already
+// imports fileURLToPath for the same reason.
+const root = fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, "");
 const require = createRequire(import.meta.url);
 globalThis.RiverTransfer = require(root + "/app/static/river_transfer.js");
 globalThis.L = { geoJSON: () => ({ addTo: () => ({}) }) };

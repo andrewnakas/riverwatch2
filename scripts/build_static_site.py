@@ -52,16 +52,26 @@ M1_ARCHIVE_SCHEMA = "m1-fcst-1"
 
 
 def _load_m1_cohort() -> set:
-    """The 490 basins the MODERN-1 member serves; empty set disables archiving.
+    """Every basin the MODERN-1 member serves -- BOTH tiers; empty disables archiving.
 
-    Archiving all 9,851 gauges would be 20x the rows for no gain -- the member
-    only ever runs on the cohort, and the other two series are archived solely
-    to give it a paired comparison on identical rows.
+    Archiving all 9,851 gauges would be 16x the rows for no gain -- the member
+    only ever runs on its own domain, and the other two series are archived
+    solely to give it a paired comparison on identical rows.
+
+    ⚠️⚠️ This read only the 490-basin training cohort until 2026-10-19, and so
+    the 130 basins GATE 3 authorised were SERVED BUT NEVER ARCHIVED: measured
+    on the 2026-10-18 archive, 439 basins present, every one of them tier 1 and
+    not one tier 2. Their live skill could therefore never be measured, which
+    defeats the point of authorising them -- GATE 3's whole case was "serve
+    them, labelled, and then measure". Mirrors `in_served_domain`.
     """
-    try:
-        return set(json.loads((ROOT / "data" / "m1_cohort.json").read_text())["cohort"])
-    except Exception:
-        return set()
+    out: set = set()
+    for name in ("m1_cohort.json", "m1_cohort_tier2.json"):
+        try:
+            out |= set(json.loads((ROOT / "data" / name).read_text())["cohort"])
+        except Exception:
+            continue
+    return out
 
 
 _m1_cohort = _load_m1_cohort()
@@ -414,7 +424,9 @@ def main() -> int:
             # Three series on IDENTICAL (station, target_date, horizon) keys,
             # because a paired comparison needs identical rows: the member, the
             # headline blend it is NOT part of, and persistence as the floor.
-            # Cohort-only, so this is 490 x 14 x 3 rows per build, not 9,851.
+            # Served-domain only, so this is 620 x 14 x 3 rows per build rather
+            # than 9,851 -- and 620 means BOTH tiers, because a basin that is
+            # served but not archived can never have its live skill measured.
             if _m1_cohort and sid in _m1_cohort:
                 issued = f.issued_at[:10]
                 qmap = (f.member_quantiles or {}).get("mblstm_modern") or []

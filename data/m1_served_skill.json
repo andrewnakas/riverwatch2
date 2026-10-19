@@ -17,6 +17,8 @@
     "substituted_encoder_days_median": null,
     "gate2_measured_substituted_days": 4,
     "within_what_gate2_measured": false,
+    "substituted_encoder_days_by_tier": {},
+    "substituted_encoder_days_worst_tier": null,
     "decoder_leads_median": null,
     "decoder_leads_expected": 14,
     "forcing_age_days_median": null,

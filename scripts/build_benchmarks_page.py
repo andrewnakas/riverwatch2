@@ -52,11 +52,19 @@ ARTIFACTS = {
     "sampling": "b0_sampling_verdict_conus404.json",
     "gate1": "m1_gate1_verdict.json",
     "gate2": "m1_gate2_verdict.json",
+    "gate3": "m1_gate3_verdict.json",
     "transfer": "river_transfer_study.json",
 }
 
 # Rendered verbatim on the page.
 _FORBIDDEN_CLAIMS = [
+    ("One number does not cover every basin this member serves.",
+     "It serves 620: the 490 it was trained on, and 130 more that GATE 3 "
+     "authorised and which it has never seen. On the same val1 window those "
+     "130 measure a median NSE of 0.854214 (CI [0.838676, 0.895274]) against "
+     "0.876335 for the 490 — so quoting the cohort figure at an out-of-cohort "
+     "gauge overstates it. Every forecast carries which tier it is in, and "
+     "the out-of-cohort ones say so in their own notes."),
     ("0.905829 is not operational skill.",
      "It is measured under perfect forcing — the model is handed the weather that "
      "actually occurred. Under real 1-day-ahead GFS forecast forcing the paired cost "
@@ -334,6 +342,54 @@ it must not be converted into an NSE claim. And the difference of medians read
 overstating it by about 1.9× — which is why every number on this page is a paired
 per-basin difference with a bootstrap interval.</p>"""
 
+    # The served domain is TWO tiers with different measured skill, and a page
+    # that quotes one number for "the member this site serves" is wrong for 130
+    # of its 620 basins. Driven off the verdict artifact so the prose cannot
+    # drift from the measurement.
+    g3 = a.get("gate3") or {}
+    gate3_block = ""
+    if g3:
+        oc = g3.get("out_of_cohort") or {}
+        ic = g3.get("in_cohort_control") or {}
+        pers = g3.get("vs_persistence_out_of_cohort") or {}
+        oc_ci = oc.get("ci95") or [None, None]
+        ic_ci = ic.get("ci95") or [None, None]
+        p_ci = pers.get("ci95") or [None, None]
+        gate3_block = f"""
+<h2>It serves basins it was never trained on, and they are measured separately</h2>
+<p>The member was trained on {_esc(ic.get('basins', '?'))} CAMELS basins. It now also serves
+<strong>{_esc(oc.get('basins', '?'))}</strong> more that it has never seen, which takes the served
+domain to <strong>620</strong>. Those were not switched on by assumption: the question
+&ldquo;is it any good there?&rdquo; was pre-registered with a band and a stop
+threshold before any out-of-cohort number existed, then measured on the same
+window and the same checkpoints as the control.</p>
+<table><thead><tr><th>basins</th><th class='n'>median NSE (val1)</th><th class='n'>CI95</th>
+<th class='n'>n</th></tr></thead><tbody>
+<tr><td>trained on</td><td class='n'>{_f(ic.get('median_nse'))}</td>
+<td class='n'>{_f(ic_ci[0])} … {_f(ic_ci[1])}</td><td class='n'>{_esc(ic.get('basins', '?'))}</td></tr>
+<tr><td><strong>never trained on</strong></td><td class='n'><strong>{_f(oc.get('median_nse'))}</strong></td>
+<td class='n'>{_f(oc_ci[0])} … {_f(oc_ci[1])}</td><td class='n'>{_esc(oc.get('basins', '?'))}</td></tr>
+</tbody></table>
+<p>The gap is <strong>{_f(g3.get('level_gap_out_minus_in'))}</strong>, and it is in the direction
+you would expect — being outside the training set costs something, and it costs about two
+hundredths of an NSE. <strong>Quote the lower figure for those gauges</strong>; every forecast
+this site publishes records which tier its basin is in, and the out-of-cohort ones carry a note
+saying so.</p>
+<p>The statistic that actually licensed serving them is the paired one, against the
+forecast that tomorrow looks like today, on identical rows: <strong>{_f(pers.get('delta_member_minus_persistence'))}</strong>
+median NSE (CI [{_f(p_ci[0])}, {_f(p_ci[1])}]), better at
+{_f(100 * (pers.get('breadth') or 0), 1)}% of them, against persistence&rsquo;s own
+{_f(pers.get('median_nse_persistence'))}.</p>
+<p class="muted">⚠️ Two honest limits. The registered decision table is keyed on the
+<em>point estimate</em>, and {_f(oc.get('median_nse'))} selects &ldquo;serve, labelled&rdquo; — but the
+interval reaches above the threshold for the tier above it, so the data do not settle which of
+the two rows was right. And this is a <em>val-window</em> measurement on basins chosen partly
+for having recent discharge; it is not a live read. Five further basins hold published forcing
+and are deliberately <strong>not</strong> served: three have almost no val-window discharge, so the
+gate can say nothing about them in either direction, and two have partial coverage and measured
+{_f(0.912948)} and {_f(0.564878)} individually — one fine, one poor, and two basins generalise
+to nothing.</p>"""
+
     gate1_block = ""
     if g1:
         on_areal = (lbl.get("governing_gate") == "GATE 2") and bool(g2)
@@ -530,6 +586,7 @@ paths, same answer — the cheapest proof that the headline and the table descri
 {gate1_block}
 {samp_block}
 
+{gate3_block}
 {transfer_block}
 
 <h2>What this evidence does <em>not</em> support</h2>

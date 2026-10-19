@@ -1363,9 +1363,11 @@ def forecast_station(
     # whose inputs exist operationally -- the other two need 4-product decoder
     # forcing or Daymet columns, and Daymet V4R1 is an ANNUAL release.
     #
-    # Restricted to the 490-basin cohort (data/m1_cohort.json) by the member
-    # itself; the other 9,361 served gauges are out of its domain and it
-    # returns None for them rather than extrapolating silently.
+    # Restricted to the member's own SERVED DOMAIN -- both tiers, 620 basins:
+    # the 490 it was trained on (data/m1_cohort.json) plus the 130 GATE 3
+    # authorised (data/m1_cohort_tier2.json), which serve under their own
+    # measured median. The other 9,231 served gauges are out of its domain and
+    # it returns None for them rather than extrapolating silently.
     #
     # It needs its OWN forcing fetch: the recipe wants 6 variables including
     # `vapor_pressure`, which Open-Meteo does not serve under that name and
@@ -1382,7 +1384,7 @@ def forecast_station(
     try:
         from . import mblstm_modern as _mblstm_modern
         # The cohort gate comes FIRST, and the checkpoint load second, before
-        # any forcing I/O: 9,361 of the 9,851 served gauges are out of this
+        # any forcing I/O: 9,231 of the 9,851 served gauges are out of this
         # member's domain, and when the checkpoints cannot be loaded at all the
         # member would otherwise spend that I/O only to emit a refusal shaped
         # like a forcing problem.

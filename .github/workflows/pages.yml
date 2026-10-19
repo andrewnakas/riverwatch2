@@ -268,7 +268,7 @@ jobs:
           python scripts_modern/nldas_areal_append.py \
             --archive-dir data/m1_forcing \
             --weights data/nldas_basin_weights.pkl \
-            --basins data/m1_cohort.json \
+            --basins data/m1_cohort.json,data/m1_cohort_tier2.json \
             --days 8 --workers 4 --max-seconds 1500
           RC=$?   # before anything else runs: a $(...) substitution resets $?
           rm -f "$HOME/.netrc"
