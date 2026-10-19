@@ -11,7 +11,8 @@ WHY A SEPARATE MODULE rather than extending `weather.DAILY_VARS`: that list is
 keyed by `weather.SCHEMA_VERSION`, and its comment is explicit -- the version is
 "bumped when DAILY_VARS expands so we re-fetch missing cols". Expanding it would
 invalidate the cached history of all 9,851 served gauges and force a full
-re-fetch in CI. This member serves 490 gauges, so it pays for its own extra
+re-fetch in CI. This member serves 620 gauges across two tiers, so it pays
+for its own extra
 channel in its own cache namespace and leaves the production member's cache
 untouched.
 

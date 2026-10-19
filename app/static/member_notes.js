@@ -47,8 +47,27 @@
         : "";
     }
     if (!served) {
+      // 620, not 490: GATE 3 widened the served domain to two tiers. A public
+      // string naming the old number tells a visitor the wrong reason their
+      // gauge has no member.
       return "not run at this gauge — outside its " +
-             "490-basin cohort, or its forcing was unavailable";
+             "620-basin served domain, or its forcing was unavailable";
+    }
+    // ⭐ WHICH TIER THIS GAUGE IS IN. GATE 3's decision table requires that
+    // out-of-cohort basins be marked as a distinct tier and quoted their OWN
+    // median, "never the cohort one". Until this was passed through, a visitor
+    // on one of the 130 basins the model has never been trained on saw exactly
+    // the label a trained-on basin shows -- the caveat was published, archived
+    // and rendered on /benchmarks, and absent from the one place that visitor
+    // was actually looking.
+    var tier = (opts && opts.tier) || "";
+    var tierNote = "";
+    if (tier === "out_of_cohort_gate3") {
+      tierNote = "⚠️ This gauge is OUTSIDE the basins this model was trained " +
+                 "on. Those 130 measure a median NSE of 0.854214 " +
+                 "(CI [0.838676, 0.895274]) against 0.876335 for the 490 it " +
+                 "was trained on, on the same window — the lower figure is " +
+                 "the one that applies here. ";
     }
     // Schema v2 renamed these and added the cohort LEVEL; v1 keys are still
     // read so an older sidecar cannot blank the label.
@@ -79,6 +98,7 @@
     // it must appear beside it. A caveat living only in an unread JSON key is
     // not a disclosure -- that mistake was already made once here.
     if (_label.extrapolation_warning) s += " \u26a0 " + _label.extrapolation_warning;
+    if (tierNote) s = tierNote + s;
     s += " Display only \u2014 it carries no blend weight.";
     return s;
   }

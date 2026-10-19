@@ -4,7 +4,8 @@
 WHY THIS EXISTS
 ---------------
 `app/mblstm_modern.py` needs 6 daily channels over a 365-day encoder window
-plus a 14-day decoder window, for the 490 cohort basins. It cannot fetch them
+plus a 14-day decoder window, for all 620 SERVED basins -- the 490-basin
+training cohort and the 130 GATE 3 authorised. It cannot fetch them
 at serve time: the Pages build sets `RW2_NO_FETCH=1`, and `modern_forcing`'s
 cache key embeds the literal `(start, end)` pair, so `end = today-1` mints a
 new cache filename every day and the cache can never warm. With 64 build

@@ -103,7 +103,36 @@ for (const [tag, s] of [["GATE 1", p], ["GATE 2", a]]) {
 
 // --- 6. not-served branch.
 const nr = MN.memberLabel("mblstm_modern", { served: false });
-check("not-run branch explains why", /cohort/.test(nr), nr);
+// Matches "served domain", not "cohort": GATE 3 widened the domain to two
+// tiers, so the public string names 620 and no longer says "490-basin cohort".
+// The NUMBER is asserted too, because that is the part that silently drifts.
+check("not-run branch explains why", /served domain/.test(nr), nr);
+check("not-run branch names the current domain size", /620/.test(nr), nr);
+check("not-run branch does not name the stale 490", !/490-basin/.test(nr), nr);
+
+// --- 7. the tier a gauge is in must reach the label.
+// GATE 3: "The UI must mark these basins as a distinct tier." Before this, a
+// visitor on one of the 130 basins the model was never trained on saw exactly
+// the label a trained-on basin shows.
+const t2 = MN.memberLabel("mblstm_modern",
+                          { served: true, tier: "out_of_cohort_gate3" });
+check("tier 2 is marked as outside the training basins",
+      /OUTSIDE the basins this model was trained on/.test(t2), t2);
+check("tier 2 quotes its OWN median", /0\.854214/.test(t2), t2);
+check("tier 2 states the cohort figure it must not be confused with",
+      /0\.876335/.test(t2), t2);
+check("tier 2 says which figure applies",
+      /the lower figure is the one that applies here/.test(t2), t2);
+
+const t1 = MN.memberLabel("mblstm_modern", { served: true, tier: "in_cohort" });
+check("tier 1 carries no out-of-cohort marker",
+      !/OUTSIDE the basins/.test(t1), t1);
+check("tier 1 does not quote the out-of-cohort median",
+      !/0\.854214/.test(t1), t1);
+
+const tNone = MN.memberLabel("mblstm_modern", { served: true });
+check("an absent tier behaves exactly like tier 1",
+      tNone === t1, tNone + " VS " + t1);
 check("not-run branch quotes no skill number", !/\d\.\d{3}/.test(nr), nr);
 
 // --- 7. the SHIPPED sidecar must render through the same path.

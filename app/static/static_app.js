@@ -681,7 +681,12 @@ function renderForecast(payload) {
   // carry that caveat where the visitor is looking.
   const modernServed = (payload.members_used || []).includes("mblstm_modern");
   const modernNote = (typeof MemberNotes !== "undefined")
-    ? MemberNotes.memberLabel("mblstm_modern", { served: modernServed })
+    ? MemberNotes.memberLabel("mblstm_modern", {
+        served: modernServed,
+        // The tier decides WHICH measured median applies to this gauge, so it
+        // has to reach the label the visitor reads.
+        tier: (payload.member_labels || {}).mblstm_modern,
+      })
     : "";
   const modernRow = modernServed ? `
       <tr class="ensemble-row">
