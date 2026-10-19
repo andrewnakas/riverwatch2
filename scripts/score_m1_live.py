@@ -226,6 +226,52 @@ def main() -> int:
             "bias": float(np.mean(p - truth)),
         }
 
+    # ⚠️⚠️ REPORT EACH TIER. The served domain is 620 basins in two tiers whose
+    # measured skill differs: on the same val1 window the 490 the member was
+    # trained on read a median NSE of 0.876335 and the 130 GATE 3 authorised
+    # read 0.854214. Pooling them into one live number understates the first
+    # and overstates the second, and the FIRST live number is the one that gets
+    # quoted. The identical blindness was just found in the published label,
+    # where a minority tier three days behind on forcing could not move a
+    # pooled median at all.
+    #
+    # Reported, not substituted: the pooled figure stays, because it is the
+    # honest answer to "how is the member doing overall", and the per-tier
+    # figures answer "what applies to the gauge in front of me".
+    tiers = {}
+    for name, fn in (("tier1_trained", ROOT / "data" / "m1_cohort.json"),
+                     ("tier2_gate3", ROOT / "data" / "m1_cohort_tier2.json")):
+        try:
+            tiers[name] = {str(x) for x in json.loads(fn.read_text())["cohort"]}
+        except Exception:
+            continue
+    result["by_tier"] = {}
+    for tname, tids in tiers.items():
+        idx = [i for i, (sid, _) in enumerate(scored) if sid in tids]
+        if not idx:
+            result["by_tier"][tname] = {
+                "n_pairs": 0, "n_basins": 0,
+                "_why": "no archived rows for this tier in this window"}
+            continue
+        tb = truth[idx]
+        ent = {"n_pairs": len(idx),
+               "n_basins": len({scored[i][0] for i in idx})}
+        for s2 in series_names:
+            pv = np.array([pred[s2][scored[i]] for i in idx], dtype=np.float64)
+            ent[s2] = {"mae": float(np.mean(np.abs(pv - tb))),
+                       "bias": float(np.mean(pv - tb))}
+        result["by_tier"][tname] = ent
+    unknown = sorted({sid for sid, _ in scored
+                      if not any(sid in t for t in tiers.values())})
+    if unknown:
+        # Not silently folded into a tier: an archived basin in neither list is
+        # either a stale archive row or a domain change nobody updated here.
+        result["by_tier"]["_basins_in_no_tier"] = {
+            "n": len(unknown), "ids": unknown[:20],
+            "_why": ("archived but in neither cohort file -- a stale archive "
+                     "row, or the served domain changed without this script "
+                     "being told")}
+
     # THE HEADLINE: paired per-basin MAE difference vs the member, with a CI.
     by_basin = defaultdict(list)
     for i, (sid, _) in enumerate(scored):

@@ -185,3 +185,43 @@ def test_the_live_scorer_still_stamps_its_own_schema():
     src = (ROOT / "scripts" / "score_m1_live.py").read_text()
     assert 'SCHEMA = "m1-live-' in src
     assert '"schema_version": SCHEMA' in src
+
+
+# ------------------------------------------------------- each tier, separately
+
+def test_the_live_scorer_reports_each_tier():
+    """The served domain is 620 basins in two tiers whose measured skill
+    differs -- 0.876335 for the 490 trained on, 0.854214 for the 130 GATE 3
+    authorised, same window. Pooling them into one live number understates the
+    first and overstates the second, and the FIRST live number is the one that
+    gets quoted.
+
+    The identical blindness had just been found in the published label, where a
+    minority tier three days behind on forcing could not move a pooled median
+    at all. 130 of 620 cannot.
+    """
+    src = (ROOT / "scripts" / "score_m1_live.py").read_text()
+    assert 'result["by_tier"]' in src
+    assert "m1_cohort_tier2.json" in src
+    assert "tier1_trained" in src and "tier2_gate3" in src
+    # Reported, not substituted: the pooled figure must survive.
+    assert 'result["series"][s]' in src, \
+        "the pooled per-series figure must still be reported"
+
+
+def test_a_basin_in_neither_tier_is_surfaced_not_folded_in():
+    """An archived basin in neither cohort file is either a stale archive row
+    or a domain change nobody propagated. Quietly counting it in one tier would
+    corrupt that tier's number and hide the cause."""
+    src = (ROOT / "scripts" / "score_m1_live.py").read_text()
+    assert "_basins_in_no_tier" in src
+    i = src.index("_basins_in_no_tier")
+    assert "served domain changed" in src[i:i + 500]
+
+
+def test_an_empty_tier_says_so_rather_than_reading_as_zero_skill():
+    """Tier 2 was served but never archived until 2026-10-19, so an empty tier
+    is a real state. It must not render as a tier that scored badly."""
+    src = (ROOT / "scripts" / "score_m1_live.py").read_text()
+    i = src.index('"n_pairs": 0')
+    assert "no archived rows for this tier" in src[i:i + 300]
