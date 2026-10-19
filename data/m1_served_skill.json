@@ -25,7 +25,8 @@
     "served_tables": 0,
     "unserved_tables": 0,
     "decoder_horizon_short": false,
-    "forcing_stale": true
+    "forcing_stale": true,
+    "upstream": {}
   },
   "live_measured": null,
   "blend_weight": 0.0,

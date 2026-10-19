@@ -50,24 +50,35 @@ GATE1 = ROOT / "benchmarks" / "m1_gate1_verdict.json"
 GATE2 = ROOT / "benchmarks" / "m1_gate2_verdict.json"
 TABLES = ROOT / "data" / "m1_forcing"
 COHORT = ROOT / "data" / "m1_cohort.json"
+TIER2 = ROOT / "data" / "m1_cohort_tier2.json"
 
 
 def served_ids() -> set[str]:
-    """The basins the member actually answers: `camels_attrs.in_cohort` gates on
-    this list, so these are the only ones the label describes.
+    """The basins the member actually answers -- BOTH tiers.
 
-    ⚠️ The published table covers 625 basins, not 490. The extra 135 are the
-    GATE 3 candidates, seeded from the areal corpus and deliberately NOT served
-    yet, and `build_m1_forcing.py` does not refresh them (its todo comes from
-    this same cohort file). Measuring freshness over everything on disk would
-    therefore report the label as permanently stale because of basins nobody is
-    served -- a warning that fires when nothing is wrong, which is the failure
-    this label has already had to fix once.
+    ⚠️⚠️ This read only the 490-basin training cohort until 2026-10-19, which
+    was right while tier 2 was dark and wrong the moment GATE 3 passed. The
+    live label then reported `served_tables: 490` and `unserved_tables: 135`
+    while the forcing builder, in the same job, logged "490 tier-1 + 130 tier-2
+    = 620 basins to refresh" -- the label under-reporting its own served domain
+    by 130 basins, and reporting 130 refreshed basins as unrefreshed.
+    Freshness is measured over this set, so had any tier-2 table actually gone
+    stale the label would also have been blind to it.
+    `app.camels_attrs.in_served_domain` is the authority on what is served, and
+    this must mirror it. Both files are read for the same reason that function
+    reads both: the two tiers have different measured skill and a single list
+    would make it impossible to say which number applies.
     """
-    try:
-        return {str(x) for x in json.loads(COHORT.read_text())["cohort"]}
-    except Exception:
-        return set()
+    out: set[str] = set()
+    for path in (COHORT, TIER2):
+        try:
+            out |= {str(x) for x in json.loads(path.read_text())["cohort"]}
+        except Exception:
+            # Absent tier 2 is normal (it simply is not deployed); an absent
+            # tier 1 leaves this empty, which makes the label describe nothing
+            # rather than describe the wrong thing.
+            continue
+    return out
 OUT = ROOT / "data" / "m1_served_skill.json"
 
 SCHEMA_VERSION = "m1-label-2"
@@ -114,6 +125,22 @@ def read_built(only: set[str] | None = None) -> dict[str, int]:
         except Exception:
             continue
     return out
+
+
+def read_areal_state() -> dict:
+    """What the areal append last learned about UPSTREAM availability.
+
+    Written by `scripts_modern/nldas_areal_append.py`, which is the only thing
+    that sees the per-hour counts. Absent is fine and means "unknown", which is
+    reported as unknown rather than guessed in either direction.
+    """
+    p = TABLES / "_areal_state.json"
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {}
 
 
 def measure_forcing(limit: int = 0) -> dict:
@@ -227,6 +254,7 @@ def measure_forcing(limit: int = 0) -> dict:
         "decoder_horizon_short": (med_dec is not None
                                   and med_dec < DECODER_LEADS_EXPECTED),
         "forcing_stale": (med_age is None or med_age > FORCING_AGE_MAX_DAYS),
+        "upstream": read_areal_state(),
     }
 
 
@@ -277,12 +305,40 @@ def build(g1: dict, g2: dict | None, mix: dict) -> dict:
         # satisfied.
         probs = []
         if not within:
+            # ⚠️ ATTRIBUTE THE CAUSE. This used to end "(refresh the
+            # basin-average provider)" unconditionally, which during the week
+            # of 2026-10-12 told readers to go fix a provider that was
+            # perfectly current while NLDAS-2 upstream had stopped publishing
+            # complete days. Naming the wrong cause is expensive -- the same
+            # mistake cost three days here when a script missing from a branch
+            # looked like a credentials problem -- so the remedy named depends
+            # on what the appender actually observed.
+            up = mix.get("upstream") or {}
+            newest_up = up.get("newest_complete_upstream_day")
+            frontier = up.get("upstream_frontier_day")
+            hours = (up.get("hours_available_on_skipped_days") or {}).get(
+                frontier) if frontier else None
+            if up.get("upstream_is_incomplete") and frontier:
+                cause = (
+                    f"; the cause is UPSTREAM, not this pipeline: NLDAS-2 has "
+                    f"published no complete day since "
+                    f"{newest_up or 'before this window'} and its newest "
+                    f"partial day {frontier} has only {hours} of 24 hours, "
+                    f"which the provider correctly refuses to average into a "
+                    f"daily value. Nothing here needs refreshing; the gap "
+                    f"closes when NASA publishes")
+            elif up:
+                cause = ("; the areal provider is behind what upstream has "
+                         "published and should be refreshed")
+            else:
+                cause = ("; the cause is unrecorded -- the areal provider has "
+                         "not reported its upstream state, so this cannot say "
+                         "whether the gap is ours or NASA's")
             probs.append(
                 f"{gap} days of the encoder window are substituted, but the "
                 f"gate that priced this configuration substituted only "
                 f"{GATE2_SUBSTITUTED_DAYS}, so its delta is an extrapolation "
-                "here and the true cost is likely larger (refresh the "
-                "basin-average provider)")
+                f"here and the true cost is likely larger{cause}")
         age = mix.get("forcing_age_days_median")
         if mix.get("forcing_stale"):
             probs.append(
