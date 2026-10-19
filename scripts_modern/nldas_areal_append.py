@@ -36,9 +36,11 @@ import gzip
 import importlib.util
 import json
 import os
+import re
 import sys
 import tempfile
 import time
+import datetime as dt
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -136,6 +138,53 @@ def write_table(p: Path, rows):
     if len(back) != len(rows):
         p.unlink(missing_ok=True)
         raise RuntimeError(f"{p.name}: wrote {len(rows)} rows, read back {len(back)}")
+
+
+PARTIAL_RE = re.compile(r"(\d+)/24 hours")
+
+
+def write_state(arch: Path, wanted, todo, done_days, skipped) -> None:
+    """Publish what this run learned about UPSTREAM, beside the tables.
+
+    `newest_complete_upstream_day` is the newest day this run could actually
+    assemble from 24 complete hours. If that equals the newest areal day in the
+    table, our append is CURRENT and any remaining gap belongs to NLDAS-2, not
+    to us.
+    """
+    partial = {}
+    for day, why in skipped.items():
+        m = PARTIAL_RE.search(why)
+        if m:
+            partial[day] = int(m.group(1))
+    newest_complete = max(done_days) if done_days else None
+    # Days upstream has SOME data for but not all 24 hours -- the frontier.
+    frontier = max(partial, default=None) if partial else None
+    state = {
+        "schema_version": 1,
+        "_note": (
+            "What the areal append learned about UPSTREAM availability, so the "
+            "public label can distinguish 'our provider is behind' from "
+            "'NLDAS-2 has not published a complete day since X'. The remedies "
+            "are completely different and the label previously named the wrong "
+            "one."),
+        "ran_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "window_requested": [wanted[0].isoformat(), wanted[-1].isoformat()],
+        "days_attempted": [d.isoformat() for d in todo],
+        "days_written": sorted(done_days),
+        "newest_complete_upstream_day": newest_complete,
+        "days_skipped": skipped,
+        "hours_available_on_skipped_days": partial,
+        "upstream_frontier_day": frontier,
+        "upstream_is_incomplete": bool(partial),
+    }
+    p = arch / "_areal_state.json"
+    tmp = p.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state, indent=1))
+    tmp.replace(p)
+    print(f"  wrote {p.name}: newest complete upstream day "
+          f"{newest_complete or 'none this run'}"
+          + (f", frontier {frontier} partial at "
+             f"{partial.get(frontier)}/24 hours" if frontier else ""))
 
 
 def main() -> int:
@@ -258,6 +307,7 @@ def main() -> int:
 
     t_start = time.time()
     done_days = []
+    skipped: dict[str, str] = {}
     for d in todo:
         # Stop CLEANLY rather than be killed. Everything already committed
         # stays; only the day in flight is lost.
@@ -273,10 +323,27 @@ def main() -> int:
             # fatal: the point builder keeps that day filled and the next run
             # tries again. Silence here would be the bug.
             print(f"  {d} SKIPPED: {exc}", flush=True)
+            skipped[d.isoformat()] = str(exc)
             continue
         n = commit({d.isoformat(): chans})
         done_days.append(d.isoformat())
         print(f"  {d} ok -> {n} basin tables updated", flush=True)
+
+    # ⚠️⚠️ RECORD WHY, NOT JUST WHAT. The published label can see the table and
+    # therefore the GAP, but it cannot see the CAUSE -- and it was telling
+    # readers to "refresh the basin-average provider" during a week when the
+    # provider was perfectly current and NLDAS-2 upstream had simply stopped
+    # publishing complete days. Pointing at the wrong cause is expensive: the
+    # same misattribution cost three days earlier in this project, when a
+    # script missing from a branch looked like an Earthdata credentials
+    # problem.
+    #
+    # Only this script knows the difference, because only this script sees the
+    # hour counts: "13/24 hours" is upstream being incomplete, while a fetch or
+    # auth failure looks different and the HDF5 preflight above would already
+    # have failed. So it writes the distinction down and the label reports it,
+    # exactly as `_built.json` records a build time that no row date can express.
+    write_state(arch, wanted, todo, done_days, skipped)
 
     if not done_days:
         print("no days produced")
