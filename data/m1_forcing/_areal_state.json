@@ -1,0 +1,20 @@
+{
+ "schema_version": 1,
+ "_note": "What the areal append learned about UPSTREAM availability, so the public label can distinguish 'our provider is behind' from 'NLDAS-2 has not published a complete day since X'. The remedies are completely different and the label previously named the wrong one.",
+ "ran_at_utc": "2026-10-24T03:42:36.244711+00:00",
+ "window_requested": [
+  "2026-10-12",
+  "2026-10-19"
+ ],
+ "days_attempted": [
+  "2026-10-19"
+ ],
+ "days_written": [
+  "2026-10-19"
+ ],
+ "newest_complete_upstream_day": "2026-10-19",
+ "days_skipped": {},
+ "hours_available_on_skipped_days": {},
+ "upstream_frontier_day": null,
+ "upstream_is_incomplete": false
+}

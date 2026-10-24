@@ -1,0 +1,84 @@
+{
+  "schema_version": "m1-label-2",
+  "member": "nldasm9",
+  "seeds": [
+    501,
+    502,
+    503,
+    504,
+    505
+  ],
+  "trained_on": "NLDAS-2 basin-average (areal) forcing",
+  "forcing_observed": {
+    "sampled_basins": 620,
+    "rows": 273420,
+    "by_src": {
+      "nldas_areal": 261020,
+      "om_point": 12400
+    },
+    "areal_fraction": 0.9546485260770975,
+    "substituted_encoder_days_median": 4,
+    "gate2_measured_substituted_days": 4,
+    "within_what_gate2_measured": true,
+    "newest_areal_day": "2026-10-19",
+    "substituted_encoder_days_by_tier": {
+      "tier1_trained": 4,
+      "tier2_gate3": 4
+    },
+    "substituted_encoder_days_worst_tier": 4,
+    "decoder_leads_median": 16,
+    "decoder_leads_expected": 14,
+    "forcing_age_days_median": 0,
+    "forcing_age_basins": 620,
+    "published_tables": 625,
+    "served_tables": 620,
+    "unserved_tables": 5,
+    "decoder_horizon_short": false,
+    "forcing_stale": false,
+    "upstream": {
+      "schema_version": 1,
+      "_note": "What the areal append learned about UPSTREAM availability, so the public label can distinguish 'our provider is behind' from 'NLDAS-2 has not published a complete day since X'. The remedies are completely different and the label previously named the wrong one.",
+      "ran_at_utc": "2026-10-24T03:42:36.244711+00:00",
+      "window_requested": [
+        "2026-10-12",
+        "2026-10-19"
+      ],
+      "days_attempted": [
+        "2026-10-19"
+      ],
+      "days_written": [
+        "2026-10-19"
+      ],
+      "newest_complete_upstream_day": "2026-10-19",
+      "days_skipped": {},
+      "hours_available_on_skipped_days": {},
+      "upstream_frontier_day": null,
+      "upstream_is_incomplete": false
+    }
+  },
+  "live_measured": null,
+  "blend_weight": 0.0,
+  "served_on": "NLDAS-2 basin-average (areal) forcing -- the product it was trained on -- for 95% of the encoder window, with the newest days Open-Meteo point-filled because NLDAS-2 publishes at today-5",
+  "governing_gate": "GATE 2",
+  "encoder_substitution_delta": -0.004018177634188769,
+  "encoder_substitution_ci95": [
+    -0.007396350167453103,
+    -0.0019625893495204827
+  ],
+  "encoder_substitution_breadth": 0.2866666666666667,
+  "encoder_substitution_level": -0.036141576080241045,
+  "encoder_substitution_frame": {
+    "name": "val1",
+    "n_basins": 150,
+    "rows": 217153,
+    "protocol": "modern-v3-9yr"
+  },
+  "superseded": {
+    "gate": "GATE 1",
+    "delta": -0.0595344589878411,
+    "what_it_measured": "serving on Open-Meteo point forcing for the WHOLE encoder window, which is what was served before the areal provider landed",
+    "fraction_recovered_paired": 0.9325061706892067
+  },
+  "extrapolation_warning": null,
+  "_note": "The served member now runs on the forcing it was trained on for 95% of its encoder window. The remainder -- the newest days, which NLDAS-2 has not published -- is Open-Meteo point, measured at a paired -0.004018 median NSE (level -0.036142) on val1/150 basins. Quoting the paired figure alone overstates the fix: areal recovers 93.3% of GATE 1's loss paired but only 57.5% on the level. Separately, the 14-day DECODER forcing is a forecast product in every configuration ever measured and neither gate covers it; its closest analogue is the -0.048033 real-forecast decay, a different product on a different frame, which must NOT be added to the above. No figure here is the member's own served skill -- that is still unmeasured, and scripts/score_m1_live.py is what will measure it."
+}
