@@ -149,7 +149,12 @@ def main() -> int:
     # two things that are not the same product. --allow-mixed-generations is
     # for a deliberate comparison BETWEEN generations, never for a headline.
     gens = Counter(r.get("schema_version") or "unstamped" for r in rows)
-    if len(gens) > 1:
+    # ⚠️ `not a.generation` matters. This refused whenever the ARCHIVE held a
+    # mix, even when the caller had already resolved it by naming one --
+    # measured by running it: `--generation m1-fcst-2` on a two-generation
+    # archive refused instead of scoring. The refusal is for an UNRESOLVED
+    # mix; naming a generation is the resolution, not a second problem.
+    if len(gens) > 1 and not a.generation:
         print("archived generations present at this lead:")
         for g, n in sorted(gens.items(), key=lambda kv: -kv[1]):
             days = sorted({r["issued_date"] for r in rows
@@ -323,7 +328,8 @@ def main() -> int:
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=2) + "\n")
-    print(f"\nwrote {out.relative_to(ROOT)}")
+    shown = out.resolve()
+    print(f"\nwrote {shown.relative_to(ROOT) if shown.is_relative_to(ROOT) else shown}")
     for s, v in result["paired_vs_member"].items():
         print(f"  member vs {s}: paired median MAE delta "
               f"{v['paired_median_mae_delta']:+.4f} cfs, CI {v['ci95']}, "

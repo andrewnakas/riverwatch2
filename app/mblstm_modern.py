@@ -247,6 +247,51 @@ def _try_load() -> bool:
         return False
 
 
+# ---------------------------------------------------------------------------
+# Static-attribute envelope.
+#
+# ⚠️ GATE 3 authorised tier 2 on a MEDIAN (0.854214 over 130 basins), and a
+# median says nothing about the tail. The tail is basins whose statics sit far
+# outside anything the 490 training basins span -- above all `area_gages2`:
+# the cohort is mean 492 km², sd 478, and 13340000 (Clearwater at Orofino) is
+# z=+28.8, 06360500 z=+25.5. Measured live 2026-10-19..11-01 at lead 1: the 8
+# tier-2 basins with any |z|>10 ran at a median 23x persistence's MAE and
+# carried 4,815 of tier 2's pooled member MAE against persistence's 198 --
+# essentially the whole tier-2 failure (13340000 issued 5,414 cfs on a river
+# reading 1,630, ramping to 17,685 by lead 14: a November freshet).
+#
+# Rule: refuse when any static z lies more than ENVELOPE_MARGIN training-sd
+# beyond the [min, max] the training cohort itself spans for that feature.
+# Tier 1 passes by construction. At 1.0 this refuses 34 of 130 tier-2 basins.
+# The margin was chosen AFTER looking at live outcomes (0.5 -> 41, 2.0 -> 29
+# refused; all three remove >88% of the excess), so it is a guard, not a
+# measurement, and the tier-2 label's 0.854214 was scored on all 130.
+ENVELOPE_MARGIN = 1.0
+_envelope: tuple[np.ndarray, np.ndarray] | None = None
+
+
+def _static_z(sid: str) -> np.ndarray:
+    return np.asarray(
+        _mb.static_vector(camels_attrs.enrich_station_attrs(sid, {"id": sid}), _cfg),
+        dtype=np.float64)
+
+
+def outside_static_envelope(sid: str) -> list[tuple[str, float, float, float]]:
+    """[(feature, z, cohort_lo, cohort_hi)] beyond the margin, worst first."""
+    global _envelope
+    if _cfg is None:
+        return []
+    if _envelope is None:
+        Z = np.stack([_static_z(s) for s in sorted(camels_attrs.cohort())])
+        _envelope = (Z.min(axis=0), Z.max(axis=0))
+    lo, hi = _envelope
+    z = _static_z(sid)
+    excess = np.maximum(lo - ENVELOPE_MARGIN - z, z - hi - ENVELOPE_MARGIN)
+    feats = _cfg["static_feats"]
+    return [(feats[i], float(z[i]), float(lo[i]), float(hi[i]))
+            for i in np.argsort(-excess) if excess[i] > 0]
+
+
 def forecast(
     q_hist: pd.DataFrame,
     wx_hist: pd.DataFrame,
@@ -288,6 +333,14 @@ def forecast(
             # (0.876335). `in_cohort` still means "trained on" and is what
             # decides WHICH number a label quotes, so widening it instead
             # would have silently re-pointed every caller that picks a figure.
+            return None
+        far = outside_static_envelope(sid)
+        if far:
+            last_skip_reason = (
+                "static attributes outside the training envelope: "
+                + ", ".join(f"{f} z={z:+.1f} (trained {lo:+.1f}..{hi:+.1f})"
+                            for f, z, lo, hi in far[:3])
+                + ". The member would be extrapolating, not forecasting.")
             return None
         if q_hist is None or len(q_hist) < CONTEXT_DAYS:
             last_skip_reason = (f"needs {CONTEXT_DAYS}d discharge history, "

@@ -648,7 +648,10 @@ function renderForecast(payload) {
   const sumEl = document.getElementById("forecast-summary");
   const blend = payload.blend || [];
   const t1 = blend[0]?.q_cfs;
-  const t7 = blend[blend.length - 1]?.q_cfs;
+  // Day +7 is index 6. This read the LAST point -- day 14 on a 14-day
+  // horizon -- under a "Day +7" label.
+  const t7 = blend[6]?.q_cfs;
+  const tLast = blend.length > 7 ? blend[blend.length - 1]?.q_cfs : undefined;
   const strat = payload.weights_strategy || "soft_blend";
   const stratLabel = strat.startsWith("snap_to:")
     ? `auto-snap to <b>${strat.split(":")[1]}</b>`
@@ -674,6 +677,7 @@ function renderForecast(payload) {
       <tr><th>Blend strategy</th><td>${stratLabel}</td></tr>
       <tr><th>Day +1 blend</th><td>${fmtNumber(t1)} cfs</td></tr>
       <tr><th>Day +7 blend</th><td>${fmtNumber(t7)} cfs</td></tr>
+      ${tLast !== undefined ? `<tr><th>Day +${blend.length} blend</th><td>${fmtNumber(tLast)} cfs</td></tr>` : ""}
     </table>
   `;
 

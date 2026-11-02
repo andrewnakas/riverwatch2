@@ -144,6 +144,26 @@ def test_short_history_refused_with_reason(monkeypatch, tmp_path):
     assert "365" in (mod.last_skip_reason or "")
 
 
+
+@pytest.mark.parametrize("area,served", [(1.5, True), (10.0, False)])
+def test_static_envelope_refuses_extrapolation(monkeypatch, tmp_path, area, served):
+    """Tier-2 basins far outside the training cohort's statics are refused.
+
+    Live 2026-10: 13340000 sat at area z=+28.8 and issued 5,414 cfs on a river
+    reading 1,630. The envelope is the cohort's own per-feature [min, max]
+    widened by ENVELOPE_MARGIN; cohort areas 0 and 1 here give [0, 1] -> 2.0.
+    """
+    mod = _fresh(monkeypatch, ckpts=[_ckpt(tmp_path)], cohort=("A", "B"))
+    areas = {"A": 0.0, "B": 1.0, COHORT_ID: area}
+    monkeypatch.setattr(mod.camels_attrs, "tier2", lambda: frozenset({COHORT_ID}))
+    monkeypatch.setattr(mod.camels_attrs, "enrich_station_attrs",
+                        lambda sid, base=None: {**(base or {}), "area_gages2": areas[sid]})
+    rows = mod.forecast(*_inputs(), 14)
+    assert (rows is not None) == served
+    if not served:
+        assert "area_gages2" in mod.last_skip_reason
+
+
 # ------------------------------------------------------------------- contract
 
 def test_forecast_contract(monkeypatch, tmp_path):
