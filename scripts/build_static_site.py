@@ -145,10 +145,19 @@ def _emit_history(site_no: str) -> bool:
     return True
 
 
+SITE_ROOT_ASSETS = {"sw.js", "manifest.webmanifest"}
+
+
 def _copy_assets() -> None:
     # static/ assets — but swap app.js for static_app.js
     for item in SRC_STATIC.iterdir():
         if item.name in {"app.js", "static_app.js"}:
+            continue
+        if item.name in SITE_ROOT_ASSETS:
+            # A service worker only controls pages at or below its own path,
+            # and Pages cannot send Service-Worker-Allowed, so these two live
+            # at the site root rather than under static/.
+            shutil.copy2(item, DIST / item.name)
             continue
         dst = DIST / "static" / item.name
         if item.is_dir():

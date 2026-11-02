@@ -5,23 +5,33 @@ US (`data/stations_v15.json`), with deep coverage of paddler-favoured runs — P
 NW, Cascades, Sierra, Mountain West, AK panhandle, Appalachia, Texas Hill Country,
 NE / Driftless.
 
-A Leaflet map shows every gauge. **Clicking a marker** gives that gauge's ensemble
+A Leaflet map shows every gauge, **coloured by today's flow against that gauge's own
+record for the date** (record low / below normal / normal / above normal / record high),
+with a red ring where the forecast peak lands above normal and ≥1.5× today's flow.
+**Search** by river, gauge id or state; every gauge has a shareable link
+(`#site=<usgs id>`); **star** gauges to keep them on the start panel. Each station panel
+shows **NWS flood stages** (action/minor/moderate/major, converted to cfs through the NWS
+rating), **gage height**, and the **official NWS river forecast** beside ours, live from
+NOAA's National Water Prediction Service where it has a forecast point. The site installs
+as an app (PWA) and keeps the last-viewed forecasts offline.
+
+**Clicking a marker** gives that gauge's ensemble
 forecast; **clicking anywhere near a river** snaps to the NHD flowline via USGS NLDI,
 delineates the upstream basin, and estimates the runoff there from the nearest
 comparable gauge by drainage-area ratio (reported in mm/day as well as cfs, and
 labelled with the donor and the measured transfer skill).
 
-The ensemble combines the following members against live USGS NWIS daily discharge
-and Open-Meteo weather:
+The live ensemble runs these members against USGS NWIS discharge and Open-Meteo /
+ECMWF weather: `persistence_lag1`, `runoff_ridge` (direct multi-step ridge),
+`chronos_bolt`, `ttm` and `timesfm` (zero-shot foundation models), `timesfm_xreg`,
+`lgbm_pooled`, NOAA's National Water Model (`nwm`) and a learned residual correction
+of it (`nwm_residual`), plus two LSTM research members (`mblstm`, and `mblstm_modern`
+= MODERN-1 on CAMELS basins) that are drawn but carry no blend weight.
 
-- `persistence_lag1` — naive baseline (yhat = last observed)
-- `runoff_ridge` — Ridge regression on lagged log-discharge + day-of-year +
-  rolling precip / temperature / snowfall windows. Recursive multi-step.
-- `chronos_bolt` — [Amazon Chronos-Bolt](https://github.com/amazon-science/chronos-forecasting)
-  zero-shot foundation model (T5-based, ~50 MB, CPU inference). Optional but recommended.
-
-Each member is rolling-validated on the training window and combined into an
-inverse-MAE-weighted ensemble blend.
+Every member is backtested per gauge. **The served line** is chosen per forecast day:
+a pooled LightGBM stacker where it has a fit, otherwise the best of mean / median /
+asinh-mean of members, optionally pulled toward NWM; the panel names the rule that drew
+it. The `1/MAE²` member weights in the table describe the members, not the line.
 
 ## 🏆 Streamflow benchmark — the research track
 
@@ -119,7 +129,7 @@ whose confidence interval includes zero.
 
 GitHub Pages: **https://andrewnakas.github.io/riverwatch2**
 
-The Pages site is rebuilt every 2 hours by `.github/workflows/pages.yml` and on
+The Pages site is rebuilt every 6 hours by `.github/workflows/pages.yml` and on
 every push to `main`. It runs the same forecast pipeline as the Flask app, dumps
 each station's forecast to a static JSON file, and uploads `dist/` as the Pages
 artifact. The frontend reads those JSONs directly — no backend.

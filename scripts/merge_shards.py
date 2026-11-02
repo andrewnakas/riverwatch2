@@ -114,6 +114,18 @@ def main() -> int:
                 total_forecasts += 1
     print(f"  total forecasts merged: {total_forecasts}")
 
+    # 2a) One small table the map colours its markers from (current flow vs the
+    # gauge's own record, and the forecast peak). Best-effort: a failure here
+    # must never cost the deploy, the map just falls back to plain markers.
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import current_conditions
+        cc = current_conditions.build(DIST / "forecasts")
+        (DIST / "current.json").write_text(json.dumps(cc, separators=(",", ":")))
+        print(f"  current.json: {len(cc['sites'])} sites")
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ⚠ current.json not written: {type(exc).__name__}: {exc}")
+
     # 2b) History JSONs from every shard (lazy-fetched by the year-compare widget)
     total_history = 0
     for sd in shard_dirs:

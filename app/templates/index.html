@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#131a2d" />
+  <meta name="description" content="Live 14-day river flow forecasts, current conditions and NWS flood stages for 9,800+ USGS gauges." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
   <title>RiverWatch2 — live zero-shot whitewater forecasts</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
@@ -11,7 +16,14 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>RiverWatch2</h1>
+    <div class="topbar-row">
+      <h1>RiverWatch2</h1>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Search rivers, gauge ids, states…" autocomplete="off"
+               aria-label="Search gauges" aria-controls="search-results" />
+        <ul id="search-results" role="listbox" hidden></ul>
+      </div>
+    </div>
     <p>Live 14-day discharge forecasts for USGS stream gauges across the US.
       <b>Click a marker</b> for that gauge's ensemble forecast, or <b>click anywhere
       near a river</b> to estimate the runoff there from the nearest comparable gauge.
@@ -41,7 +53,7 @@
         <p><b>How the blend is built:</b></p>
         <ol>
           <li>Each member is <b>backtested</b> against this gauge's own history, across several past windows spanning different <b>seasons and flow levels</b> (not just the last few months), so its accuracy is measured fairly.</li>
-          <li>Members get a <b>weight</b> proportional to <code>1 / error²</code> — the more accurate one recently was, the bigger its say. If one is clearly best, the blend leans almost entirely on it.</li>
+          <li>For each forecast day, the build picks the combining rule that backtested best at this gauge — usually a <b>pooled LightGBM stacker</b> trained across gauges, otherwise a mean or median of the members — and may lean it toward NOAA's National Water Model where that model has earned it. The panel's <i>Forecast line built by</i> row says which rule drew the line; the member table's <code>1 / error²</code> weights describe the members, not the line.</li>
           <li>Each forecast is gently <b>anchored to the last observed flow</b> so the curve starts where the river actually is, then relaxes toward the model's own prediction over a few days.</li>
           <li>The shaded band around the line is a <b>90% range</b>: we expect the real flow to land inside it about 9 days out of 10.</li>
         </ol>
@@ -50,9 +62,15 @@
           <b>degraded</b> flag means most models were unavailable and the system
           fell back to the simple baseline. These appear in the per-station
           <i>notes</i> so you always know how much to trust a given forecast.</p>
+        <p><b>Map colours</b> compare each gauge's latest daily flow with that gauge's own
+          USGS record for the same calendar day (below the 25th percentile is <i>below normal</i>,
+          above the 75th <i>above normal</i>). A red ring means the forecast peak lands above
+          normal <i>and</i> at least 1.5× today's flow. <b>Flood stages</b>, gage height and the
+          official forecast come from NOAA's National Water Prediction Service, where it has a
+          forecast point. This page is not a warning service — follow NWS warnings.</p>
         <p class="hiw-foot">
           Covers free-flowing whitewater rivers (no dam-release runs). Forecasts
-          refresh every few hours. Data: USGS gauges, NOAA weather &amp; snow,
+          rebuild every 6 hours. Data: USGS gauges, NOAA weather &amp; snow,
           NOAA National Water Model.
         </p>
       </div>
@@ -61,13 +79,20 @@
   <div id="layout">
     <div id="map"></div>
     <aside id="panel">
-      <div id="panel-empty">Click a gauge marker for its live forecast, or click anywhere near a river to estimate the runoff there.</div>
+      <div id="panel-empty">
+        <p>Search above, click a gauge marker for its live forecast, or click anywhere near a river to estimate the runoff there.</p>
+        <div id="favorites"></div>
+      </div>
       <div id="river-click" style="display:none"></div>
       <div id="panel-content" style="display:none">
-        <h2 id="station-title">—</h2>
+        <div class="title-row">
+          <h2 id="station-title">—</h2>
+          <button id="fav-btn" type="button" class="fav-btn" aria-pressed="false" title="Add to favorites">☆</button>
+        </div>
         <div id="station-meta" class="meta"></div>
         <div id="forecast-status" class="status"></div>
         <div id="forecast-summary"></div>
+        <div id="flood-block" class="flood-block"></div>
         <div id="chart-controls" class="chart-controls">
           <button id="toggle-members" type="button" class="toggle-btn" aria-pressed="false">Show ensemble members</button>
           <button id="toggle-compare" type="button" class="toggle-btn" aria-pressed="false">Compare: NWM vs ensemble vs MODERN-1</button>
@@ -89,6 +114,7 @@
   </div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="/static/rivers.js"></script>
   <script src="/static/river_transfer.js"></script>
   <script src="/static/river_click.js"></script>
   <script src="/static/member_notes.js"></script>

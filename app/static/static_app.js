@@ -20,31 +20,69 @@ function colorForState(state) {
   return "#b8c1d6";
 }
 
-function makeIcon(state) {
-  const color = colorForState(state);
+// Markers are coloured by CURRENT FLOW against the gauge's own record for
+// today's date (current.json). Without that table -- an older build, or a
+// failed fetch -- they fall back to the old region colours.
+let _haveConditions = false;
+function makeIcon(station) {
+  const c = _haveConditions ? Conditions.get(station.id) : null;
+  const color = _haveConditions ? Conditions.COLORS[c ? c.cls : 0] : colorForState(station.state);
+  const ring = Conditions.rising(c)
+    ? "border:2px solid #fff; box-shadow: 0 0 0 2px #ff4d4d, 0 0 8px rgba(255,77,77,0.8);"
+    : "border:2px solid #0b1020; box-shadow: 0 0 6px rgba(0,0,0,0.6);";
+  const star = Favs.has(station.id) ? '<span class="rw-star">★</span>' : "";
   return L.divIcon({
     className: "rw-marker",
-    html: `<div style="background:${color}; width:14px; height:14px; border-radius:50%; border:2px solid #0b1020; box-shadow: 0 0 6px rgba(0,0,0,0.6);"></div>`,
+    html: `<div style="background:${color}; width:14px; height:14px; border-radius:50%; ${ring}"></div>${star}`,
     iconSize: [14, 14],
     iconAnchor: [7, 7],
   });
 }
 
+function floodLabel(cat) {
+  return cat === "action" ? "action stage" : `${cat} flood`;
+}
+
+function conditionText(id) {
+  const c = _haveConditions ? Conditions.get(id) : null;
+  if (!c) return "";
+  let t = `${fmtNumber(c.q, 0)} cfs (${Conditions.NAMES[c.cls]})`;
+  if (Conditions.rising(c)) t += ` · forecast to rise to ${fmtNumber(c.peak_q, 0)} cfs by ${String(c.peak_date).slice(5)}`;
+  return t;
+}
+
+function refreshMarker(id) {
+  const m = markersById.get(id), s = stationsById.get(id);
+  if (m && s) m.setIcon(makeIcon(s));
+}
+
 async function loadStations() {
-  const r = await fetch("stations.json");
+  const [r] = await Promise.all([
+    fetch("stations.json"),
+    Conditions.load().then(ok => { _haveConditions = ok; }),
+  ]);
   const j = await r.json();
+  renderLegend();
   const bounds = [];
   for (const s of j.stations) {
     if (s.lat == null || s.lon == null) continue;
-    const m = L.marker([s.lat, s.lon], { icon: makeIcon(s.state) });
-    m.bindTooltip(`${s.id} — ${s.name}`);
+    const m = L.marker([s.lat, s.lon], { icon: makeIcon(s) });
+    m.bindTooltip(() => {
+      const c = conditionText(s.id);
+      return `${s.id} — ${s.name}${c ? `<br><span class="tt-cond">${c}</span>` : ""}`;
+    });
     m.on("click", () => selectStation(s));
     cluster.addLayer(m);
     markersById.set(s.id, m);
     stationsById.set(s.id, s);
     bounds.push([s.lat, s.lon]);
   }
-  if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
+  Search.build(j.stations.filter(s => s.lat != null && s.lon != null));
+  // A deep link opens its gauge instead of fitting the whole country.
+  const linked = DeepLink.read();
+  if (linked && stationsById.has(linked)) selectStationById(linked);
+  else if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
+  renderFavorites();
 
   // Show build freshness in the header
   try {
@@ -128,7 +166,7 @@ function fmtTick(ts, step, prevYear) {
 // `showMembers=false` (default) renders only history + blend so the casual
 // reader sees one clean curve. The toggle above the chart flips it to true
 // to expose every ensemble member as a faint dashed line.
-let _fcst = { canvas: null, history: [], members: {}, blend: [], live: [], full: null, range: [0, 1], showMembers: false, compare: false, quantiles: null, mae: null };
+let _fcst = { canvas: null, history: [], members: {}, blend: [], live: [], full: null, range: [0, 1], showMembers: false, compare: false, quantiles: null, mae: null, nws: null };
 
 function drawChart(canvas, history, members, blend, extra) {
   _fcst.canvas = canvas;
@@ -364,7 +402,14 @@ function _renderForecast() {
         dashed: cs.key !== "__blend__", width: 3,
       });
     }
-  } else if (_fcst.showMembers) {
+  }
+  // NOAA's official river forecast, where an RFC issues one for this gauge.
+  // Instantaneous 6-hourly values, unlike our daily means -- drawn as-is.
+  const nwsPts = (!_fcst.compare && !_fcst.showMembers && _fcst.nws?.fcst?.length && blend.length)
+    ? _fcst.nws.fcst.filter(p => Date.parse(p.date) <= Date.parse(blend[blend.length - 1].date) + MS_PER_DAY)
+    : [];
+  if (nwsPts.length) series.push({ name: "NWS official", color: "#ff6db6", points: nwsPts, width: 2 });
+  if (_fcst.showMembers) {
     const memColors = {
       persistence_lag1: "#5fa0ff", runoff_ridge: "#7be07b", chronos_bolt: "#ff8a4c",
       ttm: "#c994ff", timesfm: "#ff6f91", timesfm_xreg: "#ffb3c1",
@@ -395,6 +440,13 @@ function _renderForecast() {
       if (Number.isFinite(p.band_lo)) ys.push(p.band_lo);
     }
   }
+  // Flood thresholds join the y-extent only when the data come within reach
+  // of them (1.6x); otherwise the chart would be squashed flat under a line
+  // the river is nowhere near, and the thresholds are listed as text instead.
+  const dataMax = ys.length ? Math.max(...ys) : 1;
+  const floodLines = (_fcst.nws?.thresholds || []).filter(t => Number.isFinite(t.flow));
+  const shownFlood = floodLines.filter(t => t.flow <= dataMax * 1.6);
+  for (const t of shownFlood) ys.push(t.flow);
   const ymin = 0, ymax = (ys.length ? Math.max(...ys) : 1) * 1.15 || 1;
 
   const pad = { l: 64, r: 64, t: 18, b: 34 };
@@ -421,6 +473,22 @@ function _renderForecast() {
   ctx.fillText("cfs", pad.l - 4, pad.t - 4);
   ctx.textAlign = "left";
   ctx.fillText("cfs", w - pad.r + 4, pad.t - 4);
+
+  // NWS flood thresholds (action / minor / moderate / major), converted to cfs.
+  ctx.font = "10px Inter, sans-serif";
+  for (const t of shownFlood) {
+    const y = yToPx(t.flow);
+    ctx.strokeStyle = t.color; ctx.lineWidth = 1.5; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.color; ctx.textAlign = "right";
+    ctx.fillText(floodLabel(t.cat), w - pad.r - 4, y - 3);
+  }
+  const offChart = floodLines.filter(t => !shownFlood.includes(t));
+  if (offChart.length) {
+    ctx.fillStyle = offChart[0].color; ctx.textAlign = "right";
+    ctx.fillText(`↑ ${floodLabel(offChart[0].cat)} at ${fmtNumber(offChart[0].flow, 0)} cfs (off chart)`, w - pad.r - 4, pad.t + 26);
+  }
 
   // Faint forecast-zone shading: distinguishes the prediction window visually.
   if (history.length && blend.length) {
@@ -673,8 +741,9 @@ function renderForecast(payload) {
     <table>
       ${freshness}
       ${degraded}
-      <tr><th>Chosen on rolling MAE</th><td>${payload.chosen}</td></tr>
-      <tr><th>Blend strategy</th><td>${stratLabel}</td></tr>
+      ${conditionText(payload.station?.id) ? `<tr><th>Now</th><td>${conditionText(payload.station.id)}</td></tr>` : ""}
+      <tr><th>Forecast line built by</th><td>${lineBuiltBy(payload)}</td></tr>
+      <tr><th>Lowest backtest error</th><td>${payload.chosen} <span class="muted">(member weights: ${stratLabel})</span></td></tr>
       <tr><th>Day +1 blend</th><td>${fmtNumber(t1)} cfs</td></tr>
       <tr><th>Day +7 blend</th><td>${fmtNumber(t7)} cfs</td></tr>
       ${tLast !== undefined ? `<tr><th>Day +${blend.length} blend</th><td>${fmtNumber(tLast)} cfs</td></tr>` : ""}
@@ -704,6 +773,22 @@ function renderForecast(payload) {
 
   renderRecordStartAndStats(payload);
   renderSnotel(payload);
+
+  // NWS: flood stages, gage height, official forecast. Async and optional --
+  // most of the 9,851 gauges have no NWS forecast point.
+  _fcst.nws = null;
+  const floodEl = document.getElementById("flood-block");
+  if (floodEl) floodEl.innerHTML = `<div class="muted">Checking NWS flood stages…</div>`;
+  if (liveStationId) {
+    NWS.lookup(liveStationId).then(async (n) => {
+      if (payload !== _currentForecastPayload) return;
+      _fcst.nws = n;
+      if (n) _renderForecast();
+      const gh = (n && n.obs) ? n.obs : await usgsGageHeight(liveStationId);
+      if (payload !== _currentForecastPayload) return;
+      renderFloodBlock(payload, n, gh);
+    });
+  }
 
   const mae7 = payload.rolling_mae_h7 || {};
   const mae14 = payload.rolling_mae_h14 || {};
@@ -867,8 +952,13 @@ function renderSnotel(payload) {
   el.innerHTML = `
     <div class="snotel">
       <div class="snotel-head">
-        <b>SNOTEL</b> ${site.name || site.stationTriplet}
-        <span class="snotel-sub">${site.distance_km} km · ${fmtNumber(site.elevation_ft)} ft</span>
+        ${site.source === "snodas"
+          // SNODAS is NOAA's gridded snow model sampled at the gauge -- there
+          // is no station, so no distance or elevation to show (this printed
+          // "undefined km" on every SNODAS gauge).
+          ? `<b>Snowpack</b> NOAA SNODAS <span class="snotel-sub">gridded model at the gauge</span>`
+          : `<b>SNOTEL</b> ${site.name || site.stationTriplet}
+        <span class="snotel-sub">${Number.isFinite(site.distance_km) ? `${fmtNumber(site.distance_km)} km · ` : ""}${fmtNumber(site.elevation_ft)} ft</span>`}
       </div>
       <table class="snotel-table">
         <tr>
@@ -1380,6 +1470,10 @@ function drawClimatology(canvas, rows) {
 }
 
 async function selectStation(station) {
+  DeepLink.write(station.id);
+  updateFavButton(station.id);
+  const fe = document.getElementById("flood-block");
+  if (fe) fe.innerHTML = "";
   const rc = document.getElementById("river-click");
   if (rc) { rc.style.display = "none"; rc.innerHTML = ""; }
   if (window.RiverClick) RiverClick.clearLayers();
@@ -1589,3 +1683,148 @@ loadStations().then(() => {
     if (typeof MemberNotes !== "undefined") MemberNotes.loadLabel();
   }
 });
+
+// ---- What actually produced the forecast line ---------------------------
+// The member-weight table is NOT what draws the line: per lead, the build picks
+// a rule (a pooled LightGBM stacker where it has a fit, else mean / median /
+// asinh-mean of members) and may pull toward NWM. Say which, per lead range.
+function lineBuiltBy(payload) {
+  const per = payload.blend_strategy_per_h || {};
+  const hs = Object.keys(per).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+  if (!hs.length) return payload.weights_strategy || "weighted blend";
+  const runs = [];
+  for (const h of hs) {
+    const v = per[h];
+    const last = runs[runs.length - 1];
+    if (last && last.v === v && last.to === h - 1) last.to = h; else runs.push({ v, from: h, to: h });
+  }
+  const nice = v => String(v).replace("lgbm_stacker", "pooled LightGBM stacker").replace(/_/g, " ");
+  if (runs.length === 1) return `${nice(runs[0].v)} (all ${hs.length} days)`;
+  return runs.map(r => `days ${r.from}${r.to > r.from ? "–" + r.to : ""}: ${nice(r.v)}`).join("; ");
+}
+
+// ---- NWS flood block ------------------------------------------------------
+function renderFloodBlock(payload, n, gh) {
+  const el = document.getElementById("flood-block");
+  if (!el) return;
+  const rows = [];
+  if (gh && Number.isFinite(gh.stage)) {
+    const when = gh.time ? new Date(gh.time).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+    rows.push(`<tr><th>Gage height</th><td><b>${gh.stage.toFixed(2)} ft</b>${gh.flow ? ` · ${fmtNumber(gh.flow, 0)} cfs` : ""} <span class="muted">${when}</span></td></tr>`);
+  }
+  if (!n) {
+    el.innerHTML = rows.length
+      ? `<table class="flood-table">${rows.join("")}</table><div class="muted">No NWS flood-forecast point at this gauge.</div>`
+      : "";
+    return;
+  }
+  const blend = payload.blend || [];
+  let peak = null;
+  for (const b of blend) if (Number.isFinite(b.q_cfs) && (!peak || b.q_cfs > peak.q_cfs)) peak = b;
+  const peakCat = peak ? NWS.categoryFor(n, peak.q_cfs) : null;
+  const peakStage = peak ? NWS.flowToStage(n, peak.q_cfs) : null;
+  const catName = c => String(c || "").replace(/_/g, " ").replace("obs not current", "no current observation").replace("fcst not current", "no current forecast");
+  if (n.obsCategory) rows.push(`<tr><th>NWS status now</th><td>${catName(n.obsCategory)}</td></tr>`);
+  if (n.fcst.length) {
+    let np = null;
+    for (const p of n.fcst) if (!np || p.q_cfs > np.q_cfs) np = p;
+    rows.push(`<tr><th>NWS official forecast</th><td>peak ${fmtNumber(np.q_cfs, 0)} cfs${Number.isFinite(np.stage) ? ` / ${np.stage.toFixed(1)} ft` : ""} on ${new Date(np.date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${catName(n.fcstCategory)}</td></tr>`);
+  }
+  if (peak) {
+    rows.push(`<tr><th>RiverWatch peak</th><td>${fmtNumber(peak.q_cfs, 0)} cfs${peakStage != null ? ` ≈ ${peakStage.toFixed(1)} ft` : ""} on ${String(peak.date).slice(5)}${peakCat ? ` · <b style="color:${peakCat.color}">reaches ${floodLabel(peakCat.cat)}</b>` : " · below flood stages"}</td></tr>`);
+  }
+  const th = n.thresholds.map(t => `<span class="flood-chip" style="border-color:${t.color};color:${t.color}">${floodLabel(t.cat)}: ${t.stage != null ? t.stage + " ft" : ""}${t.flow != null ? ` (${fmtNumber(t.flow, 0)} cfs)` : ""}</span>`).join(" ");
+  el.innerHTML = `
+    <div class="flood-head">NWS flood stages · <a href="${n.url}" target="_blank" rel="noopener">${n.lid}</a></div>
+    <table class="flood-table">${rows.join("")}</table>
+    ${th ? `<div class="flood-chips">${th}</div>` : `<div class="muted">NWS publishes no flood stages for this gauge.</div>`}
+    <div class="muted flood-caveat">Our forecast is a daily mean; the instantaneous peak in a day runs higher, so a daily
+      mean near a threshold can mean the river briefly crosses it. Flood stages are NWS's; act on NWS warnings, not on this page.</div>`;
+}
+
+// ---- Legend, favorites, search -------------------------------------------
+function renderLegend() {
+  const el = document.querySelector(".legend");
+  if (!el || !_haveConditions) return;
+  el.innerHTML = [1, 2, 3, 4, 5, 0].map(i =>
+    `<span><span class="dot" style="background:${Conditions.COLORS[i]}"></span>${Conditions.NAMES[i]}</span>`).join("")
+    + `<span><span class="dot dot-rising"></span>forecast to rise</span>`
+    + `<span class="muted">flow vs this date's record</span>`;
+}
+
+function updateFavButton(id) {
+  const b = document.getElementById("fav-btn");
+  if (!b) return;
+  const on = Favs.has(id);
+  b.textContent = on ? "★" : "☆";
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  b.title = on ? "Remove from favorites" : "Add to favorites";
+  b.dataset.id = id;
+}
+
+function renderFavorites() {
+  const el = document.getElementById("favorites");
+  if (!el) return;
+  const ids = Favs.all().filter(id => stationsById.has(id));
+  if (!ids.length) { el.innerHTML = `<div class="muted">Star a gauge (☆ next to its name) to keep it here.</div>`; return; }
+  el.innerHTML = `<div class="fav-head">Your gauges</div><ul class="fav-list">` + ids.map(id => {
+    const s = stationsById.get(id), c = _haveConditions ? Conditions.get(id) : null;
+    const dot = `<span class="dot" style="background:${Conditions.COLORS[c ? c.cls : 0]}"></span>`;
+    return `<li><a href="#site=${id}" data-id="${id}">${dot}${s.name}</a><span class="muted"> ${c ? fmtNumber(c.q, 0) + " cfs" : ""}${Conditions.rising(c) ? " ↑" : ""}</span></li>`;
+  }).join("") + `</ul>`;
+}
+
+(function wireChrome() {
+  const fav = document.getElementById("fav-btn");
+  if (fav) fav.addEventListener("click", () => {
+    const id = fav.dataset.id;
+    if (!id) return;
+    Favs.toggle(id);
+    updateFavButton(id);
+    refreshMarker(id);
+    renderFavorites();
+  });
+  const favEl = document.getElementById("favorites");
+  if (favEl) favEl.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-id]");
+    if (a) { e.preventDefault(); selectStationById(a.dataset.id); }
+  });
+  window.addEventListener("hashchange", () => {
+    const id = DeepLink.read();
+    if (id && stationsById.has(id) && id !== _currentForecastPayload?.station?.id) selectStationById(id);
+  });
+
+  const input = document.getElementById("search");
+  const list = document.getElementById("search-results");
+  if (!input || !list) return;
+  let results = [], active = -1;
+  const close = () => { list.hidden = true; active = -1; };
+  const pick = (s) => { close(); input.value = ""; input.blur(); selectStationById(s.id); };
+  const draw = () => {
+    list.innerHTML = results.map((s, i) =>
+      `<li role="option" data-i="${i}" class="${i === active ? "active" : ""}"><b>${s.name}</b><span class="muted"> ${s.id} · ${s.state || ""}</span></li>`).join("")
+      || `<li class="muted">No gauges match.</li>`;
+    list.hidden = false;
+  };
+  input.addEventListener("input", () => {
+    results = Search.query(input.value);
+    active = results.length ? 0 : -1;
+    if (input.value.trim()) draw(); else close();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (list.hidden) return;
+    if (e.key === "ArrowDown") { active = Math.min(results.length - 1, active + 1); draw(); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { active = Math.max(0, active - 1); draw(); e.preventDefault(); }
+    else if (e.key === "Enter" && results[active]) { pick(results[active]); e.preventDefault(); }
+    else if (e.key === "Escape") close();
+  });
+  list.addEventListener("mousedown", (e) => {
+    const li = e.target.closest("li[data-i]");
+    if (li) { e.preventDefault(); pick(results[+li.dataset.i]); }
+  });
+  input.addEventListener("blur", () => setTimeout(close, 150));
+})();
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
