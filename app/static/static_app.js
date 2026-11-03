@@ -1711,18 +1711,24 @@ function lineBuiltBy(payload) {
 }
 
 // ---- NWS flood block ------------------------------------------------------
+function alertLink(id) {
+  return `<div class="alert-link">🔔 <a href="https://ntfy.sh/rw2-gauge-${id}" target="_blank" rel="noopener">Get phone alerts for this gauge</a>
+    <span class="muted">— free via the ntfy app; a push when the forecast starts to rise or tops the record. Not a flood warning.</span></div>`;
+}
+
 function renderFloodBlock(payload, n, gh) {
   const el = document.getElementById("flood-block");
   if (!el) return;
+  const alertHtml = alertLink(payload.station?.id || "");
   const rows = [];
   if (gh && Number.isFinite(gh.stage)) {
     const when = gh.time ? new Date(gh.time).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
     rows.push(`<tr><th>Gage height</th><td><b>${gh.stage.toFixed(2)} ft</b>${gh.flow ? ` · ${fmtNumber(gh.flow, 0)} cfs` : ""} <span class="muted">${when}</span></td></tr>`);
   }
   if (!n) {
-    el.innerHTML = rows.length
+    el.innerHTML = (rows.length
       ? `<table class="flood-table">${rows.join("")}</table><div class="muted">No NWS flood-forecast point at this gauge.</div>`
-      : "";
+      : "") + alertHtml;
     return;
   }
   const blend = payload.blend || [];
@@ -1746,7 +1752,8 @@ function renderFloodBlock(payload, n, gh) {
     <table class="flood-table">${rows.join("")}</table>
     ${th ? `<div class="flood-chips">${th}</div>` : `<div class="muted">NWS publishes no flood stages for this gauge.</div>`}
     <div class="muted flood-caveat">Our forecast is a daily mean; the instantaneous peak in a day runs higher, so a daily
-      mean near a threshold can mean the river briefly crosses it. Flood stages are NWS's; act on NWS warnings, not on this page.</div>`;
+      mean near a threshold can mean the river briefly crosses it. Flood stages are NWS's; act on NWS warnings, not on this page.</div>
+    ${alertHtml}`;
 }
 
 // ---- Legend, favorites, search -------------------------------------------

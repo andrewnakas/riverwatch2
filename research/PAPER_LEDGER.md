@@ -47,4 +47,4 @@ fixed) · **pending** (registered, not yet read).
 
 9,851 gauges; 14-day forecasts rebuilt every 6 h on GitHub Actions (64 shards); flow-class map from
 USGS daily statistics; NWS flood stages, rating, gage height and official forecast per gauge
-(client-side, NWPS); search, deep links, favorites, PWA. Not a warning service.
+(client-side, NWPS); search, deep links, favorites, PWA; push alerts on public ntfy.sh topics, posted only on upward transitions diffed against the previous deploy (`scripts/alerts.py`). Not a warning service.

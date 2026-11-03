@@ -272,3 +272,5 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 
 /* Lighthouse color-contrast: the default link blue on #131a2d was 1.84:1. */
 .topbar a { color: #8ec5ff; }
+.alert-link { margin-top: 8px; font-size: 12px; line-height: 1.45; }
+.alert-link a { color: #ffd166; font-weight: 600; }

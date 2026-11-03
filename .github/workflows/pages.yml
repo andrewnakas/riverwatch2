@@ -548,6 +548,18 @@ jobs:
         run: |
           python scripts/merge_shards.py --input-root shard_dists
 
+      # Push alerts via public ntfy.sh topics (rw2-gauge-<id>), posted only on
+      # UPWARD transitions against the previous deploy's alerts_state.json.
+      # Writes the new state into dist/ so the next run diffs against it.
+      # Best-effort: never blocks the deploy. Not run on bootstrap dispatches.
+      - name: Gauge alerts (ntfy.sh)
+        if: github.event.inputs.bootstrap_v15 != 'true'
+        continue-on-error: true
+        env:
+          RW2_ALERTS: "1"
+        run: |
+          python scripts/alerts.py --current dist/current.json --stations dist/stations.json --out dist/alerts_state.json
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
