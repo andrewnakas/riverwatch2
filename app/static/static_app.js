@@ -72,6 +72,13 @@ async function loadStations() {
       return `${s.id} — ${s.name}${c ? `<br><span class="tt-cond">${c}</span>` : ""}`;
     });
     m.on("click", () => selectStation(s));
+    // Leaflet gives a divIcon marker role=button but no accessible name, so
+    // each of the ~9,851 markers read as an unnamed button (Lighthouse
+    // aria-command-name). Markercluster re-creates icons, hence on every add.
+    m.on("add", () => {
+      const el = m.getElement();
+      if (el) el.setAttribute("aria-label", `${s.name} (${s.id})`);
+    });
     cluster.addLayer(m);
     markersById.set(s.id, m);
     stationsById.set(s.id, s);

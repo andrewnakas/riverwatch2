@@ -145,6 +145,7 @@ def _emit_history(site_no: str) -> bool:
     return True
 
 
+PUBLIC_STATION_KEYS = ("id", "name", "state", "lat", "lon", "drain_area_sqmi", "alt_ft")
 SITE_ROOT_ASSETS = {"sw.js", "manifest.webmanifest"}
 
 
@@ -228,7 +229,12 @@ def main() -> int:
 
     if not sharded or is_first_shard:
         # The full station list lives once at dist/stations.json (asset shard owns it).
-        (DIST / "stations.json").write_text(json.dumps({"stations": all_stations}, indent=2))
+        # Only the fields the browser reads, written compact: the indented
+        # all-fields file was 3.2 MB decoded and the largest thing a phone
+        # downloads before the map can draw (site_no/state_cd/huc_cd/
+        # site_type_cd are unused client-side; the build keeps them).
+        _pub = [{k: s[k] for k in PUBLIC_STATION_KEYS if k in s} for s in all_stations]
+        (DIST / "stations.json").write_text(json.dumps({"stations": _pub}, separators=(",", ":")))
 
         # The MODERN-1 evidence page, built from the committed benchmarks/m1_*
         # artifacts. Owned by the asset shard for the same reason stations.json
