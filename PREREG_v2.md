@@ -4944,3 +4944,39 @@ decoder carries ~3.8× what it carries in the encoder. That must be recorded as
 whether the two arms genuinely differ on the rows scored (a silent no-op splice
 would read exactly this way, and did once before — GATE 2 needed a
 216,952-of-217,153-rows-moved check to rule it out).
+
+---
+
+## §LIVE-1 — STACKER TRAIN/SERVE SKEW: the fix, and what it must do (registered 2026-11-03, before any post-fix number)
+
+**Finding (live, pre-fix).** m1 verification archive, generation `m1-fcst-2`, targets 2026-10-13..11-02,
+610 basins, served `ensemble_blend` vs `persistence_lag1`, all available days, no stride:
+
+| lead | pooled MAE blend/persistence | basins where blend better | median rel. bias blend | persistence |
+|---|---|---|---|---|
+| 1 | 1.007 | 0.297 | +0.023 | +0.019 |
+| 4 | 0.997 | 0.306 | +0.148 | +0.074 |
+| 7 | 1.064 | 0.296 | +0.305 | +0.090 |
+| 10 | 1.170 | 0.281 | +0.456 | +0.093 |
+| 14 | 1.000 | 0.343 | +0.553 | +0.184 |
+
+**Mechanism.** The pooled LightGBM stacker (the rule on 93% of served leads, sampled) is fit on RAW
+holdout member predictions but was served members AFTER the per-member bias scale (median 1.12–1.34,
+13–24% at the 2.0 clamp) and the observed-flow anchor. Fix: `_stacker_members_panel` serves it the raw
+values. Nothing else changes.
+
+**Prediction.** On the first ≥14 days of targets issued entirely after the fix deploys, same basins,
+same scorer, same table:
+1. median relative bias of the blend at lead 7 falls to **≤ +0.15** (from +0.305);
+2. pooled MAE blend/persistence at leads 5–10 falls **below 1.0** at a majority (≥4 of 6) of those leads.
+
+**Decision table, fixed now.**
+- both hold → the skew was the dominant cause; record it as such.
+- (1) holds, (2) fails → skew was real but persistence still wins in recession; next suspect is the
+  bias scales themselves (ratio-of-means across seasons).
+- (1) fails → the skew was not the cause of the wet bias; reopen.
+
+**Confound, stated now.** Before/after is not a controlled comparison: weather regime shifts with the
+season (autumn recession → first winter storms). A regime change that raises flows flatters a wet-biased
+model. Read (1) as a bias *level* in the post window against persistence's bias in the same window, not
+in isolation.

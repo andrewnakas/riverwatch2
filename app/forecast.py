@@ -348,6 +348,37 @@ def _anchor_to_observed(
     return out
 
 
+def _stacker_members_panel(
+    raw_member_preds: Dict[str, tuple],
+    members: Dict[str, list],
+    horizon: int,
+) -> Dict[str, List[Optional[float]]]:
+    """The member panel the pooled stacker PREDICTS from -- raw member output.
+
+    ⚠️ TRAIN/SERVE SKEW, fixed 2026-11-03. The stacker is fit on holdout rows
+    built from the RAW `*_preds` tuples (no per-member bias scale, no anchor),
+    but was served `members[...]`, i.e. AFTER `bias_scale x` and
+    `_anchor_to_observed`. Live scales skew high (sampled 2026-11-02: median
+    ridge 1.12, chronos 1.34, lgbm_pooled 1.18; 13-24% at the 2.0 clamp), so the
+    stacker saw inputs inflated relative to everything it learned from. Live
+    m1 archive 10-13..11-02, 610 basins: the served blend's median relative
+    bias rose +0.02 (lead 1) -> +0.31 (lead 7) -> +0.55 (lead 14) against
+    persistence's +0.02/+0.09/+0.18, and it beat persistence on only ~30% of
+    basins at every lead. Members the stacker never trained on (NWM etc. have
+    no holdouts) keep their served values, exactly as before.
+    """
+    panel: Dict[str, List[Optional[float]]] = {}
+    for m_name, mlist in members.items():
+        raw = raw_member_preds.get(m_name)
+        src = list(raw[0]) if raw is not None else [
+            (mlist[i]["q_cfs"] if mlist and i < len(mlist) else None) for i in range(horizon)]
+        panel[m_name] = [
+            (float(src[i]) if i < len(src) and src[i] is not None else None)
+            for i in range(horizon)
+        ]
+    return panel
+
+
 def _doy_climatology(z_series: pd.Series, dates: pd.DatetimeIndex) -> Optional[pd.Series]:
     """Per-DOY mean of an asinh-transformed series, smoothed with a ±15-day
     rolling window. Returns a series indexed 1..366 or None if too thin.
@@ -2051,12 +2082,7 @@ def forecast_station(
     stacker_blend: Optional[List[Optional[float]]] = None
     if stacker is not None and getattr(stacker, "fitted", False) and station_attrs is not None:
         try:
-            members_panel: Dict[str, List[Optional[float]]] = {}
-            for m_name, mlist in members.items():
-                members_panel[m_name] = [
-                    (mlist[i]["q_cfs"] if mlist and i < len(mlist) else None)
-                    for i in range(horizon)
-                ]
+            members_panel = _stacker_members_panel(raw_member_preds, members, horizon)
             issued_doy_now = int(last_date.dayofyear)
             target_doys_now = [
                 ((issued_doy_now - 1 + h) % 366) + 1 for h in range(1, horizon + 1)
@@ -2282,12 +2308,7 @@ def forecast_station(
     target_doys_now = [
         ((issued_doy_now - 1 + h) % 366) + 1 for h in range(1, horizon + 1)
     ]
-    members_panel_out: Dict[str, List[Optional[float]]] = {}
-    for m_name, mlist in members.items():
-        members_panel_out[m_name] = [
-            (mlist[i]["q_cfs"] if mlist and i < len(mlist) else None)
-            for i in range(horizon)
-        ]
+    members_panel_out = _stacker_members_panel(raw_member_preds, members, horizon)
     v14_4_panel: Dict[str, Any] = {
         "qs": float(qs_blend),
         "attrs": dict(station_attrs) if station_attrs else None,
