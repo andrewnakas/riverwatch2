@@ -40,3 +40,6 @@ dist/
 # MODERN-1 forecast-forcing history: published to the m1-archive orphan
 # branch beside the forecast archive, never to main.
 archive_m1_forcing/
+
+# GATE 4 areal-GFS arm (rebuilt locally, ~0.5 MB/init date; see PREREG GATE 4 deviations)
+data/gate4/
