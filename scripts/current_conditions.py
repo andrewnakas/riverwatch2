@@ -19,6 +19,12 @@ min/p25/p50/p75/max (no p10/p90, so no "much below/above" split):
     0 unknown   1 below record low   2 below normal (<p25)
     3 normal (p25..p75)   4 above normal (>p75)   5 above record high
 
+"Record" needs MIN_RECORD_YEARS of record for that month-day; below that the
+value is demoted to below/above normal. With N years a new record for a given
+date lands in each tail ~1/(N+1) of the time by chance alone -- 20% at 4 years,
+which is what put ~4.5% of gauges in each record class on 2026-11-02 (sampled
+record-class gauges: median ~22 years of record vs ~53 for "normal").
+
 A class compares one day's MEAN flow with the distribution of daily means for
 that month-day. It says nothing about flooding: flood stages come from NWS,
 per gauge, in the station panel.
@@ -32,6 +38,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 FIELDS = ["q", "date", "cls", "peak_q", "peak_date", "peak_cls", "ratio"]
+MIN_RECORD_YEARS = 10
 CLASS_NAMES = ["unknown", "record low", "below normal", "normal",
                "above normal", "record high"]
 
@@ -52,10 +59,12 @@ def classify(q, row: dict | None) -> int:
     lo, p25, p75, hi = (_num(row.get(k)) for k in ("min_va", "p25_va", "p75_va", "max_va"))
     if p25 is None or p75 is None:
         return 0
+    n = _num(row.get("count"))
+    long_enough = n is None or n >= MIN_RECORD_YEARS
     if lo is not None and q < lo:
-        return 1
+        return 1 if long_enough else 2
     if hi is not None and q > hi:
-        return 5
+        return 5 if long_enough else 4
     if q < p25:
         return 2
     if q > p75:

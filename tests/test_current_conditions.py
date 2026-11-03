@@ -18,6 +18,12 @@ def test_classify_bands():
     assert cc.classify(300, {"p25_va": None, "p75_va": 4}) == 0
 
 
+def test_record_needs_enough_years():
+    short = dict(ROW, count=4)
+    assert cc.classify(50, short) == 2 and cc.classify(1000, short) == 4
+    assert cc.classify(1000, dict(ROW, count=10)) == 5
+
+
 def test_summarise_uses_last_obs_and_blend_peak(tmp_path):
     payload = {
         "history": [{"date": "2026-10-31", "q_cfs": 120}, {"date": "2026-11-01", "q_cfs": 250}],
