@@ -4980,3 +4980,14 @@ same scorer, same table:
 season (autumn recession → first winter storms). A regime change that raises flows flatters a wet-biased
 model. Read (1) as a bias *level* in the post window against persistence's bias in the same window, not
 in isolation.
+
+### §LIVE-1 ADDENDUM 2026-11-03 — the read window, fixed before any post-fix row exists
+
+The fix (cde055e) first deployed with Pages run 41608545628 (commit f3c98c2), completed
+**2026-11-03 13:35Z**. Issued dates of 2026-11-03 are mixed pre/post builds and are excluded.
+**Post-fix window: `issued_date >= 2026-11-04`.** Read with
+`analysis/score_live_leads.py <archive> --issued-from 2026-11-04 --issued-to 2026-11-17`
+no earlier than the day lead-14 targets of the 2026-11-17 issue are observed (≥ 2026-12-02 for
+all leads; the lead-1..10 rows the prediction names are complete from 2026-11-28). Reading
+leads 5–10 before 2026-11-28 is forbidden. Comparator: the pre-fix table above
+(issued ≤ 2026-11-02).

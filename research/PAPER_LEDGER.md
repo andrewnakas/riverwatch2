@@ -32,7 +32,7 @@ fixed) · **pending** (registered, not yet read).
 | # | Finding | Number | Fix / artifact | Status |
 |---|---|---|---|---|
 | C1 | Static-attribute extrapolation: tier-2 basins up to area z=+28.8; the 8 with any \|z\|>10 ran at 23× persistence MAE (lead 1) and carried ~all tier-2 error | 5,414 cfs issued vs 1,630 observed (13340000) | static envelope guard, `outside_static_envelope`; 34/130 refused; commit d8fcede | final (margin chosen post hoc — a guard, not a measurement) |
-| C2 | Stacker train/serve skew: trained on raw member output, served bias-scaled + anchored output | blend median rel. bias +0.31 at lead 7 vs persistence +0.09; beat persistence on ~30% of basins | `_stacker_members_panel`, commit cde055e; `analysis/score_live_leads.py` | **pending — PREREG §LIVE-1, read ≥14 days post-deploy (~2026-11-18)** |
+| C2 | Stacker train/serve skew: trained on raw member output, served bias-scaled + anchored output | blend median rel. bias +0.31 at lead 7 vs persistence +0.09; beat persistence on ~30% of basins | `_stacker_members_panel`, commit cde055e; `analysis/score_live_leads.py` | **pending — PREREG §LIVE-1, read window fixed in PREREG §LIVE-1 addendum: issued 11-04..11-17, leads 5–10 readable ≥ 2026-11-28** |
 | C3 | "Record high/low" on a single calendar day is common by chance (≈1/(N+1) per tail) | 4.2% / 4.8% of gauges on day one; record-class gauges median ~22 yr vs ~53 | ≥10-year rule, `scripts/current_conditions.py` | final |
 | C4 | Scheduled builds run cache-only (`RW2_NO_FETCH=1`), so gauges never cached at bootstrap never got USGS daily statistics. A first fix (retries) was a misdiagnosis: share unchanged 13.1% → 13.0% | 1,265 / 9,697 gauges with no statistics (2026-11-03) | cold-cache fetch budget + circuit breaker + negative cache, `app/usgs_stats.py` | live (check unknown share after next build) |
 
@@ -41,7 +41,7 @@ fixed) · **pending** (registered, not yet read).
 | # | Question | Earliest read | Registration |
 |---|---|---|---|
 | D1 | GATE 4: areal GFS vs Open-Meteo point decoder | after the 2026-11-10 build (≥30 archived init dates) | `PREREG_v2.md` |
-| D2 | §LIVE-1: does the skew fix remove the wet bias / beat persistence at leads 5–10 | ≥14 days of targets issued wholly after deploy (~2026-11-18) | `PREREG_v2.md` §LIVE-1 |
+| D2 | §LIVE-1: does the skew fix remove the wet bias / beat persistence at leads 5–10 | issued 2026-11-04..11-17; leads 5–10 readable ≥ 2026-11-28 | `PREREG_v2.md` §LIVE-1 |
 
 ## E. Product (the system the science runs in)
 
