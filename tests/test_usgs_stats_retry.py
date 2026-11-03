@@ -46,3 +46,34 @@ def test_does_not_retry_a_real_404(monkeypatch):
     calls = _patch(monkeypatch, [HTTPError("u", 404, "x", {}, None), "ok"])
     assert usgs_stats._fetch_with_retry(URL) is None
     assert len(calls) == 1
+
+
+def _cold(monkeypatch, tmp_path, budget=60):
+    monkeypatch.setattr(usgs_stats, "NO_FETCH", True)
+    monkeypatch.setattr(usgs_stats, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(usgs_stats, "_cold_budget", budget)
+    monkeypatch.setattr(usgs_stats, "_cold_fail_streak", 0)
+
+
+RDB = ("agency_cd\tsite_no\tparameter_cd\tts_id\tloc_web_ds\tmonth_nu\tday_nu\tbegin_yr\tend_yr\tcount_nu"
+       "\tmax_va_yr\tmax_va\tmin_va_yr\tmin_va\tmean_va\tp25_va\tp50_va\tp75_va\n"
+       "5s\t15s\t5s\t10n\t15s\t3n\t3n\t6n\t6n\t8n\t5n\t12s\t5n\t12s\t12s\t12s\t12s\t12s\n"
+       "USGS\t01\t00060\t1\t\t1\t1\t1931\t2026\t96\t1949\t2200\t1932\t38.0\t264\t113\t192\t335\n")
+
+
+def test_cache_only_build_fetches_a_cold_site_and_caches_it(monkeypatch, tmp_path):
+    """Scheduled builds run RW2_NO_FETCH=1; a never-cached site must still fetch."""
+    _cold(monkeypatch, tmp_path)
+    calls = _patch(monkeypatch, [RDB])
+    d = usgs_stats.fetch_daily_stats("01")
+    assert d and d["rows"] and (tmp_path / "01.json").exists() and len(calls) == 1
+    assert usgs_stats.fetch_daily_stats("01")["rows"]          # now from cache
+    assert len(calls) == 1
+
+
+def test_circuit_breaker_stops_cold_fetching(monkeypatch, tmp_path):
+    _cold(monkeypatch, tmp_path)
+    calls = _patch(monkeypatch, [TimeoutError()] * 100)
+    for i in range(10):
+        assert usgs_stats.fetch_daily_stats(f"s{i}") is None
+    assert len(calls) == 5 * 3                                 # 5 sites x 3 attempts, then stop

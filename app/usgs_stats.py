@@ -27,6 +27,9 @@ if not CACHE_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkd
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 STAT_URL = "https://waterservices.usgs.gov/nwis/stat/"
+#: Cold-cache statistics fetches allowed per process under RW2_NO_FETCH=1.
+_cold_budget = int(os.environ.get("RW2_STATS_COLD_BUDGET", "60"))
+_cold_fail_streak = 0
 STAT_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 
 
@@ -42,11 +45,18 @@ def _cache_path(site_no: str) -> Path:
 _RETRY_BACKOFF_S = (3.0, 10.0)
 
 
-def _fetch_with_retry(url: str) -> Optional[str]:
+def _stat_url(site_no: str) -> str:
+    return STAT_URL + "?" + urlencode({
+        "format": "rdb", "sites": site_no, "statReportType": "daily",
+        "statTypeCd": "min,p25,p50,mean,p75,max", "parameterCd": "00060",
+    })
+
+
+def _fetch_with_retry(url: str, timeout: float = 60) -> Optional[str]:
     for i in range(len(_RETRY_BACKOFF_S) + 1):
         try:
             req = Request(url, headers={"User-Agent": "riverwatch2/0.1"})
-            with urlopen(req, timeout=60) as resp:
+            with urlopen(req, timeout=timeout) as resp:
                 return resp.read().decode("utf-8", errors="replace")
         except Exception as exc:
             code = getattr(exc, "code", None)
@@ -82,23 +92,44 @@ def fetch_daily_stats(site_no: str, *, max_age_seconds: int = STAT_TTL_SECONDS) 
         except Exception:
             pass
     if NO_FETCH:
-        # Return cached value if any, even if older than TTL; otherwise give up.
+        # Return cached value if any, even if older than TTL.
         if cache.exists():
             try:
                 return json.loads(cache.read_text())
             except Exception:
                 return None
-        return None
+        # ⚠️ ...but a gauge with NO cache used to give up here forever. Every
+        # scheduled build runs with RW2_NO_FETCH=1, so a site whose statistics
+        # were not cached during the one-time v15 bootstrap never got any:
+        # 1,265 of 9,697 gauges (13%) on 2026-11-03, century-long records
+        # included. (An earlier fix added retries, which never run in this
+        # mode -- the share did not move.) Cold sites now fetch within a small
+        # per-process budget; the statistics are ~30 KB and cached 30 days, so
+        # the backlog clears in a build or two and steady state costs nothing.
+        global _cold_budget, _cold_fail_streak
+        if _cold_budget <= 0:
+            return None
+        _cold_budget -= 1
+        text = _fetch_with_retry(_stat_url(site_no), timeout=20)
+        if text is None:
+            # Circuit breaker: if USGS is down, 60 cold sites x 3 attempts would
+            # stall a shard for over an hour. Five straight NETWORK failures
+            # end cold fetching for this build.
+            _cold_fail_streak += 1
+            if _cold_fail_streak >= 5:
+                _cold_budget = 0
+            return None
+        _cold_fail_streak = 0
+        parsed = _parse_rdb(text, site_no)
+        if parsed is None:
+            # USGS answered and there are no statistics. Cache that answer
+            # (30-day TTL) so the site stops spending budget every build.
+            cache.write_text(json.dumps({"site_no": site_no, "rows": [], "begin_date": None}))
+            return None
+        cache.write_text(json.dumps(parsed, separators=(",", ":")))
+        return parsed
 
-    params = {
-        "format": "rdb",
-        "sites": site_no,
-        "statReportType": "daily",
-        "statTypeCd": "min,p25,p50,mean,p75,max",
-        "parameterCd": "00060",
-    }
-    url = STAT_URL + "?" + urlencode(params)
-    text = _fetch_with_retry(url)
+    text = _fetch_with_retry(_stat_url(site_no))
     if text is None:
         # Fall back to existing stale cache if available, else None
         if cache.exists():
