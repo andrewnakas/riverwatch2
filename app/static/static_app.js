@@ -1511,8 +1511,13 @@ async function selectStation(station) {
   try {
     const r = await fetch(`forecasts/${station.id}.json`);
     if (!r.ok) {
-      document.getElementById("forecast-status").textContent =
-        `no forecast available for this station in the latest build (HTTP ${r.status})`;
+      // ~150 listed gauges have no forecast because USGS has published no
+      // recent daily discharge for them (every one in the build's failure list
+      // reads "no USGS daily discharge"). Say that, not an HTTP code.
+      document.getElementById("forecast-status").innerHTML = r.status === 404
+        ? `No forecast: this gauge isn't currently reporting daily discharge to USGS. ` +
+          `<a href="https://waterdata.usgs.gov/monitoring-location/${station.id}/" target="_blank" rel="noopener">See it on USGS</a>.`
+        : `Couldn't load this gauge's forecast (HTTP ${r.status}). Try again shortly.`;
       return;
     }
     const j = await r.json();
