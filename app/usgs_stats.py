@@ -34,6 +34,31 @@ def _cache_path(site_no: str) -> Path:
     return CACHE_DIR / f"{site_no}.json"
 
 
+#: Backoffs between attempts. ~13% of served gauges had NO daily statistics on
+#: 2026-11-02, including century-long records (01196500, 1931-) that the same
+#: request returns instantly from a laptop: one 60 s attempt, no retry, inside a
+#: 64-shard burst against one USGS endpoint. A failure is never cached, so it
+#: recurs every build until a single attempt happens to land.
+_RETRY_BACKOFF_S = (3.0, 10.0)
+
+
+def _fetch_with_retry(url: str) -> Optional[str]:
+    for i in range(len(_RETRY_BACKOFF_S) + 1):
+        try:
+            req = Request(url, headers={"User-Agent": "riverwatch2/0.1"})
+            with urlopen(req, timeout=60) as resp:
+                return resp.read().decode("utf-8", errors="replace")
+        except Exception as exc:
+            code = getattr(exc, "code", None)
+            # A 4xx other than throttling is an answer, not a hiccup (e.g. no
+            # statistics exist for this site): retrying cannot change it.
+            if code is not None and 400 <= code < 500 and code != 429:
+                return None
+            if i < len(_RETRY_BACKOFF_S):
+                time.sleep(_RETRY_BACKOFF_S[i])
+    return None
+
+
 def fetch_daily_stats(site_no: str, *, max_age_seconds: int = STAT_TTL_SECONDS) -> Optional[dict]:
     """Daily statistics for parameter 00060 (discharge). Returns None on failure.
 
@@ -73,11 +98,8 @@ def fetch_daily_stats(site_no: str, *, max_age_seconds: int = STAT_TTL_SECONDS) 
         "parameterCd": "00060",
     }
     url = STAT_URL + "?" + urlencode(params)
-    try:
-        req = Request(url, headers={"User-Agent": "riverwatch2/0.1"})
-        with urlopen(req, timeout=60) as resp:
-            text = resp.read().decode("utf-8", errors="replace")
-    except Exception:
+    text = _fetch_with_retry(url)
+    if text is None:
         # Fall back to existing stale cache if available, else None
         if cache.exists():
             try:
