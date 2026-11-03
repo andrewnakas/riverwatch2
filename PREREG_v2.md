@@ -4991,3 +4991,24 @@ no earlier than the day lead-14 targets of the 2026-11-17 issue are observed (�
 all leads; the lead-1..10 rows the prediction names are complete from 2026-11-28). Reading
 leads 5–10 before 2026-11-28 is forbidden. Comparator: the pre-fix table above
 (issued ≤ 2026-11-02).
+
+## GATE 4 — DEVIATIONS AND ALIGNMENT, recorded 2026-11-03 before either arm is scored
+
+1. **Where the areal-GFS arm is built.** Locally, not on the research box: the GFS 0.25° basin
+   weights were rebuilt from GAGES-II `bas_ref_all.shp` (ScienceBase 631405bbd34e36012efa304a,
+   the same polygon source as the registered lead-1 artifact) with the unmodified
+   `build_gfs_weights.py` validation: 671/671 basins covered, area check median 0.14 %, p90 0.31 %,
+   max 0.43 %, grid derived from a decoded field (north-first, 0.25°).
+2. **Target alignment.** A GFS "lead L" covers hours 24(L−1)..24L after 00z of its init day, so
+   GFS lead 1 is the init day itself. The archived Open-Meteo rows for init D have lead 1 = D+1.
+   Both arms must supply forcing for IDENTICAL target dates, so the areal-GFS arm for archive
+   init D is the **00z run of D** (the newest run available to a build on D), **GFS lead days
+   2..15** mapped to decoder leads 1..14. If lead day 15 cannot be built, decoder lead 14 is
+   reported as missing for both arms rather than substituted.
+3. **Encoder.** "NLDAS-2 areal in both arms" becomes **the served encoder table in both arms**
+   (`m1-forcing-archive`, areal NLDAS-2 with the newest days point-filled, exactly what the live
+   member saw), because NLDAS-2 needs Earthdata credentials this build does not have. It is
+   identical across arms, which is what the one-variable protocol requires; it is NOT the pure
+   NLDAS-2 encoder of GATE 1, so the arms' absolute NSE is not comparable to GATE 1/2 figures —
+   only the paired Δ is read.
+Nothing else in the GATE 4 registration changes. The 30-init-date minimum stands.
