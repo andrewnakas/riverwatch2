@@ -5012,3 +5012,8 @@ leads 5–10 before 2026-11-28 is forbidden. Comparator: the pre-fix table above
    NLDAS-2 encoder of GATE 1, so the arms' absolute NSE is not comparable to GATE 1/2 figures —
    only the paired Δ is read.
 Nothing else in the GATE 4 registration changes. The 30-init-date minimum stands.
+4. **Scored cohort.** The archived Open-Meteo decoder forcing covers the **490 tier-1 basins
+   only** (measured on 2026-10-13: 490 paired basins), so GATE 4 is scored on those 490, not the
+   620-basin served domain. Runner and read-guarded scorer: `analysis/gate4_run.py` (refuses to
+   print skill below 30 init dates; reports the arms-differ fraction first — 1.0000 on the
+   2026-10-13 smoke test, 5 basins).
