@@ -5017,3 +5017,10 @@ Nothing else in the GATE 4 registration changes. The 30-init-date minimum stands
    620-basin served domain. Runner and read-guarded scorer: `analysis/gate4_run.py` (refuses to
    print skill below 30 init dates; reports the arms-differ fraction first — 1.0000 on the
    2026-10-13 smoke test, 5 basins).
+5. **Scored cohort, corrected (2026-11-04, before any skill is read).** Item 4's "490" was measured on
+   the 2026-10-13 archive only. Across 22 init dates the archive holds **481 scoreable tier-1** basins
+   and, from 2026-10-17 (after GATE 3 authorised tier 2), **96 tier-2** basins (130 minus the 34 the
+   static-envelope guard refuses). **The decision table reads tier 1 only.** Tier 2 is printed as a
+   separate table and plays no part in the decision. The no-op check now excludes rows where both arms
+   clip to 0 cfs (7,109 of the 7,114 identical rows, 68 dry basins); on the rest the arms differ on
+   essentially every row.

@@ -33,7 +33,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.environ.setdefault("RW2_ENABLE_MBLSTM_MODERN", "1")
-from app import mblstm_modern as M, usgs  # noqa: E402
+from app import camels_attrs, mblstm_modern as M, usgs  # noqa: E402
 
 COLS = ["temperature_2m_mean", "temperature_2m_max", "temperature_2m_min",
         "precipitation_sum", "shortwave_radiation_sum", "vapor_pressure"]
@@ -104,7 +104,11 @@ def score(a) -> int:
     n_init = p.init_date.nunique()
     w = p.pivot_table(index=["station_id", "init_date", "target_date", "lead"],
                       columns="arm", values="q").dropna().reset_index()
-    moved = float((~np.isclose(w.gfs, w.om, rtol=1e-6)).mean())
+    # Rows where BOTH arms clip to 0 cfs (dry basins) are identical by
+    # construction and say nothing about whether the splice took; exclude them.
+    nz = (w.gfs > 0) | (w.om > 0)
+    moved = float((~np.isclose(w.gfs[nz], w.om[nz], rtol=1e-6)).mean())
+    w["tier"] = np.where(w.station_id.isin(camels_attrs.cohort()), 1, 2)
     print(f"init dates {n_init}, paired rows {len(w)}, basins {w.station_id.nunique()}; "
           f"rows where the arms' outputs differ: {moved:.4f}")
     if moved < 0.5:
@@ -120,6 +124,13 @@ def score(a) -> int:
     w["obs"] = [obs[s].get(t) for s, t in zip(w.station_id, w.target_date)]
     w = w.dropna(subset=["obs"])
     rng = np.random.default_rng(0)
+    for tier, wt in w.groupby("tier"):
+        print(f"\n=== tier {tier} {'(HEADLINE: the registered decision reads this table)' if tier == 1 else '(reported separately; NOT part of the decision)'}")
+        _table(wt, rng)
+    return 0
+
+
+def _table(w, rng) -> None:
     print("lead  median_dNSE(gfs-om)  CI95  breadth  basins")
     for L, g in w.groupby("lead"):
         per = g.groupby("station_id").apply(
@@ -128,7 +139,6 @@ def score(a) -> int:
         boot = [np.median(rng.choice(v, len(v))) for _ in range(5000)]
         lo, hi = np.percentile(boot, [2.5, 97.5])
         print(f"{L:>4}  {np.median(v):+.6f}  [{lo:+.6f}, {hi:+.6f}]  {np.mean(v > 0):.3f}  {len(v)}")
-    return 0
 
 
 def main() -> int:
