@@ -29,12 +29,42 @@ def test_first_run_posts_nothing_but_records_state():
 
 
 def test_only_upward_transitions_post():
-    prev = {"levels": {"a": {"level": 1, "since": "x"}, "b": {"level": 1, "since": "x"},
-                       "c": {"level": 2, "since": "x"}}}
-    ev, st = alerts.transitions(cur(a=RISING, b=RECORD, c=RISING, d=RISING, e=FLAT), prev)
+    t = "2026-11-04T00:00:00+00:00"
+    prev = {"levels": {"a": {"level": 1, "alerted_at": t}, "b": {"level": 1, "alerted_at": t},
+                       "c": {"level": 2, "alerted_at": t}}}
+    ev, st = alerts.transitions(cur(a=RISING, b=RECORD, c=RISING, d=RISING, e=FLAT), prev,
+                                now="2026-11-04T06:00:00+00:00")
     assert [e["id"] for e in ev] == ["b", "d"]          # record first, then new riser
-    assert st["levels"]["a"]["since"] == "x"            # unchanged level keeps its start
-    assert "e" not in st["levels"]                      # falling/never clears state
+    assert st["levels"]["a"]["alerted_at"] == t         # unchanged level: no repost
+    assert st["levels"]["c"]["level"] == 2              # dip below record is held
+    assert "e" not in st["levels"]
+
+
+def test_wobble_across_threshold_posts_once():
+    """2026-11-04: 117 'new' transitions of 641 in one build without hysteresis."""
+    h = lambda n: f"2026-11-04T{n:02d}:00:00+00:00"
+    _, st = alerts.transitions(cur(a=RISING), {"levels": {}}, now=h(0))
+    ev1, st = alerts.transitions(cur(a=FLAT), st, now=h(6))       # dips below
+    ev2, st = alerts.transitions(cur(a=RISING), st, now=h(12))    # back up
+    assert ev1 == [] and ev2 == []
+    assert st["levels"]["a"]["level"] == 1
+
+
+def test_level_clears_after_24h_below_then_reposts():
+    h = lambda d, n: f"2026-11-0{d}T{n:02d}:00:00+00:00"
+    _, st = alerts.transitions(cur(a=RISING), {"levels": {}}, now=h(4, 0))
+    _, st = alerts.transitions(cur(a=FLAT), st, now=h(4, 6))
+    _, st = alerts.transitions(cur(a=FLAT), st, now=h(5, 7))       # 25 h below -> cleared
+    assert "a" not in st["levels"]
+    ev, _ = alerts.transitions(cur(a=RISING), st, now=h(5, 12))
+    assert [e["id"] for e in ev] == ["a"]
+
+
+def test_held_level_reposts_after_72h():
+    t0 = "2026-11-04T00:00:00+00:00"
+    ev, _ = alerts.transitions(cur(a=RISING), {"levels": {"a": {"level": 1, "alerted_at": t0}}},
+                               now="2026-11-07T01:00:00+00:00")
+    assert [e["id"] for e in ev] == ["a"]
 
 
 def test_message_says_it_is_not_a_warning():

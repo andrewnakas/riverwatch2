@@ -10,8 +10,10 @@ Levels (from current.json, see scripts/current_conditions.py):
     1 rising  forecast peak above normal for its date AND >= 1.5x today's flow
     2 record  forecast peak above the gauge's record for its date
 
-A gauge posts when its level goes UP. Staying at a level, or falling, posts
-nothing; falling clears the state, so a later rise posts again.
+A gauge posts when its level goes UP (or re-enters a level it left more than
+CLEAR_AFTER_H ago, or holds it past REPEAT_AFTER_H). A level is held through
+dips shorter than CLEAR_AFTER_H, so a forecast wobbling across a threshold
+between builds posts once, not every build.
 
 ⚠️ Guards, each for a failure that would otherwise spam strangers' phones:
   * no previous state (first run, or the fetch failed) -> record, post nothing;
@@ -54,20 +56,44 @@ def rows(current: dict) -> dict:
     return {sid: dict(zip(f, r)) for sid, r in (current.get("sites") or {}).items()}
 
 
-def transitions(current: dict, prev: dict | None) -> tuple[list[dict], dict]:
-    """(events to post, new state). `prev` None means no usable history."""
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+#: Hysteresis. The first live diff (2026-11-04 02:24Z) found 117 "new"
+#: transitions among 641 gauges in ONE 6-hour build: forecasts wobble across
+#: the 1.5x / p75 thresholds between builds, and without memory each wobble
+#: re-alerts. So a level is HELD until the gauge has been below it for
+#: CLEAR_AFTER_H, and the same level cannot re-post within REPEAT_AFTER_H.
+CLEAR_AFTER_H = 24
+REPEAT_AFTER_H = 72
+
+
+def _hours(a: str, b: str) -> float:
+    return (datetime.fromisoformat(b) - datetime.fromisoformat(a)).total_seconds() / 3600
+
+
+def transitions(current: dict, prev: dict | None, now: str | None = None) -> tuple[list[dict], dict]:
+    """(events to post, new state). `prev` None means no usable history.
+
+    State per gauge: level (held), alerted_at (last post of that level or
+    higher), below_since (first build it read below the held level, if any).
+    """
+    now = now or datetime.now(timezone.utc).isoformat(timespec="seconds")
     old = (prev or {}).get("levels") or {}
+    cur = {sid: (level(r), r) for sid, r in rows(current).items()}
     new_levels, events = {}, []
-    for sid, r in rows(current).items():
-        lv = level(r)
-        if lv == 0:
-            continue
-        before = int((old.get(sid) or {}).get("level", 0))
-        since = (old.get(sid) or {}).get("since") if before >= lv else now
-        new_levels[sid] = {"level": lv, "since": since}
-        if prev is not None and lv > before:
-            events.append({"id": sid, "level": lv, **r})
+    for sid in set(cur) | set(old):
+        lv, r = cur.get(sid, (0, None))
+        o = old.get(sid) or {}
+        held = int(o.get("level", 0))
+        alerted = o.get("alerted_at") or o.get("since")
+        if lv >= held and lv > 0:
+            fire = prev is not None and (
+                lv > held or alerted is None or _hours(alerted, now) >= REPEAT_AFTER_H)
+            new_levels[sid] = {"level": lv, "alerted_at": now if fire or alerted is None else alerted}
+            if fire and r is not None:
+                events.append({"id": sid, "level": lv, **r})
+        elif held > 0:
+            below = o.get("below_since") or now
+            if _hours(below, now) < CLEAR_AFTER_H:
+                new_levels[sid] = {"level": held, "alerted_at": alerted, "below_since": below}
     events.sort(key=lambda e: (-e["level"], -(e.get("ratio") or 0)))
     return events, {"generated_at": now, "levels": new_levels}
 
