@@ -35,6 +35,7 @@ fixed) · **pending** (registered, not yet read).
 | C2 | Stacker train/serve skew: trained on raw member output, served bias-scaled + anchored output | blend median rel. bias +0.31 at lead 7 vs persistence +0.09; beat persistence on ~30% of basins | `_stacker_members_panel`, commit cde055e; `analysis/score_live_leads.py` | **pending — PREREG §LIVE-1, read window fixed in PREREG §LIVE-1 addendum: issued 11-04..11-17, leads 5–10 readable ≥ 2026-11-28** |
 | C3 | "Record high/low" on a single calendar day is common by chance (≈1/(N+1) per tail) | 4.2% / 4.8% of gauges on day one; record-class gauges median ~22 yr vs ~53 | ≥10-year rule, `scripts/current_conditions.py` | final |
 | C4 | Scheduled builds run cache-only (`RW2_NO_FETCH=1`), so gauges never cached at bootstrap never got USGS daily statistics. A first fix (retries) was a misdiagnosis: share unchanged 13.1% → 13.0% | 1,265 / 9,697 gauges with no statistics (2026-11-03) | cold-cache fetch budget + circuit breaker + negative cache, `app/usgs_stats.py` | final: unknown share 13.0% → **4.6%** (446 / 9,697) on the first build with the fix (2026-11-04 02:24Z) |
+| C5 | Threshold alerts on a 6-hourly forecast churn: forecasts cross the trigger back and forth between builds | 117 "new" transitions among 641 alerting gauges in one build | 24 h hold + 72 h repeat suppression, `scripts/alerts.py` (d74b220) | live (count transitions per build) |
 
 ## D. Pending reads (fixed dates; do not read early)
 
