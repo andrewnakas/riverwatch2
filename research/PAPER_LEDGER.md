@@ -41,7 +41,7 @@ fixed) · **pending** (registered, not yet read).
 
 | # | Question | Earliest read | Registration |
 |---|---|---|---|
-| D1 | GATE 4: areal GFS vs Open-Meteo point decoder | after the 2026-11-10 build (≥30 archived init dates) | `PREREG_v2.md` |
+| D1 | GATE 4: areal GFS vs Open-Meteo point decoder | lead-1 decision ≥ 2026-11-14 (30 init dates with observed targets); all-lead table ≥ 2026-11-27 (PREREG GATE 4 deviation 7) | `PREREG_v2.md` |
 | D2 | §LIVE-1: does the skew fix remove the wet bias / beat persistence at leads 5–10 | issued 2026-11-04..11-17; leads 5–10 readable ≥ 2026-11-28 | `PREREG_v2.md` §LIVE-1 |
 
 ## E. Product (the system the science runs in)

@@ -5024,3 +5024,16 @@ Nothing else in the GATE 4 registration changes. The 30-init-date minimum stands
    separate table and plays no part in the decision. The no-op check now excludes rows where both arms
    clip to 0 cfs (7,109 of the 7,114 identical rows, 68 dry basins); on the rest the arms differ on
    essentially every row.
+6. **Encoder snapshot, refreshed (2026-11-12, before any skill is read).** The 22-date coverage run used
+   the `m1-forcing-archive` snapshot of 2026-11-03, whose rows after 11-03 are point *forecasts*. Init
+   dates 11-05..11-12 need an encoder that ends in served (not forecast) forcing, so the final run uses
+   ONE snapshot for all init dates: `m1-forcing-archive` f7fbd44 (2026-11-12T15:06Z; areal NLDAS-2
+   through 11-07, point-filled after). Still identical across arms; only the paired Δ is read. All 31
+   init dates (2026-10-13..11-12) are re-predicted with it; the 22-date file is superseded, not pooled.
+7. **What "30 init dates" counts (2026-11-12, before any skill is read).** Init dates whose lead-L
+   target has been OBSERVED, per lead -- not init dates present in the prediction file (with 31 inits
+   on 11-12, lead 14 would otherwise be "read" on the 16 inits whose day-14 has happened). The scorer
+   now enforces this per lead (`analysis/gate4_run.py score`). Consequence: the lead-1 headline, and
+   with it the decision, is readable from the first run on/after **2026-11-14** (inits 10-13..11-11 +
+   USGS daily for 11-12..11-13). Leads with < 30 observed inits are not printed then. The full 14-lead
+   table is printed once more on/after **2026-11-27**, as reporting only: it cannot change the decision.

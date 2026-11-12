@@ -120,9 +120,21 @@ def score(a) -> int:
     obs = {}
     for s in w.station_id.unique():
         o = usgs.fetch_daily_discharge(s, date(2026, 10, 1), date.today())
-        obs[s] = dict(zip(o["date"].astype(str), o["q_cfs"]))
+        obs[s] = {} if o is None or o.empty else dict(zip(o["date"].astype(str), o["q_cfs"]))
     w["obs"] = [obs[s].get(t) for s, t in zip(w.station_id, w.target_date)]
     w = w.dropna(subset=["obs"])
+    # The minimum is init dates WITH OBSERVED TARGETS, per lead: an init whose
+    # lead-L target has not happened yet contributes nothing to lead L. Counting
+    # init dates in the prediction file would let lead 14 be read on ~16 dates.
+    obs_inits = w[w.tier == 1].groupby("lead").init_date.nunique()
+    print("observed tier-1 init dates per lead: "
+          + " ".join(f"{L}:{n}" for L, n in obs_inits.items()))
+    if obs_inits.get(1, 0) < MIN_INIT_DATES and not a.allow_thin:
+        print(f"⛔ lead 1 (the headline) has {obs_inits.get(1, 0)} < {MIN_INIT_DATES} observed "
+              "init dates. Coverage only.")
+        return 0
+    if not a.allow_thin:
+        w = w[w.lead.map(obs_inits).fillna(0) >= MIN_INIT_DATES]
     rng = np.random.default_rng(0)
     for tier, wt in w.groupby("tier"):
         print(f"\n=== tier {tier} {'(HEADLINE: the registered decision reads this table)' if tier == 1 else '(reported separately; NOT part of the decision)'}")
