@@ -122,7 +122,8 @@ def score(a) -> int:
         o = usgs.fetch_daily_discharge(s, date(2026, 10, 1), date.today())
         obs[s] = {} if o is None or o.empty else dict(zip(o["date"].astype(str), o["q_cfs"]))
     w["obs"] = [obs[s].get(t) for s, t in zip(w.station_id, w.target_date)]
-    w = w.dropna(subset=["obs"])
+    # Today's (UTC) daily value, if USGS shows one, is a partial-day mean.
+    w = w[w.target_date < date.today().isoformat()].dropna(subset=["obs"])
     # The minimum is init dates WITH OBSERVED TARGETS, per lead: an init whose
     # lead-L target has not happened yet contributes nothing to lead L. Counting
     # init dates in the prediction file would let lead 14 be read on ~16 dates.
