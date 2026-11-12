@@ -38,4 +38,17 @@ def test_summarise_uses_last_obs_and_blend_peak(tmp_path):
     assert list(out["sites"]) == ["01010000"]
     row = dict(zip(out["fields"], out["sites"]["01010000"]))
     assert row == {"q": 250, "date": "2026-11-01", "cls": 3, "peak_q": 500,
-                   "peak_date": "2026-11-03", "peak_cls": 4, "ratio": 2.0}
+                   "peak_date": "2026-11-03", "peak_cls": 4, "ratio": 2.0,
+                   "near_q": 500, "near_date": "2026-11-03", "near_cls": 4, "near_ratio": 2.0}
+
+
+def test_near_peak_ignores_days_past_the_window(tmp_path):
+    blend = [{"date": f"2026-11-{d:02d}", "q_cfs": q}
+             for d, q in [(2, 260), (6, 300), (7, 900), (14, 5000)]]
+    payload = {"history": [{"date": "2026-11-01", "q_cfs": 250}], "blend": blend,
+               "daily_stats": {"rows": [dict(ROW, month_day=f"11-{d:02d}") for d in range(1, 15)]}}
+    (tmp_path / "01010000.json").write_text(json.dumps(payload))
+    row = dict(zip(*(lambda o: (o["fields"], o["sites"]["01010000"]))(cc.build(tmp_path))))
+    assert (row["peak_q"], row["peak_cls"]) == (5000, 5)          # day 13: record
+    assert (row["near_q"], row["near_date"], row["near_cls"]) == (300, "2026-11-06", 3)
+    assert row["near_ratio"] == 1.2

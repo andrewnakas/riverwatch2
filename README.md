@@ -7,7 +7,8 @@ NE / Driftless.
 
 A Leaflet map shows every gauge, **coloured by today's flow against that gauge's own
 record for the date** (record low / below normal / normal / above normal / record high),
-with a red ring where the forecast peak lands above normal and ≥1.5× today's flow.
+with a red ring where the forecast peak in the next 5 days lands above normal and ≥1.5× today's flow
+(days 6–14 are shown on the chart but run wet, so they do not trigger the ring or alerts).
 **Search** by river, gauge id or state; every gauge has a shareable link
 (`#site=<usgs id>`); **star** gauges to keep them on the start panel. Each station panel
 shows **NWS flood stages** (action/minor/moderate/major, converted to cfs through the NWS

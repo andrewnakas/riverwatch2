@@ -7,8 +7,8 @@ compares this run's `current.json` with the previous run's published
 `alerts_state.json` and posts only TRANSITIONS into an alert level.
 
 Levels (from current.json, see scripts/current_conditions.py):
-    1 rising  forecast peak above normal for its date AND >= 1.5x today's flow
-    2 record  forecast peak above the gauge's record for its date
+    1 rising  5-day forecast peak above normal for its date AND >= 1.5x today's flow
+    2 record  5-day forecast peak above the gauge's record for its date
 
 A gauge posts when its level goes UP (or re-enters a level it left more than
 CLEAR_AFTER_H ago, or holds it past REPEAT_AFTER_H). A level is held through
@@ -51,9 +51,24 @@ def level(row: dict) -> int:
     return 0
 
 
+NEAR = ("q", "date", "cls", "ratio")
+
+
+def _near(r: dict) -> dict:
+    """Judge the peak within current_conditions.NEAR_DAYS, not the 14-day peak.
+
+    On 2026-11-12, 1,191 gauges sat at an alert level and 316 of the 327
+    "rising" ones peaked on day 6+, where the blend ran wet; 129-155 new
+    transitions per build hit the 50-post cap. A current.json without near_*
+    (older build) falls back to the 14-day peak."""
+    if "near_cls" not in r:
+        return r
+    return dict(r, **{f"peak_{k}" if k != "ratio" else k: r.get(f"near_{k}") for k in NEAR})
+
+
 def rows(current: dict) -> dict:
     f = current.get("fields") or []
-    return {sid: dict(zip(f, r)) for sid, r in (current.get("sites") or {}).items()}
+    return {sid: _near(dict(zip(f, r))) for sid, r in (current.get("sites") or {}).items()}
 
 
 #: Hysteresis. The first live diff (2026-11-04 02:24Z) found 117 "new"
@@ -96,6 +111,19 @@ def transitions(current: dict, prev: dict | None, now: str | None = None) -> tup
                 new_levels[sid] = {"level": held, "alerted_at": alerted, "below_since": below}
     events.sort(key=lambda e: (-e["level"], -(e.get("ratio") or 0)))
     return events, {"generated_at": now, "levels": new_levels}
+
+
+def unmark(state: dict, prev: dict | None, ids: list[str]) -> dict:
+    """Restore the previous entry of each id whose event was NOT posted (over
+    MAX_POSTS, or the POST failed). Marking them alerted silenced them for
+    REPEAT_AFTER_H without anyone being told -- 79-105 per build in Nov 2026."""
+    old = (prev or {}).get("levels") or {}
+    for sid in ids:
+        if sid in old:
+            state["levels"][sid] = old[sid]
+        else:
+            state["levels"].pop(sid, None)
+    return state
 
 
 def message(e: dict, name: str) -> tuple[str, str]:
@@ -149,10 +177,15 @@ def main() -> int:
           f"{'no previous state, posting nothing' if prev is None else f'{len(events)} new transitions'}")
     if os.environ.get("RW2_ALERTS") != "1" or not events:
         return 0
-    sent = 0
+    sent, unsent = 0, [e["id"] for e in events[MAX_POSTS:]]
     for e in events[:MAX_POSTS]:
-        sent += post(e, names.get(e["id"], e["id"]))
+        ok = post(e, names.get(e["id"], e["id"]))
+        sent += ok
+        if not ok:
+            unsent.append(e["id"])
         time.sleep(1.0)
+    if unsent:   # not posted -> not "alerted": leave them to fire next build
+        Path(a.out).write_text(json.dumps(unmark(state, prev, unsent), separators=(",", ":")))
     print(f"  alerts: posted {sent}/{min(len(events), MAX_POSTS)}"
           + (f" (capped; {len(events) - MAX_POSTS} not sent)" if len(events) > MAX_POSTS else ""))
     return 0

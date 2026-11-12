@@ -43,12 +43,21 @@ const Conditions = (() => {
 
   //: Forecast to climb well past normal: the peak lands above p75 for its day
   //: AND is at least 1.5x today's flow. Both, so a gauge that merely sits
-  //: high, or doubles from a trickle, is not flagged.
+  //: high, or doubles from a trickle, is not flagged. Judged on the NEAR peak
+  //: (next 5 days, current_conditions.NEAR_DAYS) when the build provides it:
+  //: days 6-14 of the blend run wet, and flagged ~1 in 9 gauges in Nov 2026.
+  function nearPeak(c) {
+    if (!c) return null;
+    return "near_cls" in c
+      ? { q: c.near_q, date: c.near_date, cls: c.near_cls, ratio: c.near_ratio }
+      : { q: c.peak_q, date: c.peak_date, cls: c.peak_cls, ratio: c.ratio };
+  }
   function rising(c) {
-    return !!c && c.peak_cls >= 4 && Number.isFinite(c.ratio) && c.ratio >= 1.5;
+    const p = nearPeak(c);
+    return !!p && p.cls >= 4 && Number.isFinite(p.ratio) && p.ratio >= 1.5;
   }
 
-  return { load, get, rising, COLORS, NAMES, get generatedAt() { return generatedAt; } };
+  return { load, get, rising, nearPeak, COLORS, NAMES, get generatedAt() { return generatedAt; } };
 })();
 
 const NWS = (() => {

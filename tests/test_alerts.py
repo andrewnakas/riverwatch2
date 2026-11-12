@@ -71,3 +71,23 @@ def test_message_says_it_is_not_a_warning():
     e = {"id": "1", "level": 1, **dict(zip(F, RISING))}
     title, body = alerts.message(e, "Test River")
     assert "rise" in title and "not a warning" in body
+
+
+def test_near_window_overrides_14_day_peak():
+    f = F + ["near_q", "near_date", "near_cls", "near_ratio"]
+    far_only = [100, "2026-11-01", 3, 900, "2026-11-13", 5, 9.0, 120, "2026-11-03", 3, 1.2]
+    near = [100, "2026-11-01", 3, 900, "2026-11-13", 5, 9.0, 400, "2026-11-04", 4, 4.0]
+    r = alerts.rows({"fields": f, "sites": {"a": far_only, "b": near}})
+    assert alerts.level(r["a"]) == 0 and alerts.level(r["b"]) == 1
+    assert r["b"]["peak_q"] == 400 and r["b"]["peak_date"] == "2026-11-04"
+
+
+def test_unsent_events_are_not_marked_alerted():
+    t = "2026-11-04T00:00:00+00:00"
+    prev = {"levels": {"a": {"level": 1, "alerted_at": t}}}
+    ev, st = alerts.transitions(cur(a=RECORD, b=RISING), prev, now="2026-11-04T06:00:00+00:00")
+    assert {e["id"] for e in ev} == {"a", "b"}
+    st = alerts.unmark(st, prev, ["a", "b"])
+    assert st["levels"]["a"] == {"level": 1, "alerted_at": t} and "b" not in st["levels"]
+    ev2, _ = alerts.transitions(cur(a=RECORD, b=RISING), st, now="2026-11-04T12:00:00+00:00")
+    assert {e["id"] for e in ev2} == {"a", "b"}      # they fire on the next build

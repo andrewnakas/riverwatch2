@@ -34,10 +34,17 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-FIELDS = ["q", "date", "cls", "peak_q", "peak_date", "peak_cls", "ratio"]
+FIELDS = ["q", "date", "cls", "peak_q", "peak_date", "peak_cls", "ratio",
+          "near_q", "near_date", "near_cls", "near_ratio"]
+#: The near_* fields are the same peak restricted to NEAR_DAYS after the last
+#: observation. Alerts and the map's "forecast to rise" ring read these, not the
+#: 14-day peak: on 2026-11-12, 316 of 327 "rising" gauges peaked on day 6 or
+#: later, where the blend ran wet (median rel. bias +0.31 at lead 7 vs +0.02 at
+#: lead 1, PAPER_LEDGER C2), and the median gauge's 14-day peak was 1.31x today.
+NEAR_DAYS = 5
 MIN_RECORD_YEARS = 10
 CLASS_NAMES = ["unknown", "record low", "below normal", "normal",
                "above normal", "record high"]
@@ -81,15 +88,25 @@ def summarise(payload: dict) -> list | None:
     rows = {r.get("month_day"): r for r in (payload.get("daily_stats") or {}).get("rows") or []}
     cls = classify(q, rows.get(d[5:10]))
 
-    peak_q = peak_d = None
-    for b in payload.get("blend") or []:
-        v = _num(b.get("q_cfs"))
-        if v is not None and (peak_q is None or v > peak_q):
-            peak_q, peak_d = v, str(b.get("date"))
-    peak_cls = classify(peak_q, rows.get(peak_d[5:10])) if peak_d else 0
-    ratio = round(peak_q / q, 3) if peak_q is not None and q and q > 0 else None
-    return [round(q, 2), d, cls,
-            None if peak_q is None else round(peak_q, 2), peak_d, peak_cls, ratio]
+    blend = payload.get("blend") or []
+    try:
+        near_end = (date.fromisoformat(d[:10]) + timedelta(days=NEAR_DAYS)).isoformat()
+    except ValueError:
+        near_end = ""
+
+    def peak(within: str | None) -> list:
+        pq = pd_ = None
+        for b in blend:
+            v, bd = _num(b.get("q_cfs")), str(b.get("date"))[:10]
+            if v is None or (within is not None and bd > within):
+                continue
+            if pq is None or v > pq:
+                pq, pd_ = v, bd
+        pc = classify(pq, rows.get(pd_[5:10])) if pd_ else 0
+        ratio = round(pq / q, 3) if pq is not None and q and q > 0 else None
+        return [None if pq is None else round(pq, 2), pd_, pc, ratio]
+
+    return [round(q, 2), d, cls] + peak(None) + peak(near_end)
 
 
 def build(forecast_dir: Path) -> dict:

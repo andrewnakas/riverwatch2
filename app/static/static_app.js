@@ -47,7 +47,7 @@ function conditionText(id) {
   const c = _haveConditions ? Conditions.get(id) : null;
   if (!c) return "";
   let t = `${fmtNumber(c.q, 0)} cfs (${Conditions.NAMES[c.cls]})`;
-  if (Conditions.rising(c)) t += ` · forecast to rise to ${fmtNumber(c.peak_q, 0)} cfs by ${String(c.peak_date).slice(5)}`;
+  if (Conditions.rising(c)) { const p = Conditions.nearPeak(c); t += ` · forecast to rise to ${fmtNumber(p.q, 0)} cfs by ${String(p.date).slice(5)}`; }
   return t;
 }
 
