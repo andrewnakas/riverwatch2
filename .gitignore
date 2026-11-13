@@ -43,3 +43,6 @@ archive_m1_forcing/
 
 # GATE 4 areal-GFS arm (rebuilt locally, ~0.5 MB/init date; see PREREG GATE 4 deviations)
 data/gate4/
+archive_staging_fleet/
+archive_fleet/
+archive_fleet_meta/

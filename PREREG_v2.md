@@ -5037,3 +5037,72 @@ Nothing else in the GATE 4 registration changes. The 30-init-date minimum stands
    with it the decision, is readable from the first run on/after **2026-11-14** (inits 10-13..11-11 +
    USGS daily for 11-12..11-13). Leads with < 30 observed inits are not printed then. The full 14-lead
    table is printed once more on/after **2026-11-27**, as reporting only: it cannot change the decision.
+
+---
+
+## §V16 — FLEET VERIFICATION, FRESH FORCING, CHAMPION/CHALLENGER (registered 2026-11-13, before any number below exists)
+
+**Why.** Reading the serving code on 2026-11-13 (no skill number involved) found four defects that sit
+between the research track and the served line. Each is stated here as a hypothesis with its test, so
+that none of them is "confirmed" by the fix that assumes it.
+
+1. **H-STALE.** Scheduled builds set `RW2_NO_FETCH=1`; `app/weather.py::fetch_forecast` /
+   `fetch_history` and `app/nbm.py` then return the newest cached file however old. Only USGS flow,
+   NWM and the 620-basin MODERN-1 forcing table are refreshed. Hypothesis: most gauges are forecast
+   on weather issued days-to-weeks before the build.
+2. **H-LEAK.** `app/stacker.py::add_station` fills the `q_obs_today_log` training feature with
+   `ytrue_h[0]`, the lead-1 TARGET; at serve time it is the real issue-day flow.
+3. **H-BLIND.** `nwm` and `timesfm_xreg` have no holdouts, so their stacker columns are NaN in every
+   training row and filled at serve; `nwm_residual`, `mblstm`, `mblstm_modern` are not features.
+4. **H-LAG.** Lead 1 of a build is the day after the last USGS *daily* value, typically yesterday
+   or earlier, while instantaneous values run to the present.
+
+### V16-0 The fleet archive (generation `fleet-1`) and the scoreboard
+
+Every build archives, for every gauge it serves, one row per lead: the served blend and band, the
+blend rule, every member's served value, and the raw NWM curve; plus one provenance row per gauge
+(last observed date and flow, first/last date of the weather forecast used, last date of weather
+history, NBM first date, stale/degraded flags). Orphan branch `fleet-archive`, one file per issue
+date, a re-run replaces. Scorer `analysis/score_fleet_live.py`, per lead, all days, no stride:
+pooled MAE ratio arm/reference with a basin-bootstrap 95% CI (1,000 resamples of basins), fraction
+of basins where the arm's MAE is lower, median relative bias (pred−obs)/max(obs, 0.1), and 90% band
+coverage. Lead is defined as `target_date − issued_date` in days **as well as** the archive's
+`horizon_day`, because H-LAG says the two differ; both are printed.
+
+### V16-1 H-STALE: measurement before fix
+
+Statistic: `issued_date − wx_fcst_start` in days per gauge, on the first three complete fleet
+archive days. **Prediction: median ≥ 7 days; ≥ 80% of gauges ≥ 2 days.**
+- median ≥ 2 d → H-STALE holds; build the `wx-forcing` job (GFS from NOAA open data, sampled at
+  every gauge, one artifact per build) and refuse cached forecasts older than 24 h.
+- median ≤ 1 d → H-STALE is wrong; the forcing job is demoted to an areal-vs-point experiment
+  under GATE 4's outcome and is not credited with any skill change.
+- in between → report the distribution; fix only the gauges ≥ 2 d.
+
+### V16-2 Champion / challenger — the only way the served line changes from here on
+
+A candidate served line is computed in the same build as `challenger`, archived on identical keys,
+and not drawn. **Promotion rule, fixed now:** over ≥ 14 consecutive issue dates, on all gauges with
+both lines and observed targets, the challenger replaces the champion iff
+(a) pooled MAE ratio challenger/champion has CI upper bound < 1 at ≥ 10 of 14 leads, AND
+(b) no lead has point ratio > 1.02, AND
+(c) |median relative bias| at lead 7 is not larger than the champion's by more than 0.02.
+Fail any → not promoted; the candidate stays in the ledger. One candidate at a time. Input
+freshness changes (V16-1 forcing, V16-3 nowcast) are not blend changes: they change what every
+member sees, cannot be run as a second line without doubling the build, and are instead judged
+before/after on the scoreboard with the season confound stated, as §LIVE-1 was.
+
+**§LIVE-1 is protected:** nothing that changes a served value merges before 2026-11-18 (its window
+is issue dates 11-04..11-17), and no challenger is promoted before the §LIVE-1 read is logged.
+The archive and scorer change no served value and may merge at once.
+
+### V16-3 Predictions for the fixes (each read on the scoreboard, first ≥ 14 issue dates after deploy)
+
+| change | prediction | if it fails |
+|---|---|---|
+| fresh forcing (V16-1) | weather-driven members (`runoff_ridge`, `lgbm_pooled`, `timesfm_xreg`) improve pooled MAE vs persistence by ≥ 0.03 at leads 2–7; flow-only members (`chronos_bolt`, `ttm`, `timesfm`) move < 0.01 (control) | if the control moves as much, the change is season, not forcing |
+| nowcast (H-LAG) | at fixed *calendar* lead (target − issue date) 1–3, blend MAE falls ≥ 10% | if < 3%, daily-value latency was not costing skill; drop it |
+| stacker v2 (H-LEAK + H-BLIND; one global persisted model, real holdouts for nwm / nwm_residual / mblstm, quantile heads) | promoted under V16-2; blend/persistence pooled MAE < 1 at all 14 leads; 90% band coverage 0.85–0.95 | not promoted; the per-shard stacker stays and the leak fix is tested alone |
+
+**Not predicted, stated now:** the size of any of these in NSE; none of them may be added to A3's
+−0.048033 or to any MODERN-1 figure.

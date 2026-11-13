@@ -408,6 +408,31 @@ def _doy_climatology(z_series: pd.Series, dates: pd.DatetimeIndex) -> Optional[p
     return out
 
 
+def _input_provenance(wx_hist, wx_fcst, nbm_df) -> Dict[str, Optional[str]]:
+    """First/last dates of the weather inputs a forecast ran on (§V16-0).
+
+    Never raises: provenance must not be able to cost a forecast."""
+    def _edge(df, fn, col=None):
+        try:
+            if df is None or len(df) == 0 or "date" not in df:
+                return None
+            if col is not None:
+                if col not in df:
+                    return None
+                df = df[df[col].notna()]
+                if len(df) == 0:
+                    return None
+            return str(pd.to_datetime(fn(df["date"])).date())
+        except Exception:
+            return None
+    return {
+        "wx_fcst_start": _edge(wx_fcst, min),
+        "wx_fcst_end": _edge(wx_fcst, max),
+        "wx_hist_end": _edge(wx_hist, max, "precipitation_sum"),
+        "nbm_start": _edge(nbm_df, min),
+    }
+
+
 @dataclass
 class StationForecast:
     station_id: str
@@ -472,6 +497,16 @@ class StationForecast:
     degraded: bool = False
     members_used: List[str] = field(default_factory=list)
     members_dropped: List[str] = field(default_factory=list)
+    # PREREG §V16-0: how old the inputs behind this forecast were. Scheduled
+    # builds run cache-only (RW2_NO_FETCH=1) and the weather cache returns its
+    # newest file however old, so input age must be MEASURED per gauge, not
+    # assumed. Keys: wx_fcst_start / wx_fcst_end (first/last date of the
+    # weather forecast used), wx_hist_end (last day of weather history with a
+    # precipitation value), nbm_start. None = that input was empty.
+    provenance: Dict[str, Optional[str]] = field(default_factory=dict)
+    # PREREG §V16-2: a candidate served line, archived beside `blend` on
+    # identical keys and never drawn. Empty until a challenger is registered.
+    challenger: List[dict] = field(default_factory=list)
     # v14.4: panel needed to fit the pooled blend stacker and to recompute
     # the live blend after stacker fit. Stripped from the JSON artifact by
     # the build script before serialization (see scripts/build_static_site.py).
@@ -1264,6 +1299,8 @@ def forecast_station(
             except Exception as exc:
                 notes.append(f"snotel failed: {exc}")
                 snotel_df = None
+
+    provenance = _input_provenance(wx_hist, wx_fcst, nbm_df)
 
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     future_dates = [(last_date + timedelta(days=h)).date().isoformat() for h in range(1, horizon + 1)]
@@ -2424,6 +2461,7 @@ def forecast_station(
         degraded=degraded,
         members_used=members_used,
         members_dropped=members_dropped,
+        provenance=provenance,
         daily_stats=daily_stats,
         record_start=record_start,
         record_end=record_end,

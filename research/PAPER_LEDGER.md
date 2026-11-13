@@ -26,6 +26,7 @@ fixed) · **pending** (registered, not yet read).
 | B3 | Score every day, never a stride subsample | stride-14 frame flattered results by +0.036 | README |
 | B4 | Live verification archive: what was *served*, joined to what the river did | found C1 and C2 below | `origin/m1-archive`, `scripts/snapshot_m1_archive.py` |
 | B5 | Refuse rather than serve the training mean (forcing gaps, short decoders, degenerate histories) | 10-of-16-lead table silently served leads 11–16 at training mean (2026-10-16) | `app/mblstm_modern.py` |
+| B6 | Fleet archive with input provenance: every served gauge-lead, every member, and the age of the weather it ran on; champion/challenger promotion rule fixed before any candidate exists | found by code reading 2026-11-13: cache-only builds reuse the newest weather file however old; stacker trains `q_obs_today` on the lead-1 target (both registered as hypotheses, not yet measured) | `app/fleet_archive.py`, `PREREG_v2.md` §V16 |
 
 ## C. Failures found in live operation, and fixes
 
@@ -44,6 +45,8 @@ fixed) · **pending** (registered, not yet read).
 |---|---|---|---|
 | D1 | GATE 4: areal GFS vs Open-Meteo point decoder | lead-1 decision ≥ 2026-11-14 (30 init dates with observed targets); all-lead table ≥ 2026-11-27 (PREREG GATE 4 deviation 7) | `PREREG_v2.md` |
 | D2 | §LIVE-1: does the skew fix remove the wet bias / beat persistence at leads 5–10 | issued 2026-11-04..11-17; leads 5–10 readable ≥ 2026-11-28 | `PREREG_v2.md` §LIVE-1 |
+| D3 | §V16-1 H-STALE: how old is the weather a scheduled build forecasts on (`issued_date − wx_fcst_start`, every gauge). Prediction: median ≥ 7 d | first three complete fleet-archive days (`analysis/score_fleet_live.py age`) | `PREREG_v2.md` §V16 |
+| D4 | §V16 fleet scoreboard: served blend vs persistence, every gauge, per lead, basin-bootstrap CI | issue dates ≥ 2026-11-18 only; nightly `verify.yml` → `fleet-archive:live_skill.json` | `PREREG_v2.md` §V16-0 |
 
 ## E. Product (the system the science runs in)
 

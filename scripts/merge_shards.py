@@ -26,6 +26,7 @@ DIST = ROOT / "dist"
 ARCHIVE_STAGING = ROOT / "archive_staging"
 # MODERN-1 served-forecast rows, same route as the NWM ones.
 ARCHIVE_STAGING_M1 = ROOT / "archive_staging_m1"
+ARCHIVE_STAGING_FLEET = ROOT / "archive_staging_fleet"  # PREREG §V16-0
 
 
 def main() -> int:
@@ -62,7 +63,7 @@ def main() -> int:
         # v14.2: _nwm_raw is staged outside dist/ so it doesn't ship to Pages.
         # _nwm_raw and _m1_fcst are staged OUTSIDE dist/ so they do not ship
         # to Pages. Forgetting one here publishes the raw archive CSVs.
-        if item.name in {"forecasts", "history", "_nwm_raw", "_m1_fcst"} or item.name.startswith("index_summary_shard_"):
+        if item.name in {"forecasts", "history", "_nwm_raw", "_m1_fcst", "_fleet", "_fleet_meta"} or item.name.startswith("index_summary_shard_"):
             continue
         dst = DIST / item.name
         if item.is_dir():
@@ -101,6 +102,22 @@ def main() -> int:
                 shutil.copy2(f, ARCHIVE_STAGING_M1 / f.name)
                 m1_files_collected += 1
     print(f"  m1 forecast shard files collected: {m1_files_collected} → {ARCHIVE_STAGING_M1}")
+
+    # 1d) Fleet archive rows + per-gauge provenance (PREREG §V16-0).
+    if ARCHIVE_STAGING_FLEET.exists():
+        shutil.rmtree(ARCHIVE_STAGING_FLEET)
+    fleet_files_collected = 0
+    for sub in ("_fleet", "_fleet_meta"):
+        (ARCHIVE_STAGING_FLEET / sub).mkdir(parents=True)
+        for sd in shard_dirs:
+            d = sd / sub
+            if not d.exists():
+                continue
+            for f in d.iterdir():
+                if f.suffix == ".gz":
+                    shutil.copy2(f, ARCHIVE_STAGING_FLEET / sub / f.name)
+                    fleet_files_collected += 1
+    print(f"  fleet archive shard files collected: {fleet_files_collected} → {ARCHIVE_STAGING_FLEET}")
 
     # 2) Forecast JSONs from every shard
     total_forecasts = 0

@@ -701,6 +701,49 @@ jobs:
             echo "::warning::m1-archive push did not land ${ISSUED}"
           fi
 
+      # Fleet verification archive (PREREG §V16-0): what the build served at
+      # EVERY gauge plus the age of its inputs, on the orphan `fleet-archive`
+      # branch. Pushed from a separate worktree so it cannot disturb, or be
+      # disturbed by, the checkout dance of the two steps above.
+      # if: always() + continue-on-error: an archive push must never block a deploy.
+      - name: Snapshot fleet forecasts to fleet-archive branch
+        if: always()
+        continue-on-error: true
+        run: |
+          set -e
+          git checkout --force "$GITHUB_SHA"
+          test -f scripts/snapshot_fleet_archive.py || {
+            echo "::error::could not restore the build tree; not archiving"; exit 1; }
+          python scripts/snapshot_fleet_archive.py || {
+            echo "::warning::no fleet rows to snapshot"; exit 0; }
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          WT=/tmp/rw2_fleet_wt
+          rm -rf "$WT"; git worktree prune
+          if git ls-remote --exit-code --heads origin fleet-archive; then
+            git fetch origin fleet-archive --depth=1
+            git worktree add -B fleet-archive "$WT" FETCH_HEAD
+          else
+            git worktree add --detach "$WT"
+            git -C "$WT" checkout --orphan fleet-archive
+            git -C "$WT" rm -rf -q . || true
+          fi
+          mkdir -p "$WT/archive_fleet" "$WT/archive_fleet_meta"
+          cp -r archive_fleet/* "$WT/archive_fleet/"
+          [ -d archive_fleet_meta ] && cp -r archive_fleet_meta/* "$WT/archive_fleet_meta/" || true
+          git -C "$WT" add archive_fleet archive_fleet_meta
+          if git -C "$WT" diff --cached --quiet; then
+            echo "no fleet archive changes to commit"; exit 0
+          fi
+          ISSUED=$(date -u +%Y-%m-%d)
+          git -C "$WT" commit -q -m "fleet-archive: served forecasts ${ISSUED}"
+          git -C "$WT" push origin fleet-archive
+          if git ls-remote --exit-code --heads origin fleet-archive >/dev/null; then
+            echo "::notice::pushed fleet-archive for ${ISSUED} ($(du -sh "$WT/archive_fleet" | cut -f1) total)"
+          else
+            echo "::warning::fleet-archive push did not land ${ISSUED}"
+          fi
+
   deploy:
     needs: merge
     runs-on: ubuntu-latest

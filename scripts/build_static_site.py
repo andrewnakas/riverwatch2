@@ -37,6 +37,7 @@ sys.path.insert(0, str(ROOT))
 from app.forecast import forecast_station, prepare_station_inputs, recompute_blend_with_stacker  # noqa: E402
 from app.pooled_lgbm import PooledTrainer  # noqa: E402
 from app.stacker import StackerTrainer  # noqa: E402
+from app import fleet_archive  # noqa: E402
 from app.gages2 import enrich_station_attrs, coverage_summary as gages2_coverage  # noqa: E402
 
 # v15.0: bootstrap landed (run #62 succeeded with cold caches filled),
@@ -310,6 +311,8 @@ def main() -> int:
     # q_cfs_raw, q_cfs_obs_today, bias_scale_used).
     nwm_raw_rows: list[tuple] = []
     m1_rows: list = []
+    fleet_rows: list = []   # PREREG §V16-0: every gauge, every lead
+    fleet_meta: list = []
     t0 = time.time()
 
     # v13.2: 2-pass build. Pass 1 collects fetched + feature-engineered inputs
@@ -442,6 +445,14 @@ def main() -> int:
             # Served-domain only, so this is 620 x 14 x 3 rows per build rather
             # than 9,851 -- and 620 means BOTH tiers, because a basin that is
             # served but not archived can never have its live skill measured.
+            # Fleet archive (PREREG §V16-0): what was served at EVERY gauge,
+            # with the age of its inputs. Never able to cost the forecast.
+            try:
+                _fr, _fm = fleet_archive.rows_for(f)
+                fleet_rows.extend(_fr)
+                fleet_meta.append(_fm)
+            except Exception as exc:
+                print(f"  fleet archive rows FAIL {sid}: {exc}")
             if _m1_cohort and sid in _m1_cohort:
                 issued = f.issued_at[:10]
                 qmap = (f.member_quantiles or {}).get("mblstm_modern") or []
@@ -553,6 +564,19 @@ def main() -> int:
                         "series", "q_cfs", "q_lo_raw", "q_hi_raw", "schema_version"])
             w.writerows(m1_rows)
         print(f"wrote {len(m1_rows)} MODERN-1 forecast rows → {out_path}")
+    # Fleet archive rows: same route as _m1_fcst (collected by merge_shards.py,
+    # staged outside dist/ so they never ship to Pages).
+    if fleet_rows:
+        import csv, gzip
+        for sub, hdr, payload in (("_fleet", fleet_archive.HEADER, fleet_rows),
+                                  ("_fleet_meta", fleet_archive.META_HEADER, fleet_meta)):
+            d = DIST / sub
+            d.mkdir(parents=True, exist_ok=True)
+            with gzip.open(d / f"shard_{args.shard_id}.csv.gz", "wt", newline="") as gz:
+                w = csv.writer(gz)
+                w.writerow(hdr)
+                w.writerows(payload)
+        print(f"wrote {len(fleet_rows)} fleet archive rows for {len(fleet_meta)} gauges")
     if sharded:
         (DIST / f"index_summary_shard_{args.shard_id}.json").write_text(json.dumps(summary, indent=2))
     else:

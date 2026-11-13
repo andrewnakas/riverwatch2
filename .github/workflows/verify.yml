@@ -1,0 +1,72 @@
+name: Live verification scoreboard
+
+# PREREG §V16-0 / §V16-1. Joins what the site SERVED (orphan branch
+# `fleet-archive`, written by pages.yml) to what the rivers then did, and
+# writes `live_skill.json` + `input_age.json` back to that branch. It never
+# pushes to main, so it can never trigger a Pages build.
+#
+# The scorer refuses issue dates before 2026-11-18 (PREREG §LIVE-1's window is
+# read once, from the m1 archive, on its own date).
+
+on:
+  schedule:
+    - cron: "30 14 * * *"   # after USGS has posted yesterday's daily means
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify
+  cancel-in-progress: false
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install scorer dependencies
+        run: pip install "pandas>=2.0" numpy
+
+      - name: Check out the fleet archive
+        id: arch
+        run: |
+          if git ls-remote --exit-code --heads origin fleet-archive; then
+            git fetch origin fleet-archive --depth=1
+            git worktree add -B fleet-archive /tmp/fleet FETCH_HEAD
+            echo "present=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::fleet-archive does not exist yet; nothing to score"
+            echo "present=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Input age (PREREG V16-1)
+        if: steps.arch.outputs.present == '1'
+        run: |
+          python analysis/score_fleet_live.py age /tmp/fleet --out /tmp/fleet/input_age.json | tee /tmp/age.txt
+          { echo '### Input age (issued_date minus first date of the input), days'; echo '```'; cat /tmp/age.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Score served forecasts against observations
+        if: steps.arch.outputs.present == '1'
+        run: |
+          python analysis/score_fleet_live.py score /tmp/fleet --out /tmp/fleet/live_skill.json | tee /tmp/score.txt
+          { echo '### Live scoreboard'; echo '```'; head -60 /tmp/score.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push results to fleet-archive
+        if: steps.arch.outputs.present == '1'
+        run: |
+          cd /tmp/fleet
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          git add input_age.json live_skill.json
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -q -m "scoreboard: $(date -u +%Y-%m-%d)"
+          # pages.yml's merge job pushes to the same branch; replay on top of it once.
+          git push origin fleet-archive || {
+            git fetch origin fleet-archive && git rebase FETCH_HEAD && git push origin fleet-archive; }
