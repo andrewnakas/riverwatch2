@@ -384,8 +384,33 @@ jobs:
           git push --force origin m1-forcing-archive-tmp:m1-forcing-archive
           echo "::notice::pushed m1-forcing-archive"
 
+  # PREREG §V16 H-LAG: per-gauge local-day mean discharge for the last complete
+  # days, from USGS instantaneous values (one bulk request per state, ~52
+  # calls). Shards use it only when RW2_IV_NOWCAST=1, which is NOT set yet
+  # (nothing that changes a served value before 2026-11-18); until then this
+  # job only proves the table builds. continue-on-error: it can never block a deploy.
+  iv-nowcast:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "pandas>=2.0"
+      - name: Build IV nowcast table
+        run: python scripts/build_iv_nowcast.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iv-nowcast
+          path: data/iv_nowcast
+          retention-days: 1
+          if-no-files-found: warn
+
   build:
-    needs: [snodas-extract, m1-forcing]
+    needs: [snodas-extract, m1-forcing, iv-nowcast]
     runs-on: ubuntu-latest
     timeout-minutes: 350  # cold 30yr backfill can take hours; subsequent runs are 1-day deltas
     strategy:
@@ -413,6 +438,14 @@ jobs:
         with:
           name: m1-forcing
           path: data/m1_forcing
+
+      # Absent is fine: app/iv_nowcast.py then adds nothing.
+      - name: Download IV nowcast table
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: iv-nowcast
+          path: data/iv_nowcast
 
       - uses: actions/setup-python@v5
         with:

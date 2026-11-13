@@ -5146,3 +5146,18 @@ Mechanism note, recorded so it is not rediscovered: a stale forecast file is not
 weather — rows are joined by date — it is *missing* weather: a file whose last date is before today
 contributes no future covariate at all. If H-STALE holds, the weather-driven members have been
 running without forecast weather, not with wrong weather.
+
+### §V16 NOTE (2026-11-13) — H-LAG nowcast: how it is built, and its known-value control
+
+`app/iv_nowcast.py`: USGS instantaneous values, last 3 days, one bulk request per state, reduced to
+station-LOCAL-day means; only complete days (≥ 20 samples spanning ≥ 22 h), never today's partial
+day; appended in memory after the daily record's last row, contiguously, up to yesterday. Off unless
+`RW2_IV_NOWCAST=1` (not set in `pages.yml`; not before 2026-11-18, and not in the same deploy as
+`RW2_WX_REFRESH`, so the two before/after reads are separable — forcing first, nowcast ≥ 14 issue
+dates later).
+
+Control (not a skill number — no forecast is involved): Colorado, 2026-11-10..11-12, IV-derived
+daily mean vs the official USGS daily value on the 503 gauge-days that have both: median relative
+difference 0.0015, p90 0.0072, p99 0.0407. On 2026-11-12 (read at ~08Z on 11-13) 8 Colorado gauges
+had an official daily value; the IV table had 250.
+V16-3's prediction for the nowcast stands unchanged.

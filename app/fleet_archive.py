@@ -25,7 +25,7 @@ HEADER = (["issued_date", "station_id", "target_date", "horizon_day",
           + list(MEMBERS) + ["nwm_raw", "schema_version"])
 META_HEADER = ["issued_date", "issued_at", "station_id", "last_obs_date",
                "q_obs_last", "data_age_days", "wx_fcst_start", "wx_fcst_end",
-               "wx_hist_end", "nbm_start", "stale", "degraded", "chosen",
+               "wx_hist_end", "nbm_start", "iv_days", "stale", "degraded", "chosen",
                "schema_version"]
 
 
@@ -70,6 +70,7 @@ def rows_for(f: Any) -> Tuple[List[list], list]:
             "" if getattr(f, "data_age_days", None) is None else int(f.data_age_days),
             prov.get("wx_fcst_start") or "", prov.get("wx_fcst_end") or "",
             prov.get("wx_hist_end") or "", prov.get("nbm_start") or "",
+            prov.get("iv_days") or "0",
             int(bool(getattr(f, "stale", False))),
             int(bool(getattr(f, "degraded", False))),
             str(getattr(f, "chosen", "") or ""), SCHEMA_VERSION]

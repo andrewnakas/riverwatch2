@@ -73,6 +73,7 @@ def test_input_provenance_never_raises_and_reads_edges():
     assert _input_provenance(None, object(), 3) == dict.fromkeys(p)
 
 
+
 @pytest.fixture()
 def sandbox(tmp_path):
     (tmp_path / "scripts").mkdir()

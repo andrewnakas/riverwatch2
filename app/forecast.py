@@ -28,6 +28,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 
 from . import nbm as _nbm, snodas as _snodas, snotel, usgs, usgs_stats, weather
+from . import iv_nowcast as _iv_nowcast
 
 # v12.4: LightGBM replaces Ridge for the runoff member. Lazy import so the
 # module still loads if lightgbm isn't installed; we fall back to ridge.
@@ -1125,6 +1126,8 @@ def prepare_station_inputs(
 
     notes: List[str] = []
     q_hist = usgs.fetch_daily_discharge(station_id, start, today)
+    if _iv_nowcast.enabled():  # PREREG §V16 H-LAG
+        q_hist = _iv_nowcast.extend(station_id, q_hist, today)
     if q_hist.empty:
         raise RuntimeError(f"no USGS daily discharge for {station_id}")
 
@@ -1251,6 +1254,8 @@ def forecast_station(
 
         notes = []
         q_hist = usgs.fetch_daily_discharge(station_id, start, today)
+        if _iv_nowcast.enabled():  # PREREG §V16 H-LAG
+            q_hist = _iv_nowcast.extend(station_id, q_hist, today)
         if q_hist.empty:
             raise RuntimeError(f"no USGS daily discharge for {station_id}")
 
@@ -1301,6 +1306,8 @@ def forecast_station(
                 snotel_df = None
 
     provenance = _input_provenance(wx_hist, wx_fcst, nbm_df)
+    # Days at the end of q_hist that are IV-derived, not official daily values.
+    provenance["iv_days"] = str(int(getattr(q_hist, "attrs", {}).get("iv_days", 0)))
 
     last_date = pd.to_datetime(q_hist["date"].iloc[-1])
     future_dates = [(last_date + timedelta(days=h)).date().isoformat() for h in range(1, horizon + 1)]
