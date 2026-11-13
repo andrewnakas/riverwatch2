@@ -93,6 +93,23 @@ def fetch_forecast(lat: float, lon: float, days: int = NBM_MAX_DAYS,
     cache = _cache_path(lat, lon, days)
 
     if NO_FETCH:
+        # PREREG §V16-1: this cache key carries no date, so under NO_FETCH the
+        # file was served forever. With RW2_WX_REFRESH=1 a file older than
+        # max_age_hours is re-fetched (budgeted, shared breaker in weather.py);
+        # on failure the old file is used exactly as before.
+        from . import weather as _wx
+        if _wx.refresh_allowed() and not (
+                cache.exists() and (time.time() - cache.stat().st_mtime) < max_age_hours * 3600):
+            payload = _wx.refresh_json(NBM_URL + "?" + urlencode({
+                "latitude": f"{lat:.4f}", "longitude": f"{lon:.4f}",
+                "daily": ",".join(DAILY_VARS), "models": "ncep_nbm_conus",
+                "forecast_days": days, "timezone": "UTC"}))
+            if payload is not None and (payload.get("daily") or {}).get("time"):
+                try:
+                    cache.write_text(json.dumps(payload))
+                except Exception:
+                    pass
+                return _to_df(payload)
         if cache.exists():
             return _to_df(json.loads(cache.read_text()))
         # Fall back to any recent cache for this lat/lon.

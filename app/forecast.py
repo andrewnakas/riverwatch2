@@ -2594,6 +2594,45 @@ def recompute_blend_with_stacker(
     return f
 
 
+def challenger_line(f: StationForecast, stacker: object,
+                    only_where_rule: Optional[str] = "lgbm_stacker") -> List[dict]:
+    """PREREG §V16-2: a candidate served line on the champion's exact keys.
+
+    Predicted from the same live panel the champion saw. Where the candidate
+    has no finite value the champion's value is used, so that row's paired
+    difference is exactly zero rather than missing. Call AFTER the champion's
+    blend is final and BEFORE the panel is stripped. Never raises; [] means
+    "no challenger this build"."""
+    try:
+        panel = f._v14_4_panel
+        if panel is None or panel.get("attrs") is None or not getattr(stacker, "fitted", False):
+            return []
+        vals = stacker.predict_blend(  # type: ignore[attr-defined]
+            station_id=f.station_id,
+            attrs=panel["attrs"],
+            qs=float(panel["qs"]),
+            members_panel=panel["members_panel"],
+            q_obs_today=float(panel["q_obs_today"]),
+            issued_doy=int(panel["issued_doy"]),
+            target_doys=list(panel["target_doys"]),
+        )
+        if vals is None:
+            return []
+        rules = getattr(f, "blend_strategy_per_h", None) or {}
+        out: List[dict] = []
+        for i, cur in enumerate(f.blend):
+            v = vals[i] if i < len(vals) else None
+            ok = v is not None and math.isfinite(float(v))
+            # One variable only: at a lead the champion drew by a fallback rule
+            # (not the stacker), the candidate stacker does not get to speak.
+            if only_where_rule is not None and rules.get(i + 1, rules.get(str(i + 1))) != only_where_rule:
+                ok = False
+            out.append({"date": cur["date"], "q_cfs": float(v) if ok else cur.get("q_cfs")})
+        return out
+    except Exception:
+        return []
+
+
 def _blend_weights(rolling_mae: Dict[str, float], member_names: List[str]) -> Dict[str, float]:
     """Inverse-MAE-squared weighting: w ∝ 1/MAE^2.
 

@@ -5106,3 +5106,43 @@ The archive and scorer change no served value and may merge at once.
 
 **Not predicted, stated now:** the size of any of these in NSE; none of them may be added to A3's
 −0.048033 or to any MODERN-1 figure.
+
+### §V16 DEVIATION 1 (2026-11-13, same day, before the fleet archive holds a single row) — first challenger is the leak fix ALONE
+
+V16-3 registered "stacker v2" (leak fix + real holdouts + one global model + quantile heads) as one
+candidate, with the leak fix "tested alone" only as its fallback. That bundles four changes into one
+read, which this project has already voided a screen for. Reading the code further showed the true
+issue-day flow per holdout offset (`q_obs_at_offset`) is ALREADY in the stacker panel and is used by
+`score_holdouts`; only `add_station` ignores it. So the one-variable test costs a second 14-booster
+fit per shard and nothing else.
+
+**Challenger #1 = `stacker-noleak`:** the served per-shard stacker, identical in every respect except
+that the `q_obs_today_log` training feature is the observed flow on the holdout's issue day instead
+of `ytrue_h[0]`. Where it returns no value the champion's value is archived (difference zero on that
+row). Archived in the fleet archive's `challenger` column from its first build; scored only on issue
+dates ≥ 2026-11-18; judged by the V16-2 rule unchanged. No result motivated this: no fleet row and no
+challenger value existed when it was written.
+
+**Prediction (H-LEAK):** lead-1 pooled MAE ratio challenger/champion < 1 with CI excluding 1; the
+ratio moves toward 1 as lead grows (the leaked feature is the lead-1 target, so its damage should
+concentrate at short leads). If the ratio is ≥ 1 at lead 1, H-LEAK is wrong as a cause of error —
+the trees were not leaning on that feature — and it is recorded as such.
+Stacker v2's remaining three changes follow as challenger #2, after #1 is decided.
+
+### §V16 DEVIATION 2 (2026-11-13, before any fleet row exists) — the H-STALE fix refreshes the SAME product first
+
+V16-1 named the fix as a GFS job on NOAA open data. That changes two things at once: the weather's
+AGE and its PRODUCT (the weather-driven members are fit on Open-Meteo's 13 daily variables, several
+of which — soil moisture, ET0, snow depth — GFS point extracts do not supply in the same form). So
+the first fix is one variable: `RW2_WX_REFRESH=1` lets a cache-only build fetch today's Open-Meteo
+forecast, ECMWF-ensemble forecast, NBM forecast, and the days of weather history since the record's
+last row (forward delta only, budgeted, falls back to the cache on failure, stops after 5
+consecutive failures). ~154 gauges × 4 calls per shard per build. The flag is OFF in `pages.yml`
+and is not flipped before 2026-11-18. V16-3's prediction and control for "fresh forcing" stand
+unchanged. The fleet archive's provenance columns measure how often the refresh actually lands.
+Areal GFS as a product is decided by GATE 4, separately.
+
+Mechanism note, recorded so it is not rediscovered: a stale forecast file is not *misaligned*
+weather — rows are joined by date — it is *missing* weather: a file whose last date is before today
+contributes no future covariate at all. If H-STALE holds, the weather-driven members have been
+running without forecast weather, not with wrong weather.

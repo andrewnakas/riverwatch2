@@ -17,6 +17,45 @@ import pandas as pd
 
 NO_FETCH = os.environ.get("RW2_NO_FETCH") == "1"
 
+
+# PREREG §V16-1 (H-STALE). Scheduled builds run RW2_NO_FETCH=1 so the cold
+# multi-decade backfills are never repeated -- but that also froze the weather
+# FORECAST and the recent weather history at whatever the cache last held.
+# RW2_WX_REFRESH=1 allows, under NO_FETCH, exactly the cheap forward deltas:
+# today's forecast and the days of history since the record's last row. It is
+# the same product the members were fit on, so only its AGE changes. A fetch
+# that fails falls back to the cache exactly as before; after
+# _REFRESH_MAX_FAIL_STREAK consecutive failures (rate limit, outage) the
+# process stops trying, and a per-process call budget bounds the worst case.
+WX_REFRESH = os.environ.get("RW2_WX_REFRESH") == "1"
+_REFRESH_MAX_FAIL_STREAK = 5
+_refresh_budget = int(os.environ.get("RW2_WX_REFRESH_BUDGET", "2000"))
+_refresh_fail_streak = 0
+_REFRESH_TIMEOUT_S = 20
+#: History re-fetch overlap: the archive's newest days arrive late and null.
+_REFRESH_HIST_OVERLAP_D = 7
+
+
+def refresh_allowed() -> bool:
+    return (NO_FETCH and WX_REFRESH and _refresh_budget > 0
+            and _refresh_fail_streak < _REFRESH_MAX_FAIL_STREAK)
+
+
+def refresh_json(url: str) -> dict | None:
+    """One budgeted fetch under NO_FETCH. None on failure (caller falls back)."""
+    global _refresh_budget, _refresh_fail_streak
+    if not refresh_allowed():
+        return None
+    _refresh_budget -= 1
+    try:
+        payload = _http_json(url, timeout=_REFRESH_TIMEOUT_S)
+    except Exception:
+        _refresh_fail_streak += 1
+        return None
+    _refresh_fail_streak = 0
+    return payload
+
+
 CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache" / "openmeteo"
 if not CACHE_DIR.is_symlink():  # dangling symlink (unmounted volume) breaks mkdir
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,6 +126,21 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
     schema_stale = rec_schema != SCHEMA_VERSION  # added vars in v11
 
     if NO_FETCH:
+        # §V16-1: forward delta only (never the backward backfill).
+        if refresh_allowed() and last_known and last_known < end.isoformat():
+            try:
+                frm = max(start, date.fromisoformat(last_known) - timedelta(days=_REFRESH_HIST_OVERLAP_D))
+            except ValueError:
+                frm = None
+            if frm is not None and _refresh_hist(lat, lon, have, frm, end):
+                rec.update({"lat": lat, "lon": lon, "rows": have,
+                            "first_known": min(have.keys()), "last_known": max(have.keys()),
+                            "fetched_at": time.time()})
+                rec.setdefault("schema_version", rec_schema)
+                try:
+                    rp.write_text(json.dumps(rec, separators=(",", ":")))
+                except Exception:
+                    pass
         return _slice_hist_record(have, start, end)
 
     needs_backward = bool(first_known) and first_known > start.isoformat()
@@ -144,22 +198,42 @@ def fetch_history(lat: float, lon: float, start: date, end: date, *, max_age_hou
     return _slice_hist_record(have, start, end)
 
 
-def _fetch_and_merge_hist(lat: float, lon: float, have: dict, start: date, end: date) -> bool:
-    """Fetch Open-Meteo archive [start, end] and merge into `have`. Returns True if anything was added."""
-    params = {
+def _hist_url(lat: float, lon: float, start: date, end: date) -> str:
+    return ARCHIVE_URL + "?" + urlencode({
         "latitude": f"{lat:.4f}",
         "longitude": f"{lon:.4f}",
         "start_date": start.isoformat(),
         "end_date": end.isoformat(),
         "daily": ",".join(DAILY_VARS),
         "timezone": "UTC",
-    }
-    url = ARCHIVE_URL + "?" + urlencode(params)
+    })
+
+
+def _refresh_hist(lat: float, lon: float, have: dict, start: date, end: date) -> bool:
+    """§V16-1 forward delta under NO_FETCH. A day whose precipitation is still
+    null is NOT merged: it would advance `last_known` past a day the archive
+    has not published yet, and the day would then never be asked for again."""
+    payload = refresh_json(_hist_url(lat, lon, start, end))
+    if payload is None:
+        return False
+    df_new = _to_df(payload)
+    if df_new.empty or "precipitation_sum" not in df_new:
+        return False
+    df_new = df_new[df_new["precipitation_sum"].notna()]
+    return _merge_hist(df_new, have)
+
+
+def _fetch_and_merge_hist(lat: float, lon: float, have: dict, start: date, end: date) -> bool:
+    """Fetch Open-Meteo archive [start, end] and merge into `have`. Returns True if anything was added."""
+    url = _hist_url(lat, lon, start, end)
     try:
         payload = _http_json(url)
     except Exception:
         return False
-    df_new = _to_df(payload)
+    return _merge_hist(_to_df(payload), have)
+
+
+def _merge_hist(df_new: pd.DataFrame, have: dict) -> bool:
     added = False
     for _, r in df_new.iterrows():
         row = {k: (None if pd.isna(r[k]) else float(r[k]) if k != "date" else r[k].isoformat())
@@ -200,6 +274,10 @@ def fetch_forecast(lat: float, lon: float, days: int = 14, *, max_age_hours: int
         # most recent fcst file for this lat/lon; else give up with empty df.
         if cache.exists():
             return _to_df(json.loads(cache.read_text()))
+        payload = refresh_json(_fcst_url(lat, lon, days))  # §V16-1
+        if payload is not None and (payload.get("daily") or {}).get("time"):
+            cache.write_text(json.dumps(payload))
+            return _to_df(payload)
         candidates = sorted(
             CACHE_DIR.glob(f"fcst_{lat:.3f}_{lon:.3f}_*.json"),
             key=lambda p: p.stat().st_mtime,
@@ -211,24 +289,27 @@ def fetch_forecast(lat: float, lon: float, days: int = 14, *, max_age_hours: int
     if cache.exists() and (time.time() - cache.stat().st_mtime) < max_age_hours * 3600:
         payload = json.loads(cache.read_text())
     else:
-        params = {
-            "latitude": f"{lat:.4f}",
-            "longitude": f"{lon:.4f}",
-            "daily": ",".join(DAILY_VARS),
-            "forecast_days": min(days, 16),
-            "timezone": "UTC",
-        }
-        # v17.1: forecast model selection. ECMWF forcing beat the prior
-        # default decisively on the honest harness (full-scale NSE 0.540 vs
-        # 0.510, CRPS -7%); serving defaults to Open-Meteo's "best match"
-        # unless RW2_FCST_MODEL pins a model (production: ecmwf_ifs025).
-        model = os.environ.get("RW2_FCST_MODEL", "").strip()
-        if model:
-            params["models"] = model
-        url = FORECAST_URL + "?" + urlencode(params)
-        payload = _http_json(url)
+        payload = _http_json(_fcst_url(lat, lon, days))
         cache.write_text(json.dumps(payload))
     return _to_df(payload)
+
+
+def _fcst_url(lat: float, lon: float, days: int) -> str:
+    params = {
+        "latitude": f"{lat:.4f}",
+        "longitude": f"{lon:.4f}",
+        "daily": ",".join(DAILY_VARS),
+        "forecast_days": min(days, 16),
+        "timezone": "UTC",
+    }
+    # v17.1: forecast model selection. ECMWF forcing beat the prior
+    # default decisively on the honest harness (full-scale NSE 0.540 vs
+    # 0.510, CRPS -7%); serving defaults to Open-Meteo's "best match"
+    # unless RW2_FCST_MODEL pins a model (production: ecmwf_ifs025).
+    model = os.environ.get("RW2_FCST_MODEL", "").strip()
+    if model:
+        params["models"] = model
+    return FORECAST_URL + "?" + urlencode(params)
 
 
 # v17.1: decoder-forcing vars for the ECMWF ensemble-mean serving path. Must
@@ -267,6 +348,10 @@ def fetch_forecast_ecmwf_ens(lat: float, lon: float, days: int = 14, *, max_age_
         # recent ensfcst file for this lat/lon, else an empty frame.
         if cache.exists():
             return _ens_mean_df(json.loads(cache.read_text()))
+        payload = refresh_json(_ens_url(lat, lon, days))  # §V16-1
+        if payload is not None and (payload.get("daily") or {}).get("time"):
+            cache.write_text(json.dumps(payload))
+            return _ens_mean_df(payload)
         candidates = sorted(
             CACHE_DIR.glob(f"ensfcst_{lat:.3f}_{lon:.3f}_*.json"),
             key=lambda p: p.stat().st_mtime,
@@ -278,18 +363,20 @@ def fetch_forecast_ecmwf_ens(lat: float, lon: float, days: int = 14, *, max_age_
     if cache.exists() and (time.time() - cache.stat().st_mtime) < max_age_hours * 3600:
         payload = json.loads(cache.read_text())
     else:
-        params = {
-            "latitude": f"{lat:.4f}",
-            "longitude": f"{lon:.4f}",
-            "daily": ",".join(ENS_DAILY_VARS),
-            "models": "ecmwf_ifs025",
-            "forecast_days": min(days, 15),  # IFS ENS horizon cap on this API
-            "timezone": "UTC",
-        }
-        url = ENSEMBLE_URL + "?" + urlencode(params)
-        payload = _http_json(url)
+        payload = _http_json(_ens_url(lat, lon, days))
         cache.write_text(json.dumps(payload))
     return _ens_mean_df(payload)
+
+
+def _ens_url(lat: float, lon: float, days: int) -> str:
+    return ENSEMBLE_URL + "?" + urlencode({
+        "latitude": f"{lat:.4f}",
+        "longitude": f"{lon:.4f}",
+        "daily": ",".join(ENS_DAILY_VARS),
+        "models": "ecmwf_ifs025",
+        "forecast_days": min(days, 15),  # IFS ENS horizon cap on this API
+        "timezone": "UTC",
+    })
 
 
 def _ens_mean_df(payload: dict) -> pd.DataFrame:

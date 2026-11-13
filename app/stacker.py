@@ -200,8 +200,16 @@ class StackerTrainer:
         qs: float,
         member_preds: Dict[str, List[Tuple[int, list, list]]],
         offset_to_issued_doy: Dict[int, int],
+        q_obs_at_offset: Optional[Dict[int, float]] = None,
     ) -> None:
         """Append this station's holdout panel rows to the training buffer.
+
+        q_obs_at_offset: {offset: observed flow on that holdout's ISSUE day}.
+            PREREG §V16 H-LEAK: without it (the served champion's behaviour,
+            unchanged) the `q_obs_today_log` feature is filled with
+            `ytrue_h[0]`, the lead-1 TARGET, while serving feeds it the real
+            issue-day flow. With it, training matches serving; an offset with
+            no finite value gets NaN rather than the target.
 
         member_preds: same shape as `member_preds` inside `forecast_station`,
             i.e. {member_name: [(offset, yhat_list, ytrue_list)]}. Members
@@ -284,6 +292,14 @@ class StackerTrainer:
                         q_obs_proxy = math.asinh(float(ytrue_lag1) / qs)
                     except Exception:
                         q_obs_proxy = 0.0
+                if q_obs_at_offset is not None:
+                    qo = q_obs_at_offset.get(off)
+                    try:
+                        q_obs_proxy = (math.asinh(float(qo) / qs)
+                                       if qo is not None and math.isfinite(float(qo))
+                                       else float("nan"))
+                    except Exception:
+                        q_obs_proxy = float("nan")
                 row = _row_features(
                     member_vals_asinh=member_vals_asinh,
                     q_obs_today_asinh=q_obs_proxy,

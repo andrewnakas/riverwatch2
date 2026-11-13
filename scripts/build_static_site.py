@@ -34,7 +34,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.forecast import forecast_station, prepare_station_inputs, recompute_blend_with_stacker  # noqa: E402
+from app.forecast import challenger_line, forecast_station, prepare_station_inputs, recompute_blend_with_stacker  # noqa: E402
 from app.pooled_lgbm import PooledTrainer  # noqa: E402
 from app.stacker import StackerTrainer  # noqa: E402
 from app import fleet_archive  # noqa: E402
@@ -381,10 +381,12 @@ def main() -> int:
     import os as _os
     stacker_ok = False
     stacker_obj: object = None
+    chal_obj: object = None
     if _os.environ.get("RW2_STACKER_OFF") == "1":
         print("v14.4 stacker: disabled via RW2_STACKER_OFF=1")
     else:
         st_train = StackerTrainer(horizon=args.horizon)
+        st_chal = StackerTrainer(horizon=args.horizon)
         for sid, f in forecasts_by_sid.items():
             panel = getattr(f, "_v14_4_panel", None)
             if panel is None or panel.get("attrs") is None:
@@ -399,6 +401,17 @@ def main() -> int:
                 )
             except Exception as exc:
                 print(f"  stacker.add_station FAIL {sid}: {exc}")
+            # PREREG §V16 challenger #1 (`stacker-noleak`): the same rows, with
+            # the issue-day-flow feature taken from the issue day. Archived
+            # only; it never draws the served line.
+            try:
+                st_chal.add_station(
+                    sid, panel["attrs"], panel["qs"], panel["member_preds"],
+                    panel["offset_to_issued_doy"],
+                    q_obs_at_offset=panel.get("q_obs_at_offset") or {},
+                )
+            except Exception as exc:
+                print(f"  challenger add_station FAIL {sid}: {exc}")
         n_rows = st_train.n_rows()
         # 6 offsets × 14 h × 118 stations ≈ 10K rows max per shard, so a
         # 200-row floor on any single horizon is comfortable.
@@ -408,6 +421,12 @@ def main() -> int:
             stacker_ok = st_train.fit()
             stacker_obj = st_train if stacker_ok else None
             print(f"  stacker fit: ok={stacker_ok} {time.time()-t_fit:.1f}s")
+            try:
+                t_fit = time.time()
+                chal_obj = st_chal if st_chal.fit() else None
+                print(f"  challenger (stacker-noleak) fit: ok={chal_obj is not None} {time.time()-t_fit:.1f}s")
+            except Exception as exc:
+                print(f"  challenger fit FAIL: {exc}")
         else:
             print(f"v14.4 stacker skipped: only {n_rows} pooled rows (need >=200)")
 
@@ -421,6 +440,10 @@ def main() -> int:
         try:
             if stacker_ok and stacker_obj is not None:
                 f = recompute_blend_with_stacker(f, stacker_obj)
+            # Challenger only where the champion is the stacker too, so the
+            # pair differs in exactly one thing.
+            if stacker_ok and stacker_obj is not None and chal_obj is not None:
+                f.challenger = challenger_line(f, chal_obj)
             # Strip the in-memory panel before serializing — large dict, not for Pages.
             try:
                 f._v14_4_panel = None
@@ -429,6 +452,7 @@ def main() -> int:
             data = asdict(f)
             # asdict still includes _v14_4_panel as None; drop the key entirely.
             data.pop("_v14_4_panel", None)
+            data.pop("challenger", None)  # archived (fleet-archive), never shipped or drawn
             data["station"] = st
             data["has_history_file"] = _emit_history(sid)
             (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), indent=2))
