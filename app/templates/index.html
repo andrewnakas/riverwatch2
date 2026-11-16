@@ -28,6 +28,16 @@
       <b>Click a marker</b> for that gauge's ensemble forecast, or <b>click anywhere
       near a river</b> to estimate the runoff there from the nearest comparable gauge.
       <a href="benchmarks.html">What was measured &rarr;</a></p>
+    <label class="map-filter">Show
+      <select id="map-filter" aria-label="Which gauges to show on the map">
+        <option value="all">all gauges</option>
+        <option value="reporting">reporting gauges only</option>
+        <option value="rising">forecast to rise or at an NWS flood level</option>
+        <option value="flood">at an NWS flood level (now or within 5 days)</option>
+        <option value="favs">my starred gauges</option>
+      </select>
+      <span id="map-filter-count" class="muted" aria-live="polite"></span>
+    </label>
     <div class="legend">
       <span class="dot dot-mt"></span> Mountain West
       <span class="dot dot-ak"></span> Alaska

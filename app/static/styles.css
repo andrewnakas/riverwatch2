@@ -20,7 +20,7 @@ html, body { margin: 0; padding: 0; height: 100%; font-family: Inter, system-ui,
 #forecast-summary table { width: 100%; border-collapse: collapse; }
 #forecast-summary td, #forecast-summary th { padding: 4px 6px; border-bottom: 1px solid #1f2942; font-size: 12px; text-align: left; }
 canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px; border: 1px solid #26314f; }
-#member-table { margin-top: 14px; font-size: 12px; }
+#member-table { margin-top: 14px; font-size: 12px; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 #member-table table { width: 100%; border-collapse: collapse; }
 #member-table th, #member-table td { padding: 4px 6px; border-bottom: 1px solid #1f2942; text-align: right; }
 #member-table th:first-child, #member-table td:first-child { text-align: left; }
@@ -48,7 +48,7 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .snotel-table { width: 100%; margin-top: 4px; }
 .snotel-table td { padding: 2px 6px; }
 .snotel-asof { color: #5c6685; font-size: 10px; margin-top: 2px; text-align: right; }
-.daily-stats { margin: 4px 0 10px; font-size: 12px; color: #aab7d4; }
+.daily-stats { margin: 4px 0 10px; font-size: 12px; color: #aab7d4; max-width: 100%; overflow-x: auto; }
 .daily-stats summary { cursor: pointer; color: #8ec5ff; padding: 4px 0; }
 .daily-stats table.climatology { width: 100%; border-collapse: collapse; margin-top: 6px; }
 .daily-stats table.climatology th, .daily-stats table.climatology td { padding: 4px 6px; border-bottom: 1px solid #1f2942; text-align: right; font-size: 11px; }
@@ -274,3 +274,6 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .topbar a { color: #8ec5ff; }
 .alert-link { margin-top: 8px; font-size: 12px; line-height: 1.45; }
 .alert-link a { color: #ffd166; font-weight: 600; }
+
+.map-filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 12px; color: #aab7d4; }
+.map-filter select { max-width: 100%; background: #141a2e; color: #e6ecff; border: 1px solid #2b3557; border-radius: 6px; padding: 3px 6px; font-size: 12px; }

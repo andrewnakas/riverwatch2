@@ -91,6 +91,7 @@ async function loadStations() {
     stationsById.set(s.id, s);
     bounds.push([s.lat, s.lon]);
   }
+  setupMapFilter();
   Search.build(j.stations.filter(s => s.lat != null && s.lon != null));
   // A deep link opens its gauge instead of fitting the whole country.
   const linked = DeepLink.read();
@@ -1699,7 +1700,14 @@ function renderRiverClick(res) {
 
 function selectStationById(id) {
   const s = stationsById.get(id);
-  if (s) { selectStation(s); if (s.lat != null) map.setView([s.lat, s.lon], 10); }
+  if (s) {
+    // A gauge opened by search, link or favourite must be on the map even when
+    // the current filter hides it.
+    const m = markersById.get(id);
+    if (m && !cluster.hasLayer(m)) cluster.addLayer(m);
+    selectStation(s);
+    if (s.lat != null) map.setView([s.lat, s.lon], 10);
+  }
 }
 
 loadStations().then(() => {
@@ -1774,6 +1782,46 @@ function renderFloodBlock(payload, n, gh) {
     <div class="muted flood-caveat">Our forecast is a daily mean; the instantaneous peak in a day runs higher, so a daily
       mean near a threshold can mean the river briefly crosses it. Flood stages are NWS's; act on NWS warnings, not on this page.</div>
     ${alertHtml}`;
+}
+
+// ---- Map filter ------------------------------------------------------------
+// Re-populates the cluster layer with the markers that pass. Gauges whose last
+// observation is > 14 days old carry class 0 in current.json, so "reporting"
+// means a known flow class.
+const MAP_FILTERS = {
+  all: () => true,
+  reporting: c => !!c && c.cls > 0,
+  rising: c => Conditions.rising(c) || (Conditions.flood(c)?.level || 0) >= 1,
+  flood: c => (Conditions.flood(c)?.level || 0) >= 1,
+};
+function applyMapFilter(key) {
+  const fav = key === "favs";
+  const pass = fav ? null : (MAP_FILTERS[key] || MAP_FILTERS.all);
+  const keep = [];
+  for (const [id, m] of markersById) {
+    const c = _haveConditions ? Conditions.get(id) : null;
+    if (fav ? Favs.has(id) : pass(c)) keep.push(m);
+  }
+  cluster.clearLayers();
+  cluster.addLayers(keep);
+  const cnt = document.getElementById("map-filter-count");
+  if (cnt) cnt.textContent = key === "all" ? "" : `${keep.length.toLocaleString()} of ${markersById.size.toLocaleString()}`;
+}
+function setupMapFilter() {
+  const sel = document.getElementById("map-filter");
+  if (!sel) return;
+  if (!_haveConditions) {   // without current.json only "all" and "favs" mean anything
+    for (const o of sel.options) if (!["all", "favs"].includes(o.value)) o.disabled = true;
+  }
+  let saved = "all";
+  try { saved = localStorage.getItem("rw2-map-filter") || "all"; } catch (_) {}
+  if (![...sel.options].some(o => o.value === saved && !o.disabled)) saved = "all";
+  sel.value = saved;
+  if (saved !== "all") applyMapFilter(saved);
+  sel.addEventListener("change", () => {
+    applyMapFilter(sel.value);
+    try { localStorage.setItem("rw2-map-filter", sel.value); } catch (_) {}
+  });
 }
 
 // ---- Legend, favorites, search -------------------------------------------
