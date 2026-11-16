@@ -455,7 +455,7 @@ def main() -> int:
             data.pop("challenger", None)  # archived (fleet-archive), never shipped or drawn
             data["station"] = st
             data["has_history_file"] = _emit_history(sid)
-            (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), indent=2))
+            (FORECAST_DIR / f"{sid}.json").write_text(json.dumps(_to_jsonable(data), separators=(",", ":")))
             successes += 1
             # MODERN-1 verification archive. Nothing in this project scores
             # the forecasts this site actually ISSUED against what the rivers

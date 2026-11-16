@@ -69,8 +69,8 @@ def test_input_provenance_never_raises_and_reads_edges():
     fc = pd.DataFrame({"date": ["2026-10-11", "2026-10-27"], "precipitation_sum": [0, 0]})
     p = _input_provenance(hist, fc, pd.DataFrame(columns=["date"]))
     assert p == {"wx_fcst_start": "2026-10-11", "wx_fcst_end": "2026-10-27",
-                 "wx_hist_end": "2026-10-10", "nbm_start": None}
-    assert _input_provenance(None, object(), 3) == dict.fromkeys(p)
+                 "wx_hist_end": "2026-10-10", "nbm_start": None, "wx_hist_rows": "3"}
+    assert _input_provenance(None, object(), 3) == {**dict.fromkeys(p), "wx_hist_rows": "0"}
 
 
 

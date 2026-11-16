@@ -5238,3 +5238,10 @@ history record for 99% of gauges (it matches the `mblstm` fill exactly) or becau
 defect; `fleet-1` cannot tell the two apart. `verify.yml` is registered and active but its 14:30Z
 cron did not fire on 11-16.
 
+
+**V16 meta column added 2026-11-16 (before the V16-1 read):** `wx_hist_rows` = number of
+weather-history rows handed to the members, in the fleet meta from the next build after this commit.
+It answers the open question above and changes no forecast. Also: per-gauge `forecasts/<id>.json` is
+now written compact (119.5 → 71.4 KB on 09380000; 10.4 → 9.8 KB gzipped, so the gain is deploy size —
+~1.15 GB → ~0.69 GB of forecasts — not page speed). Splitting `daily_stats` into its own file is
+dropped from the plan for the same reason: it would save ~nothing over the wire.

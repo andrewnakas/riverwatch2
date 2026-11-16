@@ -426,7 +426,16 @@ def _input_provenance(wx_hist, wx_fcst, nbm_df) -> Dict[str, Optional[str]]:
             return str(pd.to_datetime(fn(df["date"])).date())
         except Exception:
             return None
+    def _n(df):
+        try:
+            return str(int(len(df))) if df is not None else "0"
+        except Exception:
+            return "0"
     return {
+        # Rows of weather history handed to the members, whatever they hold:
+        # tells "no history record at all" (0) from "a record whose
+        # precipitation is null" when wx_hist_end is empty.
+        "wx_hist_rows": _n(wx_hist),
         "wx_fcst_start": _edge(wx_fcst, min),
         "wx_fcst_end": _edge(wx_fcst, max),
         "wx_hist_end": _edge(wx_hist, max, "precipitation_sum"),
