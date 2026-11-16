@@ -1762,7 +1762,8 @@ function renderFloodBlock(payload, n, gh) {
     for (const p of n.fcst) if (!np || p.q_cfs > np.q_cfs) np = p;
     rows.push(`<tr><th>NWS official forecast</th><td>peak ${fmtNumber(np.q_cfs, 0)} cfs${Number.isFinite(np.stage) ? ` / ${np.stage.toFixed(1)} ft` : ""} on ${new Date(np.date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${catName(n.fcstCategory)}</td></tr>`);
   }
-  if (peak) {
+  // A gauge silent > 60 days has no current forecast (see the summary table).
+  if (peak && !(Number.isFinite(payload.data_age_days) && payload.data_age_days > 60)) {
     rows.push(`<tr><th>RiverWatch peak</th><td>${fmtNumber(peak.q_cfs, 0)} cfs${peakStage != null ? ` ≈ ${peakStage.toFixed(1)} ft` : ""} on ${String(peak.date).slice(5)}${peakCat ? ` · <b style="color:${peakCat.color}">reaches ${floodLabel(peakCat.cat)}</b>` : " · below flood stages"}</td></tr>`);
   }
   const th = n.thresholds.map(t => `<span class="flood-chip" style="border-color:${t.color};color:${t.color}">${floodLabel(t.cat)}: ${t.stage != null ? t.stage + " ft" : ""}${t.flow != null ? ` (${fmtNumber(t.flow, 0)} cfs)` : ""}</span>`).join(" ");
