@@ -43,7 +43,7 @@ fixed) · **pending** (registered, not yet read).
 
 | # | Question | Earliest read | Registration |
 |---|---|---|---|
-| D1 | GATE 4: areal GFS vs Open-Meteo point decoder | lead-1 decision ≥ 2026-11-14 (30 init dates with observed targets); all-lead table ≥ 2026-11-27 (PREREG GATE 4 deviation 7) | `PREREG_v2.md` |
+| D1 | GATE 4: areal GFS vs Open-Meteo point decoder | **read 2026-11-16: STOP.** lead-1 tier-1 median ΔNSE +0.041926 [+0.023712, +0.064924], 464 basins, 31 inits — beyond the registered \|Δ\| ≤ 0.030 bound, so no switch. Re-check: both arms correctly aligned; point archive stale on ~3.6 of 30 init dates (10-14, 10-15, 10-16 part, 11-04). All-lead table ≥ 2026-11-27, reporting only; a decision needs a fresh registration (GATE 4b) | `PREREG_v2.md` GATE 4 lead-1 read; `data/gate4/score_31_lead1.log`; `analysis/gate4_forcing_check.py` |
 | D2 | §LIVE-1: does the skew fix remove the wet bias / beat persistence at leads 5–10 | issued 2026-11-04..11-17; leads 5–10 readable ≥ 2026-11-28 | `PREREG_v2.md` §LIVE-1 |
 | D3 | §V16-1 H-STALE: how old is the weather a scheduled build forecasts on (`issued_date − wx_fcst_start`, every gauge). Prediction: median ≥ 7 d | first three complete fleet-archive days (`analysis/score_fleet_live.py age`) | `PREREG_v2.md` §V16 |
 | D4 | §V16 fleet scoreboard: served blend vs persistence, every gauge, per lead, basin-bootstrap CI | issue dates ≥ 2026-11-18 only; nightly `verify.yml` → `fleet-archive:live_skill.json` | `PREREG_v2.md` §V16-0 |

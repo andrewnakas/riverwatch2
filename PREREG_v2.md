@@ -5038,6 +5038,63 @@ Nothing else in the GATE 4 registration changes. The 30-init-date minimum stands
    USGS daily for 11-12..11-13). Leads with < 30 observed inits are not printed then. The full 14-lead
    table is printed once more on/after **2026-11-27**, as reporting only: it cannot change the decision.
 
+
+## GATE 4 — LEAD-1 READ, 2026-11-16: **STOP** (|Δ| > 0.030). No switch.
+
+Read once, as registered (deviations 1–7): 31 init dates 2026-10-13..11-12 re-predicted on the single
+f7fbd44 encoder snapshot, `analysis/gate4_run.py score data/gate4/preds_31.csv.gz`
+(log: `data/gate4/score_31_lead1.log`). Arms-differ check 1.0000. Observed tier-1 init dates per
+lead: 1:31 2:31 3:31 4:30 (leads 5–14 < 30, not printed).
+
+| tier 1 (decision) | median ΔNSE (areal GFS − OM point) | CI95 | breadth | basins |
+|---|---|---|---|---|
+| **lead 1** | **+0.041926** | [+0.023712, +0.064924] | 0.629 | 464 |
+| lead 2 | +0.125641 | [+0.072622, +0.179176] | 0.636 | 464 |
+| lead 3 | +0.175960 | [+0.122836, +0.249147] | 0.662 | 464 |
+| lead 4 | +0.148524 | [+0.079373, +0.244876] | 0.612 | 464 |
+
+Tier 2 (not part of the decision, 90 basins): lead 1 +0.018080 [−0.006294, +0.071618].
+464 scored tier-1 basins, not the 481 of deviation 5: 17 have no NSE (zero-variance observations or
+no observed target); not investigated further.
+
+**Verdict by the table fixed on 2026-10-12:** the lead-1 Δ is positive with a CI excluding zero, but it
+is **outside the registered |Δ| ≤ 0.030 magnitude bound, so the STOP row applies**: "One arm is
+broken, not worse. Re-check the areal GFS record selection and the archived point rows before
+interpreting anything." **The decoder is NOT switched on this read.** The registered magnitude
+prediction (|Δ| ≤ 0.030) is refuted.
+
+### The registered re-check (inputs only; no discharge; `analysis/gate4_forcing_check.py`)
+
+Each arm's decoder forcing against the areal NLDAS-2 rows of the encoder table (through 11-07) for
+the same basin and target date, and with the target shifted ±1 day (tier 1, ~12k basin-days per cell):
+
+| lead 1 | precip r (−1 / **0** / +1 d) | temp r at 0 | temp bias | precip MAE mm |
+|---|---|---|---|---|
+| OM point | 0.237 / **0.615** / 0.218 | 0.930 | +0.49 | 1.72 |
+| areal GFS | 0.222 / **0.747** / 0.195 | 0.976 | −0.88 | 1.32 |
+
+- **Target alignment: correct in both arms** (correlation peaks at shift 0 at leads 1, 2, 3, 7 for every
+  channel). Deviation 2's lead-day mapping holds. No NaN in either arm; units agree.
+- **Areal GFS record selection: no defect found.** Its lead-1 never repeats the previous run's lead-2
+  (0.0001 of rows).
+- **Archived point rows: a defect found.** On init dates **10-14, 10-15, 11-04 (100% of basins) and
+  10-16 (62%)** the archived Open-Meteo lead-1 row is *identical* to the previous day's lead-2 row for
+  the same target: the forecast was not re-fetched, so the "init D" forecast is really D−1's (or
+  older). ~3.6 of 30 init dates, 12.6% of rows; 1–4% on other days. This is what the live member was
+  actually served on those days — H-STALE (§V16) observed inside the `m1-forcing` job itself.
+- Reference truth is *areal*, so part of GFS's closer match (precip r 0.747 vs 0.615) is the sampling
+  contrast the gate was built to measure, not a defect. At lead 7 point precip r is 0.146 against
+  0.326 for GFS.
+
+**What this does and does not establish.** Neither arm is misaligned or mis-unit; one arm (point) is
+partly stale. The stale days alone are not shown to produce the whole Δ — that would need the read
+split by init date, which is a NEW analysis on already-seen data and is **not run here**. Anything
+of that kind is exploratory and must be labelled so. The clean route to a decision is a fresh
+registration (GATE 4b) on init dates after the staleness is fixed or with stale inits excluded by a
+rule fixed in advance, same statistic, magnitude bound re-derived from this read. Until then the
+served decoder stays on Open-Meteo point. The all-lead table on/after 2026-11-27 is still printed,
+reporting only.
+
 ---
 
 ## §V16 — FLEET VERIFICATION, FRESH FORCING, CHAMPION/CHALLENGER (registered 2026-11-13, before any number below exists)
