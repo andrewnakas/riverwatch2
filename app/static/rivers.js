@@ -57,7 +57,21 @@ const Conditions = (() => {
     return !!p && p.cls >= 4 && Number.isFinite(p.ratio) && p.ratio >= 1.5;
   }
 
-  return { load, get, rising, nearPeak, COLORS, NAMES, get generatedAt() { return generatedAt; } };
+  //: NWS flood categories against today's flow (flood) and the next-5-day
+  //: peak (near_flood), from data/nws_flood.json at build time. 0 = below
+  //: action, null = NWS publishes no flow threshold here (unknown, not "safe").
+  const FLOOD_NAMES = ["", "action stage", "minor flood", "moderate flood", "major flood"];
+  const FLOOD_COLORS = ["", "#ffd23f", "#ff9f43", "#ff4d4d", "#d14bff"];
+  function flood(c) {
+    if (!c || !("flood" in c)) return null;
+    const now = Number.isInteger(c.flood) ? c.flood : null;
+    const near = Number.isInteger(c.near_flood) ? c.near_flood : null;
+    if (now === null && near === null) return null;
+    return { now: now || 0, near: near || 0, level: Math.max(now || 0, near || 0) };
+  }
+
+  return { load, get, rising, nearPeak, flood, COLORS, NAMES, FLOOD_NAMES, FLOOD_COLORS,
+           get generatedAt() { return generatedAt; } };
 })();
 
 const NWS = (() => {

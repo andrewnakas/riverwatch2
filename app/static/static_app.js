@@ -27,7 +27,11 @@ let _haveConditions = false;
 function makeIcon(station) {
   const c = _haveConditions ? Conditions.get(station.id) : null;
   const color = _haveConditions ? Conditions.COLORS[c ? c.cls : 0] : colorForState(station.state);
-  const ring = Conditions.rising(c)
+  const fl = Conditions.flood(c);
+  // A flood category (NWS thresholds) outranks the percentile "rising" ring.
+  const ring = fl && fl.level >= 1
+    ? `border:2px solid #0b1020; box-shadow: 0 0 0 3px ${Conditions.FLOOD_COLORS[fl.level]}, 0 0 10px ${Conditions.FLOOD_COLORS[fl.level]};`
+    : Conditions.rising(c)
     ? "border:2px solid #fff; box-shadow: 0 0 0 2px #ff4d4d, 0 0 8px rgba(255,77,77,0.8);"
     : "border:2px solid #0b1020; box-shadow: 0 0 6px rgba(0,0,0,0.6);";
   const star = Favs.has(station.id) ? '<span class="rw-star">★</span>' : "";
@@ -48,6 +52,9 @@ function conditionText(id) {
   if (!c) return "";
   let t = `${fmtNumber(c.q, 0)} cfs (${Conditions.NAMES[c.cls]})`;
   if (Conditions.rising(c)) { const p = Conditions.nearPeak(c); t += ` · forecast to rise to ${fmtNumber(p.q, 0)} cfs by ${String(p.date).slice(5)}`; }
+  const fl = Conditions.flood(c);
+  if (fl && fl.now >= 1) t += ` · at NWS ${Conditions.FLOOD_NAMES[fl.now]} flow`;
+  if (fl && fl.near > fl.now) t += ` · forecast to reach NWS ${Conditions.FLOOD_NAMES[fl.near]} flow by ${String(c.near_date).slice(5)}`;
   return t;
 }
 
@@ -1768,6 +1775,8 @@ function renderLegend() {
   el.innerHTML = [1, 2, 3, 4, 5, 0].map(i =>
     `<span><span class="dot" style="background:${Conditions.COLORS[i]}"></span>${Conditions.NAMES[i]}</span>`).join("")
     + `<span><span class="dot dot-rising"></span>forecast to rise</span>`
+    + [1, 2, 3, 4].map(i => `<span><span class="dot" style="background:#6b7390;box-shadow:0 0 0 3px ${Conditions.FLOOD_COLORS[i]}"></span>${Conditions.FLOOD_NAMES[i]}</span>`).join("")
+    + `<span class="muted" title="NWS flood thresholds converted to cfs, against today's daily mean or the next 5 days' forecast peak. Daily means run below the instantaneous peak; act on NWS warnings, not on this map.">rings: NWS flood level, now or within 5 days</span>`
     + `<span class="muted">flow vs this date's record</span>`;
 }
 

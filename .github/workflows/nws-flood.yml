@@ -1,0 +1,52 @@
+name: NWS flood thresholds refresh
+
+# Weekly: look up NWS flood categories (action/minor/moderate/major) for every
+# served gauge from NOAA's NWPS API, convert stage thresholds to cfs through
+# the NWPS rating, and commit data/nws_flood.json to main. The Pages build's
+# merge step reads it (scripts/current_conditions.py) to mark gauges whose flow
+# or 5-day forecast peak reaches a flood category. Thresholds change rarely;
+# a lookup that fails keeps the gauge's previous entry.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays 11:00 UTC.
+    - cron: "0 11 * * 0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: "nws-flood"
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Look up NWS flood thresholds
+        run: python scripts/build_nws_flood.py --workers 8
+
+      - name: Commit and push
+        run: |
+          set -e
+          git config user.name "riverwatch2-bot"
+          git config user.email "treesixtyweather@gmail.com"
+          git add data/nws_flood.json
+          if git diff --cached --quiet; then
+            echo "no threshold changes"
+            exit 0
+          fi
+          git commit -m "NWS flood thresholds refresh @ $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin main && exit 0
+            sleep 10
+          done
+          exit 1
