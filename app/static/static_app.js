@@ -742,7 +742,14 @@ function renderForecast(payload) {
   // prominently so a stale or degraded forecast isn't mistaken for a fresh one.
   const ageDays = payload.data_age_days;
   let freshness = "";
-  if (payload.stale) {
+  // A gauge silent for months is not "stale", it is out of service: its
+  // "forecast" is for dates long past (2026-11-16: 972 gauges > 1 year, back
+  // to 1986). Say so, and do not quote day +1/+7 values for it.
+  const lastObs = (payload.history || []).slice(-1)[0]?.date;
+  const retired = Number.isFinite(ageDays) && ageDays > 60;
+  if (retired) {
+    freshness = `<tr><th>⚠ Not reporting</th><td class="warn-cell">USGS has no daily flow here since ${String(lastObs || "").slice(0, 10)}. There is no current forecast for this gauge; the chart shows its last record.</td></tr>`;
+  } else if (payload.stale) {
     const ageTxt = Number.isFinite(ageDays) ? `${ageDays} day${ageDays === 1 ? "" : "s"}` : "old";
     freshness = `<tr><th>⚠ Data freshness</th><td class="warn-cell">STALE — last reading is ${ageTxt} old; this forecast projects from outdated data</td></tr>`;
   } else if (Number.isFinite(ageDays)) {
@@ -758,9 +765,9 @@ function renderForecast(payload) {
       ${conditionText(payload.station?.id) ? `<tr><th>Now</th><td>${conditionText(payload.station.id)}</td></tr>` : ""}
       <tr><th>Forecast line built by</th><td>${lineBuiltBy(payload)}</td></tr>
       <tr><th>Lowest backtest error</th><td>${payload.chosen} <span class="muted">(member weights: ${stratLabel})</span></td></tr>
-      <tr><th>Day +1 blend</th><td>${fmtNumber(t1)} cfs</td></tr>
+      ${retired ? "" : `<tr><th>Day +1 blend</th><td>${fmtNumber(t1)} cfs</td></tr>
       <tr><th>Day +7 blend</th><td>${fmtNumber(t7)} cfs</td></tr>
-      ${tLast !== undefined ? `<tr><th>Day +${blend.length} blend</th><td>${fmtNumber(tLast)} cfs</td></tr>` : ""}
+      ${tLast !== undefined ? `<tr><th>Day +${blend.length} blend</th><td>${fmtNumber(tLast)} cfs</td></tr>` : ""}`}
     </table>
   `;
 
