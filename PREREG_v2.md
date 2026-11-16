@@ -5218,3 +5218,23 @@ daily mean vs the official USGS daily value on the 503 gauge-days that have both
 difference 0.0015, p90 0.0072, p99 0.0407. On 2026-11-12 (read at ~08Z on 11-13) 8 Colorado gauges
 had an official daily value; the IV table had 250.
 V16-3's prediction for the nowcast stands unchanged.
+
+### V16 note, 2026-11-16 — first fleet snapshot exists; what was seen before the V16-1 read
+
+Recorded so the V16-1 read cannot be mistaken for blind. The first build with the fleet archive (run
+43806397200) wrote `fleet-archive:archive_fleet/2026/11/2026-11-16.csv.gz` (135,772 rows, 9,698
+gauges, leads 1–14) and its meta file (9,698 rows). While checking that the columns were populated
+— fill rates only, no age statistic computed, no skill — I opened three live `forecasts/<id>.json`
+files to see whether an empty `wx_hist_end` was a plumbing bug. Two of the three showed
+`wx_fcst_start = 2026-05-06` (the third had none). So I have seen, on 2 gauges, a value consistent
+with the registered H-STALE prediction (median ≥ 7 d). The registered read is unchanged: the full
+distribution on the first three complete archive days (11-16..11-18), `score_fleet_live.py age`.
+
+Fill rates in the first snapshot (plumbing facts, not results): `challenger` 100% (differs from the
+blend on 96.7% of rows); `wx_fcst_start` 66.0%; `nbm_start` 77.1%; **`wx_hist_end` 0.9%**;
+members `timesfm_xreg` 66.0%, `nwm`/`nwm_residual` 8.0%, `mblstm_modern` 5.4%, `mblstm` 0.9%.
+Open question for the V16-1 read: whether `wx_hist_end` is empty because builds have no weather
+history record for 99% of gauges (it matches the `mblstm` fill exactly) or because of a provenance
+defect; `fleet-1` cannot tell the two apart. `verify.yml` is registered and active but its 14:30Z
+cron did not fire on 11-16.
+
