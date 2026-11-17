@@ -8,7 +8,36 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap",
 }).addTo(map);
 
-const cluster = L.markerClusterGroup({ maxClusterRadius: 40 });
+// Cluster bubbles: the plugin's default colours bubbles by COUNT (green <10,
+// yellow <100, orange >=100), which reads as the flow-class legend -- zoomed
+// out, the whole country looked "below normal". Instead: a neutral bubble whose
+// ring shows the share of each flow class among its gauges, outlined red when
+// any gauge inside is at or forecast to reach an NWS flood level. (Not for
+// "rising": nearly every cluster of 300+ gauges holds one, so it said nothing.)
+const cluster = L.markerClusterGroup({ maxClusterRadius: 40, iconCreateFunction: clusterIcon });
+
+function clusterIcon(cl) {
+  const kids = cl.getAllChildMarkers(), n = kids.length;
+  const counts = [0, 0, 0, 0, 0, 0];
+  let alert = false;
+  for (const m of kids) {
+    const c = _haveConditions ? Conditions.get(m.options.stationId) : null;
+    counts[c ? c.cls : 0]++;
+    if (!alert && c) { const fl = Conditions.flood(c); alert = !!(fl && fl.level >= 1); }
+  }
+  // Draw order follows the legend: record low .. record high, then no data.
+  let at = 0;
+  const stops = [1, 2, 3, 4, 5, 0].filter(k => counts[k]).map(k => {
+    const a = at; at += counts[k] / n * 360;
+    return `${Conditions.COLORS[k]} ${a.toFixed(1)}deg ${at.toFixed(1)}deg`;
+  }).join(", ");
+  const size = n < 10 ? 30 : n < 100 ? 36 : 44;
+  return L.divIcon({
+    className: "rw-cluster" + (alert ? " rw-cluster-alert" : ""),
+    html: `<div style="background:conic-gradient(${stops})"><span>${n}</span></div>`,
+    iconSize: [size, size],
+  });
+}
 map.addLayer(cluster);
 
 const markersById = new Map();
@@ -73,7 +102,7 @@ async function loadStations() {
   const bounds = [];
   for (const s of j.stations) {
     if (s.lat == null || s.lon == null) continue;
-    const m = L.marker([s.lat, s.lon], { icon: makeIcon(s) });
+    const m = L.marker([s.lat, s.lon], { icon: makeIcon(s), stationId: s.id });
     m.bindTooltip(() => {
       const c = conditionText(s.id);
       return `${s.id} — ${s.name}${c ? `<br><span class="tt-cond">${c}</span>` : ""}`;
@@ -1835,7 +1864,8 @@ function renderLegend() {
     + `<span><span class="dot dot-rising"></span>forecast to rise</span>`
     + [1, 2, 3, 4].map(i => `<span><span class="dot" style="background:#6b7390;box-shadow:0 0 0 3px ${Conditions.FLOOD_COLORS[i]}"></span>${Conditions.FLOOD_NAMES[i]}</span>`).join("")
     + `<span class="muted" title="NWS flood thresholds converted to cfs, against today's daily mean or the next 5 days' forecast peak. Daily means run below the instantaneous peak; act on NWS warnings, not on this map.">rings: NWS flood level, now or within 5 days</span>`
-    + `<span class="muted">flow vs this date's record</span>`;
+    + `<span class="muted">flow vs this date's record</span>`
+    + `<span class="muted">groups: ring = mix of classes, red outline = a gauge at an NWS flood level</span>`;
 }
 
 function updateFavButton(id) {
