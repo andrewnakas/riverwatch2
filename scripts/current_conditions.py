@@ -78,7 +78,9 @@ def classify(q, row: dict | None) -> int:
     if lo is not None and q < lo:
         return 1 if long_enough else 2
     if hi is not None and q > hi:
-        return 5 if long_enough else 4
+        # A record of 0 cfs (a wash dry on this date in every year) makes any
+        # flow a "record": 7 of 246 record-class gauges on 2026-11-16 (ledger C3).
+        return 5 if long_enough and hi > 0 else 4
     if q < p25:
         return 2
     if q > p75:

@@ -105,3 +105,10 @@ def test_stale_observation_is_unknown_class():
     assert r["q"] == 2050                      # the value itself is still shown
     fresh = dict(zip(cc.FIELDS, cc.summarise(payload, today=_dt.date(1986, 10, 1))))
     assert fresh["peak_cls"] == 5
+
+
+def test_zero_record_high_is_not_a_record():
+    from current_conditions import classify
+    row = {"min_va": 0, "p25_va": 0, "p75_va": 0, "max_va": 0, "count": 40}
+    assert classify(5.0, row) == 4
+    assert classify(5.0, dict(row, max_va=2.0, p75_va=1.0)) == 5
