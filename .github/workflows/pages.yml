@@ -400,8 +400,15 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install "pandas>=2.0"
+      # A job that hits timeout-minutes ends "cancelled", which continue-on-error
+      # does not cover: `build` (needs: iv-nowcast) was then SKIPPED and nothing
+      # deployed (2026-11-17 01:41Z and 03:50Z runs; the job took 5 min on 11-16,
+      # >20 min once USGS IV slowed). So the script gets its own shorter limit
+      # and the step always succeeds; a missing table is already handled.
       - name: Build IV nowcast table
-        run: python scripts/build_iv_nowcast.py
+        run: |
+          timeout 720 python scripts/build_iv_nowcast.py \
+            || echo "::warning::IV nowcast table not built (timeout or error); build continues without it"
       - uses: actions/upload-artifact@v4
         with:
           name: iv-nowcast
