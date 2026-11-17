@@ -1870,6 +1870,22 @@ function renderFavorites() {
     refreshMarker(id);
     renderFavorites();
   });
+  const share = document.getElementById("share-btn");
+  if (share) share.addEventListener("click", async () => {
+    const st = _currentForecastPayload?.station;
+    if (!st?.id) return;
+    const url = location.origin + location.pathname + `#site=${st.id}`;
+    const status = document.getElementById("share-status");
+    const say = (t) => { if (status) { status.textContent = t; setTimeout(() => { status.textContent = ""; }, 2500); } };
+    try {
+      if (navigator.share) { await navigator.share({ title: `${st.name} — RiverWatch2`, url }); return; }
+      await navigator.clipboard.writeText(url);
+      say("Link copied");
+    } catch (err) {
+      if (err && err.name === "AbortError") return;   // user closed the share sheet
+      say(url);                                       // last resort: show it to copy by hand
+    }
+  });
   const favEl = document.getElementById("favorites");
   if (favEl) favEl.addEventListener("click", (e) => {
     const a = e.target.closest("a[data-id]");

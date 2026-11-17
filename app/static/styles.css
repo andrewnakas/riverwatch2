@@ -245,6 +245,8 @@ canvas { width: 100%; max-width: 100%; background: #131a2d; border-radius: 10px;
 .fav-btn { background: none; border: 1px solid #33446f; color: #ffd166; font-size: 18px; line-height: 1; border-radius: 6px;
   padding: 3px 8px; cursor: pointer; }
 .fav-btn:hover { background: #1d2742; }
+.share-btn { color: #9fc3ff; margin-left: 4px; }
+.share-status { font-size: 12px; margin-left: 6px; }
 #panel-empty p { color: #aab7d4; font-size: 14px; margin-top: 0; }
 .fav-head, .flood-head { font-size: 12px; color: #8ec5ff; font-weight: 600; margin: 10px 0 6px; }
 .flood-head a { color: #8ec5ff; }
