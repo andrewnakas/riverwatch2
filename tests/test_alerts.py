@@ -91,3 +91,20 @@ def test_unsent_events_are_not_marked_alerted():
     assert st["levels"]["a"] == {"level": 1, "alerted_at": t} and "b" not in st["levels"]
     ev2, _ = alerts.transitions(cur(a=RECORD, b=RISING), st, now="2026-11-04T12:00:00+00:00")
     assert {e["id"] for e in ev2} == {"a", "b"}      # they fire on the next build
+
+
+def test_atom_feeds_per_state_and_all():
+    import xml.etree.ElementTree as ET
+    ev, st = alerts.transitions(cur(a=RISING, b=[1, "2026-11-01", 3, 2, "2026-11-05", 3, 2.0]),
+                                {"levels": {}}, now="2026-11-02T00:00:00+00:00")
+    stations = [{"id": "a", "name": "A & B Creek", "state": "MT"},
+                {"id": "b", "name": "Quiet", "state": "ID"}]
+    fs = alerts.feeds(st, cur(a=RISING), stations)
+    assert set(fs) == {"alerts.xml", "MT.xml", "ID.xml"}
+    ns = {"a": "http://www.w3.org/2005/Atom"}
+    mt = ET.fromstring(fs["MT.xml"])
+    ents = mt.findall("a:entry", ns)
+    assert len(ents) == 1 and "A & B Creek" in ents[0].find("a:title", ns).text
+    assert "not a warning" in ents[0].find("a:summary", ns).text
+    assert ET.fromstring(fs["ID.xml"]).findall("a:entry", ns) == []
+    assert len(ET.fromstring(fs["alerts.xml"]).findall("a:entry", ns)) == 1

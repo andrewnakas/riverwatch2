@@ -1738,15 +1738,17 @@ function lineBuiltBy(payload) {
 }
 
 // ---- NWS flood block ------------------------------------------------------
-function alertLink(id) {
-  return `<div class="alert-link">🔔 <a href="https://ntfy.sh/rw2-gauge-${id}" target="_blank" rel="noopener">Get phone alerts for this gauge</a>
-    <span class="muted">— free via the ntfy app; a push when the forecast starts to rise or tops the record. Not a flood warning.</span></div>`;
+function alertLink(id, state) {
+  const st = /^[A-Z]{2}$/.test(state || "") ? state : "";
+  const feed = st ? ` · <a href="feeds/${st}.xml" target="_blank" rel="noopener">${st} alerts feed (Atom)</a>` : "";
+  return `<div class="alert-link">🔔 <a href="https://ntfy.sh/rw2-gauge-${id}" target="_blank" rel="noopener">Get phone alerts for this gauge</a>${feed}
+    <span class="muted">— free via the ntfy app or a feed reader; posted when the forecast starts to rise or tops the record. Not a flood warning.</span></div>`;
 }
 
 function renderFloodBlock(payload, n, gh) {
   const el = document.getElementById("flood-block");
   if (!el) return;
-  const alertHtml = alertLink(payload.station?.id || "");
+  const alertHtml = alertLink(payload.station?.id || "", payload.station?.state);
   const rows = [];
   if (gh && Number.isFinite(gh.stage)) {
     const when = gh.time ? new Date(gh.time).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";

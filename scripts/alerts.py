@@ -34,6 +34,7 @@ import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 TOPIC_PREFIX = "rw2-gauge-"
 NTFY = "https://ntfy.sh/"
@@ -151,6 +152,72 @@ def post(e: dict, name: str, timeout: float = 15.0) -> bool:
         return False
 
 
+FEED_MAX = 200
+
+
+def _entry(sid: str, st: dict, r: dict, name: str) -> str:
+    e = {"id": sid, **r, "level": st["level"]}
+    title, body = message(e, name)
+    when = st.get("alerted_at") or ""
+    link = f"{SITE}#site={sid}"
+    return ("<entry>"
+            f"<id>tag:riverwatch2,2026:{escape(sid)}:{st['level']}:{escape(when)}</id>"
+            f"<title>{escape(title)}</title><updated>{escape(when)}</updated>"
+            f'<link href="{escape(link)}"/>'
+            f"<category term=\"{LEVEL_NAMES[st['level']]}\"/>"
+            f"<summary>{escape(body)}</summary></entry>")
+
+
+def feeds(state: dict, current: dict, stations: list[dict]) -> dict:
+    """Atom feeds of gauges at an alert level: {"alerts.xml": all, "<ST>.xml": per state}.
+
+    An alternative to ntfy for people who use a feed reader, and the only way to
+    follow a whole state. Built from the same state file the ntfy posts come
+    from, so an entry appears when a level is (re)alerted -- its id carries
+    alerted_at, so a reader shows it as new exactly when ntfy would have posted.
+    Every state with a station gets a feed, empty or not, so URLs stay stable."""
+    r_all = rows(current)
+    meta = {s["id"]: s for s in stations}
+    now = state.get("generated_at") or ""
+    by: dict[str, list[tuple[str, str]]] = {"alerts": []}
+    for s in stations:
+        if s.get("state"):
+            by.setdefault(str(s["state"]), [])
+    for sid, st in (state.get("levels") or {}).items():
+        r = r_all.get(sid)
+        if r is None or r.get("peak_q") is None or r.get("q") is None or st.get("level") not in LEVEL_NAMES:
+            continue
+        m = meta.get(sid, {})
+        ent = (st.get("alerted_at") or "", _entry(sid, st, r, m.get("name") or sid))
+        by["alerts"].append(ent)
+        if m.get("state"):
+            by[str(m["state"])].append(ent)
+    out = {}
+    for key, ents in by.items():
+        ents.sort(key=lambda t: t[0], reverse=True)
+        where = "CONUS" if key == "alerts" else key
+        out[f"{key}.xml"] = (
+            '<?xml version="1.0" encoding="utf-8"?>'
+            '<feed xmlns="http://www.w3.org/2005/Atom">'
+            f"<id>{escape(SITE)}feeds/{key}.xml</id>"
+            f"<title>RiverWatch2 river alerts: {escape(where)}</title>"
+            f"<subtitle>Gauges whose 5-day daily-mean forecast is rising sharply or above "
+            f"record. Model forecasts, not warnings: check NWS for flood warnings.</subtitle>"
+            f"<updated>{escape(now)}</updated>"
+            f'<link rel="self" href="{escape(SITE)}feeds/{key}.xml"/>'
+            f'<link href="{escape(SITE)}"/><author><name>RiverWatch2</name></author>'
+            + "".join(e for _, e in ents[:FEED_MAX]) + "</feed>")
+    return out
+
+
+def write_feeds(state: dict, current: dict, stations: list[dict], out_dir: Path) -> int:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fs = feeds(state, current, stations)
+    for name, xml in fs.items():
+        (out_dir / name).write_text(xml, encoding="utf-8")
+    return len(fs)
+
+
 def fetch_prev(url: str) -> dict | None:
     try:
         with urllib.request.urlopen(url + f"?t={int(time.time())}", timeout=30) as r:
@@ -166,16 +233,19 @@ def main() -> int:
     ap.add_argument("--stations", default="dist/stations.json")
     ap.add_argument("--prev-url", default=SITE + "alerts_state.json")
     ap.add_argument("--out", default="dist/alerts_state.json")
+    ap.add_argument("--feeds", default="", help="directory for Atom feeds (e.g. dist/feeds)")
     a = ap.parse_args()
     current = json.loads(Path(a.current).read_text())
-    names = {s["id"]: s.get("name") or s["id"]
-             for s in json.loads(Path(a.stations).read_text()).get("stations", [])}
+    stations = json.loads(Path(a.stations).read_text()).get("stations", [])
+    names = {s["id"]: s.get("name") or s["id"] for s in stations}
     prev = fetch_prev(a.prev_url)
     events, state = transitions(current, prev)
     Path(a.out).write_text(json.dumps(state, separators=(",", ":")))
     print(f"  alerts: {len(state['levels'])} gauges at a level; "
           f"{'no previous state, posting nothing' if prev is None else f'{len(events)} new transitions'}")
     if os.environ.get("RW2_ALERTS") != "1" or not events:
+        if a.feeds:
+            print(f"  alerts: {write_feeds(state, current, stations, Path(a.feeds))} Atom feeds")
         return 0
     sent, unsent = 0, [e["id"] for e in events[MAX_POSTS:]]
     for e in events[:MAX_POSTS]:
@@ -185,7 +255,10 @@ def main() -> int:
             unsent.append(e["id"])
         time.sleep(1.0)
     if unsent:   # not posted -> not "alerted": leave them to fire next build
-        Path(a.out).write_text(json.dumps(unmark(state, prev, unsent), separators=(",", ":")))
+        state = unmark(state, prev, unsent)
+        Path(a.out).write_text(json.dumps(state, separators=(",", ":")))
+    if a.feeds:
+        print(f"  alerts: {write_feeds(state, current, stations, Path(a.feeds))} Atom feeds")
     print(f"  alerts: posted {sent}/{min(len(events), MAX_POSTS)}"
           + (f" (capped; {len(events) - MAX_POSTS} not sent)" if len(events) > MAX_POSTS else ""))
     return 0
