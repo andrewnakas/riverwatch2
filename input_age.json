@@ -1,32 +1,32 @@
 {
- "gauge_days": 9698,
+ "gauge_days": 19396,
  "wx_fcst_start": {
   "missing_frac": 0.3399,
-  "median_d": 194.0,
+  "median_d": 195.0,
   "p10_d": 194.0,
-  "p90_d": 194.0,
+  "p90_d": 195.0,
   "frac_ge_2d": 1.0
  },
  "wx_hist_end": {
   "missing_frac": 0.9914,
-  "median_d": 195.0,
+  "median_d": 196.0,
   "p10_d": 195.0,
-  "p90_d": 195.0,
+  "p90_d": 196.0,
   "frac_ge_2d": 1.0
  },
  "nbm_start": {
   "missing_frac": 0.2291,
-  "median_d": 194.0,
+  "median_d": 194.5,
   "p10_d": 194.0,
-  "p90_d": 194.0,
+  "p90_d": 195.0,
   "frac_ge_2d": 1.0
  },
  "last_obs_date": {
   "missing_frac": 0.0,
   "median_d": 1.0,
   "p10_d": 1.0,
-  "p90_d": 368.6000000000022,
-  "frac_ge_2d": 0.18
+  "p90_d": 368.5,
+  "frac_ge_2d": 0.414
  },
- "generated_at": "2026-11-16T23:28:33.945310+00:00"
+ "generated_at": "2026-11-17T22:35:21.026220+00:00"
 }
